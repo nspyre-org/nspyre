@@ -60,6 +60,8 @@ class Mongo_Listenner(QtCore.QThread):
                     self.updated.emit(doc)
                 if self.exit_flag:
                     return
+        if not self.exit_flag:
+            self.run() #This takes care of the invalidate event which stops the change_stream cursor
 
 class Synched_Mongo_Collection(QtCore.QObject):
     updated_row = QtCore.pyqtSignal(object) # Emit the updated row
@@ -102,6 +104,7 @@ class Synched_Mongo_Database(QtCore.QObject):
     updated_row = QtCore.pyqtSignal(object, object) # Emit the updated row in the format (col_name, row)
     col_added = QtCore.pyqtSignal(object) # Emit the name of the collection which was added
     col_dropped = QtCore.pyqtSignal(object) # Emit the name of the collection which was dropped
+    db_dropped = QtCore.pyqtSignal() #Emitted when the database is dropped
 
     def __init__(self, db_name, mongo_addr):
         super().__init__()
@@ -121,13 +124,26 @@ class Synched_Mongo_Database(QtCore.QObject):
                 self.dfs[col] = pd.DataFrame(col_data)
                 self.dfs[col].set_index('_id', inplace=True)
 
-    def get_df(self, col_name):
-        return self.dfs[col_name]
+    def get_df(self, col_name, timeout=1):
+        try:
+            if not self.dfs[col_name] is None:
+                return self.dfs[col_name]
+        finally:
+            t = time.time()
+            while time.time()-t<timeout:
+                if col_name in self.dfs:
+                    return self.dfs[col_name]
 
 
     @QtCore.pyqtSlot(object)
     def _update(self, change):
         # print(change)
+        if change['operationType'] == 'dropDatabase':
+            self.dfs = dict()
+            self.db_dropped.emit()
+            return
+        elif change['operationType'] == 'invalidate':
+            return
         col = change['ns']['coll']
         if col in self.dfs:
             df, row = modify_df(self.dfs[col], change)

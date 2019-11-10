@@ -11,6 +11,7 @@ import pymongo
 
 import numpy as np
 import pandas as pd
+import time
 
 class LinePlotView():
     def __init__(self, view):
@@ -24,6 +25,8 @@ class LinePlotView():
         self.update_formatter = view.get_formatter(self.w, 'update')
         if not self.init_formatter is None:
             self.init_formatter(self.w)
+
+            
 
     def start_updating(self):
         self.is_updating = True
@@ -41,13 +44,18 @@ class LinePlotView():
         
 
 class View_Manager(QtWidgets.QWidget):
-    def __init__(self, mongodb_addr, parent=None):
+    def __init__(self, mongodb_addr, parent=None, db_name='Spyre_Live_Data'):
         super().__init__(parent=parent)
-        self.db = Synched_Mongo_Database('Spyre_Live_Data', mongodb_addr)
+        self.db = Synched_Mongo_Database(db_name, mongodb_addr)
         # cleanup_register(mongodb_addr)
 
         self.views = dict()
         self.items = dict()
+        self.last_updated = dict()
+        self.timer = QtCore.QTimer(self)
+        self.timer.timeout.connect(self.update_colors)
+        self.timer.start(100)
+        self.fade_rate = 2
         
         layout = QtWidgets.QHBoxLayout()
         # Build tree
@@ -56,7 +64,7 @@ class View_Manager(QtWidgets.QWidget):
         # self.model = QtGui.QStandardItemModel()
         # self.tree.setModel(self.model)
 
-        self.tree.currentItemChanged.connect(lambda cur, prev: self.new_table_selection(cur))
+        self.tree.currentItemChanged.connect(self.new_table_selection)
         layout.addWidget(self.tree)
 
         # Build layout
@@ -85,8 +93,13 @@ class View_Manager(QtWidgets.QWidget):
 
         #Connect db signals
         self.db.col_added.connect(self.add_col)
-        # self.db.col_dropped.connect(self.del_col)
-        self.db.updated_row.connect(self.update_plot)
+        self.db.col_dropped.connect(self.del_col)
+        self.db.updated_row.connect(self._update_plot)
+
+    def _update_plot(self, col_name, row):
+        if col_name != 'Register':
+            self.last_updated[col_name] = time.time()
+        self.update_plot(col_name, row)
 
     def update_plot(self, col_name, row):
         if col_name == 'Register':
@@ -105,8 +118,11 @@ class View_Manager(QtWidgets.QWidget):
         if col_name in self.views:
             return
         top = QtWidgets.QTreeWidgetItem(self.tree, [col_name])
+        self.default_color = top.background(0) # This is used to remember the default color when instanciating (to restore in update_color)
+
         self.items[col_name] = {'__top':top}
         self.views[col_name] = dict()
+        self.last_updated[col_name] = time.time()
 
         for name, view in spyrelet_views.get_1D_views().items():
             self.views[col_name][name] = LinePlotView(view)
@@ -117,239 +133,59 @@ class View_Manager(QtWidgets.QWidget):
             top.addChild(self.items[col_name][name])
 
         self.tree.insertTopLevelItem(0, top)
-        # self.update_plot(col_name, None)
 
+    def del_col(self, col_name):
+        if col_name == 'Register':
+            return
+        for pname, view in self.views[col_name].items():
+            self.plot_layout.removeWidget(view.w)
+            view.w.deleteLater()
+        for iname, item in self.items[col_name].items():
+            self.tree.removeItemWidget(item,0)
+        self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(self.items[col_name]['__top']))
+        self.views.pop(col_name)
+        self.items.pop(col_name)
+        self.last_updated.pop(col_name)
     
 
-        # self.line_plot = 
-        # self.img_plot = HeatmapPlotWidget()
-        # 
-        # self.plot_layout.addWidget(self.img_plot)
-        # self.plot_container = QtWidgets.QWidget()
-        # self.plot_container.setLayout(self.plot_layout)
-
-    def new_table_selection(self, item):
-        txt = item.text(0)
-        if not txt in self.views:
-            spyrelet_name = item.parent().text(0)
-            view_name = txt
-        else:
-            # Selected a top level item
+    def new_table_selection(self, cur, prev):
+        def get_view_name(item):
+            if item is None:
+                return None, None
+            txt = item.text(0)
+            if not txt in self.views:
+                spyrelet_name = item.parent().text(0)
+                view_name = txt
+                return spyrelet_name, view_name
+            else:
+                # Selected a top level item
+                return txt, None
+        spyrelet_name, view_name = get_view_name(cur)
+        spyrelet_name_old, view_name_old = get_view_name(prev)
+        if not view_name_old is None:
+            self.views[spyrelet_name_old][view_name_old].stop_updating()
+        if view_name is None:
             return
+        
         self.plot_layout.setCurrentWidget(self.views[spyrelet_name][view_name].w)
         self.views[spyrelet_name][view_name].start_updating()
         if spyrelet_name in self.db.dfs:
             self.update_plot(spyrelet_name, None)
 
-        
-        # if not item is None:
-        #     self.plot_layout.setCurrentWidget(self.line_plot)
-        #     self.tabulate_item(item)
-        #     self.plot_item(item)
-
-
-
-
-
-
-
-
-# class DataExplorer(QtWidgets.QWidget):
-#     def __init__(self, parent=None, filename=None):
-#         super().__init__(parent=parent)
-#         self.repo = None
-#         self.item_list = list()
-#         self.filename = filename
-#         self.build_ui()
-#         if not filename is None:
-#             self.reload()
-
-#     def build_ui(self):
-
-#         # Build file loading widgets
-#         ctrl_panel = QtWidgets.QWidget()
-#         layout = QtWidgets.QVBoxLayout()
-#         ctrl_panel.setLayout(layout)
-#         select_filename_btn = QtWidgets.QPushButton('Select File...')
-#         self.filename_label = QtWidgets.QLabel('No file selected' if self.filename is None else self.filename)
-#         select_filename_btn.clicked.connect(self.select_filename)
-#         reload_btn = QtWidgets.QPushButton('Reload')
-#         reload_btn.clicked.connect(self.reload)
-#         layout.addWidget(select_filename_btn)
-#         layout.addWidget(self.filename_label)
-#         layout.addWidget(reload_btn)
-
-#         #Navigation function
-#         def move_index_down(_self, _ev):
-#             if type(_ev)==QtGui.QKeyEvent:
-#                 if _ev.matches(QtGui.QKeySequence.MoveToPreviousPage):
-#                     inc = -1
-#                 elif _ev.matches(QtGui.QKeySequence.MoveToNextPage):
-#                     inc = 1
-#                 else:
-#                     return QtWidgets.QTreeWidget.keyPressEvent(_self, _ev)
-#                 cur = self.tree.currentItem()
-#                 if not cur is None:
-#                     name = cur.text(0)
-#                     i = self.item_list.index(cur)
-#                     found_match = False
-#                     while not found_match:
-#                         i+=inc
-#                         if i >=len(self.item_list) or i<0:
-#                             found_match = True
-#                         elif self.item_list[i].text(0)==name:
-#                             self.tree.setCurrentItem(self.item_list[i])
-#                             found_match = True
-#                 _ev.accept()
-
-#         # Build tree
-#         self.tree = QtWidgets.QTreeWidget()
-#         self.tree.currentItemChanged.connect(lambda cur, prev: self._new_table_selection(cur))
-#         layout.addWidget(self.tree)
-#         self.tree.keyPressEvent = lambda ev: move_index_down(self.tree, ev)
-
-#         # Build plot widgets
-#         self.plot_layout = QtWidgets.QStackedLayout()
-#         self.line_plot = LinePlotWidget()
-#         self.img_plot = HeatmapPlotWidget()
-#         self.plot_layout.addWidget(self.line_plot)
-#         self.plot_layout.addWidget(self.img_plot)
-#         self.
-#         self.plot_container.setLayout(self.plot_layout)
-
-#         #Build dataframe table
-#         self.df_table = QtWidgets.QTableView()
-        
-#         self.tab_container = QtWidgets.QTabWidget()
-#         self.tab_container.addTab(self.plot_container, 'Plot')
-#         self.tab_container.addTab(self.df_table, 'Table')
-
-#         #Set the main layout
-#         splitter_config = {
-#             'main_w': ctrl_panel,
-#             'side_w': self.tab_container,
-#             'orientation': SplitterOrientation.vertical_right_button,
-#         }
-#         splitter = Splitter(**splitter_config)
-
-#         splitter.setSizes([1, 400])
-#         splitter.setHandleWidth(10)
-
-#         layout = QtWidgets.QHBoxLayout()
-#         layout.addWidget(splitter)
-#         self.setLayout(layout)
-
-#     def _new_table_selection(self, item):
-#         if not item is None:
-#             self._tabulate_item(item)
-#             self._plot_item(item)
-
-#     def _tabulate_item(self, item):
-#         path = item.data(0,QtCore.Qt.ToolTipRole)
-#         if path=='/':
-#             df = self.repo.get_index(col_order=['uid', 'name', 'spyrelet', 'date', 'time', 'description'])
-#             pd_model = PandasModel(df)
-#             model = QtCore.QSortFilterProxyModel()
-#             model.setSourceModel(pd_model)
-#             self.df_table.setSortingEnabled(True)
-#             self.tab_container.setCurrentWidget(self.df_table)
-#         else:
-#             df = self.repo[path].get_data()
-#             self.df_table.setSortingEnabled(False)
-#             if df is None:
-#                 model = PandasModel(pd.DataFrame({}))
-#             else:
-#                 model = PandasModel(df)
-#         self.df_table.setModel(model)
-
-#     def _plot_item(self, item):
-#         path = item.data(0,QtCore.Qt.ToolTipRole)
-#         self.plot_node(self.repo[path])
-
-#     def plot_node(self, node):
-#         meta = node.get_meta()
-#         if 'BasePlotWidget_type' in meta:
-#             if node.get_data() is None or node.get_data().empty:
-#                 return
-#             if meta['BasePlotWidget_type'] == self.line_plot.plot_type_str:
-#                 self.plot_layout.setCurrentWidget(self.line_plot)
-#                 self.line_plot.load_node(node)
-#             elif meta['BasePlotWidget_type'] == self.img_plot.plot_type_str:
-#                 self.plot_layout.setCurrentWidget(self.img_plot)
-#                 self.img_plot.load_node(node)
-#             self.tab_container.setCurrentWidget(self.plot_container)
-
-
-#     def select_filename(self):
-#         filename, other = QtWidgets.QFileDialog.getOpenFileName(None, 'Save repository to...', '', 'HDF5 files (*.h5)')
-#         if filename:
-#             self.filename_label.setText(filename)
-#             self.filename = filename
-#             self.reload()
-#         return
-
-#     def reload(self):
-#         if self.filename is None:
-#             raise Exception('No file selected.  Please select a filename')
-#         self.repo = Repository(self.filename)
-#         self._plot_item = lambda _s,_i: None
-#         self.tree.clear()
-#         self.tree.addChild = self.tree.addTopLevelItem
-#         self.item_list = list()
-#         def add_child(node, parent, path_prefix):
-#             for name in node.get_child_names(sort=True):
-#                 child = node.get_child(name)
-#                 path = path_prefix + '/' + name
-#                 tree_item = QtWidgets.QTreeWidgetItem([name])
-#                 tree_item.setData(0, QtCore.Qt.ToolTipRole, path)
-#                 parent.addChild(tree_item)
-#                 self.item_list.append(tree_item)
-#                 add_child(child, tree_item, path)
-#         tree_item = QtWidgets.QTreeWidgetItem(['root'])
-#         tree_item.setData(0, QtCore.Qt.ToolTipRole, '/')
-#         self.tree.addChild(tree_item)
-#         self.item_list.append(tree_item)
-#         add_child(self.repo.root, self.tree, '')
-#         self._plot_item = lambda item: self.__class__._plot_item(self, item)
-
-#     def get_selection_str(self, col_sep='\t', row_sep='\n'):
-#         indexes = self.df_table.selectedIndexes()
-#         model = self.df_table.model()
-#         if model is None:
-#             return
-#         if len(indexes) == 0:
-#             df = model._data
-#             return df.to_csv(sep=col_sep)
-#         else:
-#             indexes = sorted(indexes, key=lambda idx:(idx.row(),idx.column()))
-#             nb_column = indexes[-1].column()-indexes[0].column()+1
-#             model = self.df_table.model()
-#             ans = ''
-#             for i, index in enumerate(indexes):
-#                 ans += model.data(index)
-#                 if (i+1)%nb_column == 0:
-#                     ans += row_sep
-#                 else:
-#                     ans += col_sep
-#             return ans
-
-
-#     def keyPressEvent(self, ev):
-#         if type(ev)==QtGui.QKeyEvent:
-#             if ev.matches(QtGui.QKeySequence.Copy):
-#                 app = QtWidgets.QApplication.instance()
-#                 app.clipboard().setText(self.get_selection_str())
-#                 ev.accept()
-#             if ev.matches(QtGui.QKeySequence.Save):
-#                 filename, other = QtWidgets.QFileDialog.getSaveFileName(None, 'Save this table to...', '', 'Comma Separated Value (*.csv)')
-#                 if filename:
-#                     df = self.df_table.model()._data
-#                     df.to_csv(path_or_buf=filename, sep=',')
-#                 ev.accept()
-
-
+    def update_colors(self):
+        try:
+            for col_name, last_time in self.last_updated.items():
+                delta = (time.time()-last_time)/self.fade_rate
+                if delta<1:
+                    color = QtGui.QColor(0, 255, 0, int(max((1-delta)*255,0)))
+                    self.items[col_name]['__top'].setBackground(0, QtGui.QBrush(color))
+                else:
+                    self.items[col_name]['__top'].setBackground(0, self.default_color)
+        except:
+            pass
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication([])
     w = View_Manager(mongodb_addr="mongodb://localhost:27017/")
     w.show()
+    app.exec_()

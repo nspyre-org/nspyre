@@ -1,6 +1,6 @@
 import pymongo
 from nspyre.instrument_manager import Instrument_Manager
-from nspyre.utils import connect_to_master
+from nspyre.utils import *
 # from instrument_server import Remote_Device
 import pandas as pd
 import numpy as np
@@ -11,6 +11,7 @@ import traceback
 import inspect
 from importlib import import_module
 from collections import OrderedDict
+from tqdm.auto import tqdm
 
 class MissingDeviceError(Exception):
     pass
@@ -18,10 +19,13 @@ class MissingDeviceError(Exception):
 class MissingSpyreletError(Exception):
     pass
 
+class StopRunning(Exception):
+    pass
+
 class Spyrelet():
     REQUIRED_DEVICES = dict()
     REQUIRED_SPYRELETS = dict()
-    LAUNCHER_PARAMS = list()
+    LAUNCHER_PARAMS = dict()
 
     """
     A few notes about the spyrelet class:
@@ -36,6 +40,7 @@ class Spyrelet():
     """
     def __init__(self, unique_name, mongodb_addrs, manager, spyrelets={}):
         self.name = unique_name
+        self.progress = tqdm
         self.mongodb_addrs = mongodb_addrs
         self.validate()
         
@@ -44,9 +49,9 @@ class Spyrelet():
             'class':"{}.{}".format(self.__class__.__module__, self.__class__.__name__),
         }
 
-        client = connect_to_master(mongodb_addrs)
-        self.col = client['Spyre_Live_Data'][unique_name]
-        client['Spyre_Live_Data']['Register'].update_one({'_id':unique_name},{'$set':reg_entry}, upsert=True)
+        self.client = connect_to_master(mongodb_addrs)
+        self.col = self.client['Spyre_Live_Data'][unique_name]
+        self.client['Spyre_Live_Data']['Register'].update_one({'_id':unique_name},{'$set':reg_entry}, upsert=True)
         self.clear_data()
 
         # This is imported here otherwise the import may occur before the Remote_Device_Instance is dynamically generated...
@@ -81,9 +86,13 @@ class Spyrelet():
     
     def run(self, *args, **kwargs):
         try:
+            self._stop_flag = False
             self.clear_data()
             self.initialize(*args, **kwargs)
             self.main(*args, **kwargs)
+        except StopRunning:
+            print('stopping spyrelet')
+            pass
         except:
             traceback.print_exc()
         finally:
@@ -102,10 +111,39 @@ class Spyrelet():
         This will run even if the initialize or main errors out
         """
         pass
+
+    def call(self, spyrelet, *args, **kwargs):
+        """This is the proper way to call a sub spyrlet.  
+        It will take care of keeping the data and calling the proper progress bar.
+        If use_defaults is True (defaults to True) every argument needs to be passed as a keyword argument (ie *args will be ignored)
+        """
+        keep_data = kwargs.pop('keep_data') if 'keep_data' in kwargs else True
+        use_defaults = kwargs.pop('use_defaults') if 'use_defaults' in kwargs else True
+        use_parent_progress = kwargs.pop('use_parent_progress') if 'use_parent_progress' in kwargs else True
+        if use_parent_progress:
+            _progress = spyrelet.progress
+            spyrelet.progress = self.progress
+        if not use_defaults:
+            spyrelet.run(*args, **kwargs)
+        else:
+            launcher = Spyrelet_Launcher(spyrelet)
+            launcher.run(kwargs)
+        if use_parent_progress:
+                spyrelet.progress = _progress
         
+        if keep_data:
+            if not spyrelet.name in self._child_data:
+                self._child_data[spyrelet.name] = list()
+            self._child_data[spyrelet.name].append(spyrelet.data)
+
+
+    def stop(self):
+        self._stop_flag = True
+
     def clear_data(self):
         self.col.drop()
         self._data = list()
+        self._child_data = dict()
 
     def acquire(self, row):
         # Cleanup row
@@ -123,7 +161,12 @@ class Spyrelet():
         for k, val in restore_row.items():
             row[k] = val
         self._data.append(row)
+        if self._stop_flag:
+            raise StopRunning
             
+    @property
+    def child_data(self):
+        return self._child_data
 
     @property
     def data(self):
@@ -152,6 +195,7 @@ class Spyrelet():
         if not (valid_fina and valid_init):
             raise Exception('Signature of initialize and finalize function must be the same as that of main for spyrelet: ' + self.name)
 
+
 class Spyrelet_Launcher():
     def __init__(self, spyrelet):
         self.spyrelet = spyrelet
@@ -163,16 +207,29 @@ class Spyrelet_Launcher():
                 raise Exception("Missing positional argument in LAUNCHER_PARAMS ({})".format(k))
         
         #First add all the params which require ordering
-        self.params = OrderedDict([(k, params[k]) for k,p in ps.items() if not p.kind is inspect.Parameter.VAR_KEYWORD])
+        def infer(default):
+            return {'type':type(default)}
+        self.params = OrderedDict([(k, params[k] if k in params else infer(p.default)) for k,p in ps.items() if not p.kind is inspect.Parameter.VAR_KEYWORD])
         self.pos_or_kw_params = list(self.params.keys())
         #Add in all the other params
         for k, val in params.items():
             if not k in self.params:
                 self.params[k] = val
 
+        #Load defaults from client
+        self.reg = self.spyrelet.client['Spyre_Live_Data']['Register']
+        saved_vals = self.reg.find_one({'_id':self.spyrelet.name},{'_id':False, 'class':False})
+        saved_vals = custom_decode(saved_vals)
+        self.default_params = saved_vals
+
     def run(self, params_dict):
-        pos_or_kw_params = [self.params[k] for k in self.pos_or_kw_params]
-        others = {k:val for k, val in self.params.items() if not k in self.pos_or_kw_params}
+        self.reg.update_one({'_id':self.spyrelet.name},{'$set':custom_encode(params_dict)}, upsert=True)
+        params = self.default_params.copy()
+        self.default_params = params
+        params.update(params_dict)
+        params = {k:(val.array if type(val)==RangeDict else val) for k, val in params.items()}
+        pos_or_kw_params = [params[k] for k in self.pos_or_kw_params]
+        others = {k:val for k, val in params.items() if not k in self.pos_or_kw_params}
         return self.spyrelet.run(*pos_or_kw_params, **others)
         
         

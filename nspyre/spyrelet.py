@@ -38,7 +38,7 @@ class Spyrelet():
         - For higher performance we will store the data internally as a list instead of a dataframe.  Quicker to append to a list.
 
     """
-    def __init__(self, unique_name, mongodb_addrs, manager, spyrelets={}):
+    def __init__(self, unique_name, mongodb_addrs, manager, spyrelets={}, device_alias={}):
         self.name = unique_name
         self.progress = tqdm
         self.mongodb_addrs = mongodb_addrs
@@ -59,19 +59,20 @@ class Spyrelet():
 
         devices = manager.get_devices()
         for dname, dclass in self.REQUIRED_DEVICES.items():
-            if dname in devices:
+            real_dname = device_alias[dname] if dname in device_alias else dname
+            if real_dname in devices:
                 # isRemoteDevice = issubclass(type(devices[dname]), Remote_Device)
                 #This is a convoluted way of checking subclass
-                isRemoteDevice = any(['spyre.instrument_server.Remote_Device' in str(c) for c in inspect.getmro(type(devices[dname]))])
+                isRemoteDevice = any(['spyre.instrument_server.Remote_Device' in str(c) for c in inspect.getmro(type(devices[real_dname]))])
 
                 if isRemoteDevice :
-                    class_name = devices[dname].info['class'].split('.')[-1]
-                    mod = import_module(devices[dname].info['class'].replace('.'+class_name, ''))
+                    class_name = devices[real_dname].info['class'].split('.')[-1]
+                    mod = import_module(devices[real_dname].info['class'].replace('.'+class_name, ''))
                     inst_dclass = getattr(mod, class_name)
-                    dev = devices[dname]
+                    dev = devices[real_dname]
                 else:
-                    inst_dclass = type(devices[dname])
-                    dev = devices[dname]
+                    inst_dclass = type(devices[real_dname])
+                    dev = devices[real_dname]
                 if issubclass(inst_dclass, dclass):
                     setattr(self, dname, dev)
             else:
@@ -139,6 +140,8 @@ class Spyrelet():
 
     def stop(self):
         self._stop_flag = True
+        for sname in self.REQUIRED_SPYRELETS:
+            getattr(self, sname).stop()
 
     def clear_data(self):
         self.col.drop()

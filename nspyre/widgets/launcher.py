@@ -8,6 +8,7 @@ class Progress_Bar(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.vars = []
+        self.iterators = []
         layout = QtWidgets.QVBoxLayout()
         self.pbar = QtWidgets.QProgressBar()
         self.pbar.setTextVisible(True)
@@ -15,52 +16,56 @@ class Progress_Bar(QtWidgets.QWidget):
         layout.addWidget(self.pbar)
         layout.addWidget(self.text)
         self.setLayout(layout)
+        
     
     def reset(self):
         self.vars = []
+        self.iterators = []
         self.text.setText('stopped')
 
-    def update(self, iterator):
+    def call_iter(self, iterable):
         try:
-            max_val = len(iterator)
+            max_val = len(iterable)
         except TypeError:
             max_val = '?'
 
+        self.iterators.append(iter(iterable))
         self.vars.append({'val':0, 'max':max_val, 'start':time.time(), 'last':time.time(), 'avg':0, 'tot':0, 'rem':'?', 'per':0})
+
         if max_val != '?':
             self.pbar.setValue(0)
             self.pbar.setRange(0, max_val)
 
-        for i,x in enumerate(iterator):
-            try:
-                self.vars[-1]['val'] += 1
-                t = time.time()
-                self.vars[-1]['avg'] = t-self.vars[-1]['last']
-                self.vars[-1]['last'] = t
-                self.vars[-1]['tot'] = t-self.vars[-1]['start']
-                self.vars[-1]['per'] = 100*self.vars[-1]['val']/self.vars[-1]['max']
-                self.vars[-1]['rem'] = (self.vars[-1]['max'] - self.vars[-1]['val'])*self.vars[-1]['avg']
+    def call_next(self):
+        try:
+            next(self.iterators[-1])
+            self.vars[-1]['val'] += 1
+            t = time.time()
+            self.vars[-1]['avg'] = t-self.vars[-1]['last']
+            self.vars[-1]['last'] = t
+            self.vars[-1]['tot'] = t-self.vars[-1]['start']
+            self.vars[-1]['per'] = 100*self.vars[-1]['val']/self.vars[-1]['max']
+            self.vars[-1]['rem'] = (self.vars[-1]['max'] - self.vars[-1]['val'])*self.vars[-1]['avg']
 
-                if max_val != '?':
-                    self.pbar.setValue(i)
-                    self.pbar.setRange(0, max_val)
-                self.text.setText('\t'.join(['[{per:.0f}% {val:.0f}/{max:.0f} [{tot:.0f}s<{rem:.0f}s] {avg:.2f}s/it ]'.format(**d) for d in self.vars]))
-                QtWidgets.QApplication.processEvents()
-            except:
-                pass
-            finally:
-                yield x
-        self.vars = self.vars[:-1]
-        if max_val != '?' and not self.vars == []:
-            self.pbar.setValue(self.vars[-1]['max'])
-            self.pbar.setRange(0, self.vars[-1]['max'])
+            if self.vars[-1]['max'] != '?':
+                self.pbar.setValue(self.vars[-1]['val'])
+                self.pbar.setRange(0, self.vars[-1]['max'])
+            self.text.setText('\t'.join(['[{per:.0f}% {val:.0f}/{max:.0f} [{tot:.0f}s<{rem:.0f}s] {avg:.2f}s/it ]'.format(**d) for d in self.vars]))
             QtWidgets.QApplication.processEvents()
+        except StopIteration:
+            self.vars = self.vars[:-1]
+            if not self.vars == [] and self.vars[-1]['max'] != '?':
+                self.pbar.setValue(self.vars[-1]['max'])
+                self.pbar.setRange(0, self.vars[-1]['max'])
+                QtWidgets.QApplication.processEvents()
+            self.iterators = self.iterators[:-1]
+
+    # def update(self, iterator):
 
 class Spyrelet_Launcher_Widget(QtWidgets.QWidget):
     def __init__(self, spyrelet, parent=None):
         self.spyrelet = spyrelet
         self.progress_bar = Progress_Bar()
-        self.spyrelet.progress = self.progress_bar.update
         self.launcher = Spyrelet_Launcher(spyrelet)
         self.param_w = ParamWidget(self.launcher.params)
         self.param_w.set(**self.launcher.default_params)
@@ -69,9 +74,9 @@ class Spyrelet_Launcher_Widget(QtWidgets.QWidget):
         #Build ctrl pannel
         ctrl_pannel = QtWidgets.QWidget()
         layout = QtWidgets.QHBoxLayout()
-        run_btn = QtWidgets.QPushButton('Run')
+        self.run_btn = QtWidgets.QPushButton('Run')
         # progress_bar = QtWidgets.QLabel('Progress bar in construction')#@TODO add progress bar
-        layout.addWidget(run_btn)
+        layout.addWidget(self.run_btn)
         layout.addWidget(self.progress_bar)
         ctrl_pannel.setLayout(layout)
 
@@ -80,21 +85,63 @@ class Spyrelet_Launcher_Widget(QtWidgets.QWidget):
         layout.addWidget(ctrl_pannel)
         layout.addWidget(self.param_w)
         self.setLayout(layout)
-        self.running = False
 
         #Connect signal
-        run_btn.clicked.connect(self.run)
+        self.run_btn.clicked.connect(self.run)
+
+        self.run_thread = None
+        
 
     def run(self):
-        self.progress_bar.reset()
-        if not self.running:
-            self.running = True
-            params_dict = self.param_w.get()
-            self.launcher.run(params_dict)
-            self.running = False
+        if self.run_thread is None or self.run_thread.isFinished():
+            self.progress_bar.reset()
+            param_dict = self.param_w.get()
+            self.run_thread = Spyrelet_Run_Thread(self.launcher, param_dict)
+            self.run_thread.start()
+            self.run_btn.setText('Stop')
+            self.run_thread.finished.connect(lambda: self.run_btn.setText('Run'))
+            self.run_thread.progressed_iter.connect(self.progress_bar.call_iter)
+            self.run_thread.progressed_next.connect(self.progress_bar.call_next)
         else:
-            #Stop the run
-            self.running = False
-            self.spyrelet.stop()
+            self.run_thread.stop_requested.emit()
+
+class Spyrelet_Run_Thread(QtCore.QThread):
+    """Qt Thread which monitors for changes to qither a collection or a database and emits a signal when something happens"""
+    progressed_iter = QtCore.pyqtSignal(object) #This will be emitted when iter is called on progress is called in the spyrelet
+    progressed_next = QtCore.pyqtSignal() #This will be emitted when next is called on progress is called in the spyrelet
+    stop_requested = QtCore.pyqtSignal() # This will be emitted externally to stop the execution of a spyrelet prematurly
+    def __init__(self, launcher, param_dict):
+        super().__init__()
+        self.param_dict = param_dict
+        self.launcher = launcher
+        self.spyrelet = self.launcher.spyrelet
+        class Progress_Iter():
+            def __init__(_self, iterable):
+                _self.iterable = iterable
+            def __iter__(_self):
+                self.progressed_iter.emit(_self.iterable)
+                _self.iterable = iter(_self.iterable)
+                return _self
+            def __next__(_self):
+                self.progressed_next.emit()
+                return next(_self.iterable)
+
+
+        self.spyrelet.progress = Progress_Iter
+        self.stop_requested.connect(self.stop_run)
+
+    def progress(self, iterator):
+        for x in iterator:
+            self.progressed.emit(iterator)
+            yield x
+
+    def run(self):
+        self.launcher.run(self.param_dict)
+
+    def stop_run(self):
+        self.spyrelet.stop()
+
+
+
         
     

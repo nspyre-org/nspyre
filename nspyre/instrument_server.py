@@ -470,8 +470,21 @@ class MongoDB_Instrument_Server(Instrument_Server):
         self.db[dname].update_one({'name':feat},{'$set':{'value.{}'.format(keys.index(key)):val}}, upsert=True)
         return ans
 
+
+
 if __name__ == '__main__':
-    # server = MongoDB_Instrument_Server(server_name='Testing_Server_2',port='5555', mongodb_addrs=["mongodb://localhost:27017/","mongodb://localhost:27018/"])
-    server = MongoDB_Instrument_Server(server_name='Testing_Server', port='5556', mongodb_addrs=["mongodb://localhost:27017/","mongodb://localhost:27018/"])
-    # server = Instrument_Server(server_name='Testing_Server')
+    from nspyre.utils import get_configs
+    cfg = get_configs()
+    server = MongoDB_Instrument_Server(**cfg['instrument_server'], mongodb_addrs=cfg['mongodb_addrs'])
+    
+    # Add the different instruments
+    for dname, dev in cfg['device_list'].items():
+        try:
+            t = time.time()
+            server.add_instr(dname, dev[0], *dev[1], **dev[2])
+            print('Loaded {} in {:2f}s'.format(dname, time.time()-t))
+        except:
+            print('Could not load {}'.format(dname))
+            traceback.print_exc()
+    print("Server ready...")
     server.serve_forever()

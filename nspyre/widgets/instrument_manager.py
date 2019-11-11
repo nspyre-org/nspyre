@@ -212,10 +212,16 @@ class ActionTreeWidgetItem(QtCore.QObject):
         getattr(self.dev, self.action['name'])()
 
 if __name__ ==  '__main__':
-    app = QtWidgets.QApplication([])
-    c = Instrument_Server_Client(ip='localhost', port='5556')
-    # c2 = Instrument_Server_Client(port = 5555)
-    m = Instrument_Manager([c])
+    from nspyre.widgets.app import NSpyreApp
+    from nspyre.utils import get_configs
+    app = NSpyreApp([])
+    cfg = get_configs()
+
+    clients = []
+    for server in cfg['instrument_servers_addrs']:
+        clients.append(Instrument_Server_Client(**server))
+
+    m = Instrument_Manager(clients)
     w = Instrument_Manager_Widget(m)
     w.show()
     app.exec_()

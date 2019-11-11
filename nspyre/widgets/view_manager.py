@@ -6,7 +6,7 @@ from nspyre.widgets.splitter_widget import Splitter, SplitterOrientation
 # from nspyre.utils import connect_to_master
 from nspyre.mongo_listener import Synched_Mongo_Database
 from nspyre.views import Spyrelet_Views
-from nspyre.utils import cleanup_register
+from nspyre.utils import cleanup_register, join_nspyre_path
 import pymongo
 
 import numpy as np
@@ -44,7 +44,7 @@ class LinePlotView():
         
 
 class View_Manager(QtWidgets.QWidget):
-    def __init__(self, mongodb_addr, parent=None, db_name='Spyre_Live_Data'):
+    def __init__(self, mongodb_addr, parent=None, db_name='Spyre_Live_Data', react_to_drop=False):
         super().__init__(parent=parent)
         self.db = Synched_Mongo_Database(db_name, mongodb_addr)
         # cleanup_register(mongodb_addr)
@@ -61,8 +61,7 @@ class View_Manager(QtWidgets.QWidget):
         # Build tree
         self.tree = QtWidgets.QTreeWidget()
         self.tree.setColumnCount(1)
-        # self.model = QtGui.QStandardItemModel()
-        # self.tree.setModel(self.model)
+        self.tree.setHeaderHidden(True)
 
         self.tree.currentItemChanged.connect(self.new_table_selection)
         layout.addWidget(self.tree)
@@ -71,6 +70,9 @@ class View_Manager(QtWidgets.QWidget):
         self.plot_layout = QtWidgets.QStackedLayout()
         plot_container = QtWidgets.QWidget()
         plot_container.setLayout(self.plot_layout)
+        self.default_image = ImageWidget(join_nspyre_path('images/logo.jpg'))
+        self.plot_layout.addWidget(self.default_image)
+
 
         splitter_config = {
             'main_w': self.tree,
@@ -93,8 +95,9 @@ class View_Manager(QtWidgets.QWidget):
 
         #Connect db signals
         self.db.col_added.connect(self.add_col)
-        self.db.col_dropped.connect(self.del_col)
         self.db.updated_row.connect(self._update_plot)
+        if react_to_drop:
+            self.db.col_dropped.connect(self.del_col)
 
     def _update_plot(self, col_name, row):
         if col_name != 'Register':
@@ -165,6 +168,8 @@ class View_Manager(QtWidgets.QWidget):
         if not view_name_old is None:
             self.views[spyrelet_name_old][view_name_old].stop_updating()
         if view_name is None:
+            # Selected a top level item
+            self.plot_layout.setCurrentWidget(self.default_image)
             return
         
         self.plot_layout.setCurrentWidget(self.views[spyrelet_name][view_name].w)
@@ -184,8 +189,25 @@ class View_Manager(QtWidgets.QWidget):
         except:
             pass
 
+class ImageWidget(QtWidgets.QWidget):
+    def __init__(self, filename, parent=None):
+        super().__init__(parent=parent)
+        label = QtWidgets.QLabel()
+        pixmap = QtGui.QPixmap(filename)
+        label.setPixmap(pixmap)
+
+        layout = QtWidgets.QGridLayout()
+        layout.setContentsMargins(0,0,0,0)
+        layout.addWidget(label,0,1) #add the widget in the second colum
+        layout.setColumnStretch(0,1) #set stretch of first
+        layout.setColumnStretch(2,1) #and third column
+        self.setLayout(layout)
+
 if __name__ == '__main__':
-    app = QtWidgets.QApplication([])
-    w = View_Manager(mongodb_addr="mongodb://localhost:27017/")
+    from nspyre.widgets.app import NSpyreApp
+    from nspyre.utils import get_configs
+    app = NSpyreApp([])
+    cfg = get_configs()
+    w = View_Manager(mongodb_addr=cfg['mongodb_addrs'][0], react_to_drop=False)
     w.show()
     app.exec_()

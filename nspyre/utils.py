@@ -4,6 +4,8 @@ from collections.abc import Iterable
 import numpy as np
 import inspect
 from bson import ObjectId
+import yaml
+import os
 
 def connect_to_master(mongodb_addrs):
         for addr in mongodb_addrs:
@@ -90,3 +92,11 @@ class RangeDict(dict):
             return self.FUNCS[func_name](**d)
         else:
             return self.FUNCS[func_name](**d)*units
+
+def get_configs():
+    with open(join_nspyre_path('config.yaml'), 'r') as f:
+        d = yaml.safe_load(f)
+    return d
+
+def join_nspyre_path(path):
+    return os.path.join(os.path.dirname(__file__), path)

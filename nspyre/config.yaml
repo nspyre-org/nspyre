@@ -1,0 +1,52 @@
+
+# Here are all the setting which will be used by default by the various parts of NSpyre
+# The user should modify these to suit their specific configuration
+
+# Addresses of the different mongodb in the replica set. 
+# Generally the code will pick the first of these for read-only access, but try to find the master when writes are necessary
+mongodb_addrs:
+  - mongodb://localhost:27017/
+  - mongodb://localhost:27018/
+
+# This is the addrs of the instrument servers you want to include in the instrument manager
+instrument_servers_addrs:
+  - {ip: localhost, port: '5556'}
+
+# These will be used when a instrument server is instanciated on this computer
+instrument_server:
+  server_name: Experiment_Computer
+  port: 5556
+
+# Device list
+# This list will be used to instanciate the instrument server automatically when it is launched 
+# Each device should have an
+#   alias:
+#     - 'device class'
+#     - [<*args>]
+#     - {<**kwargs>}
+device_list:
+  my_sg:
+    - lantz.drivers.examples.LantzSignalGenerator
+    - [TCPIP::localhost::5678::SOCKET]
+    - {}
+  osc:
+    - lantz.drivers.examples.dummydrivers.DummyOsci
+    - []
+    - {}
+# Experiment list
+# Each experiment entry should have an
+# alias:
+#   - 'spyrelet class',
+#   - device alias dict (This can be empty if all the device have the same name in the spyrelet code and in the instrument server)
+#   - required spyrelets dict
+experiment_list:
+  sub_spyrelet:
+    - nspyre.test.test_spyrelets.SubSpyrelet
+    - {sg: my_sg,}
+    - {}
+  my_exp:
+    - nspyre.test.test_spyrelets.SubSpyrelet.MyExperiment
+    - {sg: my_sg, osc: my_osci,}
+    - {s2: sub_spyrelet}
+
+

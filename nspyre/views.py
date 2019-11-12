@@ -35,7 +35,7 @@ def Plot1D(fun):
 
 def Plot2D(fun):
     """Functions marked with this decorators should take a single argument (beyond self) which will be the dataframe representing the data
-       The function marked must return a 2D array to be plotted"""
+       The function marked must return a 2D ndarray to be plotted"""
     return View(fun, '2D')
 
 def PlotFormatInit(class_type_handled, view_list):

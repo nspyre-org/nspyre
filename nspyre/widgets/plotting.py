@@ -113,6 +113,11 @@ class BasePlotWidget(QtWidgets.QWidget):
         self.plot_item.setLabel(pos, _ylabel)
         return
 
+    def clear(self):
+        ypos = 'left' if self.yonleft else 'right'
+        xpos = 'bottom' if self.xonbottom else 'top'
+        self.plot_item.setLabels(**{'title':'', xpos:'', ypos:''})
+
     @property
     def invertY(self):
         return self._invertY
@@ -289,6 +294,7 @@ class LinePlotWidget(BasePlotWidget):
         self.fitter.update_traces()
 
     def clear(self):
+        super().clear()
         for tracename in list(self.traces.keys()):
             self.remove_trace(tracename)
         self._colors = it.cycle(cyclic_colors)

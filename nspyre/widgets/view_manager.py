@@ -13,22 +13,20 @@ import numpy as np
 import pandas as pd
 import time
 
-class LinePlotView():
-    def __init__(self, view):
-        if view.type != '1D':
-            raise "This class is for 1D plot only"
-        self.w = LinePlotWidget()
+class BaseView():
+    def __init__(self, view, w):
         self.view = view
         self.is_updating = False
         self.update_fun = view.update_fun
         self.init_formatter = view.get_formatter(self.w, 'init')
         self.update_formatter = view.get_formatter(self.w, 'update')
+        # if not self.init_formatter is None:
+        #     self.init_formatter(self.w)
+            
+    def start_updating(self):
+        self.w.clear()
         if not self.init_formatter is None:
             self.init_formatter(self.w)
-
-            
-
-    def start_updating(self):
         self.is_updating = True
 
     def stop_updating(self):
@@ -41,7 +39,42 @@ class LinePlotView():
                 self.w.set(name, xs=data[0], ys=data[1])
             if not self.update_formatter is None:
                 self.update_formatter(self.w)
-        
+
+class LinePlotView(BaseView):
+    def __init__(self, view, w=None):
+        if view.type != '1D':
+            raise "This class is for 1D plot only"
+        if w is None:
+            self.w = LinePlotWidget()
+        else:
+            self.w = w
+        super().__init__(view, self.w)
+            
+    def update(self, df):
+        if self.is_updating:
+            traces = self.update_fun(df)
+            for name, data in traces.items():
+                self.w.set(name, xs=data[0], ys=data[1])
+            if not self.update_formatter is None:
+                self.update_formatter(self.w)
+
+class HeatmapPlotView(BaseView):
+    def __init__(self, view, w=None):
+        if view.type != '2D':
+            raise "This class is for 2D plot only"
+        if w is None:
+            self.w = HeatmapPlotWidget()
+        else:
+            self.w = w
+        super().__init__(view, self.w)
+            
+    def update(self, df):
+        if self.is_updating:
+            im = np.array(self.update_fun(df))
+            self.w.set(im)
+            if not self.update_formatter is None:
+                self.update_formatter(self.w)
+
 
 class View_Manager(QtWidgets.QWidget):
     def __init__(self, mongodb_addr, parent=None, db_name='Spyre_Live_Data', react_to_drop=False):
@@ -72,6 +105,9 @@ class View_Manager(QtWidgets.QWidget):
         plot_container.setLayout(self.plot_layout)
         self.default_image = ImageWidget(join_nspyre_path('images/logo.jpg'))
         self.plot_layout.addWidget(self.default_image)
+        
+        self.common_lineplotwidget = LinePlotWidget()
+        self.common_heatmapplotwidget = HeatmapPlotWidget()
 
 
         splitter_config = {
@@ -127,13 +163,17 @@ class View_Manager(QtWidgets.QWidget):
         self.views[col_name] = dict()
         self.last_updated[col_name] = time.time()
 
-        for name, view in spyrelet_views.get_1D_views().items():
-            self.views[col_name][name] = LinePlotView(view)
+        for name, view in spyrelet_views.views.items():
+            if view.type == '1D':
+                self.views[col_name][name] = LinePlotView(view, self.common_lineplotwidget)
+            elif view.type == '2D':
+                self.views[col_name][name] = HeatmapPlotView(view, self.common_heatmapplotwidget)
             self.items[col_name][name] = QtWidgets.QTreeWidgetItem(0)#QtGui.QStandardItem(name)
             self.items[col_name][name].setText(0, name)
             
             self.plot_layout.addWidget(self.views[col_name][name].w)
             top.addChild(self.items[col_name][name])
+
 
         self.tree.insertTopLevelItem(0, top)
 

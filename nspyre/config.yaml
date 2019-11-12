@@ -49,4 +49,13 @@ experiment_list:
     - {sg: my_sg, osc: my_osci,}
     - {s2: sub_spyrelet}
 
+# Experimental State
+# This is a list parametters which should be saved along with the data
+experimental_state:
+  device_feat:
+    mw_freq: [my_sg, frequency]
+    mw_ampl: [my_sg, amplitude]
+  device_dictfeat:
+    # res_freq: [ws7, wavelength, 0]
+  
 

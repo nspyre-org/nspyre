@@ -29,6 +29,7 @@ net stop MongoDB
 net stop MongoDB1
 net stop MongoDB2
 
+rmdir c:\mongodb /s /q
 mkdir C:\mongodb
 mkdir C:\mongodb\db1
 mkdir C:\mongodb\db2
@@ -37,7 +38,7 @@ mkdir C:\mongodb\log
 copy /Y mongodb1.cfg C:\mongodb\mongodb1.cfg
 copy /Y mongodb2.cfg C:\mongodb\mongodb2.cfg
 
-mongod --config C:\mongodb\mongodb1.cfg --serviceName MongoDB1 --serviceDisplayName MongoDB1 --install
-mongod --config C:\mongodb\mongodb2.cfg --serviceName MongoDB2 --serviceDisplayName MongoDB2 --install
+mongod --config C:\mongodb\mongodb1.cfg --install
+mongod --config C:\mongodb\mongodb2.cfg --install
 
 start_mongodb.bat

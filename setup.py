@@ -18,7 +18,9 @@ setup(
         'pandas>=0.25.2',
         # 'lantz', #This should probably be a seperate install
         'QScintilla>=2.11.3',
-        'pyqtgraph>=0.10.0',
+        # 'pyqtgraph>=0.11.0', #For now this will need to be install from git, until v11 is released
         'pyyaml>=5.1.2',
+        'scipy>=1.2.1',
     ],
+    dependency_links = ['https://github.com/pyqtgraph/pyqtgraph.git'],
 )

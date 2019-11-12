@@ -9,27 +9,16 @@ setup(
     packages=['nspyre',],
     install_requires=[
         # New
-        # 'numpy',
-        # 'pyqt5',
-        # 'msgpack',
-        # 'msgpack-numpy',
-        # 'pyzmq',
-        # 'pymongo',
-
-        #Old
-        # 'numpy>=1.10.4',
-        # 'scipy>=0.16.0',
-        # 'pandas>=0.19.2',
-        # 'lantz',
-        # 'pint>=0.7.2',
-        # 'pyqtgraph>=0.10.0',
-        # 'pyyaml>=3.11',
-        # 'qtconsole',
-        # 'pyqt>=5.6.0',
+        'numpy>=1.16.4',
+        'pyqt5>=5.13.2',
+        'msgpack>=0.6.2',
+        'msgpack-numpy>=0.4.4.3',
+        # 'pyzmq>=18.0.2', #Use conda for this one
+        'pymongo>=3.9.0',
+        'pandas>=0.25.2',
+        # 'lantz', #This should probably be a seperate install
+        'QScintilla>=2.11.3',
+        'pyqtgraph>=0.10.0',
+        'pyyaml>=5.1.2',
     ],
-    entry_points={
-        # 'gui_scripts': [
-        #     'spyre = spyre.__main__:main',
-        # ],
-    },
 )

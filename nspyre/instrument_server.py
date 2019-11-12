@@ -31,6 +31,7 @@ try:
 except:
     print("WARNING: Pymongo is not installed.  You won't be able to use the MongoDB_Instrument_Server")
 
+ZMQ_CONTEXT = zmq.Context()
 
 # Serialization Custom type: Quantity
 def custom_encode(obj):
@@ -61,7 +62,7 @@ class Instrument_Server():
     def __init__(self,  server_name, port):
         self.name = server_name
         self.port = port
-        self.context = zmq.Context()
+        self.context = ZMQ_CONTEXT
         self.socket = self.context.socket(zmq.REP)
         self.socket.bind("tcp://*:{}".format(port))
 
@@ -192,7 +193,7 @@ class Instrument_Server_Client():
     def __init__(self, ip, port, recv_timeout=1000):
         self.server_ip = ip
         self.server_port = port
-        self.context = zmq.Context()
+        self.context = ZMQ_CONTEXT
         self.socket = self.context.socket(zmq.REQ)
         self.socket.connect("tcp://{}:{}".format(ip,port))
         self.socket.RCVTIMEO = recv_timeout

@@ -13,10 +13,15 @@ import pymongo
 
 from nspyre.instrument_server import Instrument_Server_Client, load_remote_device
 from nspyre.mongo_listener import Synched_Mongo_Database
+from nspyre.utils import get_configs
 
 class Instrument_Manager():
 
-    def __init__(self, instrument_server_client_list):
+    def __init__(self, instrument_server_client_list=None):
+        if instrument_server_client_list is None:
+            instrument_server_client_list = []
+            for server in get_configs()['instrument_servers_addrs']:
+                instrument_server_client_list.append(Instrument_Server_Client(**server))
         # Compile a list of zmq and mongo client objects
         self.clients = list()
         self.fully_mongo = True

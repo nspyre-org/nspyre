@@ -1042,13 +1042,16 @@ _viridis_data = [[0.267004, 0.004874, 0.329415],
                  [0.983868, 0.904867, 0.136897],
                  [0.993248, 0.906157, 0.143936]]
 
-_magma_data = [c for idx, c in enumerate(_magma_data) if idx % 5 == 0]
-_inferno_data = [c for idx, c in enumerate(_inferno_data) if idx % 5 == 0]
-_plasma_data = [c for idx, c in enumerate(_plasma_data) if idx % 5 == 0]
-_viridis_data = [c for idx, c in enumerate(_viridis_data) if idx % 5 == 0]
+#This set the color down sampling, higher downsampling means faster plot, lower means more precise colors
+downsampling = 51
 
-from matplotlib import cm
-_piyg_data = [list(cm.PiYG(idx)[:3]) for idx in range(256) if idx % 5 == 0]
+_magma_data = [c for idx, c in enumerate(_magma_data) if idx % downsampling == 0]
+_inferno_data = [c for idx, c in enumerate(_inferno_data) if idx % downsampling == 0]
+_plasma_data = [c for idx, c in enumerate(_plasma_data) if idx % downsampling == 0]
+_viridis_data = [c for idx, c in enumerate(_viridis_data) if idx % downsampling == 0]
+
+# from matplotlib import cm
+# _piyg_data = [list(cm.PiYG(idx)[:3]) for idx in range(256) if idx % 5 == 0]
 
 from pyqtgraph import ColorMap
 import numpy as np
@@ -1057,13 +1060,14 @@ cmaps = {}
 for (name, data) in (('magma', _magma_data),
                      ('inferno', _inferno_data),
                      ('plasma', _plasma_data),
-                     ('viridis', _viridis_data),
-                     ('piyg', _piyg_data)):
+                     ('viridis', _viridis_data),):
+                    #  ('piyg', _piyg_data)):
 
     for row in data:
         row.append(0.9)
 
     pos = np.linspace(0.0, 1.0, len(data))
+    data = (np.array(data)*255).astype(int)
     cmaps[name] = ColorMap(pos, data)
 
 
@@ -1072,4 +1076,4 @@ inferno = cmaps['inferno']
 plasma = cmaps['plasma']
 viridis = cmaps['viridis']
 
-piyg = cmaps['piyg']
+# piyg = cmaps['piyg']

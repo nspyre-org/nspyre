@@ -21,6 +21,7 @@ setup(
         # 'pyqtgraph>=0.11.0', #For now this will need to be install from git, until v11 is released
         'pyyaml>=5.1.2',
         'scipy>=1.2.1',
+        'tqdm>=4.32.2'
     ],
     dependency_links = ['https://github.com/pyqtgraph/pyqtgraph.git'],
 )

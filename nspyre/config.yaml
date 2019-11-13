@@ -40,14 +40,15 @@ device_list:
 #   - device alias dict (This can be empty if all the device have the same name in the spyrelet code and in the instrument server)
 #   - required spyrelets dict
 experiment_list:
+  my_exp:
+    - nspyre.user.test_spyrelets.MyExperiment
+    - {sg: my_sg, osc: osc,}
+    - {s2: sub_spyrelet}
   sub_spyrelet:
-    - nspyre.test.test_spyrelets.SubSpyrelet
+    - nspyre.user.test_spyrelets.SubSpyrelet
     - {sg: my_sg,}
     - {}
-  my_exp:
-    - nspyre.test.test_spyrelets.SubSpyrelet.MyExperiment
-    - {sg: my_sg, osc: my_osci,}
-    - {s2: sub_spyrelet}
+
 
 # Experimental State
 # This is a list parametters which should be saved along with the data

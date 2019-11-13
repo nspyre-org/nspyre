@@ -9,9 +9,9 @@ from lantz import Q_
 from pint.util import infer_base_unit
 import traceback
 import inspect
-from importlib import import_module
 from collections import OrderedDict
 from tqdm.auto import tqdm
+
 
 class MissingDeviceError(Exception):
     pass
@@ -38,9 +38,13 @@ class Spyrelet():
         - For higher performance we will store the data internally as a list instead of a dataframe.  Quicker to append to a list.
 
     """
-    def __init__(self, unique_name, mongodb_addrs, manager, spyrelets={}, device_alias={}):
+    def __init__(self, unique_name, spyrelets={}, device_alias={}, mongodb_addrs=None, manager=None):
         self.name = unique_name
         self.progress = tqdm
+
+        if manager is None:
+            manager = Instrument_Manager()
+
         self.mongodb_addrs = mongodb_addrs
         self.validate()
         
@@ -49,7 +53,7 @@ class Spyrelet():
             'class':"{}.{}".format(self.__class__.__module__, self.__class__.__name__),
         }
 
-        self.client = connect_to_master(mongodb_addrs)
+        self.client = get_mongo_client(mongodb_addrs)
         self.col = self.client['Spyre_Live_Data'][unique_name]
         self.client['Spyre_Live_Data']['Register'].update_one({'_id':unique_name},{'$set':reg_entry}, upsert=True)
         self.clear_data()
@@ -66,9 +70,7 @@ class Spyrelet():
                 isRemoteDevice = any(['spyre.instrument_server.Remote_Device' in str(c) for c in inspect.getmro(type(devices[real_dname]))])
 
                 if isRemoteDevice :
-                    class_name = devices[real_dname].info['class'].split('.')[-1]
-                    mod = import_module(devices[real_dname].info['class'].replace('.'+class_name, ''))
-                    inst_dclass = getattr(mod, class_name)
+                    inst_dclass = get_class_from_str(devices[real_dname].info['class'])
                     dev = devices[real_dname]
                 else:
                     inst_dclass = type(devices[real_dname])
@@ -86,6 +88,7 @@ class Spyrelet():
 
     
     def run(self, *args, **kwargs):
+        self.progress = kwargs.pop('progress') if 'progress' in kwargs else tqdm
         try:
             self._stop_flag = False
             self.clear_data()
@@ -121,16 +124,12 @@ class Spyrelet():
         keep_data = kwargs.pop('keep_data') if 'keep_data' in kwargs else True
         use_defaults = kwargs.pop('use_defaults') if 'use_defaults' in kwargs else True
         use_parent_progress = kwargs.pop('use_parent_progress') if 'use_parent_progress' in kwargs else True
-        if use_parent_progress:
-            _progress = spyrelet.progress
-            spyrelet.progress = self.progress
+
         if not use_defaults:
-            spyrelet.run(*args, **kwargs)
+            spyrelet.run(*args, progress=self.progress, **kwargs)
         else:
             launcher = Spyrelet_Launcher(spyrelet)
-            launcher.run(kwargs)
-        if use_parent_progress:
-                spyrelet.progress = _progress
+            launcher.run(progress=self.progress,**kwargs)
         
         if keep_data:
             if not spyrelet.name in self._child_data:
@@ -225,7 +224,7 @@ class Spyrelet_Launcher():
         saved_vals = custom_decode(saved_vals)
         self.default_params = saved_vals
 
-    def run(self, params_dict):
+    def run(self, progress=None, **params_dict):
         self.reg.update_one({'_id':self.spyrelet.name},{'$set':custom_encode(params_dict)}, upsert=True)
         params = self.default_params.copy()
         self.default_params = params
@@ -233,7 +232,7 @@ class Spyrelet_Launcher():
         params = {k:(val.array if type(val)==RangeDict else val) for k, val in params.items()}
         pos_or_kw_params = [params[k] for k in self.pos_or_kw_params]
         others = {k:val for k, val in params.items() if not k in self.pos_or_kw_params}
-        return self.spyrelet.run(*pos_or_kw_params, **others)
+        return self.spyrelet.run(*pos_or_kw_params, progress=progress, **others)
         
         
             

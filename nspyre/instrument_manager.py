@@ -8,7 +8,6 @@
     Date: 10/30/2019
 """
 
-from importlib import import_module
 import pymongo
 
 from nspyre.instrument_server import Instrument_Server_Client, load_remote_device
@@ -31,7 +30,7 @@ class Instrument_Manager():
                 self.fully_mongo = False
                 self.clients.append({'zmq':c,'mongo':None})
             else:
-                mc = pymongo.MongoClient(db['server_addr'])
+                mc = pymongo.MongoClient(db['server_addrs'])
                 self.clients.append({'zmq':c, 'mongo':mc[db['db_name']]})
 
         # Create the instrument list

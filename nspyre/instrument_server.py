@@ -21,15 +21,12 @@ import msgpack_numpy as m
 m.patch()
 import numpy as np
 import time
-from importlib import import_module
 import zmq
 import traceback
 import socket
+  
+from nspyre.utils import get_mongo_client, get_class_from_str
 
-try:    
-    import pymongo
-except:
-    print("WARNING: Pymongo is not installed.  You won't be able to use the MongoDB_Instrument_Server")
 
 ZMQ_CONTEXT = zmq.Context()
 
@@ -140,9 +137,7 @@ class Instrument_Server():
         return [send_time, time.time()]
 
     def add_instr(self, dname, dclass, *args, **kwargs):
-        class_name = dclass.split('.')[-1]
-        mod = import_module(dclass.replace('.'+class_name, ''))
-        c = getattr(mod, class_name)
+        c = get_class_from_str(dclass)
         self.instr[dname] = c(*args, **kwargs)
         self.instr_info[dname] = {'class':dclass, 'args':args, 'kwargs':kwargs}
         self.initialize_instr(dname)
@@ -286,9 +281,7 @@ def load_remote_device(instr_server_client, dname):
 
     info = instr_server_client.get_instr_info(dname)
 
-    class_name = info['class'].split('.')[-1]
-    mod = import_module(info['class'].replace('.'+class_name, ''))
-    driver_class = getattr(mod, class_name)
+    driver_class = get_class_from_str(info['class'])
 
     class Remote_Device_Instance(Remote_Device):
         def __init__(self):
@@ -330,41 +323,31 @@ def load_remote_device(instr_server_client, dname):
 
 
 class MongoDB_Instrument_Server(Instrument_Server):
-    def __init__(self, server_name, port, mongodb_addrs):
+    def __init__(self, server_name, port, mongodb_addrs=None):
         super().__init__(server_name=server_name, port=port)
         self.db_name = 'Instrument_Server[{}]'.format(self.name)
-        self.mongodb_addrs = mongodb_addrs
-        client = self.connect_to_master()
-        client.drop_database(self.db_name)
+        self.client = get_mongo_client(mongodb_addrs)
+        self.db = self.client[self.db_name]
+        self.client.drop_database(self.db_name)
 
         self.COMMANDS.update({
             'GET_NONE_FEAT':self.get_none_feat,
         })
 
-    def connect_to_master(self):
-        for addr in self.mongodb_addrs:
-            client = pymongo.MongoClient(addr)
-            if client.is_primary:
-                print("Connected to Mongo master at: {}".format(addr))
-                self.mongodb_master_addr = addr
-                self.db = client[self.db_name]
-                return client
-        raise Exception('Could not find Mongo Master!')
+    # def connect_to_master(self):
+    #     for addr in self.mongodb_addrs:
+    #         client = pymongo.MongoClient(addr)
+    #         if client.is_primary:
+    #             print("Connected to Mongo master at: {}".format(addr))
+    #             self.mongodb_master_addr = addr
+    #             self.db = client[self.db_name]
+    #             return client
+    #     raise Exception('Could not find Mongo Master!')
 
     def serve_forever(self):
         while True:
             try:
                 req = self.recv()
-                reply = self.answer_request(req)
-                self.send({'status':'ok', 'data':reply})
-            except pymongo.errors.NotMasterError:
-                print('Got a NotMasterError')
-                if self.DEBUG:
-                    traceback.print_exc()
-                print("Reconnecting to master...")
-                self.connect_to_master()
-                print('Connected')
-                # Try again
                 reply = self.answer_request(req)
                 self.send({'status':'ok', 'data':reply})
             except Exception as e:
@@ -374,7 +357,8 @@ class MongoDB_Instrument_Server(Instrument_Server):
                 self.send({'status':'error', 'data':error_str})
 
     def get_mongodb(self):
-        return {'db_name':self.db_name, 'server_addr':self.mongodb_master_addr}
+        addrs = ['mongodb://{}:{}/'.format(host,port) for host,port in [self.client.primary]+list(self.client.secondaries)]
+        return {'db_name':self.db_name, 'server_addrs':addrs}
 
     def get_id(self):
         hostname = socket.gethostname()    
@@ -385,9 +369,7 @@ class MongoDB_Instrument_Server(Instrument_Server):
         ans = super().add_instr(dname, dclass, *args, **kwargs)
         self.db[dname].drop()
 
-        class_name = dclass.split('.')[-1]
-        mod = import_module(dclass.replace('.'+class_name, ''))
-        c = getattr(mod, class_name)
+        c = get_class_from_str(dclass)
 
         doc_list = list()
         for feat_name, feat in c._lantz_features.items():

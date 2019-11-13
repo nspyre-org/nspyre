@@ -1,8 +1,9 @@
 from PyQt5 import QtWidgets, QtCore
 from nspyre.spyrelet import Spyrelet_Launcher
 from nspyre.widgets.param_widget import ParamWidget
-from nspyre.utils import RangeDict
+from nspyre.utils import RangeDict, get_configs, get_class_from_str
 import time
+import traceback
 
 class Progress_Bar(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
@@ -77,13 +78,14 @@ class Spyrelet_Launcher_Widget(QtWidgets.QWidget):
         self.run_btn = QtWidgets.QPushButton('Run')
         # progress_bar = QtWidgets.QLabel('Progress bar in construction')#@TODO add progress bar
         layout.addWidget(self.run_btn)
-        layout.addWidget(self.progress_bar)
         ctrl_pannel.setLayout(layout)
 
         #Build main layout
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(ctrl_pannel)
+        layout.addWidget(self.progress_bar)
         layout.addWidget(self.param_w)
+        layout.addStretch()
         self.setLayout(layout)
 
         #Connect signal
@@ -127,7 +129,7 @@ class Spyrelet_Run_Thread(QtCore.QThread):
                 return next(_self.iterable)
 
 
-        self.spyrelet.progress = Progress_Iter
+        self.progress = Progress_Iter
         self.stop_requested.connect(self.stop_run)
 
     def progress(self, iterator):
@@ -136,12 +138,68 @@ class Spyrelet_Run_Thread(QtCore.QThread):
             yield x
 
     def run(self):
-        self.launcher.run(self.param_dict)
+        self.launcher.run(progress=self.progress, **self.param_dict)
 
     def stop_run(self):
         self.spyrelet.stop()
 
 
+class Combined_Launcher(QtWidgets.QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        layout = QtWidgets.QVBoxLayout()
+        self.selector = QtWidgets.QComboBox()
+        container = QtWidgets.QWidget()
+        layout.addWidget(self.selector)
+        layout.addWidget(container)
 
+        self.setLayout(layout)
+
+
+        #Create the launchers
+        cfg = get_configs()
+        names = list(cfg['experiment_list'].keys())
+        names.sort(key=lambda x: len(cfg['experiment_list'][x][2]))
+        self.launchers = dict()
+        last_len = -1
+        while last_len != len(self.launchers):
+            last_len = len(self.launchers)
+            for sname in names:
+                sclass, devs, subs = cfg['experiment_list'][sname]
+                print(sname, all([x in self.launchers for x in list(subs.values())]))
+                if not sname in self.launchers and all([x in self.launchers for x in list(subs.values())]):
+                    try:
+                        sclass = get_class_from_str(sclass)
+                        subs = {real_name:self.launchers[alias].spyrelet for real_name,alias in subs.items()}
+                        s = sclass(sname, spyrelets=subs, device_alias=devs)
+                        self.launchers[sname] = Spyrelet_Launcher_Widget(s)
+                    except:
+                        print("Could not instanciate launcher for spyrelet {}...".format(sname))
+                        traceback.print_exc()
+
+        #Add to layout
+        layout = QtWidgets.QStackedLayout()
+        container.setLayout(layout)
+        names = list(self.launchers.keys())
+        names.sort()
+        for n in names:
+            layout.addWidget(self.launchers[n])
+
+        self.selector.addItems(names)
+        self.container_layout = layout
         
+        self.selector.currentTextChanged.connect(self.change_widget)
+
+    def change_widget(self, name):
+        self.container_layout.setCurrentWidget(self.launchers[name])
+        # self.container_layout.
+
+if __name__=='__main__':
+    from nspyre.widgets.app import NSpyreApp
+    app = NSpyreApp([])
+    w = Combined_Launcher()
+    w.show()
+    app.exec_()
+        
+
     

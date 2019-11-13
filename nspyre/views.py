@@ -1,6 +1,6 @@
 from nspyre.mongo_listener import Synched_Mongo_Collection
 from nspyre.widgets.plotting import LinePlotWidget
-from importlib import import_module
+from nspyre.utils import get_class_from_str
 
 class View():
     def __init__(self, f, plot_type):
@@ -67,9 +67,7 @@ def PlotFormatUpdate(class_type_handled, view_list):
 class Spyrelet_Views():
     def __init__(self, spyrelet_class):
         if type(spyrelet_class) is str:
-            class_name = spyrelet_class.split('.')[-1]
-            mod = import_module(spyrelet_class.replace('.'+class_name, ''))
-            spyrelet_class = getattr(mod, class_name)
+            spyrelet_class =get_class_from_str(spyrelet_class)
         
         self.views = {x:getattr(spyrelet_class, x) for x in dir(spyrelet_class) if type(getattr(spyrelet_class, x)) is View}
         formatters = [getattr(spyrelet_class, x) for x in dir(spyrelet_class) if type(getattr(spyrelet_class, x)) is Formatter]

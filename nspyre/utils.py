@@ -6,14 +6,19 @@ import inspect
 from bson import ObjectId
 import yaml
 import os
+from importlib import import_module
 
-def connect_to_master(mongodb_addrs):
-        for addr in mongodb_addrs:
-            client = pymongo.MongoClient(addr)
-            if client.is_primary:
-                print("Connected to Mongo master at: {}".format(addr))
-                return client
-        raise Exception('Could not find Mongo Master!')
+def get_mongo_client(mongodb_addrs=None):
+    if mongodb_addrs is None:
+        cfg = get_configs()
+        mongodb_addrs = cfg['mongodb_addrs']
+    return pymongo.MongoClient(mongodb_addrs, replicaset='NSpyreSet')
+    # for addr in mongodb_addrs:
+    #     client = pymongo.MongoClient(addr, re)
+    #     if client.is_primary:
+    #         print("Connected to Mongo master at: {}".format(addr))
+    #         return client
+    # raise Exception('Could not find Mongo Master!')
 
 def cleanup_register(client):
     if type(client) is str:
@@ -100,3 +105,8 @@ def get_configs():
 
 def join_nspyre_path(path):
     return os.path.join(os.path.dirname(__file__), path)
+
+def get_class_from_str(class_str):
+    class_name = class_str.split('.')[-1]
+    mod = import_module(class_str.replace('.'+class_name, ''))
+    return getattr(mod, class_name)

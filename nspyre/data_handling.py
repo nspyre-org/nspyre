@@ -1,4 +1,4 @@
-from nspyre.utils import custom_encode, custom_decode, connect_to_master, get_configs
+from nspyre.utils import custom_encode, custom_decode, get_mongo_client, get_configs
 from collections import OrderedDict
 import json
 import pymongo
@@ -93,7 +93,7 @@ def load_data(filename, mongodb_addrs=None, db_name='Spyre_Data_Loaded'):
         ans['children'][c_name]['data_list'] = data_list
 
     if not mongodb_addrs is None:
-        client = connect_to_master(mongodb_addrs)
+        client = get_mongo_client(mongodb_addrs)
         client.drop_database(db_name)
         db = client[db_name]
         def add_spyrelet_data(sname, sclass, data):

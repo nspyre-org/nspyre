@@ -8,7 +8,6 @@
     Date: 10/30/2019
 """
 
-from importlib import import_module
 from collections import OrderedDict
 
 import pyqtgraph as pg
@@ -18,6 +17,8 @@ import sip
 from nspyre.instrument_server import Instrument_Server_Client, load_remote_device
 from nspyre.instrument_manager import Instrument_Manager
 from feat import get_feat_widget
+
+from nspyre.utils import get_class_from_str
 
 from lantz import Q_
 
@@ -80,9 +81,7 @@ class Instrument_Manager_Widget(QtWidgets.QWidget):
         self.tree.setSortingEnabled(False)
 
         dclass = self.manager.get(dname)['class']
-        class_name = dclass.split('.')[-1]
-        mod = import_module(dclass.replace('.'+class_name, ''))
-        c = getattr(mod, class_name)
+        c = get_class_from_str(dclass)
 
         self.manager.get(dname)['zmq'].get_none_feat(dname)
     

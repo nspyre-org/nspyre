@@ -7,6 +7,7 @@ from nspyre.widgets.splitter_widget import Splitter, SplitterOrientation
 from nspyre.mongo_listener import Synched_Mongo_Database
 from nspyre.views import Spyrelet_Views
 from nspyre.utils import cleanup_register, join_nspyre_path
+from nspyre.widgets.image import ImageWidget
 import pymongo
 
 import numpy as np
@@ -103,7 +104,7 @@ class View_Manager(QtWidgets.QWidget):
         self.plot_layout = QtWidgets.QStackedLayout()
         plot_container = QtWidgets.QWidget()
         plot_container.setLayout(self.plot_layout)
-        self.default_image = ImageWidget(join_nspyre_path('images/logo.jpg'))
+        self.default_image = ImageWidget(join_nspyre_path('images/logo.png'))
         self.plot_layout.addWidget(self.default_image)
         
         self.common_lineplotwidget = LinePlotWidget()
@@ -228,20 +229,6 @@ class View_Manager(QtWidgets.QWidget):
                     self.items[col_name]['__top'].setBackground(0, self.default_color)
         except:
             pass
-
-class ImageWidget(QtWidgets.QWidget):
-    def __init__(self, filename, parent=None):
-        super().__init__(parent=parent)
-        label = QtWidgets.QLabel()
-        pixmap = QtGui.QPixmap(filename)
-        label.setPixmap(pixmap)
-
-        layout = QtWidgets.QGridLayout()
-        layout.setContentsMargins(0,0,0,0)
-        layout.addWidget(label,0,1) #add the widget in the second colum
-        layout.setColumnStretch(0,1) #set stretch of first
-        layout.setColumnStretch(2,1) #and third column
-        self.setLayout(layout)
 
 if __name__ == '__main__':
     from nspyre.widgets.app import NSpyreApp

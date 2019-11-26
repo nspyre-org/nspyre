@@ -15,16 +15,16 @@ Clone the repository
 git clone git@github.com:AlexBourassa/nspyre.git nspyre
 ```
 
-Configure and start the MongoDB server (this will start two mongo server in the same replica set (one primary and one secondary)). By default these are publicly accessible on ports 27017 and port 27018 so if you are not in a secured private network, make sure to add some security configurations
+Configure and start the MongoDB server (this will start two mongo server in the same replica set (one primary and one secondary)). By default these are publicly accessible on ports 27017 and port 27018 so if you are not in a secured private network, make sure to add some security configurations to the mongodb1.cfg and mongodb2.cfg files (better support for these security configurations will be integrated in future versions)
 ```
 cd nspyre
 install.bat
 ```
 
-Now you need to initialize the replica set. To do so enter the mongo shell and input a rs.initiate command
+Now you need to initialize the replica set. To do so enter the mongo shell and input a rs.initiate command (where you should substitute the X.X.X.X with your computer's ip address
 ```
 mongo
-rs.initiate({_id: "NSpyreSet", members:[{_id: 0, host: 'localhost:27017'},{_id: 1, host: 'localhost:27018'}]})
+rs.initiate({_id: "NSpyreSet", members:[{_id: 0, host: 'X.X.X.X:27017'},{_id: 1, host: 'X.X.X.X:27018'}]})
 quit()
 ```
 

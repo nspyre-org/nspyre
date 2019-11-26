@@ -5,70 +5,90 @@ import pymongo
 import pandas as pd
 from nspyre.instrument_manager import Instrument_Manager
 import traceback
-# from lantz import Q_
+import time
 
-def gen_exp_state(debug=False):
-    state_dict = OrderedDict()
-    try:
-        m = Instrument_Manager()
-    except:
-        print("Could not start the instrument manager")
-        if debug: traceback.print_exc()
+def get_exp_state_from_db(mongodb_addr=None, debug=False):
+    c = get_mongo_client(mongodb_addr=mongodb_addr)
 
-    cfg = get_configs()
-
-    if 'experimental_state' in cfg and \
-        'device_feat' in cfg['experimental_state'] and \
-        not cfg['experimental_state']['device_feat'] is None:
-        for name, vals in cfg['experimental_state']['device_feat'].items():
+    state = OrderedDict()
+    dbs = [dbname for dbname in c.list_database_names() if 'Instrument_Server' in dbname]
+    for dbname in dbs:
+        for dname in c[dbname].list_collection_names():
+            dev_col = c[dbname][dname]
+            state[dname] = OrderedDict()
             try:
-                ans = getattr(m.get(vals[0])['dev'],vals[1])
-                # if type(ans) == Q_:
-                #     ans = {'__type__':'Quantity', 'm':ans.m, 'units':str(ans.units)}
-                state_dict[name] = str(ans)
+                for param in dev_col.find({},{'_id':False, 'name':True, 'type':True, 'units':True, 'value':True}):
+                    if 'type' in param and 'name' in param:
+                        if param['type'] == 'feat':
+                            if param['units'] is None:
+                                state[dname][param['name']] = param['value']
+                            else:
+                                state[dname][param['name']] = str(param['value']) + " " + param['units']
+                        elif param['type'] == 'dictfeat':
+                            if param['units'] is None:
+                                state[dname][param['name']] = param['value']
+                            else:
+                                state[dname][param['name']] = [str(val) + " " + param['units'] for val in param['value']]
             except:
-                print("Could not save {}".format(name))
+                print("Could not save the state for device: {}".format(dname))
                 if debug: traceback.print_exc()
-    if 'experimental_state' in cfg and \
-        'device_dictfeat' in cfg['experimental_state'] and \
-        not cfg['experimental_state']['device_dictfeat'] is None:
-        for name, vals in cfg['experimental_state']['device_dictfeat'].items():
-            try:
-                ans = getattr(m.get(vals[0])['dev'],vals[1])[vals[2]]
-                # if type(ans) == Q_:
-                #     ans = {'__type__':'Quantity', 'm':ans.m, 'units':str(ans.units)}
-                state_dict[name] = str(ans)
-            except:
-                print("Could not save {}".format(name))
-                if debug: traceback.print_exc()
-    return state_dict
+    return state
 
-def save_data(spyrelet, filename, name=None, description=None, save_state = True, debug=False):
+
+def gen_exp_state(mode='current', mongodb_addr=None, debug=False):
+    if mode == 'current':
+        return get_exp_state_from_db(mongodb_addr=mongodb_addr, debug=debug)
+    elif mode =='renew':
+        #Here will directly query all the instrument for their states
+        raise NotImplementedError()
+        state_dict = OrderedDict()
+        try:
+            m = Instrument_Manager()
+        except:
+            print("Could not start the instrument manager")
+            if debug: traceback.print_exc()
+    elif mode == 'disable':
+        return {}
+    else:
+        raise Exception("Invalid mode to generate the experimental state")
+
+def save_data(spyrelet, filename, name=None, description=None, save_state_mode='current', debug=False):
     d = spyrelet.data.drop(['_id'], axis=1)
     data_dict = OrderedDict([
         ('dataset',name),
         ('description',description),
         ('spyrelet_name',spyrelet.name),
         ('spyrelet_class',"{}.{}".format(spyrelet.__class__.__module__, spyrelet.__class__.__name__)),
+        ('date', time.strftime('%Y-%m-%d')),
+        ('time', time.strftime('%H:%M:%S')),
+        ('save_format', 'spyrelet 1.0'),
+        ('experimental_state', None),
         ('data_col', list(d.columns)),
         ('data', d.to_json(orient='values')),
     ])
 
-    child_dict = OrderedDict()
-    for c_name, data_list in spyrelet.child_data.items():
-        child_dict[c_name] = OrderedDict([
-            ('spyrelet_class',"{}.{}".format(getattr(spyrelet,c_name).__class__.__module__, getattr(spyrelet,c_name).__class__.__name__)),
-            ('data_col', list(data_list[0].drop(['_id'], axis=1).columns)),
-            ('data_list',[dl.drop(['_id'], axis=1).to_json(orient='values') for dl in data_list]),
-        ])
-    data_dict['children'] = child_dict
+    try:
+        child_dict = OrderedDict()
+        for c_name, data_list in spyrelet.child_data.items():
+            c_real_name = next(real_name for real_name, obj in spyrelet.spyrelets.items() if obj.name == c_name)#This is not ideal...
+            child_dict[c_name] = OrderedDict([
+                ('spyrelet_class',"{}.{}".format(getattr(spyrelet,c_real_name).__class__.__module__, getattr(spyrelet,c_real_name).__class__.__name__)),
+                ('data_col', list(data_list[0].drop(['_id'], axis=1).columns)),
+                ('data_list',[dl.drop(['_id'], axis=1).to_json(orient='values') for dl in data_list]),
+            ])
+        data_dict['children'] = child_dict
+    except:
+        print("Could generate child dict")
+        data_dict['children'] = child_dict
+        if debug: traceback.print_exc()
 
     #This takes care of writting the experimental state
+    state_dict = dict()
     try:
-        state_dict = gen_exp_state(debug=debug) if save_state else {}
+        if not save_state_mode is None:
+            state_dict = gen_exp_state(mode=save_state_mode, debug=debug)
     except:
         print("Could generate state dict")
-        state_dict = dict()
         if debug: traceback.print_exc()
 
     #Write the file
@@ -78,10 +98,10 @@ def save_data(spyrelet, filename, name=None, description=None, save_state = True
             return data_dict
         else:
             with open(filename, 'w') as f:
-                results = json.dump(data_dict, f)
+                results = json.dump(data_dict, f, indent=4)
             return results
 
-def load_data(filename, mongodb_addrs=None, db_name='Spyre_Data_Loaded'):
+def load_data(filename, load_to_mongo=False, mongodb_addr=None, db_name='Spyre_Data_Loaded'):
     with open(filename, 'r') as f:
         ans = json.load(f)
     ans['data'] = pd.read_json(ans['data']).rename(columns={i:x for i,x in enumerate(ans['data_col'])})
@@ -92,8 +112,8 @@ def load_data(filename, mongodb_addrs=None, db_name='Spyre_Data_Loaded'):
             data_list.append(pd.read_json(d).rename(columns={i:x for i,x in enumerate(c_dict['data_col'])}))
         ans['children'][c_name]['data_list'] = data_list
 
-    if not mongodb_addrs is None:
-        client = get_mongo_client(mongodb_addrs)
+    if load_to_mongo:
+        client = get_mongo_client(mongodb_addr)
         client.drop_database(db_name)
         db = client[db_name]
         def add_spyrelet_data(sname, sclass, data):

@@ -12,7 +12,7 @@ import pymongo
 
 from nspyre.instrument_server import Instrument_Server_Client, load_remote_device
 from nspyre.mongo_listener import Synched_Mongo_Database
-from nspyre.utils import get_configs
+from nspyre.utils import get_configs, get_mongo_client
 
 class Instrument_Manager():
 
@@ -26,11 +26,13 @@ class Instrument_Manager():
         self.fully_mongo = True
         for c in instrument_server_client_list:
             db = c.get_mongodb()
+
+            print(db)
             if db is None:
                 self.fully_mongo = False
                 self.clients.append({'zmq':c,'mongo':None})
             else:
-                mc = pymongo.MongoClient(db['server_addrs'])
+                mc = get_mongo_client()
                 self.clients.append({'zmq':c, 'mongo':mc[db['db_name']]})
 
         # Create the instrument list

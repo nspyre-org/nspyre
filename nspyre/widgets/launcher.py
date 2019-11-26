@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, QtCore
 from nspyre.spyrelet import Spyrelet_Launcher
 from nspyre.widgets.param_widget import ParamWidget
+from nspyre.widgets.save_widget import Save_Widget
 from nspyre.utils import RangeDict, get_configs, get_class_from_str
 import time
 import traceback
@@ -69,15 +70,17 @@ class Spyrelet_Launcher_Widget(QtWidgets.QWidget):
         self.progress_bar = Progress_Bar()
         self.launcher = Spyrelet_Launcher(spyrelet)
         self.param_w = ParamWidget(self.launcher.params)
-        self.param_w.set(**self.launcher.default_params)
+        self.param_w.set(**self.launcher.get_defaults())
         super().__init__(parent=parent)
 
         #Build ctrl pannel
         ctrl_pannel = QtWidgets.QWidget()
         layout = QtWidgets.QHBoxLayout()
         self.run_btn = QtWidgets.QPushButton('Run')
-        # progress_bar = QtWidgets.QLabel('Progress bar in construction')#@TODO add progress bar
+        self.set_defaults_btn = QtWidgets.QPushButton('Set Defaults')
+        self.save_btn = QtWidgets.QPushButton('Save')
         layout.addWidget(self.run_btn)
+        layout.addWidget(self.save_btn)
         ctrl_pannel.setLayout(layout)
 
         #Build main layout
@@ -90,6 +93,8 @@ class Spyrelet_Launcher_Widget(QtWidgets.QWidget):
 
         #Connect signal
         self.run_btn.clicked.connect(self.run)
+        self.set_defaults_btn.clicked.connect(self.set_defaults)
+        self.save_btn.clicked.connect(self.save_data)
 
         self.run_thread = None
         
@@ -106,6 +111,13 @@ class Spyrelet_Launcher_Widget(QtWidgets.QWidget):
             self.run_thread.progressed_next.connect(self.progress_bar.call_next)
         else:
             self.run_thread.stop_requested.emit()
+
+    def set_defaults(self):
+        self.spyrelet.set_defaults(**self.param_w.get())
+
+    def save_data(self):
+        self.save_w = Save_Widget(self.spyrelet)
+        self.save_w.show()
 
 class Spyrelet_Run_Thread(QtCore.QThread):
     """Qt Thread which monitors for changes to qither a collection or a database and emits a signal when something happens"""

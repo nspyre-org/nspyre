@@ -39,17 +39,17 @@ def modify_df(df, change):
 class Mongo_Listenner(QtCore.QThread):
     """Qt Thread which monitors for changes to qither a collection or a database and emits a signal when something happens"""
     updated = QtCore.pyqtSignal(object)
-    def __init__(self, db_name, col_name=None, mongo_addrs=None):
+    def __init__(self, db_name, col_name=None, mongodb_addr=None):
         super().__init__()
         self.db_name = db_name
         self.col_name = col_name
-        self.mongo_addrs = mongo_addrs
+        self.mongodb_addr = mongodb_addr
         self.exit_flag = False
 
     def run(self):
         self.exit_flag = False
         # Connect
-        client = get_mongo_client(self.mongo_addrs)
+        client = get_mongo_client(self.mongodb_addr)
         mongo_obj = client[self.db_name]
         if not self.col_name is None:
             mongo_obj = mongo_obj[self.col_name]
@@ -67,11 +67,11 @@ class Mongo_Listenner(QtCore.QThread):
 class Synched_Mongo_Collection(QtCore.QObject):
     updated_row = QtCore.pyqtSignal(object) # Emit the updated row
     # mutex = QtCore.QMutex()
-    def __init__(self, db_name, col_name, mongo_addrs=None):
+    def __init__(self, db_name, col_name, mongodb_addr=None):
         super().__init__()
-        self.watcher = Mongo_Listenner(db_name, col_name=col_name, mongo_addr=mongo_addr)
+        self.watcher = Mongo_Listenner(db_name, col_name=col_name, mongodb_addr=mongodb_addr)
         
-        self.col = get_mongo_client(mongo_addrs)[db_name][col_name]
+        self.col = get_mongo_client(mongodb_addr)[db_name][col_name]
         self.refresh_all()
 
         self.watcher.start()
@@ -107,11 +107,11 @@ class Synched_Mongo_Database(QtCore.QObject):
     col_dropped = QtCore.pyqtSignal(object) # Emit the name of the collection which was dropped
     db_dropped = QtCore.pyqtSignal() #Emitted when the database is dropped
 
-    def __init__(self, db_name, mongo_addrs=None):
+    def __init__(self, db_name, mongodb_addr=None):
         super().__init__()
-        self.watcher = Mongo_Listenner(db_name, col_name=None, mongo_addrs=mongo_addrs)
+        self.watcher = Mongo_Listenner(db_name, col_name=None, mongodb_addr=mongodb_addr)
         
-        self.db = get_mongo_client(mongo_addrs)[db_name]
+        self.db = get_mongo_client(mongodb_addr)[db_name]
         self.refresh_all()
 
         self.watcher.start()

@@ -93,7 +93,3 @@ class Spyrelet_Views():
     #     view = self.views[view_name]
     #     view.update_fun(df)
     #     view.format_plot(plot_obj, 'update')
-
-if __name__=='__main__':
-    col = Synched_Mongo_Collection(col_name, mongo_addr)
-    LinePlotView(col)

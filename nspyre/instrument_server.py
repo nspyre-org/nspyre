@@ -323,10 +323,10 @@ def load_remote_device(instr_server_client, dname):
 
 
 class MongoDB_Instrument_Server(Instrument_Server):
-    def __init__(self, server_name, port, mongodb_addrs=None):
+    def __init__(self, server_name, port, mongodb_addr=None):
         super().__init__(server_name=server_name, port=port)
         self.db_name = 'Instrument_Server[{}]'.format(self.name)
-        self.client = get_mongo_client(mongodb_addrs)
+        self.client = get_mongo_client(mongodb_addr)
         self.db = self.client[self.db_name]
         self.client.drop_database(self.db_name)
 
@@ -357,8 +357,8 @@ class MongoDB_Instrument_Server(Instrument_Server):
                 self.send({'status':'error', 'data':error_str})
 
     def get_mongodb(self):
-        addrs = ['mongodb://{}:{}/'.format(host,port) for host,port in [self.client.primary]+list(self.client.secondaries)]
-        return {'db_name':self.db_name, 'server_addrs':addrs}
+        addr = 'mongodb://{}:{}/'.format(*self.client.primary)
+        return {'db_name':self.db_name, 'server_addr':addr}
 
     def get_id(self):
         hostname = socket.gethostname()    
@@ -458,7 +458,7 @@ class MongoDB_Instrument_Server(Instrument_Server):
 if __name__ == '__main__':
     from nspyre.utils import get_configs
     cfg = get_configs()
-    server = MongoDB_Instrument_Server(**cfg['instrument_server'], mongodb_addrs=cfg['mongodb_addrs'])
+    server = MongoDB_Instrument_Server(**cfg['instrument_server'], mongodb_addr=cfg['mongodb_addr'])
     
     # Add the different instruments
     for dname, dev in cfg['device_list'].items():

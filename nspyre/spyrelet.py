@@ -11,6 +11,7 @@ import traceback
 import inspect
 from collections import OrderedDict
 from tqdm.auto import tqdm
+from nspyre.data_handling import save_data
 
 
 class MissingDeviceError(Exception):
@@ -38,14 +39,15 @@ class Spyrelet():
         - For higher performance we will store the data internally as a list instead of a dataframe.  Quicker to append to a list.
 
     """
-    def __init__(self, unique_name, spyrelets={}, device_alias={}, mongodb_addrs=None, manager=None):
+    def __init__(self, unique_name, spyrelets={}, device_alias={}, mongodb_addr=None, manager=None):
         self.name = unique_name
         self.progress = tqdm
+        self.spyrelets = spyrelets
 
         if manager is None:
             manager = Instrument_Manager()
 
-        self.mongodb_addrs = mongodb_addrs
+        self.mongodb_addr = mongodb_addr
         self.validate()
         
         reg_entry = {
@@ -53,7 +55,7 @@ class Spyrelet():
             'class':"{}.{}".format(self.__class__.__module__, self.__class__.__name__),
         }
 
-        self.client = get_mongo_client(mongodb_addrs)
+        self.client = get_mongo_client(mongodb_addr)
         self.col = self.client['Spyre_Live_Data'][unique_name]
         self.client['Spyre_Live_Data']['Register'].update_one({'_id':unique_name},{'$set':reg_entry}, upsert=True)
         self.clear_data()
@@ -87,6 +89,9 @@ class Spyrelet():
                 raise MissingSpyreletError("Sub-Spyrelet requirements for this spyrelets ({}) was not met.  Misssing: {}".format(self.name, sname))
 
     
+    def set_defaults(self, **params_dict):
+        return self.client['Spyre_Live_Data']['Register'].update_one({'_id':self.name},{'$set':custom_encode(params_dict)}, upsert=True)
+
     def run(self, *args, **kwargs):
         self.progress = kwargs.pop('progress') if 'progress' in kwargs else tqdm
         try:
@@ -174,6 +179,9 @@ class Spyrelet():
     def data(self):
         return pd.DataFrame(self._data)
 
+    def save(self, filename, **kwargs):
+        return save_data(self, filename, **kwargs)
+
     def validate(self):
         # Check that the signature for main, initialize and finalize functions are the same or not defined
         init_s = inspect.signature(self.initialize)
@@ -220,16 +228,15 @@ class Spyrelet_Launcher():
 
         #Load defaults from client
         self.reg = self.spyrelet.client['Spyre_Live_Data']['Register']
-        saved_vals = self.reg.find_one({'_id':self.spyrelet.name},{'_id':False, 'class':False})
-        saved_vals = custom_decode(saved_vals)
-        self.default_params = saved_vals
+
+    def get_defaults(self):
+        return custom_decode(self.reg.find_one({'_id':self.spyrelet.name},{'_id':False, 'class':False}))
 
     def run(self, progress=None, **params_dict):
-        self.reg.update_one({'_id':self.spyrelet.name},{'$set':custom_encode(params_dict)}, upsert=True)
-        params = self.default_params.copy()
-        self.default_params = params
-        params.update(params_dict)
-        params = {k:(val.array if type(val)==RangeDict else val) for k, val in params.items()}
+        self.spyrelet.set_defaults(**params_dict)
+        defaults = self.get_defaults()
+        defaults.update(params_dict)
+        params = {k:(val.array if type(val)==RangeDict else val) for k, val in defaults.items()}
         pos_or_kw_params = [params[k] for k in self.pos_or_kw_params]
         others = {k:val for k, val in params.items() if not k in self.pos_or_kw_params}
         return self.spyrelet.run(*pos_or_kw_params, progress=progress, **others)

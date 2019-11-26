@@ -78,9 +78,9 @@ class HeatmapPlotView(BaseView):
 
 
 class View_Manager(QtWidgets.QWidget):
-    def __init__(self, mongodb_addr, parent=None, db_name='Spyre_Live_Data', react_to_drop=False):
+    def __init__(self, mongodb_addr=None, parent=None, db_name='Spyre_Live_Data', react_to_drop=False):
         super().__init__(parent=parent)
-        self.db = Synched_Mongo_Database(db_name, mongodb_addr)
+        self.db = Synched_Mongo_Database(db_name, mongodb_addr=mongodb_addr)
         # cleanup_register(mongodb_addr)
 
         self.views = dict()
@@ -234,7 +234,6 @@ if __name__ == '__main__':
     from nspyre.widgets.app import NSpyreApp
     from nspyre.utils import get_configs
     app = NSpyreApp([])
-    cfg = get_configs()
-    w = View_Manager(mongodb_addr=cfg['mongodb_addrs'][0], react_to_drop=False)
+    w = View_Manager(react_to_drop=False)
     w.show()
     app.exec_()

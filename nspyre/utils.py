@@ -8,11 +8,11 @@ import yaml
 import os
 from importlib import import_module
 
-def get_mongo_client(mongodb_addrs=None):
-    if mongodb_addrs is None:
+def get_mongo_client(mongodb_addr=None):
+    if mongodb_addr is None:
         cfg = get_configs()
-        mongodb_addrs = cfg['mongodb_addrs']
-    return pymongo.MongoClient(mongodb_addrs, replicaset='NSpyreSet')
+        mongodb_addr = cfg['mongodb_addr']
+    return pymongo.MongoClient(mongodb_addr, replicaset='NSpyreSet')
     # for addr in mongodb_addrs:
     #     client = pymongo.MongoClient(addr, re)
     #     if client.is_primary:
@@ -101,6 +101,7 @@ class RangeDict(dict):
 def get_configs():
     with open(join_nspyre_path('config.yaml'), 'r') as f:
         d = yaml.safe_load(f)
+    # print(d['mongodb_addrs'])
     return d
 
 def join_nspyre_path(path):

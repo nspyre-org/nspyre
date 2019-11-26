@@ -27,6 +27,7 @@ mongo
 rs.initiate({_id: "NSpyreSet", members:[{_id: 0, host: 'X.X.X.X:27017'},{_id: 1, host: 'X.X.X.X:27018'}]})
 quit()
 ```
+Finally, if you are planning on using NSpyre from different computers, you will also need to open the appropriate port in the firewall of the server machine (by default these are 27017 and 27018)
 
 Finally you can create and configure a conda environment.  The pip command must be run from inside the nspyre folder (where the setup.py script is located). Additionally, some part of this install may require the shell to be started with admin rigths:
 ```

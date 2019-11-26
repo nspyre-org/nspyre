@@ -31,7 +31,7 @@ Finally, if you are planning on using NSpyre from different computers, you will 
 
 Finally you can create and configure a conda environment.  The pip command must be run from inside the nspyre folder (where the setup.py script is located). Additionally, some part of this install may require the shell to be started with admin rigths:
 ```
-conda create -n nspyre python = 3
+conda create -n nspyre python=3
 activate nspyre
 conda install pyzmq
 pip install -e .

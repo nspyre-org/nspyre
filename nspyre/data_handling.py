@@ -55,7 +55,7 @@ def gen_exp_state(mode='current', mongodb_addr=None, debug=False):
 def save_data(spyrelet, filename, name=None, description=None, save_state_mode='current', debug=False):
     d = spyrelet.data.drop(['_id'], axis=1)
     data_dict = OrderedDict([
-        ('dataset',name),
+        ('name',name),
         ('description',description),
         ('spyrelet_name',spyrelet.name),
         ('spyrelet_class',"{}.{}".format(spyrelet.__class__.__module__, spyrelet.__class__.__name__)),

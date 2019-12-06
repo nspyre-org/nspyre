@@ -16,11 +16,11 @@ from nspyre.utils import get_configs, get_mongo_client
 
 class Instrument_Manager():
 
-    def __init__(self, instrument_server_client_list=None):
+    def __init__(self, instrument_server_client_list=None, timeout=10000):
         if instrument_server_client_list is None:
             instrument_server_client_list = []
             for server in get_configs()['instrument_servers_addrs']:
-                instrument_server_client_list.append(Instrument_Server_Client(**server))
+                instrument_server_client_list.append(Instrument_Server_Client(**server, recv_timeout=timeout))
         # Compile a list of zmq and mongo client objects
         self.clients = list()
         self.fully_mongo = True

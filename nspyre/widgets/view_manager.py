@@ -8,11 +8,78 @@ from nspyre.mongo_listener import Synched_Mongo_Database
 from nspyre.views import Spyrelet_Views
 from nspyre.utils import cleanup_register, join_nspyre_path
 from nspyre.widgets.image import ImageWidget
+from nspyre.widgets.code_editor import Scintilla_Code_Editor, Monokai_Python_Lexer
 import pymongo
 
 import numpy as np
 import pandas as pd
 import time
+import inspect
+import traceback
+import textwrap
+
+class CustomView():
+    def __init__(self, code_editor, w1D, w2D, plot_layout, initial_df):
+        self.is_updating = False
+        self.editor = code_editor
+        self.plot_layout = plot_layout
+        self.plot_type = '1D'
+        self.w = w1D
+        self.ws = {'1D':w1D, '2D':w2D}
+        self.valid_code = False
+        self._source = "plot_type = '1D'\ndef plot(df):\n    return {}"
+        self.last_df = initial_df
+        self.editor.request_run_signal.connect(self.analyze)
+        
+    
+    def start_updating(self):
+        self.analyze()
+        self.w.clear()
+        if self.valid_code:
+            self.is_updating = True
+    
+    def stop_updating(self):
+        self.is_updating = False
+
+    def get_source(self):
+        return self._source
+
+    def analyze(self):
+        self.valid_code = False
+        source = self.editor.text()
+        self._source = source
+        try:
+            exec(source)
+        except:
+            print("Error in executing the code")
+            traceback.print_exc()
+            return
+        if not ('plot_type' in locals() and 'plot' in locals()):
+            print("Missing either a 'plot_type' variable or a 'plot' function")
+            return
+        _plot_type, plot_fun = locals()['plot_type'], locals()['plot']
+        if _plot_type in ['1D', '2D']:
+            self.plot_type = _plot_type
+            self.w = self.ws[_plot_type]
+            self.plot_layout.setCurrentWidget(self.w)
+        else:
+            print("Invalid plot type!  Must be either '1D' or '2D'")
+            return
+        
+        self.update_fun = plot_fun
+        self.valid_code = True
+        self.update(self.last_df)
+
+    def update(self, df):
+        self.last_df = df
+        if self.is_updating and self.valid_code:
+            if self.plot_type == '1D':
+                traces = self.update_fun(df)
+                for name, data in traces.items():
+                    self.w.set(name, xs=data[0], ys=data[1])
+            elif self.plot_type == '2D':
+                im = np.array(self.update_fun(df))
+                self.w.set(im)
 
 class BaseView():
     def __init__(self, view, w):
@@ -40,6 +107,9 @@ class BaseView():
                 self.w.set(name, xs=data[0], ys=data[1])
             if not self.update_formatter is None:
                 self.update_formatter(self.w)
+
+    def get_source(self):
+        return textwrap.dedent(inspect.getsource(self.update_fun))
 
 class LinePlotView(BaseView):
     def __init__(self, view, w=None):
@@ -76,11 +146,17 @@ class HeatmapPlotView(BaseView):
             if not self.update_formatter is None:
                 self.update_formatter(self.w)
 
+# class CustomView(QtWidgets.QWidget):
+#     def __init__(self, )
+
 
 class View_Manager(QtWidgets.QWidget):
-    def __init__(self, mongodb_addr=None, parent=None, db_name='Spyre_Live_Data', react_to_drop=False):
+    def __init__(self, mongodb_addr=None, parent=None, db_name='Spyre_Live_Data', react_to_drop=False, db=None):
         super().__init__(parent=parent)
-        self.db = Synched_Mongo_Database(db_name, mongodb_addr=mongodb_addr)
+        if db is None:
+            self.db = Synched_Mongo_Database(db_name, mongodb_addr=mongodb_addr)
+        else:
+            self.db = db
         # cleanup_register(mongodb_addr)
 
         self.views = dict()
@@ -109,6 +185,8 @@ class View_Manager(QtWidgets.QWidget):
         
         self.common_lineplotwidget = LinePlotWidget()
         self.common_heatmapplotwidget = HeatmapPlotWidget()
+        self.plot_layout.addWidget(self.common_lineplotwidget)
+        self.plot_layout.addWidget(self.common_heatmapplotwidget)
 
 
         splitter_config = {
@@ -116,13 +194,24 @@ class View_Manager(QtWidgets.QWidget):
             'side_w': plot_container,
             'orientation': SplitterOrientation.vertical_right_button,
         }
-        splitter = Splitter(**splitter_config)
+        hsplitter = Splitter(**splitter_config)
+        hsplitter.setSizes([1, 400])
+        hsplitter.setHandleWidth(10)
 
-        splitter.setSizes([1, 400])
-        splitter.setHandleWidth(10)
+        self.code_editor = Scintilla_Code_Editor()
+        lexer = Monokai_Python_Lexer(self.code_editor)
+        self.code_editor.setLexer(lexer)
+        splitter_config = {
+            'main_w': hsplitter,
+            'side_w': self.code_editor,
+            'orientation': SplitterOrientation.horizontal_top_button,
+        }
+        vsplitter = Splitter(**splitter_config)
+        vsplitter.setSizes([1, 400])
+        vsplitter.setHandleWidth(10)
 
         layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(splitter)
+        layout.addWidget(vsplitter)
         self.setLayout(layout)
 
         if 'Register' in self.db.dfs:
@@ -172,18 +261,30 @@ class View_Manager(QtWidgets.QWidget):
             self.items[col_name][name] = QtWidgets.QTreeWidgetItem(0)#QtGui.QStandardItem(name)
             self.items[col_name][name].setText(0, name)
             
-            self.plot_layout.addWidget(self.views[col_name][name].w)
+            # self.plot_layout.addWidget(self.views[col_name][name].w)
             top.addChild(self.items[col_name][name])
 
 
         self.tree.insertTopLevelItem(0, top)
 
+    def make_new_custom_view(self, col_name):
+        name_template = 'Custom {}'
+        for i in range(100):
+            name = name_template.format(i)
+            if not name in self.views[col_name]:
+                self.views[col_name][name] = CustomView(self.code_editor, self.common_lineplotwidget, self.common_heatmapplotwidget, self.plot_layout, self.db.get_df(col_name))
+                self.items[col_name][name] = QtWidgets.QTreeWidgetItem(0)
+                self.items[col_name][name].setText(0, name)
+                self.items[col_name]['__top'].addChild(self.items[col_name][name])
+                break
+
+
     def del_col(self, col_name):
         if col_name == 'Register':
             return
-        for pname, view in self.views[col_name].items():
-            self.plot_layout.removeWidget(view.w)
-            view.w.deleteLater()
+        # for pname, view in self.views[col_name].items():
+        #     self.plot_layout.removeWidget(view.w)
+        #     view.w.deleteLater()
         for iname, item in self.items[col_name].items():
             self.tree.removeItemWidget(item,0)
         self.tree.takeTopLevelItem(self.tree.indexOfTopLevelItem(self.items[col_name]['__top']))
@@ -191,9 +292,7 @@ class View_Manager(QtWidgets.QWidget):
         self.items.pop(col_name)
         self.last_updated.pop(col_name)
     
-
-    def new_table_selection(self, cur, prev):
-        def get_view_name(item):
+    def get_view_name(self, item):
             if item is None:
                 return None, None
             txt = item.text(0)
@@ -204,8 +303,10 @@ class View_Manager(QtWidgets.QWidget):
             else:
                 # Selected a top level item
                 return txt, None
-        spyrelet_name, view_name = get_view_name(cur)
-        spyrelet_name_old, view_name_old = get_view_name(prev)
+
+    def new_table_selection(self, cur, prev):
+        spyrelet_name, view_name = self.get_view_name(cur)
+        spyrelet_name_old, view_name_old = self.get_view_name(prev)
         if not view_name_old is None:
             self.views[spyrelet_name_old][view_name_old].stop_updating()
         if view_name is None:
@@ -213,6 +314,7 @@ class View_Manager(QtWidgets.QWidget):
             self.plot_layout.setCurrentWidget(self.default_image)
             return
         
+        self.code_editor.setText(self.views[spyrelet_name][view_name].get_source())
         self.plot_layout.setCurrentWidget(self.views[spyrelet_name][view_name].w)
         self.views[spyrelet_name][view_name].start_updating()
         if spyrelet_name in self.db.dfs:
@@ -229,6 +331,22 @@ class View_Manager(QtWidgets.QWidget):
                     self.items[col_name]['__top'].setBackground(0, self.default_color)
         except:
             pass
+
+    def keyPressEvent(self, ev):
+        if type(ev)==QtGui.QKeyEvent:
+            sname, vname = self.get_view_name(self.tree.currentItem())
+            if ev.matches(QtGui.QKeySequence.Copy):
+                # app = QtWidgets.QApplication.instance()
+                # app.clipboard().setText(sname)
+                self.make_new_custom_view(sname)
+                ev.accept()
+            if ev.matches(QtGui.QKeySequence.Save):
+                # filename, other = QtWidgets.QFileDialog.getSaveFileName(None, 'Save this table to...', '', 'Comma Separated Value (*.csv)')
+                # if filename:
+                print(self.db.get_df(sname))
+                    # df = self.df_table.model()._data
+                    # df.to_csv(path_or_buf=filename, sep=',')
+                ev.accept()
 
 if __name__ == '__main__':
     from nspyre.widgets.app import NSpyreApp

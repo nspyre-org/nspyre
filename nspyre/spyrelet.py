@@ -12,6 +12,7 @@ import inspect
 from collections import OrderedDict
 from tqdm.auto import tqdm
 from nspyre.data_handling import save_data
+import threading
 
 
 class MissingDeviceError(Exception):
@@ -106,6 +107,11 @@ class Spyrelet():
             traceback.print_exc()
         finally:
             self.finalize(*args, **kwargs)
+
+    def bg_run(self, *args, **kwargs):
+        t = threading.Thread(target=lambda: self.run(*args, **kwargs))
+        t.start()
+        return t
 
     def main(self, *args, **kwargs):
         """This is the method that will contain the user main logic.  Should be overwritten"""

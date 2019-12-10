@@ -38,7 +38,7 @@ def custom_encode(d):
             out[k] = {'__type__':'RangeDict'}
             out[k].update(custom_encode(val))
         elif type(val) == np.ndarray:
-            out[k] = {'__type__':'ndarray', 'val':list(val)}
+            out[k] = {'__type__':'ndarray', 'val':val.tolist()}
         else:
             out[k] = val
     return out

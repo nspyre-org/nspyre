@@ -374,7 +374,7 @@ class MongoDB_Instrument_Server(Instrument_Server):
         doc_list = list()
         for feat_name, feat in c._lantz_features.items():
             params = feat.modifiers[MISSING][MISSING]
-            values = list(params['values'].keys()) if not params['values'] is None else None
+            values = list(params['values']) if not params['values'] is None else None
             if 'keys' in params and not params['keys'] is None:
                 keys = list(params['keys'])
                 keys.sort()

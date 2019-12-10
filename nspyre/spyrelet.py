@@ -25,9 +25,18 @@ class StopRunning(Exception):
     pass
 
 class Spyrelet():
+    # A dict with the names and associated class of the devices required to run this spyrelet
     REQUIRED_DEVICES = dict()
+
+    # A dict with the name and associated class of the sub-spyrelet required to run this spyrelet
     REQUIRED_SPYRELETS = dict()
-    LAUNCHER_PARAMS = dict()
+
+    # A definition of the parametters that are used as arguments to the main/initialize/finalize functions.  
+    # These are used both to generate a launcher GUI and to enforce units at call time.
+    PARAMS = dict()
+
+    # An extra dictionary, which can be defined by the user at initialization time. This can store anything the users want
+    CONSTS = dict()
 
     """
     A few notes about the spyrelet class:
@@ -40,13 +49,16 @@ class Spyrelet():
         - For higher performance we will store the data internally as a list instead of a dataframe.  Quicker to append to a list.
 
     """
-    def __init__(self, unique_name, spyrelets={}, device_alias={}, mongodb_addr=None, manager=None):
+    def __init__(self, unique_name, spyrelets={}, device_alias={}, mongodb_addr=None, manager=None, manager_timeout=10000, **consts):
         self.name = unique_name
         self.progress = tqdm
         self.spyrelets = spyrelets
+        self.CONSTS = self.CONSTS.copy()
+        self.CONSTS.update(**consts)
+        self.last_kwargs = dict()
 
         if manager is None:
-            manager = Instrument_Manager()
+            manager = Instrument_Manager(timeout=manager_timeout)
 
         self.mongodb_addr = mongodb_addr
         self.validate()
@@ -91,11 +103,15 @@ class Spyrelet():
 
     
     def set_defaults(self, **params_dict):
-        return self.client['Spyre_Live_Data']['Register'].update_one({'_id':self.name},{'$set':custom_encode(params_dict)}, upsert=True)
+        d = {'defaults.{}'.format(key):val for key,val in custom_encode(params_dict).items()}
+        if len(d):
+            return self.client['Spyre_Live_Data']['Register'].update_one({'_id':self.name},{'$set':d}, upsert=True)
 
     def run(self, *args, **kwargs):
-        self.progress = kwargs.pop('progress') if 'progress' in kwargs else tqdm
+        self.progress = kwargs.pop('progress') if ('progress' in kwargs) else tqdm
+        if self.progress is None: self.progress = tqdm
         try:
+            args, kwargs = self.enforce_args_units(*args, **kwargs)
             self._stop_flag = False
             self.clear_data()
             self.initialize(*args, **kwargs)
@@ -112,6 +128,30 @@ class Spyrelet():
         t = threading.Thread(target=lambda: self.run(*args, **kwargs))
         t.start()
         return t
+
+    def enforce_args_units(self, *args, **kwargs):
+        args = list(args)
+        def _enforce_units(val, param):
+            if 'units' in param:
+                if type(val) is Q_:
+                    return val.to(param['units'])
+                else:
+                    return val*Q_(1, param['units'])
+            else:
+                return val
+
+        sig = inspect.signature(self.main)
+        params = list(sig.parameters.keys())
+        for name in list(self.PARAMS.keys()):
+            param_index = params.index(name)
+            if param_index >= len(args):
+                if name in kwargs:
+                    kwargs[name] = _enforce_units(kwargs[name], self.PARAMS[name])
+                else:
+                    kwargs[name] = _enforce_units(sig.parameters[name].default, self.PARAMS[name])
+            else:
+                args[param_index] = _enforce_units(args[param_index], self.PARAMS[name])
+        return args, kwargs
 
     def main(self, *args, **kwargs):
         """This is the method that will contain the user main logic.  Should be overwritten"""
@@ -133,14 +173,14 @@ class Spyrelet():
         If use_defaults is True (defaults to True) every argument needs to be passed as a keyword argument (ie *args will be ignored)
         """
         keep_data = kwargs.pop('keep_data') if 'keep_data' in kwargs else True
-        use_defaults = kwargs.pop('use_defaults') if 'use_defaults' in kwargs else True
+        # use_defaults = kwargs.pop('use_defaults') if 'use_defaults' in kwargs else True
         use_parent_progress = kwargs.pop('use_parent_progress') if 'use_parent_progress' in kwargs else True
 
-        if not use_defaults:
-            spyrelet.run(*args, progress=self.progress, **kwargs)
-        else:
-            launcher = Spyrelet_Launcher(spyrelet)
-            launcher.run(progress=self.progress,**kwargs)
+        # if not use_defaults:
+        spyrelet.run(*args, progress=self.progress, **kwargs)
+        # else:
+        #     launcher = Spyrelet_Launcher(spyrelet)
+        #     launcher.run(progress=self.progress,**kwargs)
         
         if keep_data:
             if not spyrelet.name in self._child_data:
@@ -161,21 +201,38 @@ class Spyrelet():
     def acquire(self, row):
         # Cleanup row
         # Here we will keep numpy arrays as is for local copy, but change it to list for MongoDB
-        restore_row = dict()
-        for k, val in row.items():
-            if type(val) == Q_:
-                base_unit = '*'.join('{} ** {}'.format(u, p) for u, p in infer_base_unit(val).items())
-                row[k] = row[k].to(Q_(base_unit)).m
-            if type(val) == np.ndarray:
-                restore_row[k] = row[k]
-                row[k] = row[k].tolist()
-        self.col.insert_one(row)
+        if not row is None:
+            restore_row = dict()
+            for k, val in row.items():
+                if type(val) == Q_:
+                    base_unit = '*'.join('{} ** {}'.format(u, p) for u, p in infer_base_unit(val).items())
+                    row[k] = row[k].to(Q_(base_unit)).m
+                if type(val) == np.ndarray:
+                    restore_row[k] = row[k]
+                    row[k] = row[k].tolist()
+            self.col.insert_one(row)
 
-        for k, val in restore_row.items():
-            row[k] = val
-        self._data.append(row)
+            for k, val in restore_row.items():
+                row[k] = val
+            self._data.append(row)
         if self._stop_flag:
             raise StopRunning
+
+    """
+    The cache allows for passing information from the spyrelet to remote monitoring processes.
+    This cache is meant to be temporary, so unlike data which simply accumulates, this can be overwritten asynchronously
+    """
+    def reg_cache_clear(self):
+        self.client['Spyre_Live_Data']['Register'].update_one({'_id':self.name},{'$set':{'cache':{}}}, upsert=True)
+
+    def reg_cache_store(self, **kwargs):
+        d = {'cache.{}'.format(key):val for key,val in custom_encode(kwargs).items()}
+        if len(d):
+            return self.client['Spyre_Live_Data']['Register'].update_one({'_id':self.name},{'$set':d}, upsert=True)
+
+    def reg_cache_get(self):
+        ans = self.client['Spyre_Live_Data']['Register'].find_one({'_id':self.name},{'_id':False, 'cache':True})
+        return custom_decode(ans['cache']) if 'cache' in ans else {}
             
     @property
     def child_data(self):
@@ -215,12 +272,12 @@ class Spyrelet():
 class Spyrelet_Launcher():
     def __init__(self, spyrelet):
         self.spyrelet = spyrelet
-        params = spyrelet.LAUNCHER_PARAMS
+        params = spyrelet.PARAMS
 
         ps = inspect.signature(self.spyrelet.main).parameters
         for k, p in ps.items():
             if p.default == inspect.Parameter.empty and not k in params:
-                raise Exception("Missing positional argument in LAUNCHER_PARAMS ({})".format(k))
+                raise Exception("Missing positional argument in PARAMS ({})".format(k))
         
         #First add all the params which require ordering
         def infer(default):
@@ -236,7 +293,8 @@ class Spyrelet_Launcher():
         self.reg = self.spyrelet.client['Spyre_Live_Data']['Register']
 
     def get_defaults(self):
-        return custom_decode(self.reg.find_one({'_id':self.spyrelet.name},{'_id':False, 'class':False}))
+        ans = self.reg.find_one({'_id':self.spyrelet.name},{'_id':False, 'defaults':True})
+        return custom_decode(ans['defaults']) if 'defaults' in ans else {}
 
     def run(self, progress=None, **params_dict):
         self.spyrelet.set_defaults(**params_dict)

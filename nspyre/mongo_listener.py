@@ -5,6 +5,7 @@ import pandas as pd
 import time
 from bson.objectid import ObjectId
 from nspyre.utils import get_mongo_client
+import traceback
 
 class DropEvent():
     """Represents a drop of a collection in a certain database"""
@@ -23,8 +24,16 @@ def modify_df(df, change):
             if len(ks) == 1:
                 df.loc[key, k] = val
             elif len(ks) == 2:
-                #Assume an array here... Will see if we can get away with this
-                df.loc[key,ks[0]][int(ks[1])] = val
+                # TODO: Figure out a more reliable way of doing this
+                
+                if ks[1].isdigit():
+                    # Assume an array here... Will see if we can get away with this
+                    df.loc[key,ks[0]][int(ks[1])] = val
+                else:
+                    df.loc[key,ks[0]][ks[1]] = val
+                    
+            else:
+                raise NotImplementedError('Cannot use a dept of more then 2 in the documents')
     elif change['operationType'] == 'insert':
         doc = change['fullDocument']
         _id = doc.pop('_id')
@@ -94,8 +103,14 @@ class Synched_Mongo_Collection(QtCore.QObject):
         if self.db is None:
             self.refresh_all()
         # print(change)
-        self.df, row = modify_df(self.df, change)
-        self.updated_row.emit(row)
+        try:
+            self.df, row = modify_df(self.df, change)
+            self.updated_row.emit(row)
+        except:
+            traceback.print_exc()
+            print('Refreshing the entire collection')
+            self.refresh_all()
+        
         # self.refresh_all() #I will make this a little more efficient later on
 
     def __del__(self):
@@ -139,29 +154,34 @@ class Synched_Mongo_Database(QtCore.QObject):
     @QtCore.pyqtSlot(object)
     def _update(self, change):
         # print(change)
-        if change['operationType'] == 'dropDatabase':
-            self.dfs = dict()
-            self.db_dropped.emit()
-            return
-        elif change['operationType'] == 'invalidate':
-            return
-        col = change['ns']['coll']
-        if col in self.dfs:
-            df, row = modify_df(self.dfs[col], change)
-            if isinstance(df, DropEvent):
-                self.dfs.pop(col)
-                self.col_dropped.emit(col)
+        try:
+            if change['operationType'] == 'dropDatabase':
+                self.dfs = dict()
+                self.db_dropped.emit()
                 return
-            
-            self.dfs[col] = df
-            self.updated_row.emit(col, row)
-            
-        else:
-            doc = change['fullDocument']
-            row = pd.Series(doc)
-            self.dfs[col] = pd.DataFrame([row])
-            self.dfs[col].set_index('_id', inplace=True)
-            self.col_added.emit(col)
+            elif change['operationType'] == 'invalidate':
+                return
+            col = change['ns']['coll']
+            if col in self.dfs:
+                df, row = modify_df(self.dfs[col], change)
+                if isinstance(df, DropEvent):
+                    self.dfs.pop(col)
+                    self.col_dropped.emit(col)
+                    return
+                
+                self.dfs[col] = df
+                self.updated_row.emit(col, row)
+                
+            else:
+                doc = change['fullDocument']
+                row = pd.Series(doc)
+                self.dfs[col] = pd.DataFrame([row])
+                self.dfs[col].set_index('_id', inplace=True)
+                self.col_added.emit(col)
+        except:
+            traceback.print_exc()
+            print('Refreshing the entire database')
+            self.refresh_all()
 
         
         # self.refresh_all() #I will make this a little more efficient later on

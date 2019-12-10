@@ -6,7 +6,7 @@ from nspyre.widgets.splitter_widget import Splitter, SplitterOrientation
 # from nspyre.utils import connect_to_master
 from nspyre.mongo_listener import Synched_Mongo_Database
 from nspyre.views import Spyrelet_Views
-from nspyre.utils import cleanup_register, join_nspyre_path
+from nspyre.utils import cleanup_register, join_nspyre_path, custom_decode
 from nspyre.widgets.image import ImageWidget
 from nspyre.widgets.code_editor import Scintilla_Code_Editor, Monokai_Python_Lexer
 import pymongo
@@ -19,7 +19,7 @@ import traceback
 import textwrap
 
 class CustomView():
-    def __init__(self, code_editor, w1D, w2D, plot_layout, initial_df):
+    def __init__(self, code_editor, w1D, w2D, plot_layout, initial_df, initial_cache):
         self.is_updating = False
         self.editor = code_editor
         self.plot_layout = plot_layout
@@ -27,8 +27,9 @@ class CustomView():
         self.w = w1D
         self.ws = {'1D':w1D, '2D':w2D}
         self.valid_code = False
-        self._source = "plot_type = '1D'\ndef plot(df):\n    return {}"
+        self._source = "plot_type = '1D'\ndef plot(df, cache):\n    return {}"
         self.last_df = initial_df
+        self.last_cache = initial_cache
         self.editor.request_run_signal.connect(self.analyze)
         
     
@@ -68,17 +69,18 @@ class CustomView():
         
         self.update_fun = plot_fun
         self.valid_code = True
-        self.update(self.last_df)
+        self.update(self.last_df, self.last_cache)
 
-    def update(self, df):
+    def update(self, df, cache):
         self.last_df = df
+        self.last_cache = cache
         if self.is_updating and self.valid_code:
             if self.plot_type == '1D':
-                traces = self.update_fun(df)
+                traces = self.update_fun(df, cache)
                 for name, data in traces.items():
                     self.w.set(name, xs=data[0], ys=data[1])
             elif self.plot_type == '2D':
-                im = np.array(self.update_fun(df))
+                im = np.array(self.update_fun(df, cache))
                 self.w.set(im)
 
 class BaseView():
@@ -100,13 +102,13 @@ class BaseView():
     def stop_updating(self):
         self.is_updating = False
 
-    def update(self, df):
-        if self.is_updating:
-            traces = self.update_fun(df)
-            for name, data in traces.items():
-                self.w.set(name, xs=data[0], ys=data[1])
-            if not self.update_formatter is None:
-                self.update_formatter(self.w)
+    # def update(self, df):
+    #     if self.is_updating:
+    #         traces = self.update_fun(df)
+    #         for name, data in traces.items():
+    #             self.w.set(name, xs=data[0], ys=data[1])
+    #         if not self.update_formatter is None:
+    #             self.update_formatter(self.w, df)
 
     def get_source(self):
         return textwrap.dedent(inspect.getsource(self.update_fun))
@@ -121,13 +123,13 @@ class LinePlotView(BaseView):
             self.w = w
         super().__init__(view, self.w)
             
-    def update(self, df):
+    def update(self, df, cache):
         if self.is_updating:
-            traces = self.update_fun(df)
+            traces = self.update_fun(df, cache)
             for name, data in traces.items():
                 self.w.set(name, xs=data[0], ys=data[1])
             if not self.update_formatter is None:
-                self.update_formatter(self.w)
+                self.update_formatter(self.w, df, cache)
 
 class HeatmapPlotView(BaseView):
     def __init__(self, view, w=None):
@@ -139,12 +141,12 @@ class HeatmapPlotView(BaseView):
             self.w = w
         super().__init__(view, self.w)
             
-    def update(self, df):
+    def update(self, df, cache):
         if self.is_updating:
-            im = np.array(self.update_fun(df))
+            im = np.array(self.update_fun(df, cache))
             self.w.set(im)
             if not self.update_formatter is None:
-                self.update_formatter(self.w)
+                self.update_formatter(self.w, df, cache)
 
 # class CustomView(QtWidgets.QWidget):
 #     def __init__(self, )
@@ -235,7 +237,11 @@ class View_Manager(QtWidgets.QWidget):
             self.add_col(row.name)
             return
         for name, view in self.views[col_name].items():
-            view.update(self.db.get_df(col_name))
+            if col_name in self.db.get_df('Register').index and 'cache' in self.db.get_df('Register').loc[col_name] and not self.db.get_df('Register').loc[col_name]['cache'] is np.nan:
+                cache = custom_decode(self.db.get_df('Register').loc[col_name]['cache'])
+            else:
+                cache = {}
+            view.update(self.db.get_df(col_name), cache)
         
         
     def add_col(self, col_name):
@@ -272,7 +278,11 @@ class View_Manager(QtWidgets.QWidget):
         for i in range(100):
             name = name_template.format(i)
             if not name in self.views[col_name]:
-                self.views[col_name][name] = CustomView(self.code_editor, self.common_lineplotwidget, self.common_heatmapplotwidget, self.plot_layout, self.db.get_df(col_name))
+                if col_name in self.db.get_df('Register').index and 'cache' in self.db.get_df('Register').loc[col_name] and not self.db.get_df('Register').loc[col_name]['cache'] is np.nan:
+                    cache = custom_decode(self.db.get_df('Register').loc[col_name]['cache'])
+                else:
+                    cache = {}
+                self.views[col_name][name] = CustomView(self.code_editor, self.common_lineplotwidget, self.common_heatmapplotwidget, self.plot_layout, self.db.get_df(col_name), cache)
                 self.items[col_name][name] = QtWidgets.QTreeWidgetItem(0)
                 self.items[col_name][name].setText(0, name)
                 self.items[col_name]['__top'].addChild(self.items[col_name][name])

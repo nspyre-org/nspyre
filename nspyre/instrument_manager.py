@@ -63,7 +63,8 @@ class Instrument_Manager():
             }
             return self.instr[dname]
 
-    def del_instr(self, dname, client):
+    def del_instr(self, dname):
+        client = self.get(dname)
         client['zmq'].del_instr(dname)
         self.update_instr(dname, client)
         

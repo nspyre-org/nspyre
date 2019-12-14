@@ -140,7 +140,7 @@ class Synched_Mongo_Database(QtCore.QObject):
                 self.dfs[col] = pd.DataFrame(col_data)
                 self.dfs[col].set_index('_id', inplace=True)
 
-    def get_df(self, col_name, timeout=1):
+    def get_df(self, col_name, timeout=0.1):
         try:
             if not self.dfs[col_name] is None:
                 return self.dfs[col_name]
@@ -178,6 +178,7 @@ class Synched_Mongo_Database(QtCore.QObject):
                 self.dfs[col] = pd.DataFrame([row])
                 self.dfs[col].set_index('_id', inplace=True)
                 self.col_added.emit(col)
+                self.updated_row.emit(col, row)
         except:
             traceback.print_exc()
             print('Refreshing the entire database')

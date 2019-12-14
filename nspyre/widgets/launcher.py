@@ -2,15 +2,16 @@ from PyQt5 import QtWidgets, QtCore
 from nspyre.spyrelet import Spyrelet_Launcher
 from nspyre.widgets.param_widget import ParamWidget
 from nspyre.widgets.save_widget import Save_Widget
-from nspyre.utils import RangeDict, get_configs, get_class_from_str
+from nspyre.utils import RangeDict, get_configs, get_class_from_str, load_all_spyrelets
 import time
 import traceback
+from itertools import tee
 
 class Progress_Bar(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.vars = []
-        self.iterators = []
+        # self.iterators = []
         layout = QtWidgets.QVBoxLayout()
         self.pbar = QtWidgets.QProgressBar()
         self.pbar.setTextVisible(True)
@@ -22,16 +23,11 @@ class Progress_Bar(QtWidgets.QWidget):
     
     def reset(self):
         self.vars = []
-        self.iterators = []
+        # self.iterators = []
         self.text.setText('stopped')
 
-    def call_iter(self, iterable):
-        try:
-            max_val = len(iterable)
-        except TypeError:
-            max_val = '?'
-
-        self.iterators.append(iter(iterable))
+    def call_iter(self, iterable, max_val):
+        # self.iterators.append(iter(iterable))
         self.vars.append({'val':0, 'max':max_val, 'start':time.time(), 'last':time.time(), 'avg':0, 'tot':0, 'rem':'?', 'per':0})
 
         if max_val != '?':
@@ -39,28 +35,29 @@ class Progress_Bar(QtWidgets.QWidget):
             self.pbar.setRange(0, max_val)
 
     def call_next(self):
-        try:
-            next(self.iterators[-1])
-            self.vars[-1]['val'] += 1
-            t = time.time()
-            self.vars[-1]['avg'] = t-self.vars[-1]['last']
-            self.vars[-1]['last'] = t
-            self.vars[-1]['tot'] = t-self.vars[-1]['start']
+        self.vars[-1]['val'] += 1
+        t = time.time()
+        self.vars[-1]['avg'] = t-self.vars[-1]['last']
+        self.vars[-1]['last'] = t
+        self.vars[-1]['tot'] = t-self.vars[-1]['start']
+
+        if self.vars[-1]['max'] != '?':
+            self.pbar.setValue(self.vars[-1]['val'])
+            self.pbar.setRange(0, self.vars[-1]['max'])
             self.vars[-1]['per'] = 100*self.vars[-1]['val']/self.vars[-1]['max']
             self.vars[-1]['rem'] = (self.vars[-1]['max'] - self.vars[-1]['val'])*self.vars[-1]['avg']
-
-            if self.vars[-1]['max'] != '?':
-                self.pbar.setValue(self.vars[-1]['val'])
-                self.pbar.setRange(0, self.vars[-1]['max'])
-            self.text.setText('\t'.join(['[{per:.0f}% {val:.0f}/{max:.0f} [{tot:.0f}s<{rem:.0f}s] {avg:.2f}s/it ]'.format(**d) for d in self.vars]))
+        s_with_max = '[{per:.0f}% {val:.0f}/{max:.0f} [{tot:.0f}s<{rem:.0f}s] {avg:.2f}s/it]'
+        s_without_max = '[{val:.0f}[{tot:.0f}s] {avg:.2f}s/it]'
+        self.text.setText('\t'.join([(s_without_max if d['max']=='?' else s_with_max).format(**d)for d in self.vars]))
+        QtWidgets.QApplication.processEvents()
+    
+    def call_stopiter(self):
+        self.vars = self.vars[:-1]
+        if not self.vars == [] and self.vars[-1]['max'] != '?':
+            self.pbar.setValue(self.vars[-1]['max'])
+            self.pbar.setRange(0, self.vars[-1]['max'])
             QtWidgets.QApplication.processEvents()
-        except StopIteration:
-            self.vars = self.vars[:-1]
-            if not self.vars == [] and self.vars[-1]['max'] != '?':
-                self.pbar.setValue(self.vars[-1]['max'])
-                self.pbar.setRange(0, self.vars[-1]['max'])
-                QtWidgets.QApplication.processEvents()
-            self.iterators = self.iterators[:-1]
+        # self.iterators = self.iterators[:-1]
 
     # def update(self, iterator):
 
@@ -109,6 +106,7 @@ class Spyrelet_Launcher_Widget(QtWidgets.QWidget):
             self.run_thread.finished.connect(lambda: self.run_btn.setText('Run'))
             self.run_thread.progressed_iter.connect(self.progress_bar.call_iter)
             self.run_thread.progressed_next.connect(self.progress_bar.call_next)
+            self.run_thread.progressed_stopiter.connect(self.progress_bar.call_stopiter)
         else:
             self.run_thread.stop_requested.emit()
 
@@ -121,8 +119,9 @@ class Spyrelet_Launcher_Widget(QtWidgets.QWidget):
 
 class Spyrelet_Run_Thread(QtCore.QThread):
     """Qt Thread which monitors for changes to qither a collection or a database and emits a signal when something happens"""
-    progressed_iter = QtCore.pyqtSignal(object) #This will be emitted when iter is called on progress is called in the spyrelet
+    progressed_iter = QtCore.pyqtSignal(object, object) #This will be emitted when iter is called on progress is called in the spyrelet
     progressed_next = QtCore.pyqtSignal() #This will be emitted when next is called on progress is called in the spyrelet
+    progressed_stopiter = QtCore.pyqtSignal() #This will be emitted when next is called on progress is called in the spyrelet
     stop_requested = QtCore.pyqtSignal() # This will be emitted externally to stop the execution of a spyrelet prematurly
     def __init__(self, launcher, param_dict):
         super().__init__()
@@ -133,12 +132,22 @@ class Spyrelet_Run_Thread(QtCore.QThread):
             def __init__(_self, iterable):
                 _self.iterable = iterable
             def __iter__(_self):
-                self.progressed_iter.emit(_self.iterable)
+                try:
+                    max_val = len(_self.iterable)
+                except TypeError:
+                    traceback.print_exc()
+                    max_val = '?'
                 _self.iterable = iter(_self.iterable)
+                self.progressed_iter.emit(_self.iterable, max_val)
                 return _self
             def __next__(_self):
-                self.progressed_next.emit()
-                return next(_self.iterable)
+                try:
+                    val = next(_self.iterable)
+                    self.progressed_next.emit()
+                except StopIteration as e:
+                    self.progressed_stopiter.emit()
+                    raise e
+                return val
 
 
         self.progress = Progress_Iter
@@ -157,7 +166,7 @@ class Spyrelet_Run_Thread(QtCore.QThread):
 
 
 class Combined_Launcher(QtWidgets.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, spyrelets=None):
         super().__init__(parent=parent)
         layout = QtWidgets.QVBoxLayout()
         self.selector = QtWidgets.QComboBox()
@@ -169,25 +178,27 @@ class Combined_Launcher(QtWidgets.QWidget):
 
 
         #Create the launchers
-        cfg = get_configs()
-        names = list(cfg['experiment_list'].keys())
-        names.sort(key=lambda x: len(cfg['experiment_list'][x][2]))
-        self.launchers = dict()
-        last_len = -1
-        while last_len != len(self.launchers):
-            last_len = len(self.launchers)
-            for sname in names:
-                sclass, devs, subs = cfg['experiment_list'][sname]
-                print(sname, all([x in self.launchers for x in list(subs.values())]))
-                if not sname in self.launchers and all([x in self.launchers for x in list(subs.values())]):
-                    try:
-                        sclass = get_class_from_str(sclass)
-                        subs = {real_name:self.launchers[alias].spyrelet for real_name,alias in subs.items()}
-                        s = sclass(sname, spyrelets=subs, device_alias=devs)
-                        self.launchers[sname] = Spyrelet_Launcher_Widget(s)
-                    except:
-                        print("Could not instanciate launcher for spyrelet {}...".format(sname))
-                        traceback.print_exc()
+        spyrelets = load_all_spyrelets() if spyrelets is None else spyrelets
+        self.launchers = {name: Spyrelet_Launcher_Widget(s) for name, s in spyrelets.items()}
+        # cfg = get_configs()
+        # names = list(cfg['experiment_list'].keys())
+        # names.sort(key=lambda x: len(cfg['experiment_list'][x][2]))
+        # self.launchers = dict()
+        # last_len = -1
+        # while last_len != len(self.launchers):
+        #     last_len = len(self.launchers)
+        #     for sname in names:
+        #         sclass, devs, subs = cfg['experiment_list'][sname]
+        #         print(sname, all([x in self.launchers for x in list(subs.values())]))
+        #         if not sname in self.launchers and all([x in self.launchers for x in list(subs.values())]):
+        #             try:
+        #                 sclass = get_class_from_str(sclass)
+        #                 subs = {real_name:self.launchers[alias].spyrelet for real_name,alias in subs.items()}
+        #                 s = sclass(sname, spyrelets=subs, device_alias=devs)
+        #                 self.launchers[sname] = Spyrelet_Launcher_Widget(s)
+        #             except:
+        #                 print("Could not instanciate launcher for spyrelet {}...".format(sname))
+        #                 traceback.print_exc()
 
         #Add to layout
         layout = QtWidgets.QStackedLayout()
@@ -201,6 +212,7 @@ class Combined_Launcher(QtWidgets.QWidget):
         self.container_layout = layout
         
         self.selector.currentTextChanged.connect(self.change_widget)
+        self.show()
 
     def change_widget(self, name):
         self.container_layout.setCurrentWidget(self.launchers[name])

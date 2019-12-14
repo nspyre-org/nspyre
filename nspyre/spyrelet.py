@@ -14,7 +14,6 @@ from tqdm.auto import tqdm
 from nspyre.data_handling import save_data
 import threading
 
-
 class MissingDeviceError(Exception):
     pass
 
@@ -109,7 +108,7 @@ class Spyrelet():
 
     def run(self, *args, **kwargs):
         self.progress = kwargs.pop('progress') if ('progress' in kwargs) else tqdm
-        if self.progress is None: self.progress = tqdm
+        if self.progress is None: self.progress = lambda *args, **kwargs: tqdm(*args, leave=False, **kwargs)
         try:
             args, kwargs = self.enforce_args_units(*args, **kwargs)
             self._stop_flag = False
@@ -174,10 +173,15 @@ class Spyrelet():
         """
         keep_data = kwargs.pop('keep_data') if 'keep_data' in kwargs else True
         # use_defaults = kwargs.pop('use_defaults') if 'use_defaults' in kwargs else True
-        use_parent_progress = kwargs.pop('use_parent_progress') if 'use_parent_progress' in kwargs else True
+        ignore_child_progress = kwargs.pop('ignore_child_progress') if 'ignore_child_progress' in kwargs else False
+
+        if ignore_child_progress:
+            progress = lambda x: x
+        else:
+            progress = self.progress
 
         # if not use_defaults:
-        spyrelet.run(*args, progress=self.progress, **kwargs)
+        spyrelet.run(*args, progress=progress, **kwargs)
         # else:
         #     launcher = Spyrelet_Launcher(spyrelet)
         #     launcher.run(progress=self.progress,**kwargs)
@@ -253,7 +257,7 @@ class Spyrelet():
 
         for k,p in main_s.parameters.items():
             if not p.kind in [inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.VAR_KEYWORD]:
-                raise('Invalid main signature, Spyrelets do not support positional only, keyword only or var_positional arguments')
+                raise Exception('Invalid main signature, Spyrelets do not support positional only, keyword only or var_positional arguments')
 
         is_default = lambda sig: list(sig.parameters.keys()) == ['args', 'kwargs'] and \
                                  sig.parameters['args'].kind == inspect.Parameter.VAR_POSITIONAL and \

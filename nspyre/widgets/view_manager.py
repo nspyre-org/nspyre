@@ -175,7 +175,6 @@ class View_Manager(QtWidgets.QWidget):
         self.tree.setColumnCount(1)
         self.tree.setHeaderHidden(True)
 
-        self.tree.currentItemChanged.connect(self.new_table_selection)
         layout.addWidget(self.tree)
 
         # Build layout
@@ -217,9 +216,15 @@ class View_Manager(QtWidgets.QWidget):
         self.setLayout(layout)
 
         if 'Register' in self.db.dfs:
-            for name in self.db.get_df('Register').index:
-                self.add_col(name)
+            names = list(self.db.get_df('Register').index)
+            names.sort()
+            for name in names:
+                self.add_col(name, try_update=False)
+        
+        self.show()
 
+
+        self.tree.currentItemChanged.connect(self.new_table_selection)
 
         #Connect db signals
         self.db.col_added.connect(self.add_col)
@@ -244,7 +249,7 @@ class View_Manager(QtWidgets.QWidget):
             view.update(self.db.get_df(col_name), cache)
         
         
-    def add_col(self, col_name):
+    def add_col(self, col_name, try_update=True):
         if col_name == 'Register':
             return
         sclass = self.db.get_df('Register').loc[col_name]['class']
@@ -272,6 +277,10 @@ class View_Manager(QtWidgets.QWidget):
 
 
         self.tree.insertTopLevelItem(0, top)
+        try:
+            self.update_plot(col_name, None)
+        except:
+            pass
 
     def make_new_custom_view(self, col_name):
         name_template = 'Custom {}'

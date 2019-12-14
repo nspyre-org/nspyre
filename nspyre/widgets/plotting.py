@@ -311,9 +311,13 @@ class LinePlotWidget(BasePlotWidget):
             raise ValueError('No plot points supplied (either data or xs and ys must be given)')
         if data is not None:
             xs, ys = list(zip(*data))
-        if not isinstance(xs, np.ndarray):
+        if isinstance(xs, list):
+            xs = np.array(xs)
+        elif not isinstance(xs, np.ndarray):
             xs = xs.values
-        if not isinstance(ys, np.ndarray):
+        if isinstance(ys, list):
+            ys = np.array(ys)
+        elif not isinstance(ys, np.ndarray):
             ys = ys.values
         trace.setData(x=xs, y=ys, **kwargs)
         if yerrs is not None:

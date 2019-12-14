@@ -7,6 +7,7 @@ from bson import ObjectId
 import yaml
 import os
 from importlib import import_module
+import traceback
 
 def get_mongo_client(mongodb_addr=None):
     if mongodb_addr is None:
@@ -111,3 +112,42 @@ def get_class_from_str(class_str):
     class_name = class_str.split('.')[-1]
     mod = import_module(class_str.replace('.'+class_name, ''))
     return getattr(mod, class_name)
+
+def load_all_spyrelets():
+    cfg = get_configs()
+    names = list(cfg['experiment_list'].keys())
+
+    ans = dict()
+    last_len = -1
+    while last_len != len(ans):
+        last_len = len(ans)
+        for sname in names:
+            exp = cfg['experiment_list'][sname]
+            subs = exp['spyrelets'] if 'spyrelets' in exp else {}
+            if not sname in ans and all([x in ans for x in list(subs.values())]):
+                try:
+                    sclass = get_class_from_str(exp['class'])
+                    subs = {name:ans[inst_name] for name, inst_name in subs.items()}
+                    args = exp['args'] if 'args' in exp else {}
+                    ans[sname] = sclass(sname, spyrelets=subs, **args)
+                except:
+                    print("Could not instanciate spyrelet {}...".format(sname))
+                    traceback.print_exc()
+
+        for sname in names:
+            if not sname in ans:
+                subs = cfg['experiment_list'][sname]['spyrelets'] if 'spyrelets' in exp else {}
+                print("Could not instanciate spyrelet {}...  This is possibly because of missing sub-spyrelet: {}".format(sname, subs))
+    return ans
+
+def drop_spyrelet(name, client=None):
+    if client is None: client = get_mongo_client()
+    c['Spyre_Live_Data'][name].drop()
+    c['Spyre_Live_Data']['Register'].delete_one({'_id': name})
+
+def drop_all_spyrelets(except_list=[], client=None):
+    if client is None: client = get_mongo_client()
+    all_in_reg = [x['_id'] for x in c['Spyre_Live_Data']['Register'].find({},{})]
+    for name in all_in_reg:
+        if not name in except_list:
+            drop_spyrelet(name, client=client)

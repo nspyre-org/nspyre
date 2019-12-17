@@ -107,13 +107,14 @@ class TaskVsLaserFreq(Spyrelet):
         df = (fs[-1]-fs[0])/len(fs) # This is only a good number for standard sweeps
         for f in self.progress(fs):
             for retry in range(3):
-                try:
+                try: # Try to move the piezo
                     movemotor = False
                     self.goto_piezo(f, tol=np.abs(df), timeout=Q_(5,'s'))
                 except (TimeoutError, Piezo_Exception) as e:
                     if self.CONSTS['verbose']: traceback.print_exc()
-                    movemotor = True     # If we couldn't reach the piezo position
-                if movemotor or not self.is_single_mode(3, fp_selectivity):    # Or if we are multimode
+                    movemotor = True     
+
+                if movemotor or not self.is_single_mode(3, fp_selectivity):    # If we couldn't reach the piezo position or if we are multimode
                     goto_mot(f+(self.CONSTS['mhf_size']/2))                    # Move motor
                     if self.CONSTS['verbose']: print('After motor move', self.ws7.frequency[self.CONSTS['ws7_ch']], self.dlc.piezo_voltage)
                 else:
@@ -130,12 +131,14 @@ class TaskVsLaserFreq(Spyrelet):
         self.tname = self.name + '_task'
         self.daq.new_task(self.tname, [daq_ch])
         self.ttype = self.daq.get_task_type(self.tname)
+        self.daq.start(self.tname)
 
         if self.relay.state[self.CONSTS['relay_ch']] != self.CONSTS['relay_state']:
             self.relay.state[self.CONSTS['relay_ch']] = self.CONSTS['relay_state']
             time.sleep(0.5)
         
     def finalize(self, fs, daq_ch, time_per_point=Q_(0.5, 's'), fp_selectivity=0.2):
+        self.daq.stop(self.tname)
         self.daq.clear_task(self.tname)
         
     @Plot1D

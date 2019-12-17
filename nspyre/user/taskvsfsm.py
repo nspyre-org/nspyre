@@ -22,9 +22,14 @@ class TaskVsFSM(Spyrelet):
 
     def main(self, xs, ys, daq_ch, sweeps=1, acq_rate=Q_(5000, 'Hz'), pts_per_pixel=10):
         for sweep in self.progress(range(sweeps)):
+            backward = False
             for column_idx, y in enumerate(self.progress(ys.to('um').m)):
                 pt0, pt1 = (xs[0].to('um').m, y), (xs[-1].to('um').m, y)
+                if backward:
+                    pt0, pt1 = pt1, pt0
                 row_data = self.fsm.line_scan(init_point=pt0, final_point=pt1, steps=len(xs), acq_rate=acq_rate, pts_per_pos=pts_per_pixel)
+                if backward:
+                    row_data = np.flip(row_data)
                 self.acquire({
                     'sweep_idx': sweep,
                     'column_idx': column_idx,
@@ -32,6 +37,7 @@ class TaskVsFSM(Spyrelet):
                     'y':y,
                     'x_vals': xs.to('um').m
                 })
+                backward = not backward
 
             
     def initialize(self, xs, ys, daq_ch, sweeps=1, acq_rate=Q_(5000, 'Hz'), pts_per_pixel=10):

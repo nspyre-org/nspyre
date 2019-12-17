@@ -129,6 +129,7 @@ def load_all_spyrelets():
                     sclass = get_class_from_str(exp['class'])
                     subs = {name:ans[inst_name] for name, inst_name in subs.items()}
                     args = exp['args'] if 'args' in exp else {}
+                    args = custom_decode(args)
                     ans[sname] = sclass(sname, spyrelets=subs, **args)
                 except:
                     print("Could not instanciate spyrelet {}...".format(sname))

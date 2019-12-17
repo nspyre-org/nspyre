@@ -48,7 +48,7 @@ class Spyrelet():
         - For higher performance we will store the data internally as a list instead of a dataframe.  Quicker to append to a list.
 
     """
-    def __init__(self, unique_name, spyrelets={}, device_alias={}, mongodb_addr=None, manager=None, manager_timeout=10000, **consts):
+    def __init__(self, unique_name, spyrelets={}, device_alias={}, mongodb_addr=None, manager=None, manager_timeout=30000, **consts):
         self.name = unique_name
         self.progress = tqdm
         self.spyrelets = spyrelets
@@ -167,7 +167,7 @@ class Spyrelet():
         pass
 
     def call(self, spyrelet, *args, **kwargs):
-        """This is the proper way to call a sub spyrlet.  
+        """This is the proper way to call a sub spyrelet.  
         It will take care of keeping the data and calling the proper progress bar.
         If use_defaults is True (defaults to True) every argument needs to be passed as a keyword argument (ie *args will be ignored)
         """
@@ -287,6 +287,10 @@ class Spyrelet_Launcher():
         def infer(default):
             return {'type':type(default)}
         self.params = OrderedDict([(k, params[k] if k in params else infer(p.default)) for k,p in ps.items() if not p.kind is inspect.Parameter.VAR_KEYWORD])
+        for pname, pdescr in self.params.items():
+            if not 'defaults' in pdescr and ps[pname].default != inspect._empty:
+                self.params[pname].update(default=ps[pname].default)
+
         self.pos_or_kw_params = list(self.params.keys())
         #Add in all the other params
         for k, val in params.items():

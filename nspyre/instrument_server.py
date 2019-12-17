@@ -410,12 +410,18 @@ class MongoDB_Instrument_Server(Instrument_Server):
     def get_none_feat(self, dname):
         feats = self.db[dname].find({},{'_id':False, 'name':True, 'value':True, 'type':True, 'keys':True})
         for feat in feats:
-            if feat['type'] == 'feat' and feat['value'] is None:
-                self.get_feat(dname, feat['name'])
-            elif feat['type'] == 'dictfeat':
-                for i, key in enumerate(feat['keys']):
-                    if feat['value'][i] is None:
-                        self.get_dictfeat(dname, feat['name'], key)
+                if feat['type'] == 'feat' and feat['value'] is None:
+                    try:
+                        self.get_feat(dname, feat['name'])
+                    except:
+                        print('Could not get feat "{}" from device "{}"'.format(feat['name'], dname))
+                elif feat['type'] == 'dictfeat':
+                    for i, key in enumerate(feat['keys']):
+                        if feat['value'][i] is None:
+                            try:
+                                self.get_dictfeat(dname, feat['name'], key)
+                            except:
+                                print('Could not get feat "{}[{}]" from device "{}"'.format(feat['name'], key, dname))
         return
 
     def del_instr(self, dname):

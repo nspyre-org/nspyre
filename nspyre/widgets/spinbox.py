@@ -16,10 +16,9 @@ class SpinBox(_SpinBox):
             q = Q_(unit)
             base_units = infer_base_unit(q)
             base_unit = '*'.join('{} ** {}'.format(u, p) for u, p in base_units.items())
-            base_unit = base_unit if not base_unit == '' else 'dimensionless'
-            q_base = Q_(base_unit)
+            self.base_unit = base_unit if not base_unit == '' else 'dimensionless'
+            q_base = Q_(self.base_unit)
             factor = (q / q_base).to_base_units().m
-            self.base_unit = base_unit
             opts = {
                 'suffix': '{0.units:~}'.format(q_base),
                 'siPrefix': True,
@@ -30,8 +29,11 @@ class SpinBox(_SpinBox):
         self.setMaximumHeight(1e6)
         return
 
-    # def fixup(self, strn):
-    #     super().fixup()
+    def getValue(self):
+        if self.base_unit is None:
+            return super().value()
+        else:
+            return Q_(super().value(), self.base_unit)
 
     def unit_value(self):
         val = super().value()

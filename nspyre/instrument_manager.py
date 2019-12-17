@@ -26,8 +26,6 @@ class Instrument_Manager():
         self.fully_mongo = True
         for c in instrument_server_client_list:
             db = c.get_mongodb()
-
-            print(db)
             if db is None:
                 self.fully_mongo = False
                 self.clients.append({'zmq':c,'mongo':None})
@@ -65,7 +63,8 @@ class Instrument_Manager():
             }
             return self.instr[dname]
 
-    def del_instr(self, dname, client):
+    def del_instr(self, dname):
+        client = self.get(dname)
         client['zmq'].del_instr(dname)
         self.update_instr(dname, client)
         

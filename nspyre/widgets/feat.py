@@ -17,19 +17,24 @@ def get_feat_widget(feat):
                 opts['bounds'] = feat['limits']
             opts['dec'] = True
             opts['minStep'] = 1e-3
-            opts['decimals'] = 5
+            opts['decimals'] = 10
             if isinstance(feat['value'], int):
                 opts['int'] = True
                 opts['minStep'] = 1
                 opts['decimals'] = 10
             w = SpinBoxFeatWidget(opts)
     elif feat['value'] is None:
-        return QtWidgets.QLabel('Unknown type')
+        w = LineEditFeatWidget(text = 'Unknown type')
+        w.set_readonly(True)
+        return w
     else:
         w = LineEditFeatWidget(text = feat['value']) 
 
     w.set_readonly(feat['readonly'])
-    w.setter(feat['value'])
+    if (not feat['value'] is None) and (not feat['units'] is None):
+        w.setter(Q_(feat['value'], feat['units']))
+    else:
+        w.setter(feat['value'])
     return w
 
 class BaseFeatWidget(QtWidgets.QWidget):
@@ -88,13 +93,10 @@ class SpinBoxFeatWidget(BaseFeatWidget):
         return
 
     def setter(self, value):
-        if isinstance(value, Q_):
-            value = value.magnitude
-        self.val_w.setValue(value)
-        return
+        return self.val_w.setValue(value)
 
     def getter(self):
-        return self.val_w.value()
+        return self.val_w.getValue()
 
 class ComboBoxFeatWidget(BaseFeatWidget):
 

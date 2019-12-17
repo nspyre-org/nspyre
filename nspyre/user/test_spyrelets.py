@@ -15,7 +15,7 @@ class SubSpyrelet(Spyrelet):
         'sg': LantzSignalGenerator,
     }
 
-    LAUNCHER_PARAMS = {
+    PARAMS = {
         'iterations':{
             'type':int,
             'positive':True},
@@ -33,23 +33,23 @@ class SubSpyrelet(Spyrelet):
                 'freq': self.sg.frequency,
             })
     @Plot1D
-    def last_rand(df):
+    def last_rand(df, cache):
         last_rand = np.array(df.rand.iloc[-1])
         return {'rand':[np.arange(len(last_rand)), last_rand]}
 
     @Plot1D
-    def avg_rand(df):
+    def avg_rand(df, cache):
         rand = np.array(list(df.rand.values))
         return {'rand':[df.ind.values, rand.mean(axis=1)]}
 
     @Plot2D
-    def data_im(df):
+    def data_im(df, cache):
         im = np.array(list(df.rand.values))
         return im
 
 
     @PlotFormatUpdate(LinePlotWidget, ['last_rand'])
-    def init_formatter(plot):
+    def formatter(plot, df, cache):
         for item in plot.plot_item.listDataItems():
             item.setPen(colors[next(COLORS)])
 
@@ -63,7 +63,7 @@ class MyExperiment(Spyrelet):
         's2': SubSpyrelet
     }
 
-    LAUNCHER_PARAMS = {
+    PARAMS = {
         'amplitude':{
                 'type': float,
                 'units':'V'},
@@ -94,11 +94,11 @@ class MyExperiment(Spyrelet):
         print('finalize')
 
     @Plot1D
-    def plot_results(df):
+    def plot_results(df, cache):
         return {'result':[df.ind.values, df.result.values]}
 
     @Plot1D
-    def plot_f(df):
+    def plot_f(df, cache):
         return {'f':[df.ind.values, df.f.values], 'f2':[df.ind.values, 2*df.f.values]}
 
     @PlotFormatInit(LinePlotWidget, ['plot_f', 'plot_results'])

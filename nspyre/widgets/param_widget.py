@@ -4,7 +4,6 @@ from lantz import Q_
 import numpy as np
 from collections import OrderedDict
 
-import inspect
 from nspyre.widgets.spinbox import SpinBox
 from nspyre.utils import RangeDict
 

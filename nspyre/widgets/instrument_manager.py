@@ -16,7 +16,7 @@ import sip
 
 from nspyre.instrument_server import Instrument_Server_Client, load_remote_device
 from nspyre.instrument_manager import Instrument_Manager
-from feat import get_feat_widget
+from nspyre.widgets.feat import get_feat_widget
 
 from nspyre.utils import get_class_from_str
 
@@ -63,13 +63,19 @@ class Instrument_Manager_Widget(QtWidgets.QWidget):
         if not dname in self.feat_items:
             self.update_instr(dname)
             return
-        # print(row)
-        # print(row['type'])
         if row['type'] == 'feat':
-            self.feat_items[dname][fname].set_requested.emit(row['value'])
+            if (not row['value'] is None) and (not row['units'] is None):
+                value = Q_(row['value'], row['units'])
+            else:
+                value = row['value']
+            self.feat_items[dname][fname].set_requested.emit(value)
         elif row['type'] == 'dictfeat':
+            value = row['value'].copy()
+            for i, val in enumerate(row['value']):
+                if (not row['value'][i] is None) and (not row['units'] is None):
+                    value[i] = Q_(row['value'][i], row['units'])
             for key, w in self.feat_items[dname][fname].childs.items():
-                self.feat_items[dname][fname].set_requested.emit(key, row['value'])
+                self.feat_items[dname][fname].set_requested.emit(key, value)
 
     
     def reset_all(self):

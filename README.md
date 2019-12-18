@@ -2,6 +2,9 @@
 Networked Scientific Python Research Environment
 
 ## Installation
+
+The following should be run in a standard windows cmd line or equivalent (eg: https://cmder.net/)
+
 #### Install MongoDB
 - Download mongodb v4.2.1 (or greater) from https://www.mongodb.com/download-center/community
 - Install mongodb v4.2.1 using default options
@@ -38,4 +41,10 @@ pip install -e .
 pip install git+https://github.com/pyqtgraph/pyqtgraph.git
 ```
 
-You will also need to make sure to install lantz (most likelly a local distribution)
+You will also need to make sure to install lantz (most likelly a local distribution). Here an example of what that lantz installation could look like (feel free to modify this as needed).
+```
+cd ..
+git clone git@github.com:awsch/lantz.git lantz
+cd lantz
+pip install -e .
+```

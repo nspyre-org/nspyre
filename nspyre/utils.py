@@ -58,8 +58,12 @@ def custom_decode(d):
             out[k] = val
     return out
 
+
+def arange(start, stop, step, dtype=None):
+    return np.arange(start, stop, step, dtype=dtype)
+
 class RangeDict(dict):
-    FUNCS = {'linspace':np.linspace, 'arange':np.arange, 'logspace':np.logspace}
+    FUNCS = {'linspace':np.linspace, 'arange':arange, 'logspace':np.logspace}
 
     def __init__(self, **initial_dict):
         self._verify_valid(initial_dict)
@@ -99,10 +103,10 @@ class RangeDict(dict):
         else:
             return self.FUNCS[func_name](**d)*units
 
-def get_configs():
-    with open(join_nspyre_path('config.yaml'), 'r') as f:
+def get_configs(filename=None):
+    filename = join_nspyre_path('config.yaml') if filename is None else filename
+    with open(filename, 'r') as f:
         d = yaml.safe_load(f)
-    # print(d['mongodb_addrs'])
     return d
 
 def join_nspyre_path(path):

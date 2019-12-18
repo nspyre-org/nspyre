@@ -202,6 +202,7 @@ class Spyrelet():
         self._data = list()
         self._child_data = dict()
 
+    CASTING_DICT = {np.int32:int, np.float64:float}
     def acquire(self, row):
         # Cleanup row
         # Here we will keep numpy arrays as is for local copy, but change it to list for MongoDB
@@ -214,6 +215,9 @@ class Spyrelet():
                 if type(val) == np.ndarray:
                     restore_row[k] = row[k]
                     row[k] = row[k].tolist()
+                if type(val) in self.CASTING_DICT:
+                    row[k] = self.CASTING_DICT[type(val)](row[k])
+
             self.col.insert_one(row)
 
             for k, val in restore_row.items():

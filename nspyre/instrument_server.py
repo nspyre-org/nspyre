@@ -463,7 +463,9 @@ class MongoDB_Instrument_Server(Instrument_Server):
 
 if __name__ == '__main__':
     from nspyre.utils import get_configs
-    cfg = get_configs()
+    import sys
+    filename = None if len(sys.argv) == 1 else sys.argv[1]
+    cfg = get_configs(filename = filename)
     server = MongoDB_Instrument_Server(**cfg['instrument_server'], mongodb_addr=cfg['mongodb_addr'])
     
     # Add the different instruments

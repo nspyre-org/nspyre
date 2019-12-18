@@ -10,12 +10,12 @@ replica_set_name: NSpyreSet
 
 # This is the addrs of the instrument servers you want to include in the instrument manager
 instrument_servers_addrs:
-  # - {ip: 192.168.1.112, port: '5556'}
   - {ip: localhost, port: '5556'}
+  - {ip: '192.168.1.10', port: '5556'}
 
 # These will be used when a instrument server is instanciated on this computer
 instrument_server:
-  server_name: Experiment_Computer
+  server_name: Experiment_Computer_1
   port: 5556
 
 # Device list
@@ -34,30 +34,21 @@ device_list:
     - lantz.drivers.examples.dummydrivers.DummyOsci
     - []
     - {}
+
 # Experiment list
 # Each experiment entry should have an
 # alias:
-#   - 'spyrelet class',
-#   - device alias dict (This can be empty if all the device have the same name in the spyrelet code and in the instrument server)
-#   - required spyrelets dict
+#   class: 'spyrelet class'
+#   spyrelets: A dictionary containing the sub-spyrelet to be used
+#   args: Argument used to instanciate the spyrelet.  This included device alias dict, spyrelets dict and other CONSTS parametters
 experiment_list:
+  s2:
+    class: nspyre.user.test_spyrelets.SubSpyrelet
+    args:
+      device_alias: {sg: my_sg}
+
   my_exp:
-    - nspyre.user.test_spyrelets.MyExperiment
-    - {sg: my_sg, osc: osc,}
-    - {s2: sub_spyrelet}
-  sub_spyrelet:
-    - nspyre.user.test_spyrelets.SubSpyrelet
-    - {sg: my_sg,}
-    - {}
-
-
-# Experimental State
-# This is a list parametters which should be saved along with the data
-experimental_state:
-  device_feat:
-    mw_freq: [my_sg, frequency]
-    mw_ampl: [my_sg, amplitude]
-  device_dictfeat:
-    # res_freq: [ws7, wavelength, 0]
-  
+    class: nspyre.user.test_spyrelets.MyExperiment
+    spyrelets: {s2: s2}
+    args: {device_alias: {sg: my_sg, osc: osc}}
 

@@ -84,7 +84,7 @@ class TaskVsFreq(Spyrelet):
     @Plot1D
     def latest(df, cache):
         latest = df[df.i == df.i.max()]
-        return {'ch1':[latest.index, latest.ch1],'ch2':[latest.index, latest.ch2]}
+        return {'ch1':[latest.f, latest.ch1],'ch2':[latest.f, latest.ch2]}
 
     @Plot1D
     def diff_avg(df, cache):
@@ -95,7 +95,7 @@ class TaskVsFreq(Spyrelet):
     @Plot1D
     def diff_latest(df, cache):
         latest = df[df.i == df.i.max()]
-        return {'ch1-ch2':[latest.index, latest.ch1-latest.ch2]}
+        return {'ch1-ch2':[latest.f, latest.ch1-latest.ch2]}
 
     @PlotFormatInit(LinePlotWidget, ['avg', 'latest', 'diff_avg', 'diff_latest'])
     def init_plot(plot):

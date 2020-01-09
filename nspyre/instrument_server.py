@@ -79,6 +79,7 @@ class Instrument_Server():
             'SET_DICTFEAT':self.set_dictfeat,
             'RUN_ACTION': self.run_action,
             'GET_MONGODB':self.get_mongodb,
+            'READ': self.read,
         }
 
         self.instr = {}
@@ -179,7 +180,8 @@ class Instrument_Server():
     def run_action(self, dname, action, *args, **kwargs):
         return getattr(self.instr[dname], action)(*args, **kwargs)
 
-
+    def read(self):
+        return getattr(self.instr[dname], 'read')()
 
 
 
@@ -270,6 +272,9 @@ class Instrument_Server_Client():
 
     def get_none_feat(self, dname):
         return self.send_cmd('GET_NONE_FEAT', dname)
+    
+    def read(self):
+        return self.send_cmd('READ')
 
 
 

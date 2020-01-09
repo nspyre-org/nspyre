@@ -10,7 +10,7 @@ setup(
     install_requires=[
         # New
         'numpy>=1.16.4',
-        'pyqt5>=5.13.2',
+        'pyqt5==5.13.2',
         'msgpack>=0.6.2',
         'msgpack-numpy>=0.4.4.3',
         # 'pyzmq>=18.0.2', #Use conda for this one

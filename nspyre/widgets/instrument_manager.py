@@ -8,7 +8,8 @@
     Date: 10/30/2019
 """
 
-from collections import OrderedDict
+from collections import OrderedDict, Hashable
+import traceback
 
 import pyqtgraph as pg
 from PyQt5 import QtWidgets, QtCore
@@ -84,34 +85,38 @@ class Instrument_Manager_Widget(QtWidgets.QWidget):
             self.update_instr(dname)
 
     def update_instr(self, dname):
-        self.tree.setSortingEnabled(False)
+        try:
+            self.tree.setSortingEnabled(False)
 
-        dclass = self.manager.get(dname)['class']
-        c = get_class_from_str(dclass)
+            dclass = self.manager.get(dname)['class']
+            c = get_class_from_str(dclass)
 
-        self.manager.get(dname)['zmq'].get_none_feat(dname)
-    
-        instr_item = QtWidgets.QTreeWidgetItem(self.tree, [dname, ''])
-        feats = self.manager.get(dname)['mongo'].find({},{'_id':False})
+            self.manager.get(dname)['zmq'].get_none_feat(dname)
         
-        self.feat_items[dname] = dict()
-        for feat in feats:
-            if feat['type'] == 'dictfeat':
-                feat_item = DictFeatTreeWidgetItem(feat, self.tree, self.manager.get(dname)['dev'])
-                instr_item.addChild(feat_item.item)
-            elif feat['type'] == 'feat':
-                feat_item = FeatTreeWidgetItem(feat, self.tree, self.manager.get(dname)['dev'])
-                instr_item.addChild(feat_item.item)
-                self.tree.setItemWidget(feat_item.item, 1, feat_item.w)
-            elif feat['type'] == 'action':
-                feat_item = ActionTreeWidgetItem(feat, self.tree, self.manager.get(dname)['dev'])
-                instr_item.addChild(feat_item.item)
-                self.tree.setItemWidget(feat_item.item, 1, feat_item.w)
-            self.feat_items[dname][feat['name']] = feat_item
-            self.tree.setItemWidget(feat_item.item, 0, QtWidgets.QLabel(feat['name']))
+            instr_item = QtWidgets.QTreeWidgetItem(self.tree, [dname, ''])
+            feats = self.manager.get(dname)['mongo'].find({},{'_id':False})
+            
+            self.feat_items[dname] = dict()
+            for feat in feats:
+                if feat['type'] == 'dictfeat':
+                    feat_item = DictFeatTreeWidgetItem(feat, self.tree, self.manager.get(dname)['dev'])
+                    instr_item.addChild(feat_item.item)
+                elif feat['type'] == 'feat':
+                    feat_item = FeatTreeWidgetItem(feat, self.tree, self.manager.get(dname)['dev'])
+                    instr_item.addChild(feat_item.item)
+                    self.tree.setItemWidget(feat_item.item, 1, feat_item.w)
+                elif feat['type'] == 'action':
+                    feat_item = ActionTreeWidgetItem(feat, self.tree, self.manager.get(dname)['dev'])
+                    instr_item.addChild(feat_item.item)
+                    self.tree.setItemWidget(feat_item.item, 1, feat_item.w)
+                self.feat_items[dname][feat['name']] = feat_item
+                self.tree.setItemWidget(feat_item.item, 0, QtWidgets.QLabel(feat['name']))
 
-        self.tree.setSortingEnabled(True)
-        self.tree.sortByColumn(0, QtCore.Qt.AscendingOrder)
+            self.tree.setSortingEnabled(True)
+            self.tree.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        except:
+            print("Could not load {}".format(dname))
+            self.remove_instr(dname)
 
     def remove_instr(self, dname):
         if dname in self.feat_items:
@@ -168,6 +173,7 @@ class DictFeatTreeWidgetItem(QtCore.QObject):
         self.childs = OrderedDict()
         temp_feat = feat.copy()
         for i,key in enumerate(feat['keys']):
+            assert isinstance(key, Hashable)
             temp_feat['value'] = feat['value'][i]
             w = get_feat_widget(temp_feat)
             item = QtWidgets.QTreeWidgetItem(1)
@@ -220,7 +226,7 @@ if __name__ ==  '__main__':
     from nspyre.widgets.app import NSpyreApp
     app = NSpyreApp([])
 
-    m = Instrument_Manager()
+    m = Instrument_Manager(timeout=10000)
     w = Instrument_Manager_Widget(m)
     w.show()
     app.exec_()

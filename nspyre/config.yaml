@@ -11,7 +11,7 @@ replica_set_name: NSpyreSet
 # This is the addrs of the instrument servers you want to include in the instrument manager
 instrument_servers_addrs:
   - {ip: localhost, port: '5556'}
-  - {ip: '192.168.1.10', port: '5556'}
+#   - {ip: '192.168.1.10', port: '5556'}
 
 # These will be used when a instrument server is instanciated on this computer
 instrument_server:

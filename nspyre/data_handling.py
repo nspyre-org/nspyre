@@ -52,7 +52,7 @@ def gen_exp_state(mode='current', mongodb_addr=None, debug=False):
     else:
         raise Exception("Invalid mode to generate the experimental state")
 
-def save_data(spyrelet, filename, name=None, description=None, save_state_mode='current', debug=False):
+def save_data(spyrelet, filename, name=None, description=None, save_state_mode='current', debug=False, **kwargs):
     d = spyrelet.data.drop(['_id'], axis=1)
     data_dict = OrderedDict([
         ('name',name),
@@ -94,6 +94,8 @@ def save_data(spyrelet, filename, name=None, description=None, save_state_mode='
     #Write the file
     finally:
         data_dict['experimental_state'] = state_dict
+        data_dict.update(kwargs)
+
         if filename is None:
             return data_dict
         else:

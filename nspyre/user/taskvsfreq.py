@@ -52,8 +52,8 @@ class TaskVsFreq(Spyrelet):
             
     def initialize(self, fs, ch1, ch2, rf_power, time_per_point=0.5, iterations=100):
         self.sg.rf_amplitude = rf_power
-        self.sg.rf_toggle = True
         self.sg.mod_toggle = True
+        self.sg.rf_toggle = True
         num_ctr = sum([1 for ch in [ch1, ch2] if 'ctr' in ch])
         if num_ctr == 2:
             self.ttype = 'CI'

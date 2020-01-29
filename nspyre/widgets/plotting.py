@@ -584,8 +584,8 @@ def fit_func(xs, A=1, sigma=1, x0=0, y0=0):
     """,
         'cos':"""
 # Cosine
-def fit_func(xs, A=1, f=1, phi=0, y0=0):
-    return A*np.cos(f*xs+phi)+y0
+def fit_func(xs, A=1, T=50, phi=0, y0=1):
+    return A*np.cos(np.pi*xs/T+phi)+y0
     """,
         'linear':"""
 # Linear

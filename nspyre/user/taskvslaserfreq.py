@@ -100,8 +100,8 @@ class TaskVsLaserFreq(Spyrelet):
         if fs[-1] < fs[0]:
             raise Exception("Only forward sweep is implemented")
 
-        goto_mot(fs[0]+(self.CONSTS['mhf_size']/2))
-        if self.CONSTS['verbose']: print('After motor move', self.ws7.frequency[self.CONSTS['ws7_ch']], self.dlc.piezo_voltage)
+        # goto_mot(fs[0]+(self.CONSTS['mhf_size']/2))
+        # if self.CONSTS['verbose']: print('After motor move', self.ws7.frequency[self.CONSTS['ws7_ch']], self.dlc.piezo_voltage)
 
         #Main loop
         df = (fs[-1]-fs[0])/len(fs) # This is only a good number for standard sweeps

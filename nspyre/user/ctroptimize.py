@@ -9,8 +9,11 @@ from lantz.drivers.toptica import DLC
 from lantz.drivers.thorlabs.fabryperot import FabryPerot
 from lantz.drivers.sainsmart.relay import Relay
 
-import cma
-import dlib
+try:
+    import cma
+    import dlib
+except:
+    print("Could not load the optimization libraries.  This module is thus not fully usable")
 
 class CTROptimize(Spyrelet):
     REQUIRED_DEVICES = {

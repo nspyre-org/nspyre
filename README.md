@@ -44,7 +44,7 @@ pip install git+https://github.com/pyqtgraph/pyqtgraph.git
 You will also need to make sure to install lantz (most likelly a local distribution). Here an example of what that lantz installation could look like (feel free to modify this as needed).
 ```
 cd ..
-git clone git@github.com:awsch/lantz.git lantz
+git clone https://github.com/awsch/lantz lantz
 cd lantz
 pip install -e .
 ```

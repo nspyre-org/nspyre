@@ -147,12 +147,12 @@ def load_all_spyrelets():
 
 def drop_spyrelet(name, client=None):
     if client is None: client = get_mongo_client()
-    c['Spyre_Live_Data'][name].drop()
-    c['Spyre_Live_Data']['Register'].delete_one({'_id': name})
+    client['Spyre_Live_Data'][name].drop()
+    client['Spyre_Live_Data']['Register'].delete_one({'_id': name})
 
 def drop_all_spyrelets(except_list=[], client=None):
     if client is None: client = get_mongo_client()
-    all_in_reg = [x['_id'] for x in c['Spyre_Live_Data']['Register'].find({},{})]
+    all_in_reg = [x['_id'] for x in client['Spyre_Live_Data']['Register'].find({},{})]
     for name in all_in_reg:
         if not name in except_list:
             drop_spyrelet(name, client=client)

@@ -108,11 +108,13 @@ class Spyrelet():
 
     def run(self, *args, **kwargs):
         self.progress = kwargs.pop('progress') if ('progress' in kwargs) else tqdm
+        clear_data = kwargs.pop('clear_data') if ('clear_data' in kwargs) else True
         if self.progress is None: self.progress = lambda *args, **kwargs: tqdm(*args, leave=False, **kwargs)
         try:
             args, kwargs = self.enforce_args_units(*args, **kwargs)
             self._stop_flag = False
-            self.clear_data()
+            if clear_data:
+                self.clear_data()
             self.initialize(*args, **kwargs)
             self.main(*args, **kwargs)
         except StopRunning:

@@ -76,7 +76,7 @@ class MyExperiment(Spyrelet):
         for i, f in enumerate(self.progress(fs)):
             self.sg.frequency = f
             # print(f)
-            self.call(self.s2, A=amplitude, use_parent_progress=True)
+            self.call(self.s2, 100, A=amplitude)
             # print(self.s2.data)
             val = self.s2.data.rand.mean().mean()
             # print(val)

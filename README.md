@@ -17,6 +17,10 @@ Clone the repository
 ```
 git clone git@github.com:AlexBourassa/nspyre.git nspyre
 ```
+or 
+```
+git clone https://github.com/AlexBourassa/nspyre nspyre
+```
 
 Configure and start the MongoDB server (this will start two mongo server in the same replica set (one primary and one secondary)). By default these are publicly accessible on ports 27017 and port 27018 so if you are not in a secured private network, make sure to add some security configurations to the mongodb1.cfg and mongodb2.cfg files (better support for these security configurations will be integrated in future versions)
 ```

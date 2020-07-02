@@ -392,8 +392,7 @@ class MongoDB_Instrument_Server(Instrument_Server):
                 elif len(limits) == 3:
                     limits = [limits[0], limits[1]]
                     # step = limits[2] #Not used right now
-            print(feat_name, feat)
-            print(keys)
+
             doc_list.append({
                                 'name':feat_name,
                                 'type': 'dictfeat' if isinstance(feat, DictFeat) else 'feat',
@@ -402,7 +401,8 @@ class MongoDB_Instrument_Server(Instrument_Server):
                                 'limits': limits,
                                 'values': values,
                                 'keys': keys,
-                                'value': [None]*len(params['keys']) if isinstance(feat, DictFeat) and params['keys'] is not None else None,
+                                'value': [None]*len(params['keys']) if isinstance(feat, DictFeat) \
+                                    and params['keys'] is not None else None,
                             })
         for action_name, action in c._lantz_actions.items():
             doc_list.append({

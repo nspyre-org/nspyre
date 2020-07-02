@@ -36,14 +36,17 @@ quit()
 ```
 Finally, if you are planning on using NSpyre from different computers, you will also need to open the appropriate port in the firewall of the server machine (by default these are 27017 and 27018)
 
-Finally you can create and configure a conda environment.  The pip command must be run from inside the nspyre folder (where the setup.py script is located). Additionally, some part of this install may require the shell to be started with admin rigths:
+Finally you can create and configure a conda environment.  The pip command must be run from inside the nspyre folder (where the setup.py script is located). Additionally, some part of this install may require the shell to be started with admin rights:
 ```
 conda create -n nspyre python=3
 activate nspyre
 conda install pyzmq
 pip install -e .
 pip install git+https://github.com/pyqtgraph/pyqtgraph.git
-pip install pymongo
+```
+To ensure that you can view your data correctly, make sure that line 45 of nspyre/widgets/main.py activates the name of your notebook (if you copied the code above, this would mean you should have 
+```
+cmd = 'bash -c "activate nspyre; python {}"'.format(filename) 
 ```
 You will also need to make sure to install lantz (most likelly a local distribution). Here an example of what that lantz installation could look like (feel free to modify this as needed).
 ```

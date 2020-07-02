@@ -44,7 +44,7 @@ conda install pyzmq
 pip install -e .
 pip install git+https://github.com/pyqtgraph/pyqtgraph.git
 ```
-To ensure that you can view your data correctly, make sure that line 45 of nspyre/widgets/main.py activates the name of your aniconda environment (if you copied the code above, this would mean you should have 
+To ensure that you can view your data correctly, make sure that line 45 of nspyre/widgets/main.py activates the name of your aniconda environment. If you copied the code above, this would mean you should have the follow coding 
 ```
 cmd = 'bash -c "activate nspyre; python {}"'.format(filename) 
 ```

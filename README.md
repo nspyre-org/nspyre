@@ -43,8 +43,8 @@ activate nspyre
 conda install pyzmq
 pip install -e .
 pip install git+https://github.com/pyqtgraph/pyqtgraph.git
+pip install pymongo
 ```
-
 You will also need to make sure to install lantz (most likelly a local distribution). Here an example of what that lantz installation could look like (feel free to modify this as needed).
 ```
 cd ..

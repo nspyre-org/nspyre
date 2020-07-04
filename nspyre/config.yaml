@@ -2,6 +2,9 @@
 # Here are all the setting which will be used by default by the various parts of NSpyre
 # The user should modify these to suit their specific configuration
 
+#Conda environment name
+conda_env: nspyre
+
 # Addresses of the one of the mongodb server in the replica set.
 mongodb_addr: mongodb://localhost:27017/
 

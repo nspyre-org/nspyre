@@ -1,6 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 from nspyre.widgets.image import ImageWidget
 from nspyre.utils import join_nspyre_path
+from nspyre.utils import get_configs
 from subprocess import Popen, CREATE_NEW_CONSOLE
 import os
 import time
@@ -42,7 +43,7 @@ class Spyre_Launcher(QtWidgets.QWidget):
         if new_console:
             filename = os.path.normpath(join_nspyre_path(nspyre_py_file))
             filename = filename.replace('\\', '/')
-            cmd = 'bash -c "activate notebook; python {}"'.format(filename)
+            cmd = 'bash -c "activate {}; python {}"'.format(get_configs()['conda_env'], filename)
             Popen(cmd, creationflags=CREATE_NEW_CONSOLE)
         else:
             Popen(['python', join_nspyre_path(nspyre_py_file)])

@@ -2,10 +2,9 @@ from PyQt5 import QtCore, QtWidgets
 from nspyre.widgets.image import ImageWidget
 from nspyre.utils import join_nspyre_path
 from nspyre.utils import get_configs
-from subprocess import Popen, CREATE_NEW_CONSOLE
+from subprocess import Popen
 import os
 import time
-
 
 class Spyre_Launcher(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -44,13 +43,10 @@ class Spyre_Launcher(QtWidgets.QWidget):
             filename = os.path.normpath(join_nspyre_path(nspyre_py_file))
             filename = filename.replace('\\', '/')
             cmd = 'bash -c "activate {}; python {}"'.format(get_configs()['conda_env'], filename)
-            Popen(cmd, creationflags=CREATE_NEW_CONSOLE)
+            Popen(cmd, shell=True)
         else:
             Popen(['python', join_nspyre_path(nspyre_py_file)])
         print(time.time()-start)
-
-
-
 
 if __name__ == '__main__':
     from nspyre.widgets.app import NSpyreApp

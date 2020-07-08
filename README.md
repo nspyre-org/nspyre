@@ -28,10 +28,10 @@ cd nspyre
 install.bat
 ```
 
-Now you need to initialize the replica set. To do so enter the mongo shell and input a rs.initiate command (where you should substitute the X.X.X.X with your computer's ip address
+Now you need to initialize the replica set. To do so enter the mongo shell and input a rs.initiate command
 ```
 mongo
-rs.initiate({_id: "NSpyreSet", members:[{_id: 0, host: 'X.X.X.X:27017'},{_id: 1, host: 'X.X.X.X:27018'}]})
+rs.initiate({_id: "NSpyreSet", members:[{_id: 0, host: 'localhost:27017'},{_id: 1, host: 'localhost:27018'}]})
 quit()
 ```
 Finally, if you are planning on using NSpyre from different computers, you will also need to open the appropriate port in the firewall of the server machine (by default these are 27017 and 27018)
@@ -40,17 +40,7 @@ Finally you can create and configure a conda environment.  The pip command must 
 ```
 conda create -n nspyre python=3
 activate nspyre
-conda install pyzmq
 pip install -e .
-pip install git+https://github.com/pyqtgraph/pyqtgraph.git
 ```
 
 Modify your nspyre/nspyre/config.yaml to suit your specific configuration of nspyre.
-
-You will also need to make sure to install lantz (most likelly a local distribution). Here an example of what that lantz installation could look like (feel free to modify this as needed).
-```
-cd ..
-git clone https://github.com/awsch/lantz lantz
-cd lantz
-pip install -e .
-```

@@ -14,7 +14,7 @@ long_description = '\n\n'.join([read('LICENSE'),
 __doc__ = long_description
 
 setup(name='nspyre',
-	version='0.1.1',
+	version='0.2.0',
 	license='MIT',
 	description='Networked Scientific Python Research Environment',
 	long_description=long_description,
@@ -37,8 +37,12 @@ setup(name='nspyre',
 		'pyyaml>=5.1.2',
 		'scipy>=1.2.1',
 		'tqdm>=4.32.2',
-		#'lantzdev>=0.5', # TODO integrate new lantz version
-		'lantz @ git+https://github.com/awsch/lantz.git@drivers_develop'],
+		'rpyc>=4.1.5',
+		'lantzdev[full]>=0.5',
+		'colorama>=0.4.3',
+		'pyserial>=3.4',
+		'pyusb>=1.0.2'
+		],
 	platforms='any',
 	classifiers=[
 		"Programming Language :: Python :: 3",

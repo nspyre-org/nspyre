@@ -1,0 +1,44 @@
+2020-07-10 10:06:12,885 -- INFO -- starting instrument server...
+2020-07-10 10:06:13,077 -- DEBUG -- SerialSession was correctly imported.
+2020-07-10 10:06:13,092 -- DEBUG -- USBSession and USBRawSession were correctly imported.
+2020-07-10 10:06:13,095 -- DEBUG -- TCPIPSession was correctly imported.
+2020-07-10 10:06:13,096 -- DEBUG -- GPIBSession was not imported No module named 'gpib'.
+2020-07-10 10:06:13,096 -- DEBUG -- Created library wrapper for unset
+2020-07-10 10:06:13,096 -- DEBUG -- Created ResourceManager with session 1099072
+2020-07-10 10:06:13,097 -- INFO -- Created LantzSignalGenerator0
+2020-07-10 10:06:13,097 -- DEBUG -- Using MessageBasedDriver for TCPIP::localhost::5678::SOCKET
+2020-07-10 10:06:13,097 -- INFO -- Calling initialize
+2020-07-10 10:06:13,097 -- INFO -- initialize returned None
+2020-07-10 10:06:13,097 -- DEBUG -- Opening resource TCPIP::localhost::5678::SOCKET
+2020-07-10 10:06:13,097 -- DEBUG -- Setting [('write_termination', '\n'), ('read_termination', '\n')]
+2020-07-10 10:06:13,097 -- DEBUG -- TCPIP::localhost::5678::SOCKET - opening ...
+2020-07-10 10:06:13,098 -- DEBUG -- TCPIP::localhost::5678::SOCKET - is open with session 6443570
+2020-07-10 10:06:13,098 -- INFO -- added device fake_sg [['TCPIP::localhost::5678::SOCKET']] [{}]
+2020-07-10 10:06:13,101 -- INFO -- Created DummyOsci0
+2020-07-10 10:06:13,101 -- INFO -- Calling initialize
+2020-07-10 10:06:13,101 -- INFO -- initialize returned None
+2020-07-10 10:06:13,101 -- INFO -- added device fake_osc [[]] [{}]
+2020-07-10 10:06:13,101 -- INFO -- server started on [0.0.0.0]:5556
+2020-07-10 10:06:19,263 -- DEBUG -- Closing resource TCPIP::localhost::5678::SOCKET
+2020-07-10 10:06:19,263 -- DEBUG -- TCPIP::localhost::5678::SOCKET - closing
+2020-07-10 10:06:19,263 -- DEBUG -- TCPIP::localhost::5678::SOCKET - is closed
+2020-07-10 10:06:19,264 -- INFO -- Calling finalize
+2020-07-10 10:06:19,264 -- INFO -- finalize returned None
+2020-07-10 10:06:19,264 -- INFO -- deleted fake_sg
+2020-07-10 10:06:19,264 -- INFO -- Created LantzSignalGenerator1
+2020-07-10 10:06:19,265 -- DEBUG -- Using MessageBasedDriver for TCPIP::localhost::5678::SOCKET
+2020-07-10 10:06:19,265 -- INFO -- Calling initialize
+2020-07-10 10:06:19,265 -- INFO -- initialize returned None
+2020-07-10 10:06:19,265 -- DEBUG -- Opening resource TCPIP::localhost::5678::SOCKET
+2020-07-10 10:06:19,265 -- DEBUG -- Setting [('write_termination', '\n'), ('read_termination', '\n')]
+2020-07-10 10:06:19,265 -- DEBUG -- TCPIP::localhost::5678::SOCKET - opening ...
+2020-07-10 10:06:19,266 -- DEBUG -- TCPIP::localhost::5678::SOCKET - is open with session 6864782
+2020-07-10 10:06:19,266 -- INFO -- added device fake_sg [['TCPIP::localhost::5678::SOCKET']] [{}]
+2020-07-10 10:06:19,266 -- INFO -- Calling finalize
+2020-07-10 10:06:19,266 -- INFO -- finalize returned None
+2020-07-10 10:06:19,266 -- INFO -- deleted fake_osc
+2020-07-10 10:06:19,266 -- INFO -- Created DummyOsci1
+2020-07-10 10:06:19,267 -- INFO -- Calling initialize
+2020-07-10 10:06:19,267 -- INFO -- initialize returned None
+2020-07-10 10:06:19,267 -- INFO -- added device fake_osc [[]] [{}]
+2020-07-10 10:06:22,831 -- INFO -- Exiting...

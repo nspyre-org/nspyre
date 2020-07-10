@@ -1,0 +1,20 @@
+# Name and port to run the instrument server on
+server_settings:
+  name: inserv1
+  port: 5556
+
+# This list will be used by the instrument server to automatically load 
+# the specified devices. The syntax is:
+#   device_alias:
+#     class: 'device class'
+#     args: [<*args>]
+#     kwargs: {<**kwargs>}
+devices:
+  fake_sg:
+    class: lantz.drivers.examples.LantzSignalGenerator
+    args: [TCPIP::localhost::5678::SOCKET]
+    kwargs: {}
+  fake_osc:
+    class: lantz.drivers.examples.dummydrivers.DummyOsci
+    args: []
+    kwargs: {}

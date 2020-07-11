@@ -158,9 +158,9 @@ class CmdPrompt(Cmd):
 		try:
 			self.instrument_server.update_config(filename)
 		except:
-			print("Failed to reload config file")
+			print('Failed to reload config file')
 			return
-		print("Reloaded config file")
+		print('Reloaded config file')
 
 	def do_reload(self, arg_string):
 		"""Restart the connection with a device\n- the device name string"""
@@ -172,9 +172,9 @@ class CmdPrompt(Cmd):
 		try:
 			self.instrument_server.reload_device(dev_name)
 		except:
-			print("Failed to reload device [%s]" % dev_name)
+			print('Failed to reload device [%s]' % dev_name)
 			return
-		print("Reloaded device [%s]" % dev_name)
+		print('Reloaded device [%s]' % dev_name)
 
 	def do_reload_all(self, arg_string):
 		"""Restart the connection with all devices"""
@@ -184,9 +184,9 @@ class CmdPrompt(Cmd):
 		try:
 			self.instrument_server.reload_devices()
 		except:
-			print("Failed to reload all devices")
+			print('Failed to reload all devices')
 			return
-		print("Reloaded all devices")
+		print('Reloaded all devices')
 
 	def do_debug(self, arg_string):
 		"""Drop into the debugging console"""
@@ -201,11 +201,21 @@ class CmdPrompt(Cmd):
 		if arg_string:
 			print('Expected 0 args')
 			return
-		logging.info("Exiting...")
+		logging.info('Exiting...')
 		raise SystemExit
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 	from rpyc.utils.server import ThreadedServer
+	import optparse
+	parser = optparse.OptionParser('usage: %prog [options]')
+	parser.add_option('-c', '--config', dest='cfg', default='',
+					type='string', help='server configuration file location')
+
+	(options, args) = parser.parse_args()
+	if len(args) != 0:
+		parser.error('incorrect number of arguments')
+	config_filepath = options.cfg if options.cfg else DEFAULT_CONFIG
+	
 	# configure server logging behavior
 	logging.basicConfig(level=logging.DEBUG,
 						format='%(asctime)s -- %(levelname)s -- %(message)s',
@@ -213,7 +223,7 @@ if __name__ == "__main__":
 									logging.StreamHandler()])
 	# start RPyC server
 	logging.info('starting instrument server...')
-	inserv = InstrumentServer(DEFAULT_CONFIG)
+	inserv = InstrumentServer(config_filepath)
 	_thread.start_new_thread(rpyc_server_thread, (inserv,))
 	# allow time for the rpyc server to start
 	time.sleep(0.1)

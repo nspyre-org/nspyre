@@ -23,7 +23,7 @@ import time
 ###########################
 
 DEFAULT_CONFIG = 'config.yaml'
-DEFAULT_LOG = 'inserv.log'
+DEFAULT_LOG = 'server.log'
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 

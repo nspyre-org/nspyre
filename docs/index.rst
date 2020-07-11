@@ -10,6 +10,8 @@ Welcome to nspyre's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   contributing
+
 
 
 Indices and tables

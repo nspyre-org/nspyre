@@ -19,8 +19,8 @@ updated by the user.
 
 
 Installation
-============
+------------
 
-######
+
 nspyre
-######
+^^^^^^

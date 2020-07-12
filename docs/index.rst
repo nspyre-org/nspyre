@@ -13,10 +13,11 @@ Welcome to nspyre's documentation!
    install
    getting_started
    spyrelet
-   Instrument Server
+   instrument_server
    The Database
-   View Manager
+   view_manager
    contributing
+   
 
 Installation
 ============

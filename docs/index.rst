@@ -11,12 +11,12 @@ Welcome to nspyre's documentation!
    :caption: Contents:
 
    install
+   contributing
    Getting Started
    spyrelet
    Instrument Server
    The Database
    View Manager
-   contributing
 
 Installation
 ============

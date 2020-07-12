@@ -16,11 +16,15 @@ Welcome to nspyre's documentation!
    instrument_server
    the_database
    view_manager
+   api
    contributing
 
 
 Installation
 ============
+
+.. automodule:: Instrument_Server
+   :members:
 
 ######
 nspyre

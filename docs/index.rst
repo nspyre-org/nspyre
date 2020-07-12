@@ -7,17 +7,17 @@ Welcome to nspyre's documentation!
 ==================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Contents:
 
    install
    getting_started
    spyrelet
    instrument_server
-   The Database
+   the_database
    view_manager
    contributing
-   
+
 
 Installation
 ============

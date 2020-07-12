@@ -18,7 +18,7 @@ server code we implemented above (file Notebook_Example.py within NSpyre, or in
 Jupyter Scripts/Alex's tutorial/The Instrument Server and Spyrelet.ipynb) and
 uncomment/add the following:
 
-   code-block:: python
+.. code-block:: python
 
    # Add all the spyrelets
    all_spyrelets = load_all_spyrelets()
@@ -31,4 +31,4 @@ Available spyrelets:  ['s2', 'my_exp']
 
 
 Note that just like with the devices, the available spyrelets should be
-specified in the config.yaml under experiment_list. 
+specified in the config.yaml under experiment_list.

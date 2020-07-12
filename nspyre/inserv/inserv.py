@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 	nspyre.instrument_server.inserv.py
 	~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -17,6 +18,8 @@ import os
 import _thread
 from cmd import Cmd
 import time
+from rpyc.utils.server import ThreadedServer
+import optparse
 
 ###########################
 # Globals
@@ -119,16 +122,6 @@ class InstrumentServer(rpyc.Service):
 	def on_disconnect(self, conn):
 		pass
 
-###########################
-
-def rpyc_server_thread(instrument_server):
-	"""Thread for running the RPyC server asynchronously"""
-	t = ThreadedServer(instrument_server, port=instrument_server.port,
-						protocol_config={'allow_all_attrs' : True,
-										'allow_setattr' : True,
-										'allow_delattr' : True})
-	t.start()
-
 class CmdPrompt(Cmd):
 	"""Server shell prompt processor"""
 	def __init__(self, instrument_server):
@@ -204,9 +197,18 @@ class CmdPrompt(Cmd):
 		logging.info('Exiting...')
 		raise SystemExit
 
+###########################
+
+def rpyc_server_thread(instrument_server):
+	"""Thread for running the RPyC server asynchronously"""
+	t = ThreadedServer(instrument_server, port=instrument_server.port,
+						protocol_config={'allow_all_attrs' : True,
+										'allow_setattr' : True,
+										'allow_delattr' : True})
+	t.start()
+
 if __name__ == '__main__':
-	from rpyc.utils.server import ThreadedServer
-	import optparse
+	# parse command-line arguments
 	parser = optparse.OptionParser('usage: %prog [options]')
 	parser.add_option('-c', '--config', dest='cfg', default='',
 					type='string', help='server configuration file location')
@@ -214,8 +216,9 @@ if __name__ == '__main__':
 	(options, args) = parser.parse_args()
 	if len(args) != 0:
 		parser.error('incorrect number of arguments')
-	config_filepath = options.cfg if options.cfg else DEFAULT_CONFIG
 	
+	config_filepath = options.cfg if options.cfg else DEFAULT_CONFIG
+
 	# configure server logging behavior
 	logging.basicConfig(level=logging.DEBUG,
 						format='%(asctime)s -- %(levelname)s -- %(message)s',
@@ -225,9 +228,11 @@ if __name__ == '__main__':
 	logging.info('starting instrument server...')
 	inserv = InstrumentServer(config_filepath)
 	_thread.start_new_thread(rpyc_server_thread, (inserv,))
+	
 	# allow time for the rpyc server to start
 	time.sleep(0.1)
-	# start the shell prompt
+	
+	# start the shell prompt event loop
 	cmd_prompt = CmdPrompt(inserv)
 	cmd_prompt.prompt = 'inserv > '
 	cmd_prompt.cmdloop('instrument server started...')

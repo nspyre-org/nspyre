@@ -1,42 +1,17 @@
+# address of the mongodb server
+mongodb_addr: 'mongodb://localhost:27017/'
 
-# Here are all the setting which will be used by default by the various parts of NSpyre
-# The user should modify these to suit their specific configuration
+# this is the configuration of the instrument servers you want to include in the
+# instrument manager
+instrument_servers:
+  - {id: 'local1', ip: 'localhost'}
+  - {id: 'remote1', ip: '192.168.1.10'}
 
-#Conda environment name
-conda_env: nspyre
-
-# Addresses of the one of the mongodb server in the replica set.
-mongodb_addr: mongodb://localhost:27017/
-
-# This is the name of the replica set for the mongodb servers (this should match the _id given during the rs.initialize command)
-replica_set_name: NSpyreSet
-
-# This is the addrs of the instrument servers you want to include in the instrument manager
-instrument_servers_addrs:
-  - {ip: localhost, port: '5556'}
-#   - {ip: '192.168.1.10', port: '5556'}
-
-# These will be used when a instrument server is instanciated on this computer
-instrument_server:
-  server_name: Experiment_Computer_1
-  port: 5556
-
-# Device list
-# This list will be used to instanciate the instrument server automatically when it is launched 
-# Each device should have an
-#   alias:
-#     - 'device class'
-#     - [<*args>]
-#     - {<**kwargs>}
+# TODO
 device_list:
-  my_sg:
-    - lantz.drivers.examples.LantzSignalGenerator
-    - [TCPIP::localhost::5678::SOCKET]
-    - {}
-  osc:
-    - lantz.drivers.examples.dummydrivers.DummyOsci
-    - []
-    - {}
+  - {name: 'my_sg1', server: 'local1', device: 'sg'}
+  - {name: 'my_osc1', server: 'local1', device: 'osc'}
+  - {name: 'my_sg2', server: 'remote1', device: 'sg'}
 
 # Experiment list
 # Each experiment entry should have an

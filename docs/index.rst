@@ -10,6 +10,12 @@ Welcome to nspyre's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   Install
+   Getting Started
+   Spyrelet
+   Instrument Server
+   The Database
+   View Manager
    contributing
 
 Installation

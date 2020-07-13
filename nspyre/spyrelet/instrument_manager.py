@@ -1,86 +1,123 @@
 """
-    spyre.widgets.instrument_manager.py
+    nspyre.spyrelet.instrument_manager.py
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This instrument manager is a Widget which can connect to an Instrument server and control the associated devices
+    This module manages and centralizes connections to one or more instrument
+    servers
 
-    Author: Alexandre Bourassa
-    Date: 10/30/2019
+    Author: Jacob Feder
+    Date: 7/11/2020
 """
 
-import pymongo
+from nspyre.utils.config_file import get_config_param, load_config
+import os
+import logging
+import rpyc
 
-from nspyre.instrument_server import Instrument_Server_Client, load_remote_device
-from nspyre.mongo_listener import Synched_Mongo_Database
-from nspyre.utils import get_configs, get_mongo_client
+###########################
+# Globals
+###########################
+
+this_dir = os.path.dirname(os.path.realpath(__file__))
+
+###########################
+# Exceptions
+###########################
+
+class InstrumentManagerError(Exception):
+    """General InstrumentManager exception"""
+    def __init__(self, msg):
+        super().__init__(msg)
+
+###########################
+# Classes / functions
+###########################
 
 class Instrument_Manager():
+    """Loads a configuration file, then attempts to connect to all specified
+        instrument servers"""
+    def __init__(self, config_file):
+        self.config = {}
+        self.servers = {}
+        self.update_config(config_file)
+        self.connect_servers()
 
-    def __init__(self, instrument_server_client_list=None, timeout=10000):
-        if instrument_server_client_list is None:
-            instrument_server_client_list = []
-            for server in get_configs()['instrument_servers_addrs']:
-                instrument_server_client_list.append(Instrument_Server_Client(**server, recv_timeout=timeout))
-        # Compile a list of zmq and mongo client objects
-        self.clients = list()
-        self.fully_mongo = True
-        for c in instrument_server_client_list:
-            db = c.get_mongodb()
-            if db is None:
-                self.fully_mongo = False
-                self.clients.append({'zmq':c,'mongo':None})
-            else:
-                mc = get_mongo_client()
-                self.clients.append({'zmq':c, 'mongo':mc[db['db_name']]})
+    def connect_servers(self):
+        """Attempt connection to all of the instrument servers specified in
+        the config file"""
+        servers_configs = get_config_param(self.config, ['instrument_servers'])
+        for s in servers_configs:
+            s_addr = get_config_param(self.config,
+                                    ['instrument_servers', s, 'address'])
+            s_port = get_config_param(self.config,
+                                    ['instrument_servers', s, 'port'])
+            self.connect_server(s, s_addr, s_port)
 
-        # Create the instrument list
-        self.instr = dict()
-        for c in self.clients:
-            for dname in c['zmq'].list_instr():
-                self.update_instr(dname, c)
+    def disconnect_servers(self):
+        """Attempt disconnection from all of the instrument servers"""
+        for s in list(self.servers):
+            self.disconnect_server(s)
 
-        
+    def connect_server(self, s_id, s_addr, s_port):
+        """Attempt connection to an instrument server"""
+        try:
+            self.servers[s_id] = rpyc.connect(s_addr, s_port)
+        except:
+            raise InstrumentManagerError('Failed to connect to '
+                            'instrument server [%s] at address [%s]'
+                            % (s_id, s_addr)) from None
+        logging.info('instrument manager connected to server [%s]' % (s_id))
 
-    def launch_watchers(self):
-        for c in self.clients:
-            addr = "mongodb://{}:{}/".format(*c['mongo'].client.address)
-            db_name = c['mongo'].name
-            c['watcher'] = Synched_Mongo_Database(db_name, addr)
-
-
-    def update_instr(self, dname, client):
-        instr_dict = client['zmq'].list_instr()
-        if not dname in instr_dict:
-            if dname in self.instr:
-                self.instr.pop(dname)
-            return None
-        else:
-            self.instr[dname] = {
-                'zmq': client['zmq'],
-                'mongo': client['mongo'][dname],
-                'class': instr_dict[dname]['class'],
-                'dev': load_remote_device(client['zmq'], dname)
-            }
-            return self.instr[dname]
-
-    def del_instr(self, dname):
-        client = self.get(dname)
-        client['zmq'].del_instr(dname)
-        self.update_instr(dname, client)
-        
-    def add_instr(self, dname, client, dclass, *args, **kwargs):
-        client['zmq'].add_instr(dname, dclass, *args, **kwargs)
-        self.update_instr(dname, client)
-        return 
+    def disconnect_server(self, s_id):
+        """Disconnect from an instrument server and remove it's associated 
+        devices"""
+        try:
+            self.servers[s_id].close()
+            del self.servers[s_id]
+        except:
+            raise InstrumentManagerError('Failed to disconnect from '
+                            'instrument server [%s]' % (s_id)) from None
+        logging.info('instrument manager disconnected '
+                        'from server [%s]' % (s_id))
 
     def get_devices(self):
-        return {dname : self.instr[dname]['dev'] for dname in self.instr}
+        """Iterate through the devices in the config file and attempt to 
+        load the associated devices from the instrument servers"""
+        devs = {}
+        config_devs = get_config_param(self.config, ['devices'])
+        for d in config_devs:
+            # get the server associated with the device
+            s_id = get_config_param(self.config, ['devices', d, 'server_id'])
+            if not s_id in self.servers:
+                raise InstrumentManagerError('Device [%s] instrument server '
+                                    '[%s] not found in "instrument_servers"'
+                                    % (d, s_id)) from None
+                        
+            # get the server device name associated with the device
+            s_dev = get_config_param(self.config, ['devices', d,
+                                                    'server_device'])
 
-    def get(self, dname):
-        if dname in self.instr:
-            return self.instr[dname]
-        else:
-            for c in self.clients:
-                if dname in c['zmq'].list_instr():
-                    return self.update_instr(dname, c)
-            raise Exception('Could not find device: {}'.format(dname))
+            # retrieve the actual device object from the instrument server
+            try:
+                # see inserv.py and RPyC documentation for how this works
+                devs[d] = self.servers[s_id].root.devs[s_dev]
+            except:
+                raise InstrumentManagerError('Instrument server [%s] has no '
+                            'loaded device [%s]' % (s_id, s_dev)) from None
+            
+            logging.info('instrument manager loaded device [%s] from '
+                            ' server [%s]' % (d, s_id))
+        return devs
+
+    def update_config(self, config_file):
+        """Reload the config file"""
+        filename = os.path.join(this_dir, config_file)
+        self.config = load_config(filename)
+
+if __name__ == '__main__':
+    # configure server logging behavior
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s -- %(levelname)s -- %(message)s',
+                        handlers=[logging.StreamHandler()])
+    im = Instrument_Manager('config.yaml')
+    print(im.get_devices())

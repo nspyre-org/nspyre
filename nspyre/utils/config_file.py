@@ -1,6 +1,10 @@
 import yaml
 from importlib import import_module
 
+###########################
+# Exceptions
+###########################
+
 class ConfigEntryNotFoundError(Exception):
 	"""Exception for when a configuration file doesn't contain the desired
 	entry"""
@@ -11,6 +15,10 @@ class ConfigEntryNotFoundError(Exception):
 					(' -> '.join(config_path))
 		super().__init__(msg)
 		self.config_path = config_path
+
+###########################
+# Classes / functions
+###########################
 
 def load_config(filepath):
 	"""Return a config file dictionary loaded from a YAML file"""

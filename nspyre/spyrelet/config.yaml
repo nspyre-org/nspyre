@@ -1,17 +1,17 @@
 # address of the mongodb server
 mongodb_addr: 'mongodb://localhost:27017/'
 
-# this is the configuration of the instrument servers you want to include in the
-# instrument manager
+# configuration of the instrument servers you want to be accessible 
+# from the instrument manager
 instrument_servers:
-  - {id: 'local1', ip: 'localhost'}
-  - {id: 'remote1', ip: '192.168.1.10'}
+  local1: {address: 'localhost', port: 5556}
+#  remote1: {address: '192.168.1.10', port: 5556}
 
-# TODO
-device_list:
-  - {name: 'my_sg1', server: 'local1', device: 'sg'}
-  - {name: 'my_osc1', server: 'local1', device: 'osc'}
-  - {name: 'my_sg2', server: 'remote1', device: 'sg'}
+# devices accessible from spyrelets
+devices:
+  my_sg1: {server_id: 'local1', server_device: 'fake_sg'}
+  my_osc1: {server_id: 'local1', server_device: 'fake_osc'}
+#  my_sg2: {server_id: 'remote1', server_device: 'sg'}
 
 # Experiment list
 # Each experiment entry should have an
@@ -19,14 +19,13 @@ device_list:
 #   class: 'spyrelet class'
 #   spyrelets: A dictionary containing the sub-spyrelet to be used
 #   args: Argument used to instanciate the spyrelet.  This included device alias dict, spyrelets dict and other CONSTS parametters
-experiment_list:
+experiments:
   s2:
     class: nspyre.user.test_spyrelets.SubSpyrelet
     args:
-      device_alias: {sg: my_sg}
+      device_alias: {sg: 'my_sg1'}
 
   my_exp:
     class: nspyre.user.test_spyrelets.MyExperiment
     spyrelets: {s2: s2}
-    args: {device_alias: {sg: my_sg, osc: osc}}
-
+    args: {device_alias: {sg: 'my_sg1', osc: 'my_osc1'}}

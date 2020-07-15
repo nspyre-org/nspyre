@@ -18,6 +18,8 @@ Welcome to nspyre's documentation!
    view_manager
    api
    contributing
+      Code Contributions
+      Documentation Contributions
 
 
 Installation

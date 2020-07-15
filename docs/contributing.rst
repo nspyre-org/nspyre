@@ -149,13 +149,6 @@ The reasons for using a markup language is straight-forward:
 
 Don’t believe me? Then go .rst file for this webpage and see for yourself.
 
-There are plenty of good resources online, and cheat sheets to get you started:
-
-* `An Introduction to reStructuredText <https://docutils.readthedocs.io/en/sphinx-docs/ref/rst/introduction.html>`_
-* `A ReStructuredText Primer <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html>`_
-
-https://www.writethedocs.org/guide/writing/reStructuredText/
-
 
 
 reStructuredText
@@ -277,6 +270,32 @@ There are many different ways using reST to display code samples, or any text th
       #some sample code
       print('Hello, World!')
 
+The doctest block must end
+with a blank line and should *not* end with an unused prompt::
+
+    >>> 1 + 1
+    2
+    
+    
+Doctest blocks are text blocks which begin with ">>> ", the Python interactive interpreter main prompt, and end with a blank line. Doctest blocks are treated as a special case of literal blocks, without requiring the literal block syntax. If both are present, the literal block syntax takes priority over Doctest block syntax:
+
+This is an ordinary paragraph.
+
+>>> print 'this is a Doctest block'
+this is a Doctest block
+
+The following is a literal block::
+
+    >>> This is not recognized as a doctest block by
+    reStructuredText.  It *will* be recognized by the doctest
+    module, though!
+Indentation is not required for doctest blocks.
+
+
+
+
+
+
 Again, there is a lot that can be said about markup languages, and many resources already available online; avail yourself of whatever helps best.
 
 Resources:
@@ -284,6 +303,14 @@ Resources:
 * `reStructuredText Primer <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_
 * `Cheatsheet <https://github.com/ralsina/rst-cheatsheet>`_
 * `A ReStructuredText Primer <https://docutils.sourceforge.io/docs/user/rst/quickstart.html>`_
+
+
+There are plenty of good resources online, and cheat sheets to get you started:
+
+* `An Introduction to reStructuredText <https://docutils.readthedocs.io/en/sphinx-docs/ref/rst/introduction.html>`_
+* `A ReStructuredText Primer <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html>`_
+
+https://www.writethedocs.org/guide/writing/reStructuredText/
 
 
 

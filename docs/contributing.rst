@@ -104,6 +104,8 @@ Fork the repository
    To fork the NSpyre repository, click the Fork button in the header of the repository.
 
 .. image:: images/Bootcamp-Fork.png
+   :align: middle
+   :width: 80%
 
 Sit back and watch the forking magic. When it’s finished, you’ll be taken to your copy of the NSpyre repository. (As this is a GitHub specific step and not a git step, it can’t be completed with the git tool. However, checkout the hub command line tool for this and other useful extensions of the git tool https://hub.github.com).
 

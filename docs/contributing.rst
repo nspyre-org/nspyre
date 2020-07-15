@@ -99,27 +99,22 @@ Inline markup for font styles is similar to MarkDown:
 * Links to external sites contain the link text and a bracketed URL in backticks, followed by an underscore:
   ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
 
-If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash ``*escape* \``with`` "\"``.
+If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash ``*escape* \``with\`` "\"``.
 
 Headers
 ~~~~~~~
 
 Section headers are created by underlining (and optionally overlining) the section title with a punctuation character, at least as long as the text:
 
-Section Headers are demarcated by underlining (and optionally overlining) the section title using non-alphanumeric characters like dashes, equal signs, or tildes. The line of characters must be at least as long as the text it frames. Use the same character for headers at the same level. The following creates a header::
+Section Headers are demarcated by underlining (and optionally overlining) the section title using non-alphanumeric characters like dashes, equal signs, or tildes. The row of non-alphanumeric characters must be at least as long as the header text. Use the same character for headers at the same level. The following creates a header
 
-  =========
-  Chapter 1    If inserted in the same document, this creates a header at a different level    Section 1.1
-  =========                                                                                    -----------
+.. code-block:: console
 
-If inserted in the same document, this creates a header at a different level::
+   =========
+   Chapter 1    while this creates a header at a different level in the same document:    Section 1.1
+   =========                                                                              -----------
 
-  Section 1.1
-  ------------------
-
-Having an underline-only is acceptable, as is having both an underline and an overline. If you use the same non-alphanumeric character for underline-only and underline-and-overline headers, they will be considered to be at *different* levels.
-
-The row of non-alphanumeric characters should have at least as long as the header text.
+If you use the same non-alphanumeric character for underline-only and underline-and-overline headers, they will be considered to be at *different* levels.
 
 
 +----------------------------------------------------------+--------------------------------------------------------+
@@ -127,10 +122,6 @@ The row of non-alphanumeric characters should have at least as long as the heade
 |                                                          |   .. class:: faketitle                                 |
 |    Title                                                 |                                                        |
 |    =====                                                 |   Title                                                |
-|                                                          |                                                        |
-|    Titles are underlined (or over- and underlined) with  |   Titles are underlined (or over- and underlined) with |
-|    a nonalphanumeric character at least as long as the   |   a nonalphanumeric character at least as long as the  |
-|    text.                                                 |   text.                                                |
 |                                                          |                                                        |
 |    A lone top-level section is lifted up to be the       |   A lone top-level section is lifted up to be the      |
 |    document's title.                                     |   document's title.                                    |

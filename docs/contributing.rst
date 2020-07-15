@@ -33,7 +33,7 @@ We understand that for a lot people using this project, it might be their first 
 Version Control
 ---------------
 
-First thing’s first — `\ *Git* <https://git-scm.com>`_. Git is an example of a *distributed version control system* (DVCS) commonly used for open source and commercial software development. A *version control system* (VCS) tracks the history of changes as people and teams collaborate on projects together. As the project evolves, teams can run tests, fix bugs, and contribute new code with the confidence that any version can be recovered at any time. Developers can review project history to find out:
+First thing’s first — *Git*. `Git <https://git-scm.com>`_ is an example of a *distributed version control system* (DVCS) commonly used for open source and commercial software development. A *version control system* (VCS) tracks the history of changes as people and teams collaborate on projects together. As the project evolves, teams can run tests, fix bugs, and contribute new code with the confidence that any version can be recovered at any time. Developers can review project history to find out:
 
 * Which changes were made?
 * Who made the changes?
@@ -52,6 +52,8 @@ But let’s do an actual example of this on the command line for reference.
 .. note::
    
    In addition to performing the following steps on the commandline, as shown below, these steps to be carried out directly on Github.com and many popular text editors and IDEs have integrated tools to push & pull updates from the same environment you edit in.)
+
+::
 
    Fork the repository.
    

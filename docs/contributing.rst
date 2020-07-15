@@ -99,7 +99,8 @@ Inline markup for font styles is similar to MarkDown:
 * Links to external sites contain the link text and a bracketed URL in backticks, followed by an underscore:
   ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
 
-If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash ``*escape* \``with\`` "\\"``.
+If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash
+``\*escape* \``with`` "\\"``.
 
 Headers
 ~~~~~~~

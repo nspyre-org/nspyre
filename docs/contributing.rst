@@ -11,7 +11,7 @@ The guide is split into sections based on the type of contribution you’re thin
 Quick Facts
 ===========
 
-For this project, we use a standard **fork & pull** model to collaborate, common for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code follows the Google Style Guide for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, which some caveats as detailed :ref:`here <Code Style>`. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org>`_ -- that is, we subscribe to *Docs as Code*. If the above remarks don’t make sense to you, or you simply want a more detailed description of how to do things, continue reading below.
+For this project, we use a standard *fork & pull* model to collaborate, common practice for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code follows the Google Style Guide for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, which some caveats as detailed :ref:`here <Code Style>`. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org>`_ -- that is, we subscribe to *Docs as Code*. If the above remarks don’t make sense to you, or you simply want a more detailed description of how to do things, continue reading below.
 
 Philosophy
 ==========
@@ -28,12 +28,12 @@ Code Contributions
 ==================
 
 
-We understand that for a lot people using this project, it might be their first time contributing to an open source project. And getting started on any new project can be intimidating, especially for newcomers. So along with information about our workflow in this project, our style guides, and particular information on how to get involved, we've included some basic information, or primers, collated from various sources on a number of important topics. We hope this helps you on your journey. (If you are already a pro, we're happy to have you -- you can skip to our style guide here.)
+We understand that for a lot people using this project, it might be their first time contributing to an open source project. And getting started on any new project can be intimidating, especially for newcomers. So along with information about our workflow in this project, our style guides, and particular information on how to get involved, we've included some basic information, collated from various sources on a number of important topics. We hope this helps you on your journey. (If you are already a pro, we're happy to have you -- you can skip to our style guide :ref:`here <Code Style>`.)
 
 Version Control
 ---------------
 
-First thing’s first — *`Git <https://git-scm.com>~_*. A *version control system* (VCS) tracks the history of changes as people and teams collaborate on projects together. As the project evolves, teams can run tests, fix bugs, and contribute new code with the confidence that any version can be recovered at any time. Developers can review project history to find out:
+First thing’s first — *`Git <https://git-scm.com>`_*. A *version control system* (VCS) tracks the history of changes as people and teams collaborate on projects together. As the project evolves, teams can run tests, fix bugs, and contribute new code with the confidence that any version can be recovered at any time. Developers can review project history to find out:
 
 * Which changes were made?
 * Who made the changes?
@@ -45,7 +45,7 @@ Git grew out of the needs of the developers of the Linux kernel and is one of th
 Example: Contribute to an existing repository
 ---------------------------------------------
 
-Great, now that you understand the *why* and *how* of Git/Github, let’s explain how to get involved. We use the **Fork & Pull** model for open-source development. This means that to contribute to the project, you first need to Fork the project to a repository on GitHub. A Github fork is just a copy of a repository. When you fork a repo, you are storing a copy of the repo on your account. This means you now have ‘write’ access to edit files and develop the code. After making the desired changes you want, you then make a pull request. A pull is the git term for pull updated and/or new files from one version of a repo to another. A pull request therefore is a request for the maintainers of the original repo to pull your edits into their branch of the code on their repo.
+Great, now that you understand the *why* and *how* of Git & Github, let’s explain how to get involved. We use the **Fork & Pull** model for open-source development. This means that to contribute to the project, you first need to *fork* the project to a repository on GitHub. A Github fork is just a copy of a repository. When you fork a repo, you are storing a copy of that repo on your account. This means you now have *write* access to edit files and develop the code. After making the desired changes you want, you then make a *pull request*. A pull is the git term for pulling updated and/or new files from one version of a repo to another. A pull request therefore is a request for the maintainers of the original repo to pull your edits into their branch of the code on their repo.
 
 But let’s do an actual example of this on the command line for reference. (In addition for these steps to be carried out directly on Github.com, there are various integrated tools with popular text editors and IDEs to do this directly.) 
 

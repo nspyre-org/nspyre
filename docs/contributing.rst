@@ -32,25 +32,21 @@ First Steps
 
 Getting started contributing to an open-source project can be intimidating, especially for first timers. So along with information about the workflow of this project, our style guide, and particular information for getting involved, here is some basic information to help you get started on your journey and show you the ropes. (If you are already a pro, then you can skip to here.)
 
-Contents
---------
-TODO
-
 Code Style
 ----------
 
-There are many different frameworks for styling. The NSpyre codebase uses the Python standard for styling — PEP 8. In addition, we have adopted the Google Style Guide for both code and our docstrings. In brief, this follows PEP 8 with some leniences in the spirit of legibility.
+There are many different frameworks for styling. The NSpyre codebase uses the Python standard for styling — `PEP 8 <https://pep8.org>`_. In addition, we have adopted the Google Style Guide for both code and our docstrings. In brief, this follows PEP 8 with some leniences in the spirit of legibility.
 
 Additionally, we strongly encourage the use of the new PEP ### standard for constructors in all but the most obvious cases.
 
-All functions, methods, and classes are to contain docstrings. Object data model methods (e.g. __repr__) are typically the exception to this rule.
+All functions, methods, and classes are to contain docstrings. Object data model methods (e.g. '__repr__') are typically the exception to this rule.
 
 Documentation Style
 -------------------
 
 When contributing documentation, please do your best to follow the style of the documentation files. This means a soft-limit of 79 characters wide in your text files and a semi-formal, yet friendly and approachable, prose style.
 
-When presenting Python code, use single-quoted strings ('hello' instead of "hello").
+When presenting Python code, use single-quoted strings (''hello'' instead of ``"hello"``).
 
 
 Writing Docs
@@ -105,8 +101,6 @@ Fork the repository
    To fork the NSpyre repository, click the Fork button in the header of the repository.
 
 .. image:: images/Bootcamp-Fork.png
-   :align: middle
-   :alt: A repository's fork button
 
 Sit back and watch the forking magic. When it’s finished, you’ll be taken to your copy of the NSpyre repository. (As this is a GitHub specific step and not a git step, it can’t be completed with the git tool. However, checkout the hub command line tool for this and other useful extensions of the git tool https://hub.github.com).
 

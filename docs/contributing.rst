@@ -33,7 +33,7 @@ We understand that for a lot people using this project, it might be their first 
 Version Control
 ---------------
 
-First thing’s first — *`Git <https://git-scm.com>`_*. A *version control system* (VCS) tracks the history of changes as people and teams collaborate on projects together. As the project evolves, teams can run tests, fix bugs, and contribute new code with the confidence that any version can be recovered at any time. Developers can review project history to find out:
+First thing’s first — `*Git* <https://git-scm.com>`_. A *version control system* (VCS) tracks the history of changes as people and teams collaborate on projects together. As the project evolves, teams can run tests, fix bugs, and contribute new code with the confidence that any version can be recovered at any time. Developers can review project history to find out:
 
 * Which changes were made?
 * Who made the changes?
@@ -97,7 +97,7 @@ That’s the gist on the workflow!
    People save there code everywhere, in there documents folder, on their desktop, in a hidden folder. Not having a system to managing code is BAD. That's why git exists after all. Similarly, you want your code to be in a unified location on your local machine. Where it isn't in a place that someone will easily tamper with it, but in a location that is still easily accessible if you know where it is. To that end, we *highly* recommend that you create a directory at the root level of your local machine called ``SourceCode`` (or with whatever camalcase formatting your prefer). Create a new subdirectory for every project going forward. So for NSpyre, if you call ``git clone https://github.com/[username]/nspyre.git`` inside SourceCode, you will get a new directory called nspyre, containing your repo.
 
 Next, search for a **branch** to check if someone has already started work on the issue of interest. If not, start one; make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc).
- A pull is the git term for pulling updated and/or new files from one version of a repo to another.
+A pull is the git term for pulling updated and/or new files from one version of a repo to another.
 
 .. _Code Style:
 

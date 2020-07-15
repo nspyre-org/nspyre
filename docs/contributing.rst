@@ -11,7 +11,7 @@ The guide is split into sections based on the type of contribution you’re thin
 Quick Facts
 ===========
 
-For this project, we use a standard **fork & pull** model to collaborate, common for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code uses the Google Style Guide for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, the caveats can be found `here Code Style_`_. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org/guide/writing/beginners-guide-to-docs/>`_. If the above doesn’t make sense, or you simply want a more detailed description of how to do things, continue reading below.
+For this project, we use a standard **fork & pull** model to collaborate, common for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code uses the Google Style Guide for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, the caveats can be found `here _`Code Style``_. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org/guide/writing/beginners-guide-to-docs/>`_. If the above doesn’t make sense, or you simply want a more detailed description of how to do things, continue reading below.
 
 Philosophy
 ==========
@@ -84,9 +84,9 @@ Paragraphs in reStructuredText are blocks of text separated by at least one blan
 
 Inline markup for font styles is similar to MarkDown:
 
-* Use one asterisk (``*text*``) for italics
-* Use two asterisks (``**text**``) for bolding
-* Use two backticks (````text````) for code samples.
+* Use one asterisk (``*text*``) for *italics*.
+* Use two asterisks (``**text**``) for **bolding**.
+* Use two backticks (````text````) for ``code samples``.
 * Links to external sites contain the link text and a bracketed URL in backticks, followed by an underscore: ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
 
 Headers
@@ -106,6 +106,32 @@ If inserted in the same document, this creates a header at a different level::
 Having an underline-only is acceptable, as is having both an underline and an overline. If you use the same non-alphanumeric character for underline-only and underline-and-overline headers, they will be considered to be at *different* levels.
 
 The row of non-alphanumeric characters should have at least as long as the header text.
+
+
++----------------------------------------------------------+--------------------------------------------------------+
+| ::                                                       |                                                        |
+|                                                          |   .. class:: faketitle                                 |
+|    Title                                                 |                                                        |
+|    =====                                                 |   Title                                                |
+|                                                          |                                                        |
+|    Titles are underlined (or over- and underlined) with  |   Titles are underlined (or over- and underlined) with |
+|    a nonalphanumeric character at least as long as the   |   a nonalphanumeric character at least as long as the  |
+|    text.                                                 |   text.                                                |
+|                                                          |                                                        |
+|    A lone top-level section is lifted up to be the       |   A lone top-level section is lifted up to be the      |
+|    document's title.                                     |   document's title.                                    |
+|                                                          |                                                        |    
+|    Any non-alphanumeric character can be used, but       |   Any non-alphanumeric character can be used, but      |
+|    Python convention is:                                 |   Python convention is:                                |
+|                                                          |                                                        |
+|    * ``#`` with overline, for parts                      |   * ``#`` with overline, for parts                     |
+|    * ``*`` with overline, for chapters                   |   * ``*`` with overline, for chapters                  |
+|    * ``=``, for sections                                 |   * ``=``, for sections                                |
+|    * ``-``, for subsections                              |   * ``-``, for subsections                             |
+|    * ``^``, for subsubsections                           |   * ``^``, for subsubsections                          |
+|    * ``"``, for paragraphs                               |   * ``"``, for paragraphs                              |
++----------------------------------------------------------+--------------------------------------------------------+
+
 
 
 Lists

@@ -32,8 +32,7 @@ Welcome to nspyre's documentation!
    
    contributing
 
-# a 79-char ruler:
-# 34567891123456789212345678931234567894123456789512345678961234567897123456789
+
 What is NSpyre?
 =============
 

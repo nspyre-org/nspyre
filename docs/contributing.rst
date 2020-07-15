@@ -95,7 +95,7 @@ Inline markup for font styles is similar to MarkDown:
 * Use two asterisks (``**text**``) for **bolding**.
 * Use two backticks (````text````) for ``code samples``.
 * Use an underscore (``reference_``) for reference_.
-* Use one backtick (```reference with whitespace_```) for `reference with whitespace_'.
+* Use one backtick (```reference with whitespace`_``) for `reference with whitespace`_.
 * Links to external sites contain the link text and a bracketed URL in backticks, followed by an underscore:
   
   ```Link to Write the Docs <https://www.writethedocs.org/>`_``.

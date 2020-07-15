@@ -51,7 +51,7 @@ Hopefully that all makes sense, but let’s do an actual example of this on the 
 
 .. tip::
    
-   In addition to performing the following steps on the commandline, as shown below, these steps can be carried out directly on Github.com and many popular text editors and IDEs have integrated tools to use git/github directly.)
+   In addition to performing the following steps on the commandline, as shown below, these steps can be carried out directly on Github.com and many popular text editors and IDEs have integrated tools to use git/github directly.
 
 .. code-block:: console
 
@@ -60,8 +60,6 @@ Hopefully that all makes sense, but let’s do an actual example of this on the 
    To fork the NSpyre repository, click the Fork button in the header of the repository.
    
 .. image:: images/Bootcamp-Fork.png
-    :align: middle
-    :width: 553.5pt
    
 
 .. code-block:: console

@@ -13,10 +13,6 @@ Quick Facts
 
 For this project, we use a standard **fork & pull** model to collaborate, common for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code uses the Google Style Guide for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, the caveats can be found `here Code Style_`_. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org/guide/writing/beginners-guide-to-docs/>`_. If the above doesn’t make sense, or you simply want a more detailed description of how to do things, continue reading below.
 
-Code Contributions
-==================
-
-
 First Steps
 -----------
 
@@ -36,6 +32,9 @@ As writethedocs eloquently states,
    If people can’t figure out how to use your code, they won’t use it.
 
 If you’ve made it this far, then presumably we’ve satisfied the first two criteria (although we are still working on making the second easier!), and this site is the reason for the third. The key to good software development is good documentation. Along with that is the need to strike a balance between efficiency and complexity. Because this is a scientific and an experimentation platform, certain requirements with speed and structure are necessary. We try to keep things as simple as possible, but we are flexible in approach when necessary. Most importantly, we strive for sustainable code.
+
+Code Contributions
+==================
 
 
 Code Style
@@ -108,8 +107,8 @@ Fork the repository
 
 .. image:: images/Bootcamp-Fork.png
    :align: middle
-   :width: 738
-   :scale: 20
+   :width: 738px
+   :scale: 20%
 
 Sit back and watch the forking magic. When it’s finished, you’ll be taken to your copy of the NSpyre repository. (As this is a GitHub specific step and not a git step, it can’t be completed with the git tool. However, checkout the hub command line tool for this and other useful extensions of the git tool https://hub.github.com).
 

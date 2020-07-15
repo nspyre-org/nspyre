@@ -40,18 +40,18 @@ First thing’s first — *Git*. `Git <https://git-scm.com>`_ is an example of a
 * When were the changes made?
 * Why were changes needed?
 
-Git grew out of the needs of the developers of the Linux kernel and is one of the most widely-used VCS tools available. `GitHub <https://github.com>`_ is a Git hosting repository that builds collaboration directly into the development process by providing developers with tools to ship better code through command line features, issues (threaded discussions), pull requests, code review, and more. If all this information is new, then please read this: `Understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_  — it’s a 5min read and will make your life a lot easier going forward. (If you want a much deeper explanation and a good reference source to get up to speed on the basics of using git and GitHub, go here: `Git Handbook <https://guides.github.com/introduction/git-handbook/>`_.)
+Git grew out of the needs of the developers of the Linux kernel and is one of the most widely-used VCS tools available. `GitHub <https://github.com>`_ is a Git hosting repository that builds collaboration directly into the development process by providing developers with tools to ship better code through command line features, issues (threaded discussions), pull requests, code review, and more. If all this information is new, then please read this: `Understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_  — it’s a 5min read and will make your life a lot easier going forward. (If you want a much deeper explanation and a good reference source to get up to speed on the basics of using git and GitHub, go to the `Git Handbook <https://guides.github.com/introduction/git-handbook/>`_.)
 
 How to Contribute: Forking & Pull Requests
 ------------------------------------------
 
-Great, now that you understand the *why* and *how* of Git & Github, let’s explain how to get involved. We use the **Fork & Pull** model for open-source development. This means that to contribute to the project, you first need to *fork* the project to a repository on GitHub. A Github fork is just a copy of a repository. When you fork a repo, you are storing a copy of that repo on your personal account. This means you now have *write* access to edit files and develop the code. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you *pull* a branch, that's the git term for updating one set of code with more recently updated and/or new files. You can *pull* a branch you are working on from the github repo to get the most up-to-date copy locally, pull one branch into another to take certain *commits*, or pull in the reverse direction to bring your updates into the main repo. A pull request, therefore, is a request for the maintainers of the original repo to *review & merge* your edits into their version of the code on their repo.
+Great, now that you understand the *why* and *how* of Git & Github, let’s explain the workflow to contribute. We use the **fork & pull** model to collaborate. This means that to contribute to the project, you first need to **Fork** the project on GitHub. A Github fork is just a copy of a repository. When you *fork* a repo, you are storing a copy of that repo on your personal account. Doing so grants you full *write* access to edit files and develop the code on your version. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you ``git pull ...``, that's the git term for *pulling* updated and/or new files from one version of a repo to another; you are simply updating files in one direction. Thus, *pulling* applies in many different contexts (more info below). A pull request, therefore, is a request you make for the maintainers, of the original repo you forked, to *review & merge* your edits into their version of the code stored on their repo.
 
-But let’s do an actual example of this on the command line for reference.
+Hopefully that all makes sense, but let’s do an actual example of this on the command line to walk you through the steps.
 
-.. note::
+.. tip::
    
-   In addition to performing the following steps on the commandline, as shown below, these steps to be carried out directly on Github.com and many popular text editors and IDEs have integrated tools to push & pull updates from the same environment you edit in.)
+   In addition to performing the following steps on the commandline, as shown below, these steps can be carried out directly on Github.com and many popular text editors and IDEs have integrated tools to use git/github directly.)
 
 ::
 
@@ -60,6 +60,9 @@ But let’s do an actual example of this on the command line for reference.
    To fork the NSpyre repository, click the Fork button in the header of the repository.
    
 .. image:: images/Bootcamp-Fork.png
+   :align: middle
+   :width: 553.5pt
+   
 
 ::
 
@@ -109,7 +112,10 @@ That’s the gist on the workflow!
    Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
 
 Next, search for a **branch** to check if someone has already started work on the issue of interest. If not, start one; make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc).
-A pull is the git term for pulling updated and/or new files from one version of a repo to another.
+
+
+You can *pull* a branch you are working on from the github repo to get the most up-to-date copy locally, pull one branch into another to take certain *commits*, or pull in the reverse direction to bring your updates into the main repo.
+
 
 .. _Code Style:
 

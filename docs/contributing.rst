@@ -100,12 +100,12 @@ Great, now that you understand the *why* and *how* of Git/Github, let’s explai
 
 But let’s do an actual example of this on the command line for reference. (In addition for these steps to be carried out directly on Github.com, there are various integrated tools with popular text editors and IDEs to do this directly.) 
 
-#. Fork the repository
-    To fork the NSpyre repository, click the Fork button in the header of the repository.
+Fork the repository
+   To fork the NSpyre repository, click the Fork button in the header of the repository.
 
 .. image:: images/Bootcamp-Fork.png
 
-   Sit back and watch the forking magic. When it’s finished, you’ll be taken to your copy of the NSpyre repository. (As this is a GitHub specific step and not a git step, it can’t be completed with the git tool. However, checkout the hub command line tool for this and other useful extensions of the git tool https://hub.github.com).
+Sit back and watch the forking magic. When it’s finished, you’ll be taken to your copy of the NSpyre repository. (As this is a GitHub specific step and not a git step, it can’t be completed with the git tool. However, checkout the hub command line tool for this and other useful extensions of the git tool https://hub.github.com).
 
 .. code-block:: console
 

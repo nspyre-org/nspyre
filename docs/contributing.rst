@@ -2,16 +2,16 @@
 Contributing
 ############
 
-If you’re reading this, you probably want to contribute to NSpyre — great! This project has taken a lot of work and still have big strides to continue making it a flexible, extensive, and sustainable experimentation platform. Any and all support is greatly appreciated.
+If you’re reading this, you probably want to contribute to NSpyre — great! This project has taken a lot of work and still has big strides to continue making it a flexible, extensive, and sustainable experimentation platform. Any and all support is greatly appreciated.
 
 This document lays out guidelines and advice for contributing to this project. If you’re thinking of contributing, please start by reading the immediate info below detailing project specifics to get a feel for how contributing to this project works. If you have any questions, feel free to reach out to one of the primary maintainers. *(Need link/contact info)*
 
 The guide is split into sections based on the type of contribution you’re thinking of making, with a section that covers general guidelines for all contributors.
 
 Quick Facts
------------
+===========
 
-For this project, we use a standard **fork&pull** model to contribute, just like any open-source project. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code uses the Google Style Guide for docstrings, with standard pep8 formatting, the caveats can be found here. For documentation, we write in reStructuredText, using Sphinx to generate files and ReadTheDocs for site hosting. We follow the philosophy of writethedocs. If the above doesn’t make sense, or you simply want a more detailed description of how to do things, continue reading below.
+For this project, we use a standard **fork & pull** model to collaborate, common for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code uses the Google Style Guide for docstrings, with standard `PEP 8<https://pep8.org>`_ formatting, the caveats can be found `here <Code Style>`_. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `writethedocs <https://www.writethedocs.org/guide/writing/beginners-guide-to-docs/>`_. If the above doesn’t make sense, or you simply want a more detailed description of how to do things, continue reading below.
 
 First Steps
 -----------
@@ -106,7 +106,7 @@ Fork the repository
 .. image:: images/Bootcamp-Fork.png
    :align: middle
    :width: 738
-   :scale: 80
+   :scale: 20
 
 Sit back and watch the forking magic. When it’s finished, you’ll be taken to your copy of the NSpyre repository. (As this is a GitHub specific step and not a git step, it can’t be completed with the git tool. However, checkout the hub command line tool for this and other useful extensions of the git tool https://hub.github.com).
 

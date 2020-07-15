@@ -6,19 +6,19 @@ Install
 streamlined installer is in development and will be released shortly. Updated
 documentation will follow.
 
-.. attention:
+.. attention::
    
    These installation instructions are only temporary. A new
    streamlined installer is in development and will be released shortly. Updated
    documentation will follow.
  
-.. important:
+.. important::
    
    These installation instructions are only temporary. A new
    streamlined installer is in development and will be released shortly. Updated
    documentation will follow.
 
-.. note:
+.. note::
    
    These installation instructions are only temporary. A new
    streamlined installer is in development and will be released shortly. Updated

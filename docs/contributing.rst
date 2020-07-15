@@ -48,7 +48,7 @@ Documentation Style
 
 When contributing documentation, please do your best to follow the style of the documentation files. This means a soft-limit of 79 characters wide in your text files and a semi-formal, yet friendly and approachable, prose style.
 
-When presenting Python code, use single-quoted strings (`'hello'` instead of ``"hello"``); this also applies to code as well!
+When presenting Python code, use single-quoted strings (``'hello'`` instead of ``"hello"``); this also applies to code as well!
 
 
 Writing Docs
@@ -79,26 +79,38 @@ reStructuredText
 ^^^^^^^^^^^^^^^^
 
 How to use reStructuredText
+
 Formatting the main text
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+There are many resources on rST syntax, but we've found it helpful to know these basic things when starting out (and as a quick refresher!).
+
 Paragraphs in reStructuredText are blocks of text separated by at least one blank line. All lines in the paragraph must be indented by the same amount.
+
+Indentation is important and mixing spaces and tabs causes problems. So just like Python, it's best to just use spaces. And typically, you want to **use three spaces**. Yes, you read that correctly. (A standard tab is equivalent to 4 spaces.)
 
 Inline markup for font styles is similar to MarkDown:
 
 * Use one asterisk (``*text*``) for *italics*.
 * Use two asterisks (``**text**``) for **bolding**.
 * Use two backticks (````text````) for ``code samples``.
-* Links to external sites contain the link text and a bracketed URL in backticks, followed by an underscore: ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
+* Use an underscore (``reference_``) for reference_.
+* Use one backtick (```reference with whitespace_```) for `reference with whitespace_'.
+* Links to external sites contain the link text and a bracketed URL in backticks, followed by an underscore:
+  ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
+
+If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash ``*escape* \``with`` "\"``.
 
 Headers
 ~~~~~~~
 
-Headers are demarcated by non-alphanumeric characters like dashes, equal signs, or tildes. Use the same character for headers at the same level. The following creates a header::
+Section headers are created by underlining (and optionally overlining) the section title with a punctuation character, at least as long as the text:
 
-  ===============
-  Chapter 1
-  ===============
+Section Headers are demarcated by underlining (and optionally overlining) the section title using non-alphanumeric characters like dashes, equal signs, or tildes. The line of characters must be at least as long as the text it frames. Use the same character for headers at the same level. The following creates a header::
+
+  =========
+  Chapter 1    If inserted in the same document, this creates a header at a different level    Section 1.1
+  =========                                                                                    -----------
 
 If inserted in the same document, this creates a header at a different level::
 
@@ -246,4 +258,5 @@ There’s a lot of online resources available for various aspects of software de
 * https://guides.github.com
 * https://cheat.readthedocs.io/en/latest/git.html
 * https://dont-be-afraid-to-commit.readthedocs.io/en/latest/contributing.html
+* https://gist.github.com/RichardBronosky/454964087739a449da04
 

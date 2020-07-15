@@ -2,7 +2,7 @@
 Contributing
 ############
 
-If you’re reading this, you probably want to contribute to NSpyre — great! This project has taken a lot of work and still has big strides to continue making it a flexible, extensive, and sustainable experimentation platform. Any and all support is greatly appreciated.
+If you’re reading this, you probably want to contribute to NSpyre — great! This project has taken a lot of work and still has big strides to take to continue making it a flexible, extensive, and sustainable experimentation platform. Any and all support is greatly appreciated.
 
 This document lays out guidelines and advice for contributing to this project. If you’re thinking of contributing, please start by reading the immediate info below detailing project specifics to get a feel for how contributing to this project works. If you have any questions, feel free to reach out to one of the primary maintainers. *(Need link/contact info)*
 

@@ -96,7 +96,15 @@ That’s the gist on the workflow!
 
 .. important::
    
-   People save there code everywhere, in there documents folder, on their desktop, in a hidden folder. Not having a system to managing code is BAD. That's why git exists after all. Similarly, you want your code to be in a unified location on your local machine. Where it isn't in a place that someone will easily tamper with it, but in a location that is still easily accessible if you know where it is. To that end, we *highly* recommend that you create a directory at the root level of your local machine called ``SourceCode`` (or with whatever camalcase formatting your prefer). Create a new subdirectory for every project going forward. So for NSpyre, if you call ``git clone https://github.com/[username]/nspyre.git`` inside SourceCode, you will get a new directory called nspyre, containing your repo.
+   People save there code everywhere, in there documents folder, on their desktop, in a hidden folder. Not having a system to managing code is BAD. That's why git exists after all. Similarly, you want your code to be in a unified location on your local machine. Where it isn't in a place that someone will easily tamper with it, but in a location that is still easily accessible if you know where it is. To that end, we *highly* recommend that you create a directory at the root level of your local machine called ``SourceCode`` (or with whatever camalcase formatting your prefer). Create a new subdirectory for every project going forward.
+
+.. warning::
+   
+   So for NSpyre, if you call ``git clone https://github.com/[username]/nspyre.git`` inside SourceCode, you will get a new directory called nspyre, containing your repo.
+
+.. note:: Virutal Environments
+   
+   Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
 
 Next, search for a **branch** to check if someone has already started work on the issue of interest. If not, start one; make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc).
 A pull is the git term for pulling updated and/or new files from one version of a repo to another.
@@ -170,7 +178,28 @@ Inline markup for font styles is similar to MarkDown:
 * Use an underscore (``reference_``) for reference_.
 * Use one backtick (```reference with whitespace`_``) for `reference with whitespace`_.
 * Links to external sites contain the link text and a bracketed URL in backticks, followed by an underscore:
-  ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
+  | ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
+.. _Cross-referencing arbitrary locations:
+* To support cross-referencing to arbitrary locations in any document, the standard **reST** labels are used. For this to work, label names must be unique throughout the entire documentation. There are two ways in which you can refer to labels:
+  
+  - If you place a label directly before a section title, you can reference to it with :ref:`label-name`. For example:
+    
+    .. code-block:: console
+       
+       .. _my-reference-label:
+       
+       Section to cross-reference
+       --------------------------
+       
+       This is the text of the section.
+       
+       It refers to the section itself, see :ref:`my-reference-label`.
+    
+    The ``:ref:`` role would then generate a link to the section, with the link title being “Section to cross-reference”. This works just as well when section and reference are in different source files.
+    | Labels that aren’t placed before a section title can still be referenced, but you must give the link an explicit title, using this syntax: :ref:`Link title <label-name>`.
+    | Note: Reference labels must start with an underscore. When referencing a label, the underscore must be omitted (see examples above).
+
+:ref:`A title <Cross-referencing arbitrary locations>`
 
 If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash .
 

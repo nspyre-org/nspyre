@@ -2,23 +2,7 @@
 Install
 *******
 
-**Note:** These installation instructions are only temporary. A new
-streamlined installer is in development and will be released shortly. Updated
-documentation will follow.
-
 .. attention::
-   
-   These installation instructions are only temporary. A new
-   streamlined installer is in development and will be released shortly. Updated
-   documentation will follow.
- 
-.. important::
-   
-   These installation instructions are only temporary. A new
-   streamlined installer is in development and will be released shortly. Updated
-   documentation will follow.
-
-.. note::
    
    These installation instructions are only temporary. A new
    streamlined installer is in development and will be released shortly. Updated

@@ -61,6 +61,8 @@ Sit back and watch the forking magic. When it’s finished, you’ll be taken to
    # download a repository on GitHub.com to our machine
    git clone https://github.com/me/repo.git
    
+   .. image:: images/Bootcamp-Fork.png
+   
    # change into the `repo` directory
    cd repo
    

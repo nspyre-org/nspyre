@@ -9,6 +9,7 @@ Welcome to nspyre's documentation!
 .. toctree::
    :maxdepth: 4
    :caption: Contents:
+   :hidden:
 
    install
    getting_started
@@ -16,18 +17,20 @@ Welcome to nspyre's documentation!
    instrument_server
    the_database
    view_manager
+
+.. toctree::
+   :maxdepth: 1
+   :caption: API
+   :hidden:
+   
    api
 
 .. toctree::
    :maxdepth: 2
    :caption: Contributing:
+   :hidden:
    
    contributing
-
-Quick Facts
-Philosophy
-Code Contributions
-Documentation Contributions
 
 
 Installation

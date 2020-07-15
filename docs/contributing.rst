@@ -139,7 +139,15 @@ Writing Docs
 
 The project uses `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_ as the markup language for writing documentation. `Sphinx <https://www.sphinx-doc.org/en/master/>`_ is then used to generate documentation and the is hosted on `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_. Documentation improvements are always welcome! The documentation files live in the docs/ directory of the codebase. They’re written in reStructuredText, and use Sphinx to generate the full suite of documentation. Writing documentation is a great way to start contributing, especially if you are new, and will help get you familiar with the codebase.
 
-reStructuredText is an easy-to-read, what-you-see-is-what-you-get plaintext markup syntax and parser system. It is useful for inline program documentation (such as Python docstrings), for quickly creating simple web pages, and for standalone documents. Markdown is another, slightly simpler alternative. reStructuredText is a bit harder to use, but is more powerful.
+reStructuredText is an easy-to-read, what-you-see-is-what-you-get plaintext markup syntax and parser system. It is useful for inline program documentation (such as Python docstrings), for quickly creating simple web pages, and for standalone documents. Markdown is another, slightly simpler alternative. reStructuredText is a bit harder to use, but is more powerful and is widely used for Python documentation.
+
+The reasons for using a markup language is straight-forward:
+
+* easy to write and maintain (strong semantic markup tools and well-defined markup standards)
+* still makes sense as plain text (easily legible in raw form)
+* renders nicely into HTML (this looks nice, doesn't it?)
+
+Don’t believe me? Then go .rst file for this webpage and see for yourself.
 
 There are plenty of good resources online, and cheat sheets to get you started:
 
@@ -149,14 +157,6 @@ There are plenty of good resources online, and cheat sheets to get you started:
 https://www.writethedocs.org/guide/writing/reStructuredText/
 
 
-
-The reasons for using a markup language is straight-forward:
-
-* easy to write and maintain
-* still makes sense as plain text
-* renders nicely into HTML
-
-Don’t believe me? Then go .rst file for this webpage and see for yourself.
 
 reStructuredText
 ^^^^^^^^^^^^^^^^
@@ -248,7 +248,7 @@ For enumerated lists, use a number or letter followed by a period, or followed b
 
 .. code-block:: console
 
-  1. Use this format the numbers in your list like 1., 2., etc.
+  1. Use this to format the items in your list like 1., 2., etc.
 
   A. To make items in your list go like A., B., etc. Both uppercase and lowercase letters are acceptable.
 
@@ -271,19 +271,24 @@ For bulleted lists, use indentation to indicate the level of nesting of a bullet
 Code Samples
 ~~~~~~~~~~~~~~~~~~~
 
-To display code samples, or any text that should not be formatted, end the paragraph prior to the code sample with two colons (``::``) and indent the code sample::
+There are many different ways using reST to display code samples, or any text that should not be formatted, but we explicity use the ``code-block`` directive for simplicity. Here's an example
 
-  This is the paragraph preceding the code sample::
+.. code-block:: rst
 
-    #some sample code
+   This is the paragraph preceding the code sample::
+   
+   .. code-block:: python
+      
+      #some sample code
+      print('Hello, World!')
 
-The is a lot that can be said about markdown, and many resources already available online (listed below). But here are some basics to get started.
+Again, there is a lot that can be said about markup languages, and many resources already available online; avail yourself of whatever helps best.
 
 Resources:
 
 * `reStructuredText Primer <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_
 * `Cheatsheet <https://github.com/ralsina/rst-cheatsheet>`_
-
+* `A ReStructuredText Primer <https://docutils.sourceforge.io/docs/user/rst/quickstart.html>`_
 
 
 

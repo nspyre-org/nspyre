@@ -11,31 +11,24 @@ The guide is split into sections based on the type of contribution you’re thin
 Quick Facts
 ===========
 
-For this project, we use a standard **fork & pull** model to collaborate, common for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code follows the Google Style Guide for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, which some caveats as detailed :ref:`here <Code Style>`. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org/guide/writing/beginners-guide-to-docs/>`_ -- that is, we subscribe to *docs-as-code*. If the above doesn’t make sense, or you simply want a more detailed description of how to do things, continue reading below.
+For this project, we use a standard **fork & pull** model to collaborate, common for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code follows the Google Style Guide for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, which some caveats as detailed :ref:`here <Code Style>`. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org>`_ -- that is, we subscribe to *Docs as Code*. If the above remarks don’t make sense to you, or you simply want a more detailed description of how to do things, continue reading below.
 
 Philosophy
 ==========
 
 As `WriteTheDocs <https://www.writethedocs.org/guide/writing/beginners-guide-to-docs/>`_ eloquently states,
 
-   If people don’t know why your project exists, they won’t use it.
-   
-   If people can’t figure out how to install your code, they won’t use it.
-   
-   If people can’t figure out how to use your code, they won’t use it.
+   | If people don’t know why your project exists, they won’t use it.
+   | If people can’t figure out how to install your code, they won’t use it.
+   | If people can’t figure out how to use your code, they won’t use it.
 
-If you’ve made it this far, then presumably we’ve satisfied the first two criteria (although we are still working on making the second easier!), and this site is the reason for the third. The key to good software development is good documentation. Along with that is the need to strike a balance between efficiency and complexity. Because this is a scientific and an experimentation platform, certain requirements with speed and structure are necessary. We try to keep things as simple as possible, but we are flexible in approach when necessary. Most importantly, we strive for sustainable code.
+If you’ve made it this far, then presumably we’ve satisfied the first two criteria (although we are still working on making the second easier!), and this site is the reason for the third. The key to good software development is good documentation. Along with that is the need to strike a balance between efficiency and complexity. Because this is a scientific and an experimentation platform, certain requirements with speed and structure are necessary. We try to keep things as simple as possible, but we are flexible in approach when necessary. Most importantly, we strive for *sustainable* code.
 
 Code Contributions
 ==================
 
 
-We understand that for a lot people using this project, it might be there first time contributing to an open-source project. If this is too much handholding, then feel free to move along.
-
-First Steps
------------
-
-Getting started contributing to an open-source project can be intimidating, especially for first timers. So along with information about the workflow of this project, our style guide, and particular information for getting involved, here is some basic information to help you get started on your journey and show you the ropes. (If you are already a pro, then you can skip to here.)
+We understand that for a lot people using this project, it might be their first time contributing to an open source project. And getting started on any new project can be intimidating, especially for newcomers. So along with information about our workflow in this project, our style guides, and particular information on how to get involved, we've included some basic information, or primers, collated from various sources on a number of important topics. We hope this helps you on your journey. (If you are already a pro, we're happy to have you -- you can skip to our style guide here.)
 
 Version Control
 ---------------

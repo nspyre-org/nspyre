@@ -33,14 +33,14 @@ We understand that for a lot people using this project, it might be their first 
 Version Control
 ---------------
 
-First thing’s first — *Git*. A version control system, or VCS, tracks the history of changes as people and teams collaborate on projects together. As the project evolves, teams can run tests, fix bugs, and contribute new code with the confidence that any version can be recovered at any time. Developers can review project history to find out:
+First thing’s first — *`Git <https://git-scm.com>~_*. A *version control system* (VCS) tracks the history of changes as people and teams collaborate on projects together. As the project evolves, teams can run tests, fix bugs, and contribute new code with the confidence that any version can be recovered at any time. Developers can review project history to find out:
 
 * Which changes were made?
 * Who made the changes?
 * When were the changes made?
 * Why were changes needed?
 
-Git is one of the first and most widely-used VCS available. GitHub is a Git hosting repository that provides developers with tools to ship better code through command line features, issues (threaded discussions), pull requests, code review, and more; building collaboration directly into the development process. If all this information is new, then read this: `Understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_  — it’s a 5min read and will make your life a lot easier going forward. (Then to get up to speed on the basics of using git and GitHub, go here: .)
+Git grew out of the needs of the developers of the Linux kernel and is one of the most widely-used VCS tools available. `GitHub <https://github.com>`_ is a Git hosting repository that builds collaboration directly into the development process by providing developers with tools to ship better code through command line features, issues (threaded discussions), pull requests, code review, and more. If all this information is new, then please read this: `Understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_  — it’s a 5min read and will make your life a lot easier going forward. (If you want a much deeper explanation and a good reference source to get up to speed on the basics of using git and GitHub, go here: `Git Handbook <https://guides.github.com/introduction/git-handbook/>`_.)
 
 Example: Contribute to an existing repository
 ---------------------------------------------

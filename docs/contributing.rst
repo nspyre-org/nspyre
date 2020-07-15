@@ -161,11 +161,6 @@ https://www.writethedocs.org/guide/writing/reStructuredText/
 reStructuredText
 ^^^^^^^^^^^^^^^^
 
-How to use reStructuredText
-
-Formatting the main text
-~~~~~~~~~~~~~~~~~~~~~~~~
-
 There are many resources on rST syntax, but we've found it helpful to know these basic things when starting out (and as a quick refresher!).
 
 Paragraphs in reStructuredText are blocks of text separated by at least one blank line. All lines in the paragraph must be indented by the same amount.
@@ -179,7 +174,7 @@ Inline markup for font styles is similar to MarkDown:
 * Use two backticks (````text````) for ``code samples``.
 * Use an underscore (``reference_``) for reference_.
 * Use one backtick (```reference with whitespace`_``) for `reference with whitespace`_.
-* Links to external sites contain the link text and a bracketed URL in backticks, followed by an underscore:
+* | Links to external sites contain the link text and a bracketed URL in backticks, followed by an underscore:
   | ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
 .. _Cross-referencing arbitrary locations:
 * To support cross-referencing to arbitrary locations in any document, the standard **reST** labels are used. For this to work, label names must be unique throughout the entire documentation. There are two ways in which you can refer to labels:

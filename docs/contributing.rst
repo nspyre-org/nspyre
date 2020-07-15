@@ -13,6 +13,10 @@ Quick Facts
 
 For this project, we use a standard **fork & pull** model to collaborate, common for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code uses the Google Style Guide for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, the caveats can be found `here <Code Style>`_. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org/guide/writing/beginners-guide-to-docs/>`_. If the above doesn’t make sense, or you simply want a more detailed description of how to do things, continue reading below.
 
+Code Contributions
+==================
+
+
 First Steps
 -----------
 
@@ -28,9 +32,9 @@ Philosophy
 As writethedocs eloquently states,
 
 ::
-	If people don’t know why your project exists, they won’t use it.
-	If people can’t figure out how to install your code, they won’t use it.
-	If people can’t figure out how to use your code, they won’t use it.
+   If people don’t know why your project exists, they won’t use it.
+   If people can’t figure out how to install your code, they won’t use it.
+   If people can’t figure out how to use your code, they won’t use it.
 
 If you’ve made it this far, then presumably we’ve satisfied the first two criteria (although we are still working on making the second easier!), and this site is the reason for the third. The key to good software development is good documentation. Along with that is the need to strike a balance between efficiency and complexity. Because this is a scientific and an experimentation platform, certain requirements with speed and structure are necessary. We try to keep things as simple as possible, but we are flexible in approach when necessary. Most importantly, we strive for sustainable code.
 

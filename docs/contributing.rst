@@ -11,7 +11,7 @@ The guide is split into sections based on the type of contribution you’re thin
 Quick Facts
 ===========
 
-For this project, we use a standard **fork & pull** model to collaborate, common for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code uses the Google Style Guide for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, the caveats can be found `here <Code Style>`_. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org/guide/writing/beginners-guide-to-docs/>`_. If the above doesn’t make sense, or you simply want a more detailed description of how to do things, continue reading below.
+For this project, we use a standard **fork & pull** model to collaborate, common for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code uses the Google Style Guide for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, the caveats can be found `here Code Style_`_. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org/guide/writing/beginners-guide-to-docs/>`_. If the above doesn’t make sense, or you simply want a more detailed description of how to do things, continue reading below.
 
 Code Contributions
 ==================
@@ -29,9 +29,8 @@ TODO
 Philosophy
 ----------
 
-As writethedocs eloquently states,
+As writethedocs eloquently states,::
 
-::
    If people don’t know why your project exists, they won’t use it.
    If people can’t figure out how to install your code, they won’t use it.
    If people can’t figure out how to use your code, they won’t use it.

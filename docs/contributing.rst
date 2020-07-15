@@ -39,14 +39,14 @@ There are many different frameworks for styling. The NSpyre codebase uses the Py
 
 Additionally, we strongly encourage the use of the new PEP ### standard for constructors in all but the most obvious cases.
 
-All functions, methods, and classes are to contain docstrings. Object data model methods (e.g. '__repr__') are typically the exception to this rule.
+All functions, methods, and classes are to contain docstrings. Object data model methods (e.g. ``__repr__``) are typically the exception to this rule.
 
 Documentation Style
 -------------------
 
 When contributing documentation, please do your best to follow the style of the documentation files. This means a soft-limit of 79 characters wide in your text files and a semi-formal, yet friendly and approachable, prose style.
 
-When presenting Python code, use single-quoted strings (''hello'' instead of ``"hello"``).
+When presenting Python code, use single-quoted strings (`'hello'` instead of ``"hello"``); this also applies to code as well!
 
 
 Writing Docs
@@ -57,9 +57,11 @@ The project uses resStructuredText as the markup language for writing documentat
 reStructuredText is an easy-to-read, what-you-see-is-what-you-get plaintext markup syntax and parser system. It is useful for inline program documentation (such as Python docstrings), for quickly creating simple web pages, and for standalone documents. Markdown is another, slightly simpler alternative. reStructuredText is a bit harder to use, but is more powerful.
 
 There are plenty of good resources online, and cheat sheets to get you started:
+
 * `An Introduction to reStructuredText <https://docutils.readthedocs.io/en/sphinx-docs/ref/rst/introduction.html>`_
-* `A ReStructuredText Primer <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html
-https://www.writethedocs.org/guide/writing/reStructuredText/>`_
+* `A ReStructuredText Primer <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html>`_
+
+https://www.writethedocs.org/guide/writing/reStructuredText/
 
 
 
@@ -70,6 +72,81 @@ The reasons for using a markup language is straight-forward:
 * renders nicely into HTML
 
 Don’t believe me? Then go .rst file for this webpage and see for yourself.
+
+reStructuredText
+^^^^^^^^^^^^^^^^
+
+How to use reStructuredText
+Formatting the main text
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Paragraphs in reStructuredText are blocks of text separated by at least one blank line. All lines in the paragraph must be indented by the same amount.
+
+Inline markup for font styles is similar to MarkDown:
+
+* Use one asterisk (``*text*``) for italics
+* Use two asterisks (``**text**``) for bolding
+* Use two backticks (````text````) for code samples.
+* Links to external sites contain the link text and a bracketed URL in backticks, followed by an underscore: ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
+
+Headers
+~~~~~~~
+
+Headers are demarcated by non-alphanumeric characters like dashes, equal signs, or tildes. Use the same character for headers at the same level. The following creates a header::
+
+  ===============
+  Chapter 1
+  ===============
+
+If inserted in the same document, this creates a header at a different level::
+
+  Section 1.1
+  ------------------
+
+Having an underline-only is acceptable, as is having both an underline and an overline. If you use the same non-alphanumeric character for underline-only and underline-and-overline headers, they will be considered to be at *different* levels.
+
+The row of non-alphanumeric characters should have at least as long as the header text.
+
+
+Lists
+~~~~~~~~~~~~~~
+
+For enumerated lists, use a number or letter followed by a period, or followed by a right-bracket, or surrounded by brackets::
+
+  1. Use this format the numbers in your list like 1., 2., etc.
+
+  A. To make items in your list go like A., B., etc. Both uppercase and lowercase letters are acceptable.
+
+  I. Roman numerals are also acceptable, uppercase or lowercase.
+
+  (1) Numbers in brackets are acceptable.
+
+  1) So are numbers followed by a bracket.
+
+For bulleted lists, use indentation to indicate the level of nesting of a bullet point. You can use ``-``, ``+``, or ``*`` as a bullet point character::
+
+  * Bullet point
+    
+    - nested bullet point
+      
+      + even more nested bullet point
+
+Code Samples
+~~~~~~~~~~~~~~~~~~~
+
+To display code samples, or any text that should not be formatted, end the paragraph prior to the code sample with two colons (``::``) and indent the code sample::
+
+  This is the paragraph preceding the code sample::
+
+    #some sample code
+
+The is a lot that can be said about markdown, and many resources already available online (listed below). But here are some basics to get started.
+
+Resources:
+
+* `reStructuredText Primer <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_
+* `Cheatsheet <https://github.com/ralsina/rst-cheatsheet>`_
+
 
 
 

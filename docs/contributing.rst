@@ -33,7 +33,7 @@ We understand that for a lot people using this project, it might be their first 
 Version Control
 ---------------
 
-First thing’s first — `*Git* <https://git-scm.com>`_. A *version control system* (VCS) tracks the history of changes as people and teams collaborate on projects together. As the project evolves, teams can run tests, fix bugs, and contribute new code with the confidence that any version can be recovered at any time. Developers can review project history to find out:
+First thing’s first — `\ *Git* <https://git-scm.com>`_. Git is an example of a *distributed version control system* (DVCS) commonly used for open source and commercial software development. A *version control system* (VCS) tracks the history of changes as people and teams collaborate on projects together. As the project evolves, teams can run tests, fix bugs, and contribute new code with the confidence that any version can be recovered at any time. Developers can review project history to find out:
 
 * Which changes were made?
 * Who made the changes?

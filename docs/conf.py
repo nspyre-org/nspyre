@@ -89,7 +89,8 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-html_logo = 'images/logo.png'
-html_favicon = 'images/favicon.ico'
+#html_logo = 'images/logo.png'
+#html_favicon = 'images/favicon.ico'
 
-html_last_updated_fmt = '%Y/%m/%d'
+html_last_updated_fmt = '%b %d, %Y'
+#'%Y/%m/%d'

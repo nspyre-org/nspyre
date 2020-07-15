@@ -8,7 +8,7 @@ Welcome to nspyre's documentation!
 
 .. toctree::
    :maxdepth: 4
-   :caption: Contents:
+   :caption: Contents
    :hidden:
 
    install
@@ -27,7 +27,7 @@ Welcome to nspyre's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contributing:
+   :caption: Contributing
    :hidden:
    
    contributing

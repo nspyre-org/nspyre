@@ -32,6 +32,53 @@ Welcome to nspyre's documentation!
    
    contributing
 
+# a 79-char ruler:
+# 34567891123456789212345678931234567894123456789512345678961234567897123456789
+What is NSpyre?
+=============
+
+NSpyre is a Python Framework for conducting Physics 
+It uses a networked approach to allow for the running of experiments using
+distributed equipment over many networked systems. The experimental hardware
+being controlled can thus be connected to different computers, which are in
+turn be controlled by another machine running the *experimental setup*. This
+allows for the easy integration of shared resources in a research environment.
+
+[insert example usage codeblock]
+
+It builds on top of the Lantz (instrumentation communication toolkit) module
+for interfacing with equipment using a variety of protocols and grew out of
+many years of development in the Awschalom Group and others — first from the
+dark ages of LabView and Matlab code into an original proto-spyre and finally
+into it’s fully realized networked form.
+
+ Networked Scientific Experimentation Toolkit
+
+How is it used?
+============
+
+The beauty of NSpyre is that many operations can be performed in multiple ways,
+allowing for maximum flexibility. This includes both command line, GUI, and
+Jupyter interfaces. Experiments and analyses can be written in detailed
+*Spyrelets* or added in-situ/adhoc in a scripting style fashion. This
+*plug-and-play* fashion allows for many modalities, but here is a common usage:
+
+[insert example codeblock]
+
+Who uses it? (And who are we)
+========================
+
+Primarily developed out of the Awschalom Group at the University of Chicago PME,
+we are an experimental quantum physics research lab with a focus on point defect
+in the solid-state. There has been growing adoption in the immediate quantum
+space with our collaborations within our own halls, but there is hope that this
+software can be adopted by more and more people from different institutions and
+we can all benefit from these shared resources to low the development time
+writing code and foster exchange to improve our research and maximize our
+productivity. Anyone in the research or industrial spaces using electrical or
+other computer controlled equipment with a programming interface can benefit
+from these resources.
+
 
 Installation
 ============

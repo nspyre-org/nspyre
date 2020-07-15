@@ -20,12 +20,14 @@ Welcome to nspyre's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :captions: Contributing:
+   :caption: Contributing:
    
-   Quick Facts
-   Philosophy
-   Code Contributions
-   Documentation Contributions
+   contributing
+
+Quick Facts
+Philosophy
+Code Contributions
+Documentation Contributions
 
 
 Installation

@@ -11,16 +11,16 @@ The guide is split into sections based on the type of contribution you’re thin
 Quick Facts
 ===========
 
-For this project, we use a standard *fork & pull* model to collaborate, common practice for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code follows the Google Style Guide for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, which some caveats as detailed :ref:`here <Code Style>`. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org>`_ -- that is, we subscribe to *Docs as Code*. If the above remarks don’t make sense to you, or you simply want a more detailed description of how to do things, continue reading below.
+For this project, we use a standard *fork & pull* model to collaborate, common practice for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code follows the Google Style Guide for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, which has some caveats as detailed :ref:`here <Code Style>`. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org>`_ -- that is, we subscribe to *Docs as Code*. If the above remarks don’t make sense to you, or you simply want a more detailed description of how to do things, continue reading below.
 
 Philosophy
 ==========
 
 As `WriteTheDocs <https://www.writethedocs.org/guide/writing/beginners-guide-to-docs/>`_ eloquently states,
 
-   | If people don’t know why your project exists, they won’t use it.
-   | If people can’t figure out how to install your code, they won’t use it.
-   | If people can’t figure out how to use your code, they won’t use it.
+   | If people don’t know *why your project exists*, they won’t use it.
+   | If people can’t figure out *how to install your code*, they won’t use it.
+   | If people can’t figure out *how to use your code*, they won’t use it.
 
 If you’ve made it this far, then presumably we’ve satisfied the first two criteria (although we are still working on making the second easier!), and this site is the reason for the third. The key to good software development is good documentation. Along with that is the need to strike a balance between efficiency and complexity. Because this is a scientific and an experimentation platform, certain requirements with speed and structure are necessary. We try to keep things as simple as possible, but we are flexible in approach when necessary. Most importantly, we strive for *sustainable* code.
 
@@ -42,26 +42,32 @@ First thing’s first — *`Git <https://git-scm.com>`_*. A *version control sys
 
 Git grew out of the needs of the developers of the Linux kernel and is one of the most widely-used VCS tools available. `GitHub <https://github.com>`_ is a Git hosting repository that builds collaboration directly into the development process by providing developers with tools to ship better code through command line features, issues (threaded discussions), pull requests, code review, and more. If all this information is new, then please read this: `Understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_  — it’s a 5min read and will make your life a lot easier going forward. (If you want a much deeper explanation and a good reference source to get up to speed on the basics of using git and GitHub, go here: `Git Handbook <https://guides.github.com/introduction/git-handbook/>`_.)
 
-Example: Contribute to an existing repository
----------------------------------------------
+How to Contribute: Forking & Pull Requests
+------------------------------------------
 
-Great, now that you understand the *why* and *how* of Git & Github, let’s explain how to get involved. We use the **Fork & Pull** model for open-source development. This means that to contribute to the project, you first need to *fork* the project to a repository on GitHub. A Github fork is just a copy of a repository. When you fork a repo, you are storing a copy of that repo on your account. This means you now have *write* access to edit files and develop the code. After making the desired changes you want, you then make a *pull request*. A pull is the git term for pulling updated and/or new files from one version of a repo to another. A pull request therefore is a request for the maintainers of the original repo to pull your edits into their branch of the code on their repo.
+Great, now that you understand the *why* and *how* of Git & Github, let’s explain how to get involved. We use the **Fork & Pull** model for open-source development. This means that to contribute to the project, you first need to *fork* the project to a repository on GitHub. A Github fork is just a copy of a repository. When you fork a repo, you are storing a copy of that repo on your personal account. This means you now have *write* access to edit files and develop the code. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you *pull* a branch, that's the git term for updating one set of code with more recently updated and/or new files. You can *pull* a branch you are working on from the github repo to get the most up-to-date copy locally, pull one branch into another to take certain *commits*, or pull in the reverse direction to bring your updates into the main repo. A pull request, therefore, is a request for the maintainers of the original repo to *review & merge* your edits into their version of the code on their repo.
 
-But let’s do an actual example of this on the command line for reference. (In addition for these steps to be carried out directly on Github.com, there are various integrated tools with popular text editors and IDEs to do this directly.) 
+But let’s do an actual example of this on the command line for reference.
 
-Fork the repository
+.. note::
+   
+   In addition to performing the following steps on the commandline, as shown below, these steps to be carried out directly on Github.com and many popular text editors and IDEs have integrated tools to push & pull updates from the same environment you edit in.)
+
+   Fork the repository.
+   
    To fork the NSpyre repository, click the Fork button in the header of the repository.
-
-.. image:: images/Bootcamp-Fork.png
-
-Sit back and watch the forking magic. When it’s finished, you’ll be taken to your copy of the NSpyre repository. (As this is a GitHub specific step and not a git step, it can’t be completed with the git tool. However, checkout the hub command line tool for this and other useful extensions of the git tool https://hub.github.com).
+   
+   .. image:: images/Bootcamp-Fork.png
+   
+   Sit back and watch the forking magic. When it’s finished, you’ll be taken to your copy
+   of the NSpyre repository. (As this is a GitHub specific step and not a git step, it can’t
+   be completed with the git tool. However, checkout the hub command line tool for this and
+   other useful extensions of the git tool https://hub.github.com).
 
 .. code-block:: console
 
    # download a repository on GitHub.com to our machine
    git clone https://github.com/me/repo.git
-   
-   .. image:: images/Bootcamp-Fork.png
    
    # change into the `repo` directory
    cd repo
@@ -85,6 +91,13 @@ Sit back and watch the forking magic. When it’s finished, you’ll be taken to
 
 
 That’s the gist on the workflow!
+
+.. important::
+   
+   People save there code everywhere, in there documents folder, on their desktop, in a hidden folder. Not having a system to managing code is BAD. That's why git exists after all. Similarly, you want your code to be in a unified location on your local machine. Where it isn't in a place that someone will easily tamper with it, but in a location that is still easily accessible if you know where it is. To that end, we *highly* recommend that you create a directory at the root level of your local machine called ``SourceCode`` (or with whatever camalcase formatting your prefer). Create a new subdirectory for every project going forward. So for NSpyre, if you call ``git clone https://github.com/[username]/nspyre.git`` inside SourceCode, you will get a new directory called nspyre, containing your repo.
+
+Next, search for a **branch** to check if someone has already started work on the issue of interest. If not, start one; make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc).
+ A pull is the git term for pulling updated and/or new files from one version of a repo to another.
 
 .. _Code Style:
 

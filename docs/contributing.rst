@@ -53,18 +53,18 @@ Hopefully that all makes sense, but let’s do an actual example of this on the 
    
    In addition to performing the following steps on the commandline, as shown below, these steps can be carried out directly on Github.com and many popular text editors and IDEs have integrated tools to use git/github directly.)
 
-::
+.. code-block:: console
 
    Fork the repository.
    
    To fork the NSpyre repository, click the Fork button in the header of the repository.
    
 .. image:: images/Bootcamp-Fork.png
-   :align: middle
-   :width: 553.5pt
+    :align: middle
+    :width: 553.5pt
    
 
-::
+.. code-block:: console
 
    Sit back and watch the forking magic. When it’s finished, you’ll be taken to your copy
    of the NSpyre repository. (As this is a GitHub specific step and not a git step, it can’t

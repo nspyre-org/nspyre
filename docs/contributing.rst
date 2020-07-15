@@ -97,6 +97,7 @@ Inline markup for font styles is similar to MarkDown:
 * Use an underscore (``reference_``) for reference_.
 * Use one backtick (```reference with whitespace_```) for `reference with whitespace_'.
 * Links to external sites contain the link text and a bracketed URL in backticks, followed by an underscore:
+  
   ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
 
 If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash ``*escape* \``with\`` "\"``.
@@ -104,9 +105,7 @@ If asterisks \* or backquotes \\ appear in running text and could be confused wi
 Headers
 ~~~~~~~
 
-Section headers are created by underlining (and optionally overlining) the section title with a punctuation character, at least as long as the text:
-
-Section Headers are demarcated by underlining (and optionally overlining) the section title using non-alphanumeric characters like dashes, equal signs, or tildes. The row of non-alphanumeric characters must be at least as long as the header text. Use the same character for headers at the same level. The following creates a header
+Section Headers are demarcated by underlining (or over- and underlining) the section title using non-alphanumeric characters like dashes, equal signs, or tildes. The row of non-alphanumeric characters must be at least as long as the header text. Use the same character for headers at the same level. The following creates a header
 
 .. code-block:: console
 
@@ -118,10 +117,10 @@ If you use the same non-alphanumeric character for underline-only and underline-
 
 
 +----------------------------------------------------------+--------------------------------------------------------+
-| ::                                                       |                                                        |
-|                                                          |   .. class:: faketitle                                 |
-|    Title                                                 |                                                        |
-|    =====                                                 |   Title                                                |
+| ::                                                       | ..                                                     |
+|                                                          |                                                        |
+|    Title                                                 |   Title                                                |
+|    =====                                                 |   =====                                                |
 |                                                          |                                                        |
 |    A lone top-level section is lifted up to be the       |   A lone top-level section is lifted up to be the      |
 |    document's title.                                     |   document's title.                                    |
@@ -140,9 +139,11 @@ If you use the same non-alphanumeric character for underline-only and underline-
 
 
 Lists
-~~~~~~~~~~~~~~
+~~~~~
 
-For enumerated lists, use a number or letter followed by a period, or followed by a right-bracket, or surrounded by brackets::
+For enumerated lists, use a number or letter followed by a period, or followed by a right-bracket, or surrounded by brackets
+
+.. code-block:: console
 
   1. Use this format the numbers in your list like 1., 2., etc.
 
@@ -154,7 +155,9 @@ For enumerated lists, use a number or letter followed by a period, or followed b
 
   1) So are numbers followed by a bracket.
 
-For bulleted lists, use indentation to indicate the level of nesting of a bullet point. You can use ``-``, ``+``, or ``*`` as a bullet point character::
+For bulleted lists, use indentation to indicate the level of nesting of a bullet point. You can use ``-``, ``+``, or ``*`` as a bullet point character
+
+.. code-block:: console
 
   * Bullet point
     

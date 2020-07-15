@@ -21,6 +21,7 @@ Welcome to nspyre's documentation!
 .. toctree::
    :maxdepth: 2
    :captions: Contributing:
+   
    Quick Facts
    Philosophy
    Code Contributions

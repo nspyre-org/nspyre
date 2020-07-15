@@ -17,9 +17,14 @@ Welcome to nspyre's documentation!
    the_database
    view_manager
    api
-   contributing
-      Code Contributions
-      Documentation Contributions
+
+.. toctree::
+   :maxdepth: 2
+   :captions: Contributing:
+   Quick Facts
+   Philosophy
+   Code Contributions
+   Documentation Contributions
 
 
 Installation

@@ -1,9 +1,3 @@
-td div.figure {
-  margin-bottom:0px;
-}
-div.figure {
-  margin-bottom: 0px !important;
-}
 .rst-content div.figure {
   margin-bottom: 0px;
 }

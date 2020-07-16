@@ -142,6 +142,18 @@ A Few More Comments
 
 There's a few more important considerations that should be made when setting up a good development environment. We will briefly discuss them here.
 
+* Setting up a working directory
+  
+  People save there code everywhere, in their documents folder, on their desktop, in a hidden folder. Not having a system to managing code is BAD. That's why git exists after all. Similarly, you want your code to be in a unified location on your local machine. Where it isn't in a place that someone will easily tamper with it, but in a location that is still easily accessible if you know where it is.
+  
+  .. important::
+     
+     To that end, we *highly* recommend that you create a directory at the root level of your local machine called ``SourceCode`` (with whatever camelCase, snake_case, or other styling you prefer). Create a new subdirectory for every project going forward.
+  
+  .. warning::
+     
+     So for NSpyre, if you call ``git clone https://github.com/[username]/nspyre.git`` inside SourceCode, you will get a new directory called nspyre, containing your repo (as shown above).
+
 * Virual Enivronments
   
   .. note::
@@ -153,18 +165,6 @@ There's a few more important considerations that should be made when setting up 
   .. tip::
      
      The above steps for forking a repo and making a pull request were performed on the command line. In addition to performing these steps directly on GitHub.com, many popular text editors and IDEs have integrated tools for using git/github directly within their environments. (PyCharm, Sublime Text, and VS Code are a few favorites)
-
-* Setting up a working directory
-  
-  People save there code everywhere, in their documents folder, on their desktop, in a hidden folder. Not having a system to managing code is BAD. That's why git exists after all. Similarly, you want your code to be in a unified location on your local machine. Where it isn't in a place that someone will easily tamper with it, but in a location that is still easily accessible if you know where it is.
-  
-  .. important::
-     
-     To that end, we *highly* recommend that you create a directory at the root level of your local machine called ``SourceCode`` (with whatever camelCase, snake_case, or other styling you prefer). Create a new subdirectory for every project going forward.
-
-.. warning::
-   
-   So for NSpyre, if you call ``git clone https://github.com/[username]/nspyre.git`` inside SourceCode, you will get a new directory called nspyre, containing your repo (as shown above).
 
 .. _Code Style:
 
@@ -192,9 +192,11 @@ When presenting Python code, use single-quoted strings (``'hello'`` instead of `
 Writing Docs
 ------------
 
-The project uses `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_ as the markup language for writing documentation. `Sphinx <https://www.sphinx-doc.org/en/master/>`_ is then used to generate documentation and the is hosted on `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_. Documentation improvements are always welcome! The documentation files live in the docs/ directory of the codebase. They’re written in reStructuredText, and use Sphinx to generate the full suite of documentation. Writing documentation is a great way to start contributing, especially if you are new, and will help get you familiar with the codebase.
+Documentation improvements are always welcome! The documentation files live in the ``docs/`` directory of the codebase. They’re written in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, and use `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate the full suite of documentation, with site-hosting provided by `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_. Writing documentation is a great way to start contributing, especially if you are new, and will help get you familiar with the codebase.
 
 reStructuredText is an easy-to-read, what-you-see-is-what-you-get plaintext markup syntax and parser system. It is useful for inline program documentation (such as Python docstrings), for quickly creating simple web pages, and for standalone documents. Markdown is another, slightly simpler alternative. reStructuredText is a bit harder to use, but is more powerful and is widely used for Python documentation.
+
+For documentation, we write in reStructuredText, using Sphinx to generate files and ReadTheDocs for site hosting. 
 
 The reasons for using a markup language is straight-forward:
 
@@ -206,47 +208,55 @@ Don’t believe me? Then go .rst file for this webpage and see for yourself.
 
 
 
+For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting
+
+The project uses `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_ as the markup language for writing documentation. `Sphinx <https://www.sphinx-doc.org/en/master/>`_ is then used to generate documentation and it is hosted on `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_.
+
+
+
 reStructuredText
 ^^^^^^^^^^^^^^^^
 
-There are many resources on rST syntax, but we've found it helpful to know these basic things when starting out (and as a quick refresher!).
+There are many resources on reST syntax, but we've found it helpful to know these basic things when starting out (and as a quick refresher!).
 
-Paragraphs in reStructuredText are blocks of text separated by at least one blank line. All lines in the paragraph must be indented by the same amount.
+#. Paragraphs in reStructuredText are blocks of text separated by at least one blank line. All lines in the paragraph must be indented by the same amount.
 
-Indentation is important and mixing spaces and tabs causes problems. So just like Python, it's best to just use spaces. And typically, you want to **use three spaces**. Yes, you read that correctly. (A standard tab is equivalent to 4 spaces.)
+#. Indentation is important and mixing spaces and tabs causes problems. So just like Python, it's best to just use spaces. And typically, you want to **use three spaces**. Yes, you read that correctly. (A standard tab is equivalent to 4 spaces.)
 
-Inline markup for font styles is similar to MarkDown:
-
-* Use one asterisk (``*text*``) for *italics*.
-* Use two asterisks (``**text**``) for **bolding**.
-* Use two backticks (````text````) for ``code samples``.
-* Use an underscore (``reference_``) for reference_.
-* Use one backtick (```reference with whitespace`_``) for `reference with whitespace`_.
-* | Links to external sites contain the link text and a bracketed URL in backticks, followed by an underscore:
-  | ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
-.. _Cross-referencing arbitrary locations:
-* To support cross-referencing to arbitrary locations in any document, the standard **reST** labels are used. For this to work, label names must be unique throughout the entire documentation. There are two ways in which you can refer to labels:
-  
-  - If you place a label directly before a section title, you can reference to it with :ref:`label-name`. For example:
-    
-    .. code-block:: console
+#. Inline markup for font styles is similar to MarkDown:
+   
+   * Use one asterisk (``*text*``) for *italics*.
+   * Use two asterisks (``**text**``) for **bolding**.
+   * Use two backticks (````text````) for ``code samples``.
+   * Use an underscore (``references_``) for references_.
+   * Use one backtick (```references with whitespace`_``) for `references with whitespace`_.
+   * | Links to external sites contain the link text and a bracketed URL in backticks,
+     | followed by an underscore:
+     | ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
+   
+   .. _Cross-referencing arbitrary locations:
+   * To support cross-referencing to arbitrary locations in any document, the standard **reST** labels are used. For this to work, label names must be unique throughout the entire documentation. There are two ways in which you can refer to labels:
+     
+     - If you place a label directly before a section title, you can reference to it with :ref:`label-name`. For example:
        
-       .. _my-reference-label:
+       .. code-block:: console
+          
+          .. _my-reference-label:
+          
+          Section to cross-reference
+          --------------------------
+          
+          This is the text of the section.
+          
+          It refers to the section itself, see :ref:`my-reference-label`.
        
-       Section to cross-reference
-       --------------------------
-       
-       This is the text of the section.
-       
-       It refers to the section itself, see :ref:`my-reference-label`.
-    
-    The ``:ref:`` role would then generate a link to the section, with the link title being “Section to cross-reference”. This works just as well when section and reference are in different source files.
-    | Labels that aren’t placed before a section title can still be referenced, but you must give the link an explicit title, using this syntax: :ref:`Link title <label-name>`.
-    | Note: Reference labels must start with an underscore. When referencing a label, the underscore must be omitted (see examples above).
-
-:ref:`A title <Cross-referencing arbitrary locations>`
-
-If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash .
+       | The ``:ref:`` role would then generate a link to the section, with the link title being “Section to cross-reference”. This works just as well when section and reference are in different source files.
+       | Labels that aren’t placed before a section title can still be referenced, but you must give the link an explicit title, using this syntax: :ref:`Link title <label-name>`.
+       | Note: Reference labels must start with an underscore. When referencing a label, the underscore must be omitted (see examples above).
+   
+   .. .. :ref:`A title <Cross-referencing arbitrary locations>`
+   
+#. If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash .
 
 Headers
 ~~~~~~~
@@ -368,7 +378,7 @@ There are plenty of good resources online, and cheat sheets to get you started:
 
 .. attention::
    
-   Hi! We know some of these webpages may be lacking, this documentation has only recently been created and is in active development. Please check back weekly has new content is regularly updated as it is being worked on. Please be patient -- we are mainly graduate students and have a lot of responsiblities.
+   We know some of these webpages could use some work -- this documentation has only recently been created and is in active development. It is updated regularly with all the newly written information. So check back weekly.
 
 .. caution::
    

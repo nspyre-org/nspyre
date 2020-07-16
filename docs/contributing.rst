@@ -336,14 +336,7 @@ There are many different ways of using reST to display code samples, -- or any t
       #some sample code
       print('Hello, World!')
 
-The doctest block must end
-with a blank line and should *not* end with an unused prompt::
-
-    >>> 1 + 1
-    2
-    
-    
-Doctest blocks are text blocks which begin with ">>> ", the Python interactive interpreter main prompt, and end with a blank line. Doctest blocks are treated as a special case of literal blocks, without requiring the literal block syntax. If both are present, the literal block syntax takes priority over Doctest block syntax:
+There is one exception to the rule: when you want to display an interactive Python interpreter. Doctest blocks are text blocks which begin with ">>> ", the Python interactive interpreter main prompt, and end with a blank line (an unused prompt is will break things). Doctest blocks are treated as a special case of `literal blocks`, without requiring the literal block syntax. If both are present, the literal block syntax takes priority over Doctest block syntax:
 
 This is an ordinary paragraph.
 
@@ -358,9 +351,12 @@ The following is a literal block::
 Indentation is not required for doctest blocks.
 
 
+The doctest block must end
+with a blank line and should *not* end with an unused prompt::
 
-
-
+    >>> 1 + 1
+    2
+    >>>
 
 Again, there is a lot that can be said about markup languages, and many resources already available online; avail yourself of whatever helps best.
 
@@ -379,7 +375,7 @@ There are plenty of good resources online, and cheat sheets to get you started:
 
 .. attention::
    
-   We know some of these webpages could use some work -- this documentation has only recently been created and is in active development. It is updated regularly with all the newly written information. So check back weekly.
+   We know some of these webpages could use some work -- this documentation has only recently been created and is in active development. It is updated regularly, so check back weekly.
 
 .. caution::
    

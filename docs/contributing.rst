@@ -98,12 +98,8 @@ Finally, the *push* command updates files from one location to another, but in t
      
      You can *pull* a branch you are working on from the github repo to get the most up-to-date copy locally, pull one branch into another to take certain *commits*, or pull in the reverse direction to bring your updates into the main repo.
 
-Creating a Pull Request |space| |white-space| |space| |create-pr|
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. |space| unicode:: U+0020
-.. |white-space| unicode:: U+00A0
-.. |create-pr| image:: images/create-pr.png
+Creating a Pull Request
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Once you've vetted your code for errors, checked to make sure you've followed all the project guidelines, and most importantly, *documented* your code, it's time to make a pull request.
 
@@ -131,7 +127,7 @@ Once you've vetted your code for errors, checked to make sure you've followed al
 
 All that's left is to officially merge your changes into ``master`` and delete the development branch you were working off of if the associated issues have been closed and the branch is no longer needed. This is something the maintainers of the project will do once it's been confirmed that all the project guidelines have been followed, and most importantly, your code works!
 
-.. image:: images/merge-button.png
+.. figure:: images/merge-button.png
    :align: center
    :height: 106.67px
    :width: 557.18px

@@ -94,7 +94,7 @@ You will notice the addition of two new terms -- *branch* and *push*. Each repos
 
 Finally, the *push* command updates files from one location to another, but in the opposite direction as *pull*. ``git pull`` brings any changes from the target repo on the servers and updates them into the version/branch that you currently have checked out on your local copy. ``git push`` does the opposite. It takes any changes on your local copy of the branch you have checked out and reflects those changes on the repository. If you don't ``git push`` your commits then they will not be uploaded to the repo; this also means they won't be backed up. So it's good practice to push your progress at least daily so it is uploaded to the repository.
 
-Creating a Pull Request                     |create-pr|
+Creating a Pull Request \ \ \ \ \ \ \ \ \ \ |create-pr|
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. |create-pr| image:: images/create-pr.png
@@ -123,12 +123,14 @@ Once you've vetted your code for errors, checked to make sure you've followed al
 
 All that's left is to officially merge your changes into ``master`` and delete the development branch you were working off of if the associated issues have been closed and the branch is no longer needed. This is something the maintainers of the project will do once it's been confirmed that all the project guidelines have been followed, and most importantly, your code works!
 
-.. figure:: images/merge-button.png
+.. image:: images/merge-button.png
    :align: center
    :scale: 50%
 
 .. figure:: images/delete-button.png
    :align: center
+   :height: 67px
+   :width: 557.18px
 
 (For more detailed information on creating a pull request for a fork, see `here <https://docs.github.com/en/enterprise/2.16/user/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork>`_.)
 
@@ -161,16 +163,7 @@ things you should knowThat’s the gist on the workflow!
    
    So for NSpyre, if you call ``git clone https://github.com/[username]/nspyre.git`` inside SourceCode, you will get a new directory called nspyre, containing your repo.
 
-
-
-
-
-
 You can *pull* a branch you are working on from the github repo to get the most up-to-date copy locally, pull one branch into another to take certain *commits*, or pull in the reverse direction to bring your updates into the main repo.
-
-(As this is a GitHub specific step and not a git step, it can’t
-   be completed with the git tool. However, checkout the **hub command line tool** for this and
-   other useful extensions of the git tool https://hub.github.com).
 
 .. _Code Style:
 

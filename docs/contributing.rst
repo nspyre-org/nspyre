@@ -51,13 +51,12 @@ To make things concrete, let’s actually perform this using the command line.
 
 .. figure:: images/Bootcamp-Fork.png
    :align: right
-   :scale: 60%
 
 First you need to fork the repository of interest. To do so, click the Fork button in the header of the repository.
 
   .. tip::
      
-     As this is a github specific step and not a git step, it can’t be completed with the git command line tool. However, the **hub command line tool** provides useful extensions: https://hub.github.com).
+     As this is a github specific step and not a git step, it can’t be completed with the `git <https://git-scm.com>`_ command line tool. However, the `hub <https://hub.github.com>`_ command line tool provides useful extensions.
 
 When it’s finished, you’ll be taken to your copy of the NSpyre repository, which will be located at ``https://github.com/[your-username]/nspyre``. The rest can now be completed using the console:
 
@@ -103,10 +102,14 @@ Once you've vetted your code for errors, checked to make sure you've followed al
 
 .. code-block:: console
    
-   # either click the Pull Request tab, then from the Pull Request page, click the green New pull request button,
-   # or, navigate to the branch you made edits to in the drop-down box on the repository homepage, and click the green Compare & pull request button.
+   # in the main repository you want to merge into, either click the Pull Request tab,
+   # then from the Pull Request page, click the green New pull request button,
+   # or,
+   # navigate to the branch you made edits to in the drop-down box on the repository
+   # homepage, and click the green Compare & pull request button.
    
-   # then, look over your changes in the diffs on the Compare page, make sure they’re what you want to submit.
+   # then, look over your changes in the diffs on the Compare page,
+   # make sure they’re what you want to submit.
    
    # give your pull request a title and write a brief description of your changes.
    # when you’re satisfied, click the big green Create pull request button.
@@ -117,15 +120,15 @@ Once you've vetted your code for errors, checked to make sure you've followed al
    kjnkj:align: center
    kjnkjn:scale: 50%
 
-All that's left is to officially merge your changes into ``master`` and delete the development branch you were working off of if the associated issues have been closed and the branch is now longer needed. This is something the maintainers of the project will do once it's been confirmed that all the project guidelines have been followed, and most importantly, your code works!
+All that's left is to officially merge your changes into ``master`` and delete the development branch you were working off of if the associated issues have been closed and the branch is no longer needed. This is something the maintainers of the project will do once it's been confirmed that all the project guidelines have been followed, and most importantly, your code works!
 
-.. image:: images/merge-button.png
+.. figure:: images/merge-button.png
    :align: center
-   :scale: 80%
 
 .. figure:: images/delete-button.png
    :align: center
-   :scale: 50%
+
+(For more detailed information on creating a pull request for a fork, see `here <https://docs.github.com/en/enterprise/2.16/user/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork>`_.)
 
 |
 |

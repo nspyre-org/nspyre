@@ -58,7 +58,6 @@ To make things concrete, but let’s do an actual example of this on the command
    # first you need to fork the repository of interests (NSpyre obviously). To do so, click the Fork button in the header of the repository.
 
 .. figure:: images/Bootcamp-Fork.png
-   :align: middle
    :scale: 50%
 
 .. code-block:: console

@@ -1,12 +1,13 @@
-*******
-Install
-*******
-
-.. attention::
+.. important::
    
    These installation instructions are only temporary. A new
    streamlined installer is in development and will be released shortly. Updated
    documentation will follow.
+
+
+*******
+Install
+*******
 
 The following should be run in a standard windows cmd line or equivalent
 (eg: https://cmder.net/)

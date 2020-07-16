@@ -94,8 +94,10 @@ You will notice the addition of two new terms -- *branch* and *push*. Each repos
 
 Finally, the *push* command updates files from one location to another, but in the opposite direction as *pull*. ``git pull`` brings any changes from the target repo on the servers and updates them into the version/branch that you currently have checked out on your local copy. ``git push`` does the opposite. It takes any changes on your local copy of the branch you have checked out and reflects those changes on the repository. If you don't ``git push`` your commits then they will not be uploaded to the repo; this also means they won't be backed up. So it's good practice to push your progress at least daily so it is uploaded to the repository.
 
-Creating a Pull Request
-^^^^^^^^^^^^^^^^^^^^^^^
+Creating a Pull Request |create-pr|
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. |create-pr| image:: images/create-pr.png
 
 Once you've vetted your code for errors, checked to make sure you've followed all the project guidelines, and most importantly, *documented* your code, it's time to make a pull request.
 
@@ -117,13 +119,13 @@ Once you've vetted your code for errors, checked to make sure you've followed al
 
 All that's left is to officially merge your changes into ``master`` and delete the development branch you were working off of if the associated issues have been closed and the branch is now longer needed. This is something the maintainers of the project will do once it's been confirmed that all the project guidelines have been followed, and most importantly, your code works!
 
-.. figure:: images/merge-button.png
+.. image:: images/merge-button.png
    :align: center
    :scale: 80%
 
 .. figure:: images/delete-button.png
    :align: center
-   :scale: 80%
+   :scale: 50%
 
 |
 |

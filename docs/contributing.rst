@@ -11,7 +11,7 @@ The guide is split into sections based on the type of contribution you’re thin
 Quick Facts
 ===========
 
-For this project, we use a standard *fork & pull* model to collaborate, common practice for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code follows the Google Style Guide for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, which has some caveats as detailed :ref:`here <Code Style>`. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org>`_ -- that is, we subscribe to *Docs as Code*. If the above remarks don’t make sense to you, or you simply want a more detailed description of how to do things, continue reading below.
+For this project, we use a standard *fork & pull* model to collaborate, common practice for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code follows the Google Style Guide for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, and some of our own caveats as detailed :ref:`here <Code Style>`. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org>`_ -- that is, we subscribe to *Docs as Code*. If the above remarks don’t make sense to you, or you simply want a more detailed description of how to do things, continue reading below.
 
 Philosophy
 ==========
@@ -28,7 +28,7 @@ Code Contributions
 ==================
 
 
-We understand that for a lot people using this project, it might be their first time contributing to an open source project. And getting started on any new project can be intimidating, especially for newcomers. So along with information about our workflow in this project, our style guides, and particular information on how to get involved, we've included some basic information, collated from various sources on a number of important topics. We hope this helps you on your journey. (If you are already a pro, we're happy to have you -- you can skip to our style guide :ref:`here <Code Style>`.)
+We understand that for a lot of people using this project, it might be their first time contributing to an open source project. And getting started on any new project can be intimidating, especially for newcomers. So along with information about our workflow in this project, our style guides, and particular information on how to get involved, we've included some basic information, collated from various sources on a number of important topics. We hope this helps you on your journey. (If you are already a pro, we're happy to have you -- you can skip to our style guide :ref:`here <Code Style>`.)
 
 Version Control
 ---------------
@@ -40,60 +40,79 @@ First thing’s first — *Git*. `Git <https://git-scm.com>`_ is an example of a
 * When were the changes made?
 * Why were changes needed?
 
-Git grew out of the needs of the developers of the Linux kernel and is one of the most widely-used VCS tools available. `GitHub <https://github.com>`_ is a Git hosting repository that builds collaboration directly into the development process by providing developers with tools to ship better code through command line features, issues (threaded discussions), pull requests, code review, and more. If all this information is new, then please read this: `Understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_  — it’s a 5min read and will make your life a lot easier going forward. (If you want a much deeper explanation and a good reference source to get up to speed on the basics of using git and GitHub, go to the `Git Handbook <https://guides.github.com/introduction/git-handbook/>`_.)
+Git grew out of the needs of the developers of the Linux kernel and is one of the most widely-used VCS tools available. `GitHub <https://github.com>`_ is a Git hosting repository that builds collaboration directly into the development process by providing developers with tools to ship better code through command line features, issues (threaded discussions), pull requests, code review, and more. If all this information is new, then please read this: `Understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_  — it’s a 5min read and will make your life a lot easier going forward. (If you want a much deeper explanation and a good reference source to get up to speed on the basics of using Git and GitHub, go to the `Git Handbook <https://guides.github.com/introduction/git-handbook/>`_.)
 
 How to Contribute: Forking & Pull Requests
 ------------------------------------------
 
-Great, now that you understand the *why* and *how* of Git & Github, let’s explain the workflow to contribute. We use the **fork & pull** model to collaborate. This means that to contribute to the project, you first need to **Fork** the project on GitHub. A Github fork is just a copy of a repository. When you *fork* a repo, you are storing a copy of that repo on your personal account. Doing so grants you full *write* access to edit files and develop the code on your version. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you ``git pull ...``, that's the git term for *pulling* updated and/or new files from one version of a repo to another; you are simply updating files in one direction. Thus, *pulling* applies in many different contexts (more info below). A pull request, therefore, is a request you make for the maintainers, of the original repo you forked, to *review & merge* your edits into their version of the code stored on their repo.
+Great, now that you understand the *why* and *how* of Git & Github, let’s explain the workflow to contribute. We use the **fork & pull** model to collaborate. This means that to contribute to the project, you first need to **Fork** the project on GitHub. A Github fork is just a copy of a repository. When you *fork* a repo, you are storing a copy of that repo on your personal account. Doing so grants you full *write* access to edit files and develop the code on your version of it. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you ``git pull`` on a codebase, that's the git term for *pulling* updated and/or new files from one version of a repo to another; you are simply updating files in a particular direction. Thus, *pulling* applies in many different contexts (more info :ref:`below <push pull>`). A *pull request*, therefore, is a request you make for the maintainers, of the original repo you forked, to *review & merge* your edits into their version of the code stored on their repo.
 
-Hopefully that all makes sense, but let’s do an actual example of this on the command line to walk you through the steps.
+To make things concrete, but let’s do an actual example of this on the command line to give you some reference steps.
 
 .. tip::
    
-   In addition to performing the following steps on the commandline, as shown below, these steps can be carried out directly on Github.com and many popular text editors and IDEs have integrated tools to use git/github directly.
+   In addition to performing the following steps on the command line, as shown below, these steps can be carried out directly on GitHub.com, and many popular text editors and IDEs have integrated tools for using git/github directly within their environments.
 
 .. code-block:: console
 
-   Fork the repository.
-   
-   To fork the NSpyre repository, click the Fork button in the header of the repository.
+   # first you need to fork the repository of interests (NSpyre obviously). To do so, click the Fork button in the header of the repository.
    
 .. image:: images/Bootcamp-Fork.png
-   
 
 .. code-block:: console
 
-   Sit back and watch the forking magic. When it’s finished, you’ll be taken to your copy
-   of the NSpyre repository. (As this is a GitHub specific step and not a git step, it can’t
-   be completed with the git tool. However, checkout the **hub command line tool** for this and
-   other useful extensions of the git tool https://hub.github.com).
+   # sit back and watch the forking magic. When it’s finished, you’ll be taken to your copy of the NSpyre repository.
 
 .. code-block:: console
-
-   # download a repository on GitHub.com to our machine
-   git clone https://github.com/me/repo.git
    
-   # change into the `repo` directory
-   cd repo
+   # navigate to the directory you want to store your local copy of the repo
+   cd ~/SourceCode
+
+   # download the repository on GitHub.com to your machine
+   git clone https://github.com/[your-username]/nspyre.git
+   
+   # change into the `nspyre` directory that was created for you
+   cd nspyre
    
    # create a new branch to store any new changes
-   git branch my-branch
+   git branch descriptive-branch-title
    
    # switch to that branch (line of development)
-   git checkout my-branch
+   git checkout descriptive-branch-title
    
-   # make changes, for example, edit `file1.md` and `file2.md` using the text editor
+   # make changes, for example, edit `contributors.md` and create `my-spyrelet.py`
 
    # stage the changed files
-   git add file1.md file2.md
+   git add contributors.md my-spyrelet.py
    
    # take a snapshot of the staging area (anything that's been added)
+   # the -m flag adds a comment to the commmit
    git commit -m "my snapshot"
    
    # push changes to github
-   git push --set-upstream origin my-branch
+   git push --set-upstream origin descriptive-branch-title
 
+.. _push pull:
+
+You will notice the addition of two new terms -- *branch* and *push*. Each repository can have multiple versions of it's codebase that are under development. The ``master`` *branch* is the main version of the code on the repository and is the one from which all other branches originate. This is the official working version that is used out in the wild and the one you eventually want your changes to appear on. When forking a repo, you also get all the different branches at the time of copying. When contributing on an issue, you first want to search for a **branch** to check if someone has already started work on that issue of interest. If not, start a new one; make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc).
+
+Finally, the *push* command updates files from one location to another, but in the opposite direction as *pull*. ``git pull`` brings any changes from the target repo on the servers and updates them into the version/branch that you currently have checked out on your local copy. ``git push`` does the opposite. It takes any changes on your local copy of the branch you have checked out and reflects those changes on the repository. If you don't ``git push`` your commits then they will not be uploaded to the repo; similarly, this means they won't be backed up so it is good practice to push your progress so it is saved centrally and not on your machine least anything happens to it.
+
+Once you've vetted your code for errors, checked to make sure you've followed all the project guidelines, and most importantly, *documented* your code, you have make a pull request.
+
+.. code-block:: console
+   
+   # either click the Pull Request tab, then from the Pull Request page, click the green New pull request button,
+   # or, navigate to the branch you made edits to in the drop-down box on the repository homepage, and click the green Compare & pull request button.
+   
+   # then, look over your changes in the diffs on the Compare page, make sure they’re what you want to submit.
+   
+   # give your pull request a title and write a brief description of your changes.
+   # when you’re satisfied, click the big green Create pull request button.
+   
+   # Congrats, you've submitted your first contributon for merging!
+
+.. image:: images/create-pr.png
 
 That’s the gist on the workflow!
 
@@ -109,11 +128,14 @@ That’s the gist on the workflow!
    
    Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
 
-Next, search for a **branch** to check if someone has already started work on the issue of interest. If not, start one; make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc).
+
 
 
 You can *pull* a branch you are working on from the github repo to get the most up-to-date copy locally, pull one branch into another to take certain *commits*, or pull in the reverse direction to bring your updates into the main repo.
 
+(As this is a GitHub specific step and not a git step, it can’t
+   be completed with the git tool. However, checkout the **hub command line tool** for this and
+   other useful extensions of the git tool https://hub.github.com).
 
 .. _Code Style:
 

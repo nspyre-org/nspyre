@@ -98,12 +98,15 @@ Finally, the *push* command updates files from one location to another, but in t
    
    You can *pull* a branch you are working on from the github repo to get the most up-to-date copy locally, pull one branch into another to take certain *commits*, or pull in the reverse direction to bring your updates into the main repo.
 
-Creating a Pull Request U+0020 U+0020 U+0020 |create-pr|
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creating a Pull Request |space| |space| |space| |create-pr|
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. |space| unicode:: U+0020
 .. |create-pr| image:: images/create-pr.png
 
 Once you've vetted your code for errors, checked to make sure you've followed all the project guidelines, and most importantly, *documented* your code, it's time to make a pull request.
+
+.. image:: images/compare-and-pr.png
 
 .. code-block:: console
    
@@ -129,12 +132,13 @@ All that's left is to officially merge your changes into ``master`` and delete t
 
 .. image:: images/merge-button.png
    :align: center
+   :height: 106.67px
+   :width: 557.18px
 
 .. figure:: images/delete-button.png
    :align: center
-   
-..   :height: 67px
-     :width: 557.18px
+   :height: 67.07px
+   :width: 557.18px
 
 (For more detailed information on creating a pull request from a fork, see `here <https://docs.github.com/en/enterprise/2.16/user/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork>`_.)
 

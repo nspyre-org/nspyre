@@ -2,8 +2,9 @@
    
    We know some of these webpages could use some work -- this documentation has only recently been created and is in active development. It is updated regularly, so check back weekly.
 
+#####################
 The Instrument Server
-=====================
+#####################
 
 The Instrument Server is where the lantz driver actually lives. Commands
 received on the ZMQ (socket) connection are relayed to the lantz driver.
@@ -18,13 +19,3 @@ file located in the same folder.
 LANTZ drivers. The list of instruments and their corresponding drivers are
 located in the device_list within the config.yaml file and would have to be
 updated by the user.
-
-
-
-
-Installation
-------------
-
-
-nspyre
-^^^^^^

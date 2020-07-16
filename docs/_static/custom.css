@@ -6,3 +6,6 @@ td {
 div.figure {
   margin-bottom: 0px;
 }
+.rst-content div.figure {
+  margin-bottom: 0px;
+}

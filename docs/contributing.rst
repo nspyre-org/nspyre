@@ -51,6 +51,7 @@ To make things concrete, let’s actually perform this using the command line.
 
 .. figure:: images/Bootcamp-Fork.png
    :align: right
+   :scale: 50%
 
 First you need to fork the repository of interest. To do so, click the Fork button in the header of the repository.
 
@@ -93,8 +94,8 @@ You will notice the addition of two new terms -- *branch* and *push*. Each repos
 
 Finally, the *push* command updates files from one location to another, but in the opposite direction as *pull*. ``git pull`` brings any changes from the target repo on the servers and updates them into the version/branch that you currently have checked out on your local copy. ``git push`` does the opposite. It takes any changes on your local copy of the branch you have checked out and reflects those changes on the repository. If you don't ``git push`` your commits then they will not be uploaded to the repo; this also means they won't be backed up. So it's good practice to push your progress at least daily so it is uploaded to the repository.
 
-Creating a Pull Request |create-pr|
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Creating a Pull Request                     |create-pr|
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. |create-pr| image:: images/create-pr.png
 
@@ -124,14 +125,12 @@ All that's left is to officially merge your changes into ``master`` and delete t
 
 .. figure:: images/merge-button.png
    :align: center
+   :scale: 50%
 
 .. figure:: images/delete-button.png
    :align: center
 
 (For more detailed information on creating a pull request for a fork, see `here <https://docs.github.com/en/enterprise/2.16/user/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork>`_.)
-
-|
-|
 
 A Few More Comments
 ^^^^^^^^^^^^^^^^^^^

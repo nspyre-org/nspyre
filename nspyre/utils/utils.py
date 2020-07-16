@@ -1,4 +1,3 @@
-import pymongo
 from pint import Quantity as Q_
 from collections.abc import Iterable
 import numpy as np
@@ -8,12 +7,39 @@ import yaml
 import os
 from importlib import import_module
 import traceback
+import nspyre.utils.config_file
 
-def get_mongo_client(mongodb_addr=None):
-    if mongodb_addr is None:
-        cfg = get_configs()
-        mongodb_addr = cfg['mongodb_addr']
-    return pymongo.MongoClient(mongodb_addr, replicaset='NSpyreSet')
+def monkey_wrap(wrapped_func, before_func, after_func):
+    """Monkey patch technique for wrapping functions defined
+    in 3rd party modules, for example:
+    import uncontrolled_module
+    uncontrolled_module.some_class.internal_method = \
+        monkey_wrap(uncontrolled_module.some_class.internal_method, 
+                lambda args, kwargs: print('before! args: %s kwargs: %s' % \
+                                            (args, kwargs)),
+                lambda args, kwargs: print('after!'))
+    obj = some_class()
+    obj.internal_method(arg1, arg2)
+    should return ->
+    before! args: (arg1, arg2) kwargs: {}
+    <internal_method runs>
+    after!"""
+    def _wrap(*args, **kwargs):
+        if before_func:
+            before_func(args, kwargs)
+        wrapped_func(*args, **kwargs)
+        if after_func:
+            after_func(args, kwargs)
+    return _wrap
+
+def join_nspyre_path(p):
+    return os.path.join(os.path.dirname(__file__), p)
+
+def get_class_from_str(class_str):
+    class_name = class_str.split('.')[-1]
+    mod = import_module(class_str.replace('.'+class_name, ''))
+    return getattr(mod, class_name)
+
     # for addr in mongodb_addrs:
     #     client = pymongo.MongoClient(addr, re)
     #     if client.is_primary:
@@ -102,14 +128,6 @@ def get_mongo_client(mongodb_addr=None):
 #             return self.FUNCS[func_name](**d)
 #         else:
 #             return self.FUNCS[func_name](**d)*units
-
-def join_nspyre_path(p):
-    return os.path.join(os.path.dirname(__file__), p)
-
-def get_class_from_str(class_str):
-    class_name = class_str.split('.')[-1]
-    mod = import_module(class_str.replace('.'+class_name, ''))
-    return getattr(mod, class_name)
 
 def load_all_spyrelets():
     cfg = get_configs()

@@ -13,12 +13,14 @@
 import logging
 from nspyre.utils.config_file import get_config_param, load_config, \
                                     get_class_from_str
+from nspyre.utils.utils import monkey_wrap
 import rpyc
 import os
 import _thread
+import pymongo
 from cmd import Cmd
 import time
-from rpyc.utils.server import ThreadedServer
+from rpyc.utils.server import ThreadedServer 
 import argparse
 
 ###########################
@@ -46,15 +48,59 @@ class InstrumentServerError(Exception):
 class InstrumentServer(rpyc.Service):
     """RPyC provider that loads lantz devices and exposes them to the remote
     client"""
-    
-    def __init__(self, config_file):
+    def __init__(self, config_file=None, mongodb_addr=None):
         super().__init__()
+        # configuration
         self.config = {}
+        self.config_file = None
+        self.name = None
+        # rpyc server settings
+        self.port = None
+        # rpyc server object
+        self._rpyc_server = None
+        # mongodb
+        self.db_name = None
+        self.db_addr = None
+        self.db_client = None
+        self.db = None
+        # lantz devices
+        self.devs = {}
+
         self.update_config(config_file)
+        self.reload_server_config()
+        self.reload_mongo(mongodb_addr)
+        self.reload_devices()
+        self.start_server()
+
+    def restart(self, config_file=None, mongodb_addr=None):
+        logging.info('restarting...')
+        self.update_config(config_file)
+        self.reload_server_config()
+        self.reload_mongo(mongodb_addr)
+        self.reload_devices()
+        self.reload_server()
+
+    def reload_server_config(self):
+        """Reload RPyC server settings from the config"""
         self.name = get_config_param(self.config, ['server_settings', 'name'])
         self.port = get_config_param(self.config, ['server_settings', 'port'])
-        self.devs = {}
-        self.reload_devices()
+        
+    def reload_mongo(self, mongodb_addr=None):
+        """Config and connect to mongodb database"""
+        self.db_name = 'Instrument_Server[%s]' % (self.name)
+        self.db_addr = mongodb_addr if mongodb_addr else \
+                            get_config_param(self.config, ['mongodb_addr'])
+        logging.info('connecting to mongodb server [%s]...', self.db_addr)
+        # TODO disconnect first?, timeout
+        self.db_client = pymongo.MongoClient(mongodb_addr,
+                                            replicaset='NSpyreSet')
+        self.db = self.db_client[self.db_name]
+        try:
+            self.db_client.drop_database(self.db_name)
+        except:
+            raise InstrumentServerError('Failed connecting to mongodb [%s]' \
+                                        % (self.db_addr)) from None
+        logging.info('connected to mongodb server [%s]', self.db_addr)
 
     def add_device(self, dev_name, dev_class, dev_args, dev_kwargs):
         """Add and initialize a device"""
@@ -69,17 +115,31 @@ class InstrumentServer(rpyc.Service):
 
         # get an instance of the device
         try:
-            self.devs[dev_name] = dev_class(*dev_args, **dev_kwargs)
+            self.devs[dev_name] = \
+                    dev_class(*dev_args, **dev_kwargs)
         except:
             raise InstrumentServerError('Failed to get instance of device ' \
                                         '[%s] of class [%s]'
                                         % (dev_name, dev_class)) from None
 
+        # method for overriding lantz feature getter/setters
+        # see monkey_wrap() for more info
+        # TODO
+        import lantz
+        lantz.core.feat.Feat.__get__ = \
+                monkey_wrap(lantz.core.feat.Feat.__get__,
+                                lambda a,k: print('args: %s kwargs: %s' % (a,k)),
+                                None)
+        lantz.core.feat.DictFeat.__get__ = \
+                monkey_wrap(lantz.core.feat.DictFeat.__get__,
+                                lambda a,k: print('args: %s kwargs: %s' % (a,k)),
+                                None)
+
         # initialize it
         try:
             self.devs[dev_name].initialize()
         except:
-            raise InstrumentServerError('Device [%s] initialization sequence' \
+            raise InstrumentServerError('Device [%s] initialization sequence ' \
                                         'failed' % (dev_name)) from None
 
         logging.info('added device %s [%a] [%a]' % (dev_name,
@@ -111,17 +171,64 @@ class InstrumentServer(rpyc.Service):
         """Reload all devices"""
         for dev_name in get_config_param(self.config, ['devices']):
             self.reload_device(dev_name)
+        logging.info('reloaded all devices')
 
-    def update_config(self, config_file):
+    def update_config(self, config_file=None):
         """Reload the config file"""
-        filename = os.path.join(this_dir, config_file)
-        self.config = load_config(filename)
+        # update the config file if a new one was passed as argument
+        if config_file:
+            self.config_file = config_file
+        self.config = load_config(self.config_file)
+        logging.info('loaded config file [%s]' % (self.config_file))
 
     def on_connect(self, conn):
-        pass
+        """Called when a client connects to the RPyC server"""
+        # TODO print client address
+        logging.info('client [%s] connected' % (conn))
 
     def on_disconnect(self, conn):
-        pass
+        """Called when a client discconnects from the RPyC server"""
+        # TODO print client address
+        logging.info('client [%s] disconnected' % (conn))
+
+    def reload_server(self):
+        """Restart the RPyC server"""
+        self.stop_server()
+        self.start_server()
+
+    def start_server(self):
+        """Start the RPyC server"""
+        if self._rpyc_server:
+            logging.warning('can\'t start the rpyc server because one ' \
+                            'is already running')
+            return
+        _thread.start_new_thread(self._rpyc_server_thread, ())
+        # allow time for the rpyc server to start
+        # TODO synchronous wait for it to start with a signal
+        time.sleep(0.1)
+
+    def stop_server(self):
+        """Stop the RPyC server"""
+        if not self._rpyc_server:
+            logging.warning('can\'t stop the rpyc server because there ' \
+                            'isn\'t one running')
+            return
+        logging.info('stopping RPyC server...')
+        self._rpyc_server.close()
+        self._rpyc_server = None
+        # TODO synchronous wait until thread has exited
+        time.sleep(0.1)
+
+    def _rpyc_server_thread(self):
+        """Thread for running the RPyC server asynchronously"""
+        logging.info('starting RPyC server...')
+        self._rpyc_server = ThreadedServer(self, port=self.port,
+                            protocol_config={'allow_all_attrs' : True,
+                                            'allow_setattr' : True,
+                                            'allow_delattr' : True,
+                                            'sync_request_timeout' : 10})
+        self._rpyc_server.start()
+        logging.info('RPyC server stopped')
 
 class CmdPrompt(Cmd):
     """Server shell prompt processor"""
@@ -138,26 +245,21 @@ class CmdPrompt(Cmd):
             print(d)
 
     def do_update_config(self, arg_string):
-        """Reload the server config file\n- the config file location"""
+        """Reload the server config file\n<string> the config file path"""
         args = arg_string.split(' ')
-        if not arg_string:
-            filename = DEFAULT_CONFIG
-        else:
-            # deal with absolute vs relative paths
-            filename = args[0]
-            if not os.path.isabs(args[0]):
-                filename = os.path.join(os.getcwd(), filename)
-
+        if len(args) > 1:
+            print('Expected 1 arg: device name, or 0 args for default config')
+            return
         # attempt to reload the config file
         try:
-            self.inserv.update_config(filename)
+            self.inserv.update_config(config_file=\
+                                    args[0] if arg_string else None)
         except:
             print('Failed to reload config file')
             return
-        print('Reloaded config file')
 
-    def do_reload(self, arg_string):
-        """Restart the connection with a device\n- the device name string"""
+    def do_reload_dev(self, arg_string):
+        """Restart the connection with a device\n<string> the device name"""
         args = arg_string.split(' ')
         if not arg_string or len(args) > 1:
             print('Expected 1 arg: device name')
@@ -168,7 +270,6 @@ class CmdPrompt(Cmd):
         except:
             print('Failed to reload device [%s]' % dev_name)
             return
-        print('Reloaded device [%s]' % dev_name)
 
     def do_reload_all(self, arg_string):
         """Restart the connection with all devices"""
@@ -180,7 +281,50 @@ class CmdPrompt(Cmd):
         except:
             print('Failed to reload all devices')
             return
-        print('Reloaded all devices')
+
+    def do_reload_mongo(self, arg_string):
+        """Restart the connection with the mongodb server"""
+        if arg_string:
+            print('Expected 0 args')
+            return
+        try:
+            self.inserv.reload_mongo()
+        except:
+            print('Failed to reload mongodb server')
+            return
+
+    def do_restart(self, arg_string):
+        """Restart the server by reloading the config file and all devices"""
+        if arg_string:
+            print('Expected 0 args')
+            return
+        try:
+            self.inserv.restart()
+        except:
+            print('Failed to restart')
+            return
+
+    def do_stop(self, arg_string):
+        """Stop the rpyc server"""
+        if arg_string:
+            print('Expected 0 args')
+            return
+        try:
+            self.inserv.stop_server()
+        except:
+            print('Failed to stop')
+            return
+
+    def do_start(self, arg_string):
+        """Start the rpyc server"""
+        if arg_string:
+            print('Expected 0 args')
+            return
+        try:
+            self.inserv.start_server()
+        except:
+            print('Failed to start')
+            return
 
     def do_debug(self, arg_string):
         """Drop into the debugging console"""
@@ -195,17 +339,9 @@ class CmdPrompt(Cmd):
         if arg_string:
             print('Expected 0 args')
             return
-        logging.info('Exiting...')
+        self.inserv.stop_server()
+        logging.info('exiting shell...')
         raise SystemExit
-
-def rpyc_server_thread(inserv):
-    """Thread for running the RPyC server asynchronously"""
-    t = ThreadedServer(inserv, port=inserv.port,
-                        protocol_config={'allow_all_attrs' : True,
-                                        'allow_setattr' : True,
-                                        'allow_delattr' : True,
-                                        'sync_request_timeout' : 10})
-    t.start()
 
 if __name__ == '__main__':
     # parse command-line arguments
@@ -218,25 +354,29 @@ if __name__ == '__main__':
     arg_parser.add_argument('-l', '--log',
                             default=DEFAULT_LOG,
                             help='server log file location')
+    arg_parser.add_argument('-m', '--mongo',
+                            default=None,
+                            help='mongodb address e.g. ' \
+                            'mongodb://192.168.1.27:27017/')
     arg_parser.add_argument('-q', '--quiet',
                             action='store_true',
                             help='disable logging')
+    arg_parser.add_argument('-v', '--verbose',
+                            action='store_true',
+                            help='log debug messages')
     cmd_args = arg_parser.parse_args()
 
     # configure server logging behavior
     if not cmd_args.quiet:
-        logging.basicConfig(level=logging.DEBUG,
-                            format='%(asctime)s -- %(levelname)s -- %(message)s',
-                            handlers=[logging.FileHandler(cmd_args.log, 'w+'),
-                                        logging.StreamHandler()])
-    # start RPyC server
+        logging.basicConfig(level=logging.DEBUG if cmd_args.verbose
+                        else logging.INFO,
+                        format='%(asctime)s -- %(levelname)s -- %(message)s',
+                        handlers=[logging.FileHandler(cmd_args.log, 'w+'),
+                                logging.StreamHandler()])
+    # init and start RPyC server
     logging.info('starting instrument server...')
-    inserv = InstrumentServer(cmd_args.config)
-    _thread.start_new_thread(rpyc_server_thread, (inserv,))
-    
-    # allow time for the rpyc server to start
-    time.sleep(0.1)
-    
+    inserv = InstrumentServer(cmd_args.config, cmd_args.mongo)
+
     # start the shell prompt event loop
     cmd_prompt = CmdPrompt(inserv)
     cmd_prompt.prompt = 'inserv > '

@@ -117,7 +117,31 @@ Once you've vetted your code for errors, checked to make sure you've followed al
 
 .. image:: images/create-pr.png
 
-That’s the gist on the workflow!
+All that's left is to officially merge your changes into ``master`` and delete the development branch you were working off of if the associated issues have been closed and the branch is now longer needed. This is something the maintainers of the project will do once it's been confirmed that all the project guidelines have been followed, and most importantly, your code works!
+
+.. image:: images/merge-button.png
+.. image:: images/delete-button.png
+
+::
+
+::
+
+::
+
+A Few More Comments
+^^^^^^^^^^^^^^^^^^^
+
+There's a few more important considerations that should be made when setting up a good development environment :command:`git rebase -i master`. We will briefly discuss them here:guilabel:`New Pull Request`.
+
+
+* Virual Enivronments
+  
+  .. note:: Virutal Environments
+     
+     Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
+
+
+things you should knowThat’s the gist on the workflow!
 
 .. important::
    
@@ -127,9 +151,7 @@ That’s the gist on the workflow!
    
    So for NSpyre, if you call ``git clone https://github.com/[username]/nspyre.git`` inside SourceCode, you will get a new directory called nspyre, containing your repo.
 
-.. note:: Virutal Environments
-   
-   Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
+
 
 
 

@@ -56,15 +56,14 @@ To make things concrete, but let’s do an actual example of this on the command
 .. code-block:: console
 
    # first you need to fork the repository of interests (NSpyre obviously). To do so, click the Fork button in the header of the repository.
-   
+
 .. figure:: images/Bootcamp-Fork.png
+   :align: middle
    :scale: 50%
 
 .. code-block:: console
-
+   
    # sit back and watch the forking magic. When it’s finished, you’ll be taken to your copy of the NSpyre repository.
-
-.. code-block:: console
    
    # navigate to the directory you want to store your local copy of the repo
    cd ~/SourceCode
@@ -116,12 +115,19 @@ Once you've vetted your code for errors, checked to make sure you've followed al
    
    # Congrats, you've submitted your first contributon for merging!
 
-.. image:: images/create-pr.png
+.. figure:: images/create-pr.png
+   :align: middle
+   :scale: 50%
 
 All that's left is to officially merge your changes into ``master`` and delete the development branch you were working off of if the associated issues have been closed and the branch is now longer needed. This is something the maintainers of the project will do once it's been confirmed that all the project guidelines have been followed, and most importantly, your code works!
 
-.. image:: images/merge-button.png
-.. image:: images/delete-button.png
+.. figure:: images/merge-button.png
+   :align: middle
+   :scale: 80%
+
+.. figure:: images/delete-button.png
+   :align: middle
+   :scale: 80%
 
 |
 |

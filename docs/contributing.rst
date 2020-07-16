@@ -98,6 +98,9 @@ You will notice the addition of two new terms -- *branch* and *push*. Each repos
 
 Finally, the *push* command updates files from one location to another, but in the opposite direction as *pull*. ``git pull`` brings any changes from the target repo on the servers and updates them into the version/branch that you currently have checked out on your local copy. ``git push`` does the opposite. It takes any changes on your local copy of the branch you have checked out and reflects those changes on the repository. If you don't ``git push`` your commits then they will not be uploaded to the repo; similarly, this means they won't be backed up so it is good practice to push your progress so it is saved centrally and not on your machine least anything happens to it.
 
+Creating a Pull Request
+^^^^^^^^^^^^^^^^^^^^^^^
+
 Once you've vetted your code for errors, checked to make sure you've followed all the project guidelines, and most importantly, *documented* your code, you have make a pull request.
 
 .. code-block:: console

@@ -40,12 +40,12 @@ First thing’s first — *Git*. `Git <https://git-scm.com>`_ is an example of a
 * When were the changes made?
 * Why were changes needed?
 
-Git grew out of the needs of the developers of the Linux kernel and is one of the most widely-used VCS tools available. `GitHub <https://github.com>`_ is a Git hosting repository that builds collaboration directly into the development process by providing developers with tools to ship better code through command line features, issues (threaded discussions), pull requests, code review, and more. If all this information is new, then please read this: `Understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_  — it’s a 5min read and will make your life a lot easier going forward. (If you want a much deeper explanation and a good reference source to get up to speed on the basics of using Git and GitHub, go to the `Git Handbook <https://guides.github.com/introduction/git-handbook/>`_.)
+Git grew out of the needs of the developers of the Linux kernel and is one of the most widely-used VCS tools available. `GitHub <https://github.com>`_ is a Git hosting repository that builds collaboration directly into the development process by providing developers with tools to ship better code through command line features, issues (threaded discussions), pull requests, code review, and more. If all this information is new, then please read this: `Understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_  — it’s a 5min read and it will make your life a lot easier going forward. (If you want a much deeper explanation and a good reference source to get up to speed on the basics of using Git and GitHub, go to the `Git Handbook <https://guides.github.com/introduction/git-handbook/>`_.)
 
 How to Contribute: Forking & Pull Requests
 ------------------------------------------
 
-Great, now that you understand the *why* and *how* of Git & GitHub, let’s explain the workflow to contribute. We use the **fork & pull** model to collaborate. This means that to contribute to the project, you first need to **Fork** the project on GitHub. A GitHub fork is just a copy of a repository (repo). When you *fork* a repo, you are storing a copy of that repo on your personal account. Doing so grants you full *write* access to edit files and develop the code on your version of it. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you ``git pull`` on a codebase, that's the git term for *pulling* updated and/or new files from one version of a repo to another; you are simply updating files in a particular direction. Thus, *pulling* applies in many different contexts (more info below). A *pull request*, therefore, is a request you make for the maintainers, of the original repo you forked, to *review & merge* your edits into their version of the code stored on their repo (you can, of course, make pull requests on your own repositories).
+Great, now that you understand the *why* and *how* of Git & GitHub, let’s explain the workflow to contribute. We use the **fork & pull** model to collaborate. This means that to contribute to the project, you first need to **Fork** the project on GitHub. A GitHub fork is just a copy of a repository (repo). When you *fork* a repo, you are storing a copy of that repo on your personal account. Doing so grants you full *write* access to edit files and develop the code on your version of it. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you :command:`git pull` on a codebase, that's the git term for *pulling* updated and/or new files from one version of a repo to another; you are simply updating files in a particular direction. Thus, *pulling* applies in many different contexts (more info below). A *pull request*, therefore, is a request you make for the maintainers, of the original repo you forked, to *review & merge* your edits into their version of the code stored on their repo (you can, of course, make pull requests on your own repositories).
 
 To make things concrete, let’s actually perform this using the command line.
 
@@ -90,25 +90,27 @@ When it’s finished, you’ll be taken to your copy of the NSpyre repository, w
    # push changes to github
    git push --set-upstream origin descriptive-branch-title
 
-You will notice the addition of two new terms -- *branch* and *push*. Each repository can have multiple versions of it's codebase that are under development. The ``master`` *branch* is the main version of the code on the repository and is the root branch from which all others originate. This is the official working version that is used out in the wild and the one you eventually want your changes to appear on. When forking a repo, you also get all the different branches at the time of copying. When contributing on an issue, you first want to search existing *branches* to check if someone has already started a branch for work on that issue. If not, start a new one and make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc).
+You will notice the addition of two new terms -- *branch* and *push*. Each repository can have multiple versions of it's codebase that are under development. The ``master`` *branch* is the main version of the code on the repository and is the root branch from which all others originate. This is the official working version that is used out in the wild and the one you eventually want your changes to appear on. When forking a repo, you also get all the different branches at the time of copying. When contributing on an issue, you first want to search existing *branches* to check if someone has already started a branch for work on that issue. If not, start a new one and make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc). Then you need to *checkout* the branch to which you want to make changes, making sure to *add*, *commit* them so they are reflected locally.
 
 Finally, the *push* command updates files from one location to another, but in the opposite direction as *pull*. ``git pull`` brings any changes from the target repo on the servers and updates them into the version/branch that you currently have checked out on your local copy. ``git push`` does the opposite. It takes any changes on your local copy of the branch you have checked out and reflects those changes on the repository. If you don't ``git push`` your commits then they will not be uploaded to the repo; this also means they won't be backed up. So it's good practice to push your progress at least daily so it is uploaded to the repository.
 
   .. note::
      
-     You can *pull* a branch you are working on from the github repo to get the most up-to-date copy locally, pull one branch into another to take certain *commits*, or pull in the reverse direction to bring your updates into the main repo.
+     You can *pull* a branch you are working on from the github repo to get the most up-to-date copy locally, *pull* one branch into another to transfer certain *commits* between them, or *pull* in the reverse direction to bring your updates into the main repo (i.e. *push* from your local console).
 
 Creating a Pull Request
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Once you've vetted your code for errors, checked to make sure you've followed all the project guidelines, and most importantly, *documented* your code, it's time to make a pull request.
+Once you've vetted your code for errors, checked to make sure you've followed all the project guidelines -- and, most importantly, *documented* your code -- it's time to make a pull request.
 
 .. image:: images/compare-and-pr.png
 
 .. code-block:: console
    
-   # in the main repository you want to merge into, either click the Pull Request tab,
-   # then from the Pull Request page, click the green New pull request button,
+   # in the main repository you want to merge into,
+   # either
+   # click the Pull Request tab, then from the Pull Request page,
+   # click the green New pull request button,
    # or,
    # navigate to the branch you made edits to in the drop-down box on the repository
    # homepage, and click the green Compare & pull request button.
@@ -119,13 +121,9 @@ Once you've vetted your code for errors, checked to make sure you've followed al
    # give your pull request a title and write a brief description of your changes.
    # when you’re satisfied, click the big green Create pull request button.
    
-   # Congrats, you've submitted your first contributon for merging!
+   # Congrats, you've submitted your first contribution ready for merging!
 
-.. iojblblkbb image:: images/create-pr.png
-   kjnkj:align: center
-   kjnkjn:scale: 50%
-
-All that's left is to officially merge your changes into ``master`` and delete the development branch you were working off of if the associated issues have been closed and the branch is no longer needed. This is something the maintainers of the project will do once it's been confirmed that all the project guidelines have been followed, and most importantly, your code works!
+All that's left is to officially merge your changes into ``master`` and delete the development branch you were working off of, if the associated issues have been closed and the branch is no longer needed. This is something the maintainers of the project will do once it's been confirmed that all the project guidelines have been followed and, in particular, checking your code works!
 
 .. figure:: images/merge-button.png
    :align: center
@@ -142,31 +140,31 @@ All that's left is to officially merge your changes into ``master`` and delete t
 A Few More Comments
 ^^^^^^^^^^^^^^^^^^^
 
-There's a few more important considerations that should be made when setting up a good development environment :command:`git rebase -i master`. We will briefly discuss them here :guilabel:`New Pull Request`.
-
+There's a few more important considerations that should be made when setting up a good development environment. We will briefly discuss them here.
 
 * Virual Enivronments
   
-  .. note:: Virutal Environments
+  .. note::
      
-     Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
+     Make sure you have some sort of virtual environment implemented in your workflow. The environment management tools built into Anaconda are great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out `venv <https://docs.python.org/3/tutorial/venv.html>`_ -- it has a lot of improvements over virtualenv and is the preferred way for Python 3.3 or newer, which is why it's now included by default.
 
-* Next thing
+* Development tools
 
   .. tip::
      
-     In addition to performing the following steps on the command line, as shown below, these steps can be carried out directly on GitHub.com, and many popular text editors and IDEs have integrated tools for using git/github directly within their environments.
+     The above steps for forking a repo and making a pull request were performed on the command line. In addition to performing these steps directly on GitHub.com, many popular text editors and IDEs have integrated tools for using git/github directly within their environments. (PyCharm, Sublime Text, and VS Code are a few favorites)
 
-
-things you should knowThat’s the gist on the workflow!
-
-.. important::
-   
-   People save there code everywhere, in there documents folder, on their desktop, in a hidden folder. Not having a system to managing code is BAD. That's why git exists after all. Similarly, you want your code to be in a unified location on your local machine. Where it isn't in a place that someone will easily tamper with it, but in a location that is still easily accessible if you know where it is. To that end, we *highly* recommend that you create a directory at the root level of your local machine called ``SourceCode`` (or with whatever camalcase formatting your prefer). Create a new subdirectory for every project going forward.
+* Setting up a working directory
+  
+  People save there code everywhere, in their documents folder, on their desktop, in a hidden folder. Not having a system to managing code is BAD. That's why git exists after all. Similarly, you want your code to be in a unified location on your local machine. Where it isn't in a place that someone will easily tamper with it, but in a location that is still easily accessible if you know where it is.
+  
+  .. important::
+     
+     To that end, we *highly* recommend that you create a directory at the root level of your local machine called ``SourceCode`` (with whatever camelCase, snake_case, or other styling you prefer). Create a new subdirectory for every project going forward.
 
 .. warning::
    
-   So for NSpyre, if you call ``git clone https://github.com/[username]/nspyre.git`` inside SourceCode, you will get a new directory called nspyre, containing your repo.
+   So for NSpyre, if you call ``git clone https://github.com/[username]/nspyre.git`` inside SourceCode, you will get a new directory called nspyre, containing your repo (as shown above).
 
 .. _Code Style:
 
@@ -370,11 +368,11 @@ There are plenty of good resources online, and cheat sheets to get you started:
 
 .. attention::
    
-   Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
+   Hi! We know some of these webpages may be lacking, this documentation has only recently been created and is in active development. Please check back weekly has new content is regularly updated as it is being worked on. Please be patient -- we are mainly graduate students and have a lot of responsiblities.
 
 .. caution::
    
-   Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
+   Hi! We know some of these webpages may be lacking, this documentation has only recently been created and is in active development. Please check back weekly has new content is regularly updated as it is being worked on. Please be patient -- we are mainly graduate students and have a lot of responsiblities.
 
 .. danger::
    
@@ -390,7 +388,7 @@ There are plenty of good resources online, and cheat sheets to get you started:
    
 .. important::
    
-   Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
+   Hi! We know some of these webpages may be lacking, this documentation has only recently been created and is in active development. Please check back weekly has new content is regularly updated as it is being worked on. Please be patient -- we are mainly graduate students and have a lot of responsiblities.
    
 .. note::
    

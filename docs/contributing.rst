@@ -166,6 +166,18 @@ There's a few more important considerations that should be made when setting up 
      
      The above steps for forking a repo and making a pull request were performed on the command line. In addition to performing these steps directly on GitHub.com, many popular text editors and IDEs have integrated tools for using git/github directly within their environments. (PyCharm, Sublime Text, and VS Code are a few favorites)
 
+* Perform ``git checkout`` and ``git branch`` in one command:
+  
+  .. code-block: console
+     
+     Check out an existing branch:
+     git checkout <branch>
+     Create new branch:
+     git branch <branchname> [<start point>]
+     Create new branch and check it out in one command:
+     git checkout -b <newbranch> [<start point>]
+
+
 .. _Code Style:
 
 Code Style
@@ -205,7 +217,7 @@ The reasons for using a markup language is straight-forward:
 | Don’t believe me? Then go to the .rst file for this webpage and see for yourself.
 | (The .rst file for this webpage is also an excellent source to get familiar with the markup syntax and as a reference for how to write documentation too.)
 
-There is a branch ``documentation-deploy`` used specifically for making documentation commits and staging the documentation before adding to ``master``. If you are only making documentation edits (anything in `docs/`) or writing docstrings for the api, then make those changes here. Otherwise, add the documentation commits along with source code on the branch tracking that issue. Whenever a commit is make to this branch, it will trigger a rebuild of the documentation viewable at the unlisted site ``nspyre.readthedocs.io/en/documentation-deploy`` for you to confirm formatting. It takes about 60 seconds to build once triggered, so be patient. If you make too many commits too quickly, the rebuild may error out (and lots of small commits are bad anyways). You can use the revision number (i.e. ``Revision 760a94f0.``) at the bottom of the webpage to confirm the rebuild.and testing fo
+There is a branch ``documentation-deploy`` used specifically for making documentation commits and staging the documentation before adding to ``master``. If you are only making documentation edits (anything in `docs/`) or writing docstrings for the api, then make those changes here. Otherwise, add the documentation commits along with source code on the branch tracking that issue. Whenever a commit is make to this branch, it will trigger a rebuild of the documentation viewable at the unlisted site ``nspyre.readthedocs.io/en/documentation-deploy`` for you to confirm formatting. It takes about 60 seconds to build once triggered, so be patient. If you make too many commits too quickly, the rebuild may error out (and lots of small commits are bad anyways). You can use the revision number (i.e. ``Revision 760a94f0.``) at the bottom of the webpage to confirm the rebuild.
 
 reStructuredText
 ----------------
@@ -259,8 +271,8 @@ Section Headers are demarcated by underlining (or over- and underlining) the sec
 .. code-block:: rst
 
    =========
-   Chapter 1  while this creates a header at a different level in the doc:  Section 1.1
-   =========                                                                -----------
+   Chapter 1    while this creates a header at a different level in the doc:    Section 1.1
+   =========                                                                    -----------
 
 If you use the same non-alphanumeric character for underline-only and underline-and-overline headers, they will be considered to be at *different* levels.
 
@@ -340,60 +352,10 @@ There is one exception to the rule: when you want to display an interactive sess
 
 Again, there is a lot that can be said about markup languages; we haven't even talked about table, roles, explicit markup, or generic directives. But included here is everything you need to get started and includes 90% of the information necessary to write this very Contributing section of the documentation. Additionally, there are many resources already available online and you should avail yourself of whatever helps best:
 
-* `reStructuredText Primer <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_
+* `reStructuredText Primer (recommended guide) <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_
+* `A ReStructuredText Primer (docutils -- maintainers) <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html>`_
 * `Cheatsheet <https://github.com/ralsina/rst-cheatsheet>`_
-* `A ReStructuredText Primer <https://docutils.sourceforge.io/docs/user/rst/quickstart.html>`_
-
-* `An Introduction to reStructuredText <https://docutils.readthedocs.io/en/sphinx-docs/ref/rst/introduction.html>`_
-* `A ReStructuredText Primer <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html>`_
-* https://www.writethedocs.org/guide/writing/reStructuredText/
-
-.. attention::
-   
-   We know some of these webpages could use some work -- this documentation has only recently been created and is in active development. It is updated regularly, so check back weekly.
-
-.. caution::
-   
-   Hi! We know some of these webpages may be lacking, this documentation has only recently been created and is in active development. Please check back weekly has new content is regularly updated as it is being worked on. Please be patient -- we are mainly graduate students and have a lot of responsiblities.
-
-.. danger::
-   
-   Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
-
-.. error::
-   
-   Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
-   
-.. hint::
-   
-   Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
-   
-.. important::
-   
-   Hi! We know some of these webpages may be lacking, this documentation has only recently been created and is in active development. Please check back weekly has new content is regularly updated as it is being worked on. Please be patient -- we are mainly graduate students and have a lot of responsiblities.
-   
-.. note::
-   
-   Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
-   
-.. tip::
-   
-   Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
-   
-.. warning::
-   
-   Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
-   
-.. admonition:: Virtual Environments
-   
-   Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
-
-
-
-
-
-
-
+* `reference for above guide <https://www.writethedocs.org/guide/writing/reStructuredText/>`_
 
 Resources
 ---------
@@ -404,11 +366,4 @@ There’s a lot of online resources available for various aspects of software de
 * https://cheat.readthedocs.io/en/latest/git.html
 * https://dont-be-afraid-to-commit.readthedocs.io/en/latest/contributing.html
 * https://gist.github.com/RichardBronosky/454964087739a449da04
-
-+--------------------------------------------------------+------------------------------------------------------+
-|  |                                                     |                                                      |
-|  |  First you need to fork the repository of interest  |  .. figure:: images/Bootcamp-Fork.png                |
-|  |  (NSpyre obviously). To do so, click the Fork       |     :align: center                                   |
-|  |  button in the header of the repository.            |     :scale: 60%                                      |
-|                                                        |                                                      |
-+--------------------------------------------------------+------------------------------------------------------+
+* `An Introduction to reStructuredText <https://docutils.readthedocs.io/en/sphinx-docs/ref/rst/introduction.html>`_

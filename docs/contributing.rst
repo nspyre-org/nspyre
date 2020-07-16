@@ -57,7 +57,8 @@ To make things concrete, but let’s do an actual example of this on the command
 
    # first you need to fork the repository of interests (NSpyre obviously). To do so, click the Fork button in the header of the repository.
    
-.. image:: images/Bootcamp-Fork.png
+.. figure:: images/Bootcamp-Fork.png
+   :scale: 50%
 
 .. code-block:: console
 
@@ -122,11 +123,10 @@ All that's left is to officially merge your changes into ``master`` and delete t
 .. image:: images/merge-button.png
 .. image:: images/delete-button.png
 
-::
-
-::
-
-::
+|
+|
+|
+|
 
 A Few More Comments
 ^^^^^^^^^^^^^^^^^^^

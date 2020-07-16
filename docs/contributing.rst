@@ -45,21 +45,9 @@ Git grew out of the needs of the developers of the Linux kernel and is one of th
 How to Contribute: Forking & Pull Requests
 ------------------------------------------
 
-Great, now that you understand the *why* and *how* of Git & Github, let’s explain the workflow to contribute. We use the **fork & pull** model to collaborate. This means that to contribute to the project, you first need to **Fork** the project on GitHub. A Github fork is just a copy of a repository. When you *fork* a repo, you are storing a copy of that repo on your personal account. Doing so grants you full *write* access to edit files and develop the code on your version of it. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you ``git pull`` on a codebase, that's the git term for *pulling* updated and/or new files from one version of a repo to another; you are simply updating files in a particular direction. Thus, *pulling* applies in many different contexts (more info below). A *pull request*, therefore, is a request you make for the maintainers, of the original repo you forked, to *review & merge* your edits into their version of the code stored on their repo.
+Great, now that you understand the *why* and *how* of Git & Github, let’s explain the workflow to contribute. We use the **fork & pull** model to collaborate. This means that to contribute to the project, you first need to **Fork** the project on GitHub. A Github fork is just a copy of a repository. When you *fork* a repo, you are storing a copy of that repo on your personal account. Doing so grants you full *write* access to edit files and develop the code on your version of it. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you ``git pull`` on a codebase, that's the git term for *pulling* updated and/or new files from one version of a repo to another; you are simply updating files in a particular direction. Thus, *pulling* applies in many different contexts (more info below). A *pull request*, therefore, is a request you make for the maintainers, of the original repo you forked, to *review & merge* your edits into their version of the code stored on their repo (you can, of course, make pull requests on your own repositories, too).
 
-To make things concrete, but let’s do an actual example of this on the command line to give you some reference steps.
-
-.. tip::
-   
-   In addition to performing the following steps on the command line, as shown below, these steps can be carried out directly on GitHub.com, and many popular text editors and IDEs have integrated tools for using git/github directly within their environments.
-
-+--------------------------------------------------------+------------------------------------------------------+
-|  |                                                     |                                                      |
-|  |  First you need to fork the repository of interest  |  .. figure:: images/Bootcamp-Fork.png                |
-|  |  (NSpyre obviously). To do so, click the Fork       |     :align: center                                   |
-|  |  button in the header of the repository.            |     :scale: 60%                                      |
-|                                                        |                                                      |
-+--------------------------------------------------------+------------------------------------------------------+
+To make things concrete, let’s perform an actual example of this on the command line to give you a reference to look back at.
 
 .. figure:: images/Bootcamp-Fork.png
    :align: right
@@ -149,6 +137,12 @@ There's a few more important considerations that should be made when setting up 
   .. note:: Virutal Environments
      
      Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
+
+* Next thing
+
+  .. tip::
+     
+     In addition to performing the following steps on the command line, as shown below, these steps can be carried out directly on GitHub.com, and many popular text editors and IDEs have integrated tools for using git/github directly within their environments.
 
 
 things you should knowThat’s the gist on the workflow!
@@ -429,3 +423,10 @@ There’s a lot of online resources available for various aspects of software de
 * https://dont-be-afraid-to-commit.readthedocs.io/en/latest/contributing.html
 * https://gist.github.com/RichardBronosky/454964087739a449da04
 
++--------------------------------------------------------+------------------------------------------------------+
+|  |                                                     |                                                      |
+|  |  First you need to fork the repository of interest  |  .. figure:: images/Bootcamp-Fork.png                |
+|  |  (NSpyre obviously). To do so, click the Fork       |     :align: center                                   |
+|  |  button in the header of the repository.            |     :scale: 60%                                      |
+|                                                        |                                                      |
++--------------------------------------------------------+------------------------------------------------------+

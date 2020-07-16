@@ -54,10 +54,10 @@ To make things concrete, but let’s do an actual example of this on the command
    In addition to performing the following steps on the command line, as shown below, these steps can be carried out directly on GitHub.com, and many popular text editors and IDEs have integrated tools for using git/github directly within their environments.
 
 +--------------------------------------------------------+------------------------------------------------------+
-|  |                                                     |  |                                                   |
+|  |                                                     |                                                      |
 |  |  First you need to fork the repository of interest  |  .. figure:: images/Bootcamp-Fork.png                |
 |  |  (NSpyre obviously). To do so, click the Fork       |     :align: center                                   |
-|  |  button in the header of the repository.            |     :scale: 50%                                      |
+|  |  button in the header of the repository.            |     :scale: 60%                                      |
 |                                                        |                                                      |
 +--------------------------------------------------------+------------------------------------------------------+
 
@@ -126,6 +126,7 @@ All that's left is to officially merge your changes into ``master`` and delete t
 
 .. figure:: images/merge-button.png
 .. image:: images/delete-button.png
+.. image:: images/merge-button.png
 
 |
 |

@@ -45,7 +45,7 @@ Git grew out of the needs of the developers of the Linux kernel and is one of th
 How to Contribute: Forking & Pull Requests
 ------------------------------------------
 
-Great, now that you understand the *why* and *how* of Git & GitHub, let’s explain the workflow to contribute. We use the **fork & pull** model to collaborate. This means that to contribute to the project, you first need to **Fork** the project on GitHub. A GitHub fork is just a copy of a repository. When you *fork* a repo, you are storing a copy of that repo on your personal account. Doing so grants you full *write* access to edit files and develop the code on your version of it. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you ``git pull`` on a codebase, that's the git term for *pulling* updated and/or new files from one version of a repo to another; you are simply updating files in a particular direction. Thus, *pulling* applies in many different contexts (more info below). A *pull request*, therefore, is a request you make for the maintainers, of the original repo you forked, to *review & merge* your edits into their version of the code stored on their repo (you can, of course, make pull requests on your own repositories).
+Great, now that you understand the *why* and *how* of Git & GitHub, let’s explain the workflow to contribute. We use the **fork & pull** model to collaborate. This means that to contribute to the project, you first need to **Fork** the project on GitHub. A GitHub fork is just a copy of a repository (repo). When you *fork* a repo, you are storing a copy of that repo on your personal account. Doing so grants you full *write* access to edit files and develop the code on your version of it. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you ``git pull`` on a codebase, that's the git term for *pulling* updated and/or new files from one version of a repo to another; you are simply updating files in a particular direction. Thus, *pulling* applies in many different contexts (more info below). A *pull request*, therefore, is a request you make for the maintainers, of the original repo you forked, to *review & merge* your edits into their version of the code stored on their repo (you can, of course, make pull requests on your own repositories).
 
 To make things concrete, let’s actually perform this using the command line.
 
@@ -94,8 +94,12 @@ You will notice the addition of two new terms -- *branch* and *push*. Each repos
 
 Finally, the *push* command updates files from one location to another, but in the opposite direction as *pull*. ``git pull`` brings any changes from the target repo on the servers and updates them into the version/branch that you currently have checked out on your local copy. ``git push`` does the opposite. It takes any changes on your local copy of the branch you have checked out and reflects those changes on the repository. If you don't ``git push`` your commits then they will not be uploaded to the repo; this also means they won't be backed up. So it's good practice to push your progress at least daily so it is uploaded to the repository.
 
-Creating a Pull Request \ \ \ \ \ \ \ \ \ \ |create-pr|
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. note::
+   
+   You can *pull* a branch you are working on from the github repo to get the most up-to-date copy locally, pull one branch into another to take certain *commits*, or pull in the reverse direction to bring your updates into the main repo.
+
+Creating a Pull Request U+0020 U+0020 U+0020 |create-pr|
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. |create-pr| image:: images/create-pr.png
 
@@ -125,19 +129,19 @@ All that's left is to officially merge your changes into ``master`` and delete t
 
 .. image:: images/merge-button.png
    :align: center
-   :scale: 50%
 
 .. figure:: images/delete-button.png
    :align: center
-   :height: 67px
-   :width: 557.18px
+   
+..   :height: 67px
+     :width: 557.18px
 
-(For more detailed information on creating a pull request for a fork, see `here <https://docs.github.com/en/enterprise/2.16/user/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork>`_.)
+(For more detailed information on creating a pull request from a fork, see `here <https://docs.github.com/en/enterprise/2.16/user/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork>`_.)
 
 A Few More Comments
 ^^^^^^^^^^^^^^^^^^^
 
-There's a few more important considerations that should be made when setting up a good development environment :command:`git rebase -i master`. We will briefly discuss them here:guilabel:`New Pull Request`.
+There's a few more important considerations that should be made when setting up a good development environment :command:`git rebase -i master`. We will briefly discuss them here :guilabel:`New Pull Request`.
 
 
 * Virual Enivronments
@@ -162,8 +166,6 @@ things you should knowThat’s the gist on the workflow!
 .. warning::
    
    So for NSpyre, if you call ``git clone https://github.com/[username]/nspyre.git`` inside SourceCode, you will get a new directory called nspyre, containing your repo.
-
-You can *pull* a branch you are working on from the github repo to get the most up-to-date copy locally, pull one branch into another to take certain *commits*, or pull in the reverse direction to bring your updates into the main repo.
 
 .. _Code Style:
 

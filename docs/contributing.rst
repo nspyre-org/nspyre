@@ -53,11 +53,11 @@ To make things concrete, but let’s do an actual example of this on the command
    
    In addition to performing the following steps on the command line, as shown below, these steps can be carried out directly on GitHub.com, and many popular text editors and IDEs have integrated tools for using git/github directly within their environments.
 
-+----------------------------------------------------------+--------------------------------------------------------+
-|  # first you need to fork the repository of interest     |  .. image:: images/Bootcamp-Fork.png                   |
-|    (NSpyre obviously). To do so, click the Fork button   |     :align: center                                     |
-|    in the header of the repository.                      |     :scale: 50%                                        |
-+----------------------------------------------------------+--------------------------------------------------------+
++--------------------------------------------------------+------------------------------------------------------+
+|  first you need to fork the repository of interest     |  .. image:: images/Bootcamp-Fork.png                 |
+|  (NSpyre obviously). To do so, click the Fork button   |     :align: center                                   |
+|  in the header of the repository.                      |     :scale: 50%                                      |
++--------------------------------------------------------+------------------------------------------------------+
 
 .. code-block:: console
 
@@ -127,17 +127,13 @@ Once you've vetted your code for errors, checked to make sure you've followed al
 
 All that's left is to officially merge your changes into ``master`` and delete the development branch you were working off of if the associated issues have been closed and the branch is now longer needed. This is something the maintainers of the project will do once it's been confirmed that all the project guidelines have been followed, and most importantly, your code works!
 
-.. image:: images/merge-button.png
+.. figure:: images/merge-button.png
    :align: center
-   :height: 610.66pt
-   :width: 1794pt
-   :scale: 50%
+   :scale: 80%
 
 .. image:: images/delete-button.png
    :align: center
-   :height: 288
-   :width: 2392px
-   :scale: 50%
+   :scale: 80%
 
 |
 |

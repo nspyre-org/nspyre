@@ -61,11 +61,11 @@ To make things concrete, but let’s do an actual example of this on the command
 |                                                        |                                                      |
 +--------------------------------------------------------+------------------------------------------------------+
 
-First you need to fork the repository of interest (NSpyre obviously). To do so, click the Fork button in the header of the repository. 
-
 .. figure:: images/Bootcamp-Fork.png
    :align: right
    :scale: 60%
+
+First you need to fork the repository of interest (NSpyre obviously). To do so, click the Fork button in the header of the repository. 
 
 Sit back and watch the forking magic. When it’s finished, you’ll be taken to your copy of the NSpyre repository. Now though, we move to the console:
 

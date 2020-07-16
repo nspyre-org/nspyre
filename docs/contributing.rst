@@ -58,6 +58,7 @@ To make things concrete, but let’s do an actual example of this on the command
    # first you need to fork the repository of interests (NSpyre obviously). To do so, click the Fork button in the header of the repository.
 
 .. figure:: images/Bootcamp-Fork.png
+   :align: center
    :scale: 50%
 
 .. code-block:: console
@@ -114,19 +115,18 @@ Once you've vetted your code for errors, checked to make sure you've followed al
    
    # Congrats, you've submitted your first contributon for merging!
 
-.. figure:: images/create-pr.png
-   :align: middle
-   :scale: 50%
+.. image:: images/create-pr.png
+   :align: center
 
 All that's left is to officially merge your changes into ``master`` and delete the development branch you were working off of if the associated issues have been closed and the branch is now longer needed. This is something the maintainers of the project will do once it's been confirmed that all the project guidelines have been followed, and most importantly, your code works!
 
-.. figure:: images/merge-button.png
-   :align: middle
-   :scale: 80%
+.. image:: images/merge-button.png
+   :align: center
+   :width: 553.5pt
 
-.. figure:: images/delete-button.png
-   :align: middle
-   :scale: 80%
+.. image:: images/delete-button.png
+   :align: center
+   :scale: 50%
 
 |
 |
@@ -365,42 +365,41 @@ There are plenty of good resources online, and cheat sheets to get you started:
 
 * `An Introduction to reStructuredText <https://docutils.readthedocs.io/en/sphinx-docs/ref/rst/introduction.html>`_
 * `A ReStructuredText Primer <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html>`_
+* https://www.writethedocs.org/guide/writing/reStructuredText/
 
-https://www.writethedocs.org/guide/writing/reStructuredText/
-
-.. attention:: Virtual Environments
-   
-   Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
-
-.. caution:: Virtual Environments
+.. attention::
    
    Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
 
-.. danger:: Virtual Environments
+.. caution::
    
    Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
 
-.. error:: Virtual Environments
+.. danger::
+   
+   Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
+
+.. error::
    
    Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
    
-.. hint:: Virtual Environments
+.. hint::
    
    Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
    
-.. important:: Virtual Environments
+.. important::
    
    Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
    
-.. note:: Virtual Environments
+.. note::
    
    Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
    
-.. tip:: Virtual Environments
+.. tip::
    
    Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
    
-.. warning:: Virtual Environments
+.. warning::
    
    Making sure you have some sort of virtual environment implied in your workflow. The built in management of Anaconda is great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out venv -- it have a lot of improvements over virtualenv.
    

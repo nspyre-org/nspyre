@@ -45,7 +45,7 @@ Git grew out of the needs of the developers of the Linux kernel and is one of th
 How to Contribute: Forking & Pull Requests
 ------------------------------------------
 
-Great, now that you understand the *why* and *how* of Git & Github, let’s explain the workflow to contribute. We use the **fork & pull** model to collaborate. This means that to contribute to the project, you first need to **Fork** the project on GitHub. A Github fork is just a copy of a repository. When you *fork* a repo, you are storing a copy of that repo on your personal account. Doing so grants you full *write* access to edit files and develop the code on your version of it. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you ``git pull`` on a codebase, that's the git term for *pulling* updated and/or new files from one version of a repo to another; you are simply updating files in a particular direction. Thus, *pulling* applies in many different contexts (more info :ref:`below <push pull>`). A *pull request*, therefore, is a request you make for the maintainers, of the original repo you forked, to *review & merge* your edits into their version of the code stored on their repo.
+Great, now that you understand the *why* and *how* of Git & Github, let’s explain the workflow to contribute. We use the **fork & pull** model to collaborate. This means that to contribute to the project, you first need to **Fork** the project on GitHub. A Github fork is just a copy of a repository. When you *fork* a repo, you are storing a copy of that repo on your personal account. Doing so grants you full *write* access to edit files and develop the code on your version of it. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you ``git pull`` on a codebase, that's the git term for *pulling* updated and/or new files from one version of a repo to another; you are simply updating files in a particular direction. Thus, *pulling* applies in many different contexts (more info below). A *pull request*, therefore, is a request you make for the maintainers, of the original repo you forked, to *review & merge* your edits into their version of the code stored on their repo.
 
 To make things concrete, but let’s do an actual example of this on the command line to give you some reference steps.
 
@@ -95,8 +95,6 @@ Sit back and watch the forking magic. When it’s finished, you’ll be taken to
    # push changes to github
    git push --set-upstream origin descriptive-branch-title
 
-.. _push pull:
-
 You will notice the addition of two new terms -- *branch* and *push*. Each repository can have multiple versions of it's codebase that are under development. The ``master`` *branch* is the main version of the code on the repository and is the one from which all other branches originate. This is the official working version that is used out in the wild and the one you eventually want your changes to appear on. When forking a repo, you also get all the different branches at the time of copying. When contributing on an issue, you first want to search for a **branch** to check if someone has already started work on that issue of interest. If not, start a new one; make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc).
 
 Finally, the *push* command updates files from one location to another, but in the opposite direction as *pull*. ``git pull`` brings any changes from the target repo on the servers and updates them into the version/branch that you currently have checked out on your local copy. ``git push`` does the opposite. It takes any changes on your local copy of the branch you have checked out and reflects those changes on the repository. If you don't ``git push`` your commits then they will not be uploaded to the repo; similarly, this means they won't be backed up so it is good practice to push your progress so it is saved centrally and not on your machine least anything happens to it.
@@ -118,18 +116,20 @@ Once you've vetted your code for errors, checked to make sure you've followed al
    
    # Congrats, you've submitted your first contributon for merging!
 
-.. image:: images/create-pr.png
-   :align: center
-   :scale: 50%
+.. iojblblkbb image:: images/create-pr.png
+   kjnkj:align: center
+   kjnkjn:scale: 50%
 
 All that's left is to officially merge your changes into ``master`` and delete the development branch you were working off of if the associated issues have been closed and the branch is now longer needed. This is something the maintainers of the project will do once it's been confirmed that all the project guidelines have been followed, and most importantly, your code works!
 
 .. figure:: images/merge-button.png
-.. image:: images/delete-button.png
-.. image:: images/merge-button.png
+   :align: center
+   :scale: 80%
 
-|
-|
+.. figure:: images/delete-button.png
+   :align: center
+   :scale: 80%
+
 |
 |
 

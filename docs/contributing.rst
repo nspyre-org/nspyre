@@ -196,23 +196,16 @@ Documentation improvements are always welcome! The documentation files live in t
 
 reStructuredText is an easy-to-read, what-you-see-is-what-you-get plaintext markup syntax and parser system. It is useful for inline program documentation (such as Python docstrings), for quickly creating simple web pages, and for standalone documents. Markdown is another, slightly simpler alternative. reStructuredText is a bit harder to use, but is more powerful and is widely used for Python documentation.
 
-For documentation, we write in reStructuredText, using Sphinx to generate files and ReadTheDocs for site hosting. 
-
 The reasons for using a markup language is straight-forward:
 
 * easy to write and maintain (strong semantic markup tools and well-defined markup standards)
 * still makes sense as plain text (easily legible in raw form)
 * renders nicely into HTML (this looks nice, doesn't it?)
 
-Don’t believe me? Then go .rst file for this webpage and see for yourself.
+| Don’t believe me? Then go to the .rst file for this webpage and see for yourself.
+| (The .rst file for this webpage is also an excellent source to get familiar with the markup syntax and as a reference for how to write documentation too.)
 
-
-
-For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting
-
-The project uses `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_ as the markup language for writing documentation. `Sphinx <https://www.sphinx-doc.org/en/master/>`_ is then used to generate documentation and it is hosted on `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_.
-
-
+There is a branch ``documentation-deploy`` used specifically for making documentation commits and staging the documentation before adding to ``master``. If you are only making documentation edits (anything in `docs/`) or writing docstrings for the api, then make those changes here. Otherwise, add the documentation commits along with source code on the branch tracking that issue. Whenever a commit is make to this branch, it will trigger a rebuild of the documentation viewable at the unlisted site ``nspyre.readthedocs.io/en/documentation-deploy`` for you to confirm formatting. It takes about 60 seconds to build once triggered, so be patient. If you make too many commits too quickly, the rebuild may error out (and lots of small commits are bad anyways). You can use the revision number (i.e. ``Revision 760a94f0.``) at the bottom of the webpage to confirm the rebuild.and testing fo
 
 reStructuredText
 ----------------
@@ -336,38 +329,20 @@ There are many different ways of using reST to display code samples, -- or any t
       #some sample code
       print('Hello, World!')
 
-There is one exception to the rule: when you want to display an interactive Python interpreter. Doctest blocks are text blocks which begin with ">>> ", the Python interactive interpreter main prompt, and end with a blank line (an unused prompt is will break things). Doctest blocks are treated as a special case of `literal blocks`, without requiring the literal block syntax. If both are present, the literal block syntax takes priority over Doctest block syntax:
+There is one exception to the rule: when you want to display an interactive session. Doctest blocks are text blocks which begin with ">>>", the Python interactive interpreter main prompt, and end with a blank line (an unused prompt is *not* allowed - it will break things). Doctest blocks are treated as a special case of ``literal blocks``, without requiring the literal block syntax. If both are present, the literal block syntax takes priority over Doctest block syntax:
 
-This is an ordinary paragraph.
+.. code-block:: rst
+   
+   This is an ordinary paragraph.
+   
+   >>> print 'this is a Doctest block'
+   this is a Doctest block
 
->>> print 'this is a Doctest block'
-this is a Doctest block
-
-The following is a literal block::
-
-    >>> This is not recognized as a doctest block by
-    reStructuredText.  It *will* be recognized by the doctest
-    module, though!
-Indentation is not required for doctest blocks.
-
-
-The doctest block must end
-with a blank line and should *not* end with an unused prompt::
-
-    >>> 1 + 1
-    2
-    >>>
-
-Again, there is a lot that can be said about markup languages, and many resources already available online; avail yourself of whatever helps best.
-
-Resources:
+Again, there is a lot that can be said about markup languages; we haven't even talked about table, roles, explicit markup, or generic directives. But included here is everything you need to get started and includes 90% of the information necessary to write this very Contributing section of the documentation. Additionally, there are many resources already available online and you should avail yourself of whatever helps best:
 
 * `reStructuredText Primer <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_
 * `Cheatsheet <https://github.com/ralsina/rst-cheatsheet>`_
 * `A ReStructuredText Primer <https://docutils.sourceforge.io/docs/user/rst/quickstart.html>`_
-
-
-There are plenty of good resources online, and cheat sheets to get you started:
 
 * `An Introduction to reStructuredText <https://docutils.readthedocs.io/en/sphinx-docs/ref/rst/introduction.html>`_
 * `A ReStructuredText Primer <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html>`_

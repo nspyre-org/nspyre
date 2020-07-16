@@ -57,7 +57,7 @@ To make things concrete, but let’s do an actual example of this on the command
 
    # first you need to fork the repository of interests (NSpyre obviously). To do so, click the Fork button in the header of the repository.
 
-.. figure:: images/Bootcamp-Fork.png
+.. image:: images/Bootcamp-Fork.png
    :align: center
    :scale: 50%
 
@@ -117,15 +117,18 @@ Once you've vetted your code for errors, checked to make sure you've followed al
 
 .. image:: images/create-pr.png
    :align: center
+   :width: 300pt
 
 All that's left is to officially merge your changes into ``master`` and delete the development branch you were working off of if the associated issues have been closed and the branch is now longer needed. This is something the maintainers of the project will do once it's been confirmed that all the project guidelines have been followed, and most importantly, your code works!
 
 .. image:: images/merge-button.png
    :align: center
-   :width: 553.5pt
+   :width: 1794pt
+   :scale: 50%
 
 .. image:: images/delete-button.png
    :align: center
+   :width: 2392px
    :scale: 50%
 
 |

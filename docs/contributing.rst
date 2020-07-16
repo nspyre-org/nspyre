@@ -45,21 +45,23 @@ Git grew out of the needs of the developers of the Linux kernel and is one of th
 How to Contribute: Forking & Pull Requests
 ------------------------------------------
 
-Great, now that you understand the *why* and *how* of Git & Github, let’s explain the workflow to contribute. We use the **fork & pull** model to collaborate. This means that to contribute to the project, you first need to **Fork** the project on GitHub. A Github fork is just a copy of a repository. When you *fork* a repo, you are storing a copy of that repo on your personal account. Doing so grants you full *write* access to edit files and develop the code on your version of it. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you ``git pull`` on a codebase, that's the git term for *pulling* updated and/or new files from one version of a repo to another; you are simply updating files in a particular direction. Thus, *pulling* applies in many different contexts (more info below). A *pull request*, therefore, is a request you make for the maintainers, of the original repo you forked, to *review & merge* your edits into their version of the code stored on their repo (you can, of course, make pull requests on your own repositories, too).
+Great, now that you understand the *why* and *how* of Git & GitHub, let’s explain the workflow to contribute. We use the **fork & pull** model to collaborate. This means that to contribute to the project, you first need to **Fork** the project on GitHub. A GitHub fork is just a copy of a repository. When you *fork* a repo, you are storing a copy of that repo on your personal account. Doing so grants you full *write* access to edit files and develop the code on your version of it. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you ``git pull`` on a codebase, that's the git term for *pulling* updated and/or new files from one version of a repo to another; you are simply updating files in a particular direction. Thus, *pulling* applies in many different contexts (more info below). A *pull request*, therefore, is a request you make for the maintainers, of the original repo you forked, to *review & merge* your edits into their version of the code stored on their repo (you can, of course, make pull requests on your own repositories).
 
-To make things concrete, let’s perform an actual example of this on the command line to give you a reference to look back at.
+To make things concrete, let’s actually perform this using the command line.
 
 .. figure:: images/Bootcamp-Fork.png
    :align: right
    :scale: 60%
 
-First you need to fork the repository of interest (NSpyre obviously). To do so, click the Fork button in the header of the repository. 
+First you need to fork the repository of interest. To do so, click the Fork button in the header of the repository.
 
-Sit back and watch the forking magic. When it’s finished, you’ll be taken to your copy of the NSpyre repository. Now though, we move to the console:
+  .. tip::
+     
+     As this is a github specific step and not a git step, it can’t be completed with the git command line tool. However, the **hub command line tool** provides useful extensions: https://hub.github.com).
+
+When it’s finished, you’ll be taken to your copy of the NSpyre repository, which will be located at ``https://github.com/[your-username]/nspyre``. The rest can now be completed using the console:
 
 .. code-block:: console
-   
-   # sit back and watch the forking magic. When it’s finished, you’ll be taken to your copy of the NSpyre repository.
    
    # navigate to the directory you want to store your local copy of the repo
    cd ~/SourceCode
@@ -88,14 +90,14 @@ Sit back and watch the forking magic. When it’s finished, you’ll be taken to
    # push changes to github
    git push --set-upstream origin descriptive-branch-title
 
-You will notice the addition of two new terms -- *branch* and *push*. Each repository can have multiple versions of it's codebase that are under development. The ``master`` *branch* is the main version of the code on the repository and is the one from which all other branches originate. This is the official working version that is used out in the wild and the one you eventually want your changes to appear on. When forking a repo, you also get all the different branches at the time of copying. When contributing on an issue, you first want to search for a **branch** to check if someone has already started work on that issue of interest. If not, start a new one; make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc).
+You will notice the addition of two new terms -- *branch* and *push*. Each repository can have multiple versions of it's codebase that are under development. The ``master`` *branch* is the main version of the code on the repository and is the root branch from which all others originate. This is the official working version that is used out in the wild and the one you eventually want your changes to appear on. When forking a repo, you also get all the different branches at the time of copying. When contributing on an issue, you first want to search existing *branches* to check if someone has already started a branch for work on that issue. If not, start a new one and make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc).
 
-Finally, the *push* command updates files from one location to another, but in the opposite direction as *pull*. ``git pull`` brings any changes from the target repo on the servers and updates them into the version/branch that you currently have checked out on your local copy. ``git push`` does the opposite. It takes any changes on your local copy of the branch you have checked out and reflects those changes on the repository. If you don't ``git push`` your commits then they will not be uploaded to the repo; similarly, this means they won't be backed up so it is good practice to push your progress so it is saved centrally and not on your machine least anything happens to it.
+Finally, the *push* command updates files from one location to another, but in the opposite direction as *pull*. ``git pull`` brings any changes from the target repo on the servers and updates them into the version/branch that you currently have checked out on your local copy. ``git push`` does the opposite. It takes any changes on your local copy of the branch you have checked out and reflects those changes on the repository. If you don't ``git push`` your commits then they will not be uploaded to the repo; this also means they won't be backed up. So it's good practice to push your progress at least daily so it is uploaded to the repository.
 
 Creating a Pull Request
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Once you've vetted your code for errors, checked to make sure you've followed all the project guidelines, and most importantly, *documented* your code, you have make a pull request.
+Once you've vetted your code for errors, checked to make sure you've followed all the project guidelines, and most importantly, *documented* your code, it's time to make a pull request.
 
 .. code-block:: console
    

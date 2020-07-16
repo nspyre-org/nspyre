@@ -215,7 +215,7 @@ The project uses `reStructuredText <https://www.sphinx-doc.org/en/master/usage/r
 
 
 reStructuredText
-^^^^^^^^^^^^^^^^
+----------------
 
 There are many resources on reST syntax, but we've found it helpful to know these basic things when starting out (and as a quick refresher!).
 
@@ -239,7 +239,7 @@ There are many resources on reST syntax, but we've found it helpful to know thes
      
      - If you place a label directly before a section title, you can reference to it with :ref:`label-name`. For example:
        
-       .. code-block:: console
+       .. code-block:: rst
           
           .. _my-reference-label:
           
@@ -259,15 +259,15 @@ There are many resources on reST syntax, but we've found it helpful to know thes
 #. If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash .
 
 Headers
-~~~~~~~
+^^^^^^^
 
 Section Headers are demarcated by underlining (or over- and underlining) the section title using non-alphanumeric characters like dashes, equal signs, or tildes. The row of non-alphanumeric characters must be at least as long as the header text. Use the same character for headers at the same level. The following creates a header
 
-.. code-block:: console
+.. code-block:: rst
 
    =========
-   Chapter 1    while this creates a header at a different level:    Section 1.1
-   =========                                                         -----------
+   Chapter 1  while this creates a header at a different level in the doc:  Section 1.1
+   =========                                                                -----------
 
 If you use the same non-alphanumeric character for underline-only and underline-and-overline headers, they will be considered to be at *different* levels.
 
@@ -295,25 +295,26 @@ If you use the same non-alphanumeric character for underline-only and underline-
 
 
 Lists
-~~~~~
+^^^^^
 
-For enumerated lists, use a number or letter followed by a period, or followed by a right-bracket, or surrounded by brackets
+For enumerated lists, use a number or letter followed by a period, or followed by a right-bracket, or surrounded by brackets:
 
-.. code-block:: console
+.. code-block:: rst
 
   1. Use this to format the items in your list like 1., 2., etc.
 
-  A. To make items in your list go like A., B., etc. Both uppercase and lowercase letters are acceptable.
+  A. Use this to make items in your list appear as A., B., etc.
+     Both uppercase and lowercase letters are acceptable.
 
-  I. Roman numerals are also acceptable, uppercase or lowercase.
+  I. Roman numerals are also acceptable -- both upper and lowercase.
 
-  (1) Numbers in brackets are acceptable.
+  (1) Numbers in brackets are also acceptable.
 
   1) So are numbers followed by a bracket.
 
-For bulleted lists, use indentation to indicate the level of nesting of a bullet point. You can use ``-``, ``+``, or ``*`` as a bullet point character
+For bulleted lists, use indentation to indicate the level of nesting of a bullet point. You can use ``-``, ``+``, or ``*`` as a bullet point character:
 
-.. code-block:: console
+.. code-block:: rst
 
   * Bullet point
     
@@ -322,9 +323,9 @@ For bulleted lists, use indentation to indicate the level of nesting of a bullet
       + even more nested bullet point
 
 Code Samples
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^
 
-There are many different ways using reST to display code samples, or any text that should not be formatted, but we explicity use the ``code-block`` directive for simplicity. Here's an example
+There are many different ways of using reST to display code samples, -- or any text that should not be formatted -- but we explicity use the ``code-block`` directive for simplicity. Here's an example:
 
 .. code-block:: rst
 

@@ -170,13 +170,14 @@ There's a few more important considerations that should be made when setting up 
   
   .. code-block:: console
      
-     Check out an existing branch:
+     # check out an existing branch:
      git checkout <branch>
-     Create new branch:
+     
+     # create a new branch:
      git branch <branchname> [<start point>]
-     Create new branch and check it out in one command:
+     
+     # create a new branch and check it out in one command:
      git checkout -b <newbranch> [<start point>]
-
 
 .. _Code Style:
 
@@ -276,7 +277,7 @@ Section Headers are demarcated by underlining (or over- and underlining) the sec
    Chapter 1    while this creates a header at a different level in the doc:    Section 1.1
    =========                                                                    -----------
 
-A lone top-level section is lifted up to be the document's title. If you use the same non-alphanumeric character for underline-only, and underline-and-overline headers, they will be considered to be at *different* levels. Any non-alphanumeric character can be used, but the Python convention is as follows and is enforced here:
+A lone top-level section is lifted up to be the document's title. If you use the same non-alphanumeric character for underline-only, and underline-and-overline headers, they will be considered to be at *different* levels. Any non-alphanumeric character can be used, but the Python convention -- which is to be used -- is as follows:
 
   * ``#`` with overline, for parts
   * ``*`` with overline, for chapters
@@ -288,7 +289,7 @@ A lone top-level section is lifted up to be the document's title. If you use the
 Lists
 ^^^^^
 
-For enumerated lists, use a number or letter followed by a period, or followed by a right-bracket, or surrounded by brackets:
+For enumerated lists, use a number or letter followed by a period, or followed by a right-bracket, or surrounded by brackets. You can also use the `#` symbol for an auto-numbered list:
 
 .. code-block:: rst
 
@@ -301,7 +302,9 @@ For enumerated lists, use a number or letter followed by a period, or followed b
 
   (1) Numbers in brackets are also acceptable.
 
-  1) So are numbers followed by a bracket.
+  3) So are numbers followed by a bracket, and you don't have to start numbering at one either.
+  
+  #. A numbered listed useful for re-arranging items frequently.
 
 For bulleted lists, use indentation to indicate the level of nesting of a bullet point. You can use ``-``, ``+``, or ``*`` as a bullet point character:
 
@@ -342,6 +345,7 @@ Again, there is a lot that can be said about markup languages; we haven't even t
 * `A ReStructuredText Primer (docutils -- maintainers) <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html>`_
 * `Cheatsheet <https://github.com/ralsina/rst-cheatsheet>`_
 * `reference for above guide <https://www.writethedocs.org/guide/writing/reStructuredText/>`_
+* https://developer.lsst.io/restructuredtext/style.html
 
 Resources
 ---------

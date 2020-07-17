@@ -184,21 +184,22 @@ There's a few more important considerations that should be made when setting up 
 Code Style
 ----------
 
-There are many different frameworks for styling. The NSpyre codebase follows the Python standard for styling — `PEP 8 <https://pep8.org>`_. In addition, we have adopted the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`_ for both code and our docstrings. This follows :pep:`8` with some modifications to the standard in the spirit of legibility. Additionally, the :pep:`257` on docstring conventions and :pep:`3107` on function annotations are encouraged in all but the most obvious cases.
+There are many different frameworks for styling. The NSpyre codebase follows the Python standard for styling — `PEP 8 <https://pep8.org>`_; it's the definitive guide to style conventions in Python and worth a read. In addition, we have adopted the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`_ for both code and our docstrings. This follows :pep:`8` with some modifications to the standard in the spirit of legibility. Additionally, the :pep:`257` on docstring conventions and :pep:`848` on type hints using function annotations are encouraged in all but the most obvious cases.
 
 .. code-block:: python
    
    def function_with_pep484_type_annotations(param1: int, param2: str) -> bool:
        """Example function with PEP 484 type annotations.
+       
+       Args:
+           param1: The first parameter.
+           param2: The second parameter.
+       
+       Returns:
+           The return value. True for success, False otherwise.
+       """
 
-    Args:
-        param1: The first parameter.
-        param2: The second parameter.
-
-    Returns:
-        The return value. True for success, False otherwise.
-
-    """
+*Type hints* are the annotations appending the function declaration ``(param1: int, param2: str) -> bool``. Unlike a static programming language, Python neither requires these type declarations nor does it use them to do runtime type checking. The benefit to putting this information outside the docstrings is to increase readability of docstrings while also making both static analysis and refactoring easier.
 
 All functions, methods, and classes are to contain docstrings. Object data model methods (e.g. ``__repr__``) are typically the exception to this rule.
 

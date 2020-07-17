@@ -90,7 +90,7 @@ When it’s finished, you’ll be taken to your copy of the NSpyre repository, w
    # push changes to github
    git push --set-upstream origin descriptive-branch-title
 
-You will notice the addition of two new terms -- *branch* and *push*. Each repository can have multiple versions of it's codebase that are under development. The ``master`` *branch* is the main version of the code on the repository and is the root branch from which all others originate. This is the official working version that is used out in the wild and the one you eventually want your changes to appear on. When forking a repo, you also get all the different branches at the time of copying. When contributing on an issue, you first want to search existing *branches* to check if someone has already started a branch for work on that issue. If not, start a new one and make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc). Then you need to *checkout* the branch to which you want to make changes, making sure to *add*, *commit* them so they are reflected locally.
+You will notice the addition of two new terms -- *branch* and *push*. Each repository can have multiple versions of it's codebase that are under development. The ``master`` *branch* is the main version of the code on the repository and is the root branch from which all others originate. This is the official working version that is used out in the wild and the one you eventually want your changes to appear on. When forking a repo, you also get all the different branches at the time of copying. When contributing on an issue, you first want to search existing *branches* to check if someone has already started a branch for work on that issue. If not, start a new one and make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc). Then you need to *checkout* the branch to which you want to make changes, making sure to *add* and *commit* them so they are reflected locally.
 
 Finally, the *push* command updates files from one location to another, but in the opposite direction as *pull*. ``git pull`` brings any changes from the target repo on the servers and updates them into the version/branch that you currently have checked out on your local copy. ``git push`` does the opposite. It takes any changes on your local copy of the branch you have checked out and reflects those changes on the repository. If you don't ``git push`` your commits then they will not be uploaded to the repo; this also means they won't be backed up. So it's good practice to push your progress at least daily so it is uploaded to the repository.
 
@@ -112,7 +112,7 @@ Once you've vetted your code for errors, checked to make sure you've followed al
    # click the Pull Request tab, then from the Pull Request page,
    # click the green New pull request button,
    # or,
-   # navigate to the branch you made edits to in the drop-down box on the repository
+   # navigate to the branch (to which you made edits) in the drop-down box on the repository
    # homepage, and click the green Compare & pull request button.
    
    # then, look over your changes in the diffs on the Compare page,
@@ -144,7 +144,7 @@ There's a few more important considerations that should be made when setting up 
 
 * Setting up a working directory
   
-  People save there code everywhere, in their documents folder, on their desktop, in a hidden folder. Not having a system to managing code is BAD. That's why git exists after all. Similarly, you want your code to be in a unified location on your local machine. Where it isn't in a place that someone will easily tamper with it, but in a location that is still easily accessible if you know where it is.
+  People save there code everywhere, in their documents folder, on their desktop, in a hidden folder. Not having a system to managing code is *BAD*; that's why git exists after all. Similarly, you want your code to be in a unified location on your local machine -- not in a place that someone will easily tamper with it, while still being in an easily accessible location if you know where it is.
   
   .. important::
      
@@ -184,9 +184,7 @@ There's a few more important considerations that should be made when setting up 
 Code Style
 ----------
 
-There are many different frameworks for styling. The NSpyre codebase uses the Python standard for styling — `PEP 8 <https://pep8.org>`_. In addition, we have adopted the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`_ for both code and our docstrings. In brief, this follows :pep:`8` with some leniences in the spirit of legibility.
-
-Additionally, we strongly encourage the use of the new :pep:`257` and :pep:`3107` standard for constructors in all but the most obvious cases.
+There are many different frameworks for styling. The NSpyre codebase follows the Python standard for styling — `PEP 8 <https://pep8.org>`_. In addition, we have adopted the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`_ for both code and our docstrings. This follows :pep:`8` with some modifications to the standard in the spirit of legibility. Additionally, the :pep:`257` on docstring conventions and :pep:`3107` on function annotations are encouraged in all but the most obvious cases.
 
 .. code-block:: python
    

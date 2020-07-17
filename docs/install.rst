@@ -10,7 +10,10 @@ Install
 *******
 
 The following should be run in a standard windows cmd line or equivalent
-(eg: https://cmder.net/)
+(eg: https://cmder.net/) This is because you need to have git installed (ideally
+hub, too) and on the path to perform the above installation from github. Bash
+will also need to be enabled - will include directions for this soon. 
+
 
 Install MongoDB
 ===============

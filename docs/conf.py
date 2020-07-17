@@ -46,7 +46,7 @@ extensions = [
     #'jupyter_sphinx',
     'nbsphinx', # for .ipynb file support (i.e. jupyter notebooks)
     #'sphinxcontrib.bibtex', # for bibliographic references
-    'sphinxcontrib.rsvgconverter' # for SVG->PDF conversion in LaTeX output
+    'sphinxcontrib.rsvgconverter', # for SVG->PDF conversion in LaTeX output
     'sphinx_copybutton' # for adding 'copy to clipboard' buttons to all text/code boxes
 ]
 

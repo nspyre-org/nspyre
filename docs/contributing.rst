@@ -11,7 +11,7 @@ The guide is split into sections based on the type of contribution you’re thin
 Quick Facts
 ===========
 
-For this project, we use a standard *fork & pull* model to collaborate, common practice for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code follows the Google Style Guide for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, and some of our own caveats as detailed :ref:`here <Code Style>`. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org>`_ -- that is, we subscribe to *Docs as Code*. If the above remarks don’t make sense to you, or you simply want a more detailed description of how to do things, continue reading below.
+For this project, we use a standard *fork & pull* model to collaborate, common practice for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code follows the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`_ for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, and some of our own caveats as detailed :ref:`here <Code Style>`. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org>`_ -- that is, we subscribe to *Docs as Code*. If the above remarks don’t make sense to you, or you simply want a more detailed description of how to do things, continue reading below.
 
 Philosophy
 ==========
@@ -184,9 +184,23 @@ There's a few more important considerations that should be made when setting up 
 Code Style
 ----------
 
-There are many different frameworks for styling. The NSpyre codebase uses the Python standard for styling — `PEP 8 <https://pep8.org>`_. In addition, we have adopted the Google Style Guide for both code and our docstrings. In brief, this follows PEP 8 with some leniences in the spirit of legibility.
+There are many different frameworks for styling. The NSpyre codebase uses the Python standard for styling — `PEP 8 <https://pep8.org>`_. In addition, we have adopted the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`_ for both code and our docstrings. In brief, this follows :pep:`8` with some leniences in the spirit of legibility.
 
-Additionally, we strongly encourage the use of the new PEP ### standard for constructors in all but the most obvious cases.
+Additionally, we strongly encourage the use of the new :pep:`257` and :pep:`3107` standard for constructors in all but the most obvious cases.
+
+.. code-block:: python
+   
+   def function_with_pep484_type_annotations(param1: int, param2: str) -> bool:
+       """Example function with PEP 484 type annotations.
+
+    Args:
+        param1: The first parameter.
+        param2: The second parameter.
+
+    Returns:
+        The return value. True for success, False otherwise.
+
+    """
 
 All functions, methods, and classes are to contain docstrings. Object data model methods (e.g. ``__repr__``) are typically the exception to this rule.
 
@@ -243,8 +257,7 @@ There are many resources on **reST** syntax, but we've found it helpful to know 
    * Use one backtick (```references with whitespace`_``) for `references with whitespace`_.
    * | Links to external sites contain the link text and a bracketed URL in backticks,
      | followed by an underscore:
-     | ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
-   
+     | ```Link to Write the Docs <https://www.writethedocs.org/>`_``.   
    .. _Cross-referencing arbitrary locations:
    * To support cross-referencing to arbitrary locations in any document, the standard **reST** labels are used. *References point to labels.* For this to work, label names must be unique throughout the entire documentation. There are two ways in which you can refer to labels:
      
@@ -264,7 +277,7 @@ There are many resources on **reST** syntax, but we've found it helpful to know 
        The ``:ref:`` role would then generate a link to the section, with the link title being “Section to cross-reference”. This works just as well when the section and reference are in different source files. Note that *labels must start with an underscore*, but it's reference does not; additionally, label definitions start with two periods and end with a colon.
      - Labels that aren’t placed before a section title can still be referenced, but you must give the link an explicit title, using this syntax: ``:ref:`Link title <label-name>`.``
 
-#. If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash ``*escape* \``with\`` \"\\"``.
+#. If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash: ``*escape* \* or \\ with "\\"`` yields *escape* \* or \\ with "\\".
 
 Headers
 ^^^^^^^
@@ -344,7 +357,7 @@ One Final Word
 
 You may have noticed that the *directives* in the above examples all use a similar markup syntax -- i.e. they start with ``.. [name]``. *Explicit markup* is used in **reST** for most constructs. There is a secondary idea of a *directive*: a generic block of *explicit markup*. It is one of the extension mechanisms of **reST**, and Sphinx makes heavy use of it. A directive ends it's generic block with ``::`` after it's name (e.g. ``.. code-block::`` shown above). This syntax is used extensively for more complex features, such as images, roles, comments, and admonitions.
 
-Again, there is a lot that can be said about markup languages; we haven't even talked about table, roles, field lists, or literal blocks. But included here is everything you need to get started and *all* of the information necessary to write this very *Contributing* section of the documentation. Additionally, there are many resources already available online and you should avail yourself of whatever helps best:
+Again, there is a lot that can be said about markup languages; we haven't even talked about tables, roles, field lists, or substitutions. But included here is everything you need to get started and *all* of the information necessary to write this very *Contributing* section of the documentation. Additionally, there are many resources already available online and you should avail yourself of whatever helps best:
 
 * `reStructuredText Primer (recommended guide) <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_
 * `A ReStructuredText Primer (docutils -- maintainers) <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html>`_
@@ -362,3 +375,8 @@ There’s a lot of online resources available for various aspects of software de
 * https://dont-be-afraid-to-commit.readthedocs.io/en/latest/contributing.html
 * https://gist.github.com/RichardBronosky/454964087739a449da04
 * `An Introduction to reStructuredText <https://docutils.readthedocs.io/en/sphinx-docs/ref/rst/introduction.html>`_
+* https://www.writethedocs.org/guide/tools/testing/
+* https://egghead.io/courses/how-to-contribute-to-an-open-source-project-on-github
+* https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#ref-role
+* https://cheat.readthedocs.io/en/latest/rst.html
+* https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html

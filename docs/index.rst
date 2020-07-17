@@ -43,7 +43,7 @@ NSpyre is a Python Framework for conducting physics experiments. It uses a
 networked approach to allow for the running of experiments using distributed
 equipment over many networked systems. The experimental hardware being controlled
 can thus be connected to different computers, which can in turn be controlled by
-another machine running the *experimental setup*. This allows for the easy
+another machine running the *experimental* commands. This allows for the easy
 integration of shared resources in a research environment.
 
 .. code-block:: console

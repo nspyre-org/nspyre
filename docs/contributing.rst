@@ -45,7 +45,7 @@ Git grew out of the needs of the developers of the Linux kernel and is one of th
 How to Contribute: Forking & Pull Requests
 ------------------------------------------
 
-Great, now that you understand the *why* and *how* of Git & GitHub, let’s explain the workflow to contribute. We use the **fork & pull** model to collaborate. This means that to contribute to the project, you first need to **Fork** the project on GitHub. A GitHub fork is just a copy of a repository (repo). When you *fork* a repo, you are storing a copy of that repo on your personal account. Doing so grants you full *write* access to edit files and develop the code on your version of it. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you :command:`git pull` on a codebase, that's the git term for *pulling* updated and/or new files from one version of a repo to another; you are simply updating files in a particular direction. Thus, *pulling* applies in many different contexts (more info below). A *pull request*, therefore, is a request you make for the maintainers, of the original repo you forked, to *review & merge* your edits into their version of the code stored on their repo (you can, of course, make pull requests on your own repositories).
+Great, now that you understand the *why* and *how* of Git & GitHub, let’s explain the workflow to contribute. We use the **fork & pull** model to collaborate. This means that to contribute to the project, you first need to **Fork** the project on GitHub. A GitHub fork is just a copy of a repository (repo). When you *fork* a repo, you are storing a copy of that repo on your personal account. Doing so grants you full *write* access to edit files and develop the code on your version of it. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you ``git pull`` on a codebase, that's the git term for *pulling* updated and/or new files from one version of a repo to another; you are simply updating files in a particular direction. Thus, *pulling* applies in many different contexts (more info below). A *pull request*, therefore, is a request you make for the maintainers, of the original repo you forked, to *review & merge* your edits into their version of the code stored on their repo (you can, of course, make pull requests on your own repositories).
 
 To make things concrete, let’s actually perform this using the command line.
 
@@ -204,20 +204,25 @@ When presenting Python code, use single-quoted strings (``'hello'`` instead of `
 Writing Docs
 ------------
 
-Documentation improvements are always welcome! The documentation files live in the ``docs/`` directory of the codebase. They’re written in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, and use `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate the full suite of documentation, with site-hosting provided by `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_. Writing documentation is a great way to start contributing, especially if you are new, and will help get you familiar with the codebase.
+Documentation improvements are always welcome! The documentation files live in the ``docs/`` directory of the codebase. They’re written in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, and use `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate the full suite of documentation, with site hosting provided by `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_. Writing documentation is a great way to start contributing, especially if you are new, and will help get you familiar with the codebase.
 
 reStructuredText is an easy-to-read, what-you-see-is-what-you-get plaintext markup syntax and parser system. It is useful for inline program documentation (such as Python docstrings), for quickly creating simple web pages, and for standalone documents. Markdown is another, slightly simpler alternative. reStructuredText is a bit harder to use, but is more powerful and is widely used for Python documentation.
 
-The reasons for using a markup language is straight-forward:
+The reasons for using a markup language are straight-forward:
 
 * easy to write and maintain (strong semantic markup tools and well-defined markup standards)
 * still makes sense as plain text (easily legible in raw form)
 * renders nicely into HTML (this looks nice, doesn't it?)
 
-| Don’t believe me? Then go to the .rst file for this webpage and see for yourself.
+| Don’t believe us? Then go to the .rst file for this webpage and see for yourself.
 | (The .rst file for this webpage is also an excellent source to get familiar with the markup syntax and as a reference for how to write documentation too.)
 
-There is a branch ``documentation-deploy`` used specifically for making documentation commits and staging the documentation before adding to ``master``. If you are only making documentation edits (anything in `docs/`) or writing docstrings for the api, then make those changes here. Otherwise, add the documentation commits along with source code on the branch tracking that issue. Whenever a commit is make to this branch, it will trigger a rebuild of the documentation viewable at the unlisted site ``nspyre.readthedocs.io/en/documentation-deploy`` for you to confirm formatting. It takes about 60 seconds to build once triggered, so be patient. If you make too many commits too quickly, the rebuild may error out (and lots of small commits are bad anyways). You can use the revision number (i.e. ``Revision 760a94f0.``) at the bottom of the webpage to confirm the rebuild.
+Commits & Testing
+^^^^^^^^^^^^^^^^^
+
+The ``documentation-deploy`` branch is used specifically for making documentation commits and staging the documentation before adding to ``master``. If you are only making documentation edits (anything in ``docs/``) or writing docstrings for the api, then make those changes here. Otherwise, add the documentation commits to the same branch the associated source code is being developed on.
+
+Whenever a commit is make to this branch, it will trigger a rebuild of the documentation viewable at the unlisted site ``https://nspyre.readthedocs.io/en/documentation-deploy`` for you to confirm formatting. It takes about 60 seconds to build once triggered, so be patient. If you make too many commits too quickly, the rebuild may error out (and lots of small commits are bad anyways). You can use the revision number (i.e. ``Revision 760a94f0.``) at the bottom of the webpage to confirm the rebuild has completed.
 
 reStructuredText
 ----------------

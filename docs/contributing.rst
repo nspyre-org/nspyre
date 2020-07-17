@@ -168,7 +168,7 @@ There's a few more important considerations that should be made when setting up 
 
 * Perform ``git checkout`` and ``git branch`` in one command:
   
-  .. code-block: console
+  .. code-block:: console
      
      Check out an existing branch:
      git checkout <branch>
@@ -227,11 +227,11 @@ Whenever a commit is make to this branch, it will trigger a rebuild of the docum
 reStructuredText
 ----------------
 
-There are many resources on reST syntax, but we've found it helpful to know these basic things when starting out (and as a quick refresher!).
+There are many resources on **reST** syntax, but we've found it helpful to know these basic things when starting out (and as a quick refresher!).
 
 #. Paragraphs in reStructuredText are blocks of text separated by at least one blank line. All lines in the paragraph must be indented by the same amount.
 
-#. Indentation is important and mixing spaces and tabs causes problems. So just like Python, it's best to just use spaces. And typically, you want to **use three spaces**. Yes, you read that correctly. (A standard tab is equivalent to 4 spaces.)
+#. Indentation is important and mixing spaces and tabs causes problems. So like Python, it's best to just use spaces. And typically, you want to **use three spaces**. Yes, you read that correctly, we'll explain why in a minute. (A standard tab is equivalent to 4 spaces.)
 
 #. Inline markup for font styles is similar to MarkDown:
    
@@ -245,7 +245,7 @@ There are many resources on reST syntax, but we've found it helpful to know thes
      | ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
    
    .. _Cross-referencing arbitrary locations:
-   * To support cross-referencing to arbitrary locations in any document, the standard **reST** labels are used. For this to work, label names must be unique throughout the entire documentation. There are two ways in which you can refer to labels:
+   * To support cross-referencing to arbitrary locations in any document, the standard **reST** labels are used. *References point to labels.* For this to work, label names must be unique throughout the entire documentation. There are two ways in which you can refer to labels:
      
      - If you place a label directly before a section title, you can reference to it with :ref:`label-name`. For example:
        
@@ -260,18 +260,15 @@ There are many resources on reST syntax, but we've found it helpful to know thes
           
           It refers to the section itself, see :ref:`my-reference-label`.
        
-       | The ``:ref:`` role would then generate a link to the section, with the link title being “Section to cross-reference”. This works just as well when section and reference are in different source files.
-       | Labels that aren’t placed before a section title can still be referenced, but you must give the link an explicit title, using this syntax: :ref:`Link title <label-name>`.
-       | Note: Reference labels must start with an underscore. When referencing a label, the underscore must be omitted (see examples above).
-   
-   .. .. :ref:`A title <Cross-referencing arbitrary locations>`
-   
-#. If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash .
+       The ``:ref:`` role would then generate a link to the section, with the link title being “Section to cross-reference”. This works just as well when the section and reference are in different source files. Note that *labels must start with an underscore*, but it's reference does not.
+     - Labels that aren’t placed before a section title can still be referenced, but you must give the link an explicit title, using this syntax: ``:ref:`Link title <label-name>`.``
+
+#. If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash.
 
 Headers
 ^^^^^^^
 
-Section Headers are demarcated by underlining (or over- and underlining) the section title using non-alphanumeric characters like dashes, equal signs, or tildes. The row of non-alphanumeric characters must be at least as long as the header text. Use the same character for headers at the same level. The following creates a header
+Section Headers are demarcated by underlining (or over- and underlining) the section title using non-alphanumeric characters like dashes, equal signs, or tildes. The row of non-alphanumeric characters must be at least as long as the header text. Use the same character for headers at the same level. The following creates a header:
 
 .. code-block:: rst
 
@@ -279,30 +276,14 @@ Section Headers are demarcated by underlining (or over- and underlining) the sec
    Chapter 1    while this creates a header at a different level in the doc:    Section 1.1
    =========                                                                    -----------
 
-If you use the same non-alphanumeric character for underline-only and underline-and-overline headers, they will be considered to be at *different* levels.
+A lone top-level section is lifted up to be the document's title. If you use the same non-alphanumeric character for underline-only, and underline-and-overline headers, they will be considered to be at *different* levels. Any non-alphanumeric character can be used, but the Python convention is as follows and is enforced here:
 
-
-+----------------------------------------------------------+--------------------------------------------------------+
-| ::                                                       | ..                                                     |
-|                                                          |                                                        |
-|    Title                                                 |   Title                                                |
-|    =====                                                 |   =====                                                |
-|                                                          |                                                        |
-|    A lone top-level section is lifted up to be the       |   A lone top-level section is lifted up to be the      |
-|    document's title.                                     |   document's title.                                    |
-|                                                          |                                                        |    
-|    Any non-alphanumeric character can be used, but       |   Any non-alphanumeric character can be used, but      |
-|    Python convention is:                                 |   Python convention is:                                |
-|                                                          |                                                        |
-|    * ``#`` with overline, for parts                      |   * ``#`` with overline, for parts                     |
-|    * ``*`` with overline, for chapters                   |   * ``*`` with overline, for chapters                  |
-|    * ``=``, for sections                                 |   * ``=``, for sections                                |
-|    * ``-``, for subsections                              |   * ``-``, for subsections                             |
-|    * ``^``, for subsubsections                           |   * ``^``, for subsubsections                          |
-|    * ``"``, for paragraphs                               |   * ``"``, for paragraphs                              |
-+----------------------------------------------------------+--------------------------------------------------------+
-
-
+  * ``#`` with overline, for parts
+  * ``*`` with overline, for chapters
+  * ``=``, for sections
+  * ``-``, for subsections
+  * ``^``, for subsubsections
+  * ``"``, for paragraphs
 
 Lists
 ^^^^^
@@ -316,7 +297,7 @@ For enumerated lists, use a number or letter followed by a period, or followed b
   A. Use this to make items in your list appear as A., B., etc.
      Both uppercase and lowercase letters are acceptable.
 
-  I. Roman numerals are also acceptable -- both upper and lowercase.
+  I. Roman numerals are also acceptable -- both upper- and lowercase.
 
   (1) Numbers in brackets are also acceptable.
 

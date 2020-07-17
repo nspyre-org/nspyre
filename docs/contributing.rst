@@ -144,7 +144,7 @@ There's a few more important considerations that should be made when setting up 
 
 * Setting up a working directory
   
-  People save there code everywhere, in their documents folder, on their desktop, in a hidden folder. Not having a system to managing code is *BAD*; that's why git exists after all. Similarly, you want your code to be in a unified location on your local machine -- not in a place that someone will easily tamper with it, while still being in an easily accessible location if you know where it is.
+  People save their code everywhere, in their documents folder, on their desktop, in a hidden folder. Not having a system to managing code is *BAD*; that's why git exists after all. Similarly, you want your code to be in a unified location on your local machine -- not in a place that someone will easily tamper with it, while still being in an easily accessible location if you know where it is.
   
   .. important::
      

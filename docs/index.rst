@@ -7,6 +7,14 @@
 Welcome to nspyre's documentation!
 ##################################
 
+.. image:: https://img.shields.io/github/license/nspyre-dev/nspyre
+   :target: https://github.com/nspyre-dev/nspyre/blob/master/LICENSE
+   :alt: GitHub
+
+.. image:: https://readthedocs.org/projects/nspyre/badge/?version=latest
+   :target: https://nspyre.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
 Pythonic Networked Scientific Experimentation Toolkit
 
 .. toctree::

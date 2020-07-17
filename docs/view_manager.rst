@@ -21,11 +21,11 @@ Loading the file successfully should prompt a view manager window to open. In th
 
 .. image:: images/s2-experiment.png
 
-   Notice that the code for each predefined plot function is given in an editable form at the bottom of the View Manager window.  Pressing ``‘Ctrl + c’`` will generate a new, custom plot (named Custom 0) in-which you can define a different plot function. This is very useful if you want to slightly tweak one of the predefined plots, but in order to make a plot function automatically available upon running an experiment, you should add it in your spyrelet file (here test_spyrelets.py). For example, you can plot the square mean random value by simply copy-paste the avg_rand code into the Custom 0 box while adding **2 appropriately and pressing ``‘Shift + Enter’``.
+Notice that the code for each predefined plot function is given in an editable form at the bottom of the View Manager window.  Pressing ``‘Ctrl + c’`` will generate a new, custom plot (named Custom 0) in-which you can define a different plot function. This is very useful if you want to slightly tweak one of the predefined plots, but in order to make a plot function automatically available upon running an experiment, you should add it in your spyrelet file (here test_spyrelets.py). For example, you can plot the square mean random value by simply copy-paste the avg_rand code into the Custom 0 box while adding **2 appropriately and pressing ``‘Shift + Enter’``.
    
-   The plot functions within the spyrelet file can be defined as 1D or 2D plots. 1D plots return a dictionary with the name of the parameter as a keyword with the associated value being an array of x-arrays and y-arrays. 2D plots similarly return a 2D array.
+The plot functions within the spyrelet file can be defined as 1D or 2D plots. 1D plots return a dictionary with the name of the parameter as a keyword with the associated value being an array of x-arrays and y-arrays. 2D plots similarly return a 2D array.
    
-   Another function that can be added to the spyrelet is a plot formatter. These can be used to set plot properties (like color, labels, etc.) at the start of the run with @PlotFormatInit  or ones that are being updated with each plot with @PlotFormatUpdate.
+Another function that can be added to the spyrelet is a plot formatter. These can be used to set plot properties (like color, labels, etc.) at the start of the run with @PlotFormatInit  or ones that are being updated with each plot with @PlotFormatUpdate.
 
 .. image:: images/custom-plot.png
 

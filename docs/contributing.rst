@@ -184,7 +184,7 @@ There's a few more important considerations that should be made when setting up 
 Code Style
 ----------
 
-There are many different frameworks for styling. The NSpyre codebase follows the Python standard for styling — `PEP 8 <https://pep8.org>`_; it's the definitive guide to style conventions in Python and worth a read. In addition, we have adopted the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`_ for both code and our docstrings. This follows :pep:`8` with some modifications to the standard in the spirit of legibility. Additionally, the :pep:`257` on docstring conventions and :pep:`848` on type hints using function annotations are encouraged in all but the most obvious cases.
+The NSpyre codebase follows the Python standard for styling — `PEP 8 <https://pep8.org>`_; it's the definitive guide to style conventions in Python and worth a read. In addition, we have adopted the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`_ for both code and our docstrings. This follows :pep:`8` with some modifications in the spirit of legibility. Finally, the :pep:`257` on docstring conventions and :pep:`848` on type hints using function annotations are encouraged in all but the most obvious cases.
 
 .. code-block:: python
    
@@ -199,12 +199,12 @@ There are many different frameworks for styling. The NSpyre codebase follows the
            The return value. True for success, False otherwise.
        """
 
-*Type hints* are the annotations appending the function declaration ``(param1: int, param2: str) -> bool``. Unlike a static programming language, Python neither requires these type declarations nor does it use them to do runtime type checking. The benefit to putting this information outside the docstrings is to increase readability of docstrings while also making both static analysis and refactoring easier.
+*Type hints* are the annotations appending the function declaration and look like this: ``(param1: int, param2: str) -> bool``. Unlike a static programming language, Python neither requires these type declarations nor does it use them to do runtime type checking. The benefit to putting this information outside the docstrings is to increase readability of docstrings, while also making both static analysis and refactoring easier.
 
-A few other changes:
+A few other guidelines:
 
 * Line-length can exceed 79 characters, to 100, when convenient.
-* Always use single-quoted strings (e.g. ``'#single-quote'``), unless a single-quote occurs within the string.
+* Always use single-quoted strings (e.g. ``'#single-quote'``), unless a single-quote occurs within the string; escaping ``\'`` may be sensible as well.
 
 All functions, methods, and classes are to contain docstrings. Object data model methods (e.g. ``__repr__``) are typically the exception to this rule.
 
@@ -215,9 +215,13 @@ Documentation Contributions
 Documentation Style
 -------------------
 
-When contributing documentation, please do your best to follow the style of the documentation files. This means a soft-limit of 79 characters wide in your text files and a semi-formal, yet friendly and approachable, prose style.
+When contributing documentation, please do your best to follow the style of the documentation files. This means a soft-limit of 79 characters wide in your text files and a semi-formal, yet friendly and approachable, prose style. Tutorial type information should be placed in the getting started sections. If you are writing documentation for a major spyrelet, create a new .rst file and make sure to add it to the appropriate toctree in index.rst.
 
-When presenting Python code, use single-quoted strings (``'hello'`` instead of ``"hello"``); this applies to code as well!
+Guidelines:
+* When presenting Python code, use single-quoted strings (``'hello'`` instead of ``"hello"``); this applies to code as well!
+* Make sure to show examples of code output and expected results. The use of screenshots for GUI elements is acceptable, but make sure the resolution is high enough.
+* Refer to the .rst file for this section as a reference for good format styling.
+* Don't go more than three levels of headings; a maximum of two levels is encouraged.
 
 
 Writing Docs
@@ -250,7 +254,7 @@ There are many resources on **reST** syntax, but we've found it helpful to know 
 
 #. Paragraphs in reStructuredText are blocks of text separated by at least one blank line. All lines in the paragraph must be indented by the same amount.
 
-#. Indentation is important and mixing spaces and tabs causes problems. So like Python, it's best to just use spaces. And typically, you want to **use three spaces**. Yes, you read that correctly, we'll explain why in a minute. (A standard tab is equivalent to 4 spaces.)
+#. Indentation is important and mixing spaces and tabs causes problems. So like Python, it's best to just use spaces. And typically, you want to **use three spaces**. Yes, you read that correctly, we'll explain why in a minute. (A standard tab is equivalent to four spaces.)
 
 #. Inline markup for font styles is similar to MarkDown:
    

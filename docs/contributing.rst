@@ -201,6 +201,11 @@ There are many different frameworks for styling. The NSpyre codebase follows the
 
 *Type hints* are the annotations appending the function declaration ``(param1: int, param2: str) -> bool``. Unlike a static programming language, Python neither requires these type declarations nor does it use them to do runtime type checking. The benefit to putting this information outside the docstrings is to increase readability of docstrings while also making both static analysis and refactoring easier.
 
+A few other changes:
+
+* Line-length can exceed 79 characters, to 100, when convenient.
+* Always use single-quoted strings (e.g. ``'#single-quote'``), unless a single-quote occurs within the string.
+
 All functions, methods, and classes are to contain docstrings. Object data model methods (e.g. ``__repr__``) are typically the exception to this rule.
 
 

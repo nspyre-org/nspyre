@@ -207,7 +207,7 @@ Writing Docs
 
 Documentation improvements are always welcome! The documentation files live in the ``docs/`` directory of the codebase. They’re written in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, and use `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate the full suite of documentation, with site hosting provided by `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_. Writing documentation is a great way to start contributing, especially if you are new, and will help get you familiar with the codebase.
 
-reStructuredText is an easy-to-read, what-you-see-is-what-you-get plaintext markup syntax and parser system. It is useful for inline program documentation (such as Python docstrings), for quickly creating simple web pages, and for standalone documents. Markdown is another, slightly simpler alternative. reStructuredText is a bit harder to use, but is more powerful and is widely used for Python documentation.
+reStructuredText is an easy-to-read, what-you-see-is-what-you-get plaintext markup syntax and parser system. It is useful for inline program documentation (such as Python docstrings), for quickly creating simple web pages, and for standalone documents. `Markdown <https://daringfireball.net/projects/markdown/>`_ is another, slightly simpler alternative. reStructuredText is a bit harder to use, but is more powerful and is widely used for Python documentation.
 
 The reasons for using a markup language are straight-forward:
 
@@ -261,10 +261,10 @@ There are many resources on **reST** syntax, but we've found it helpful to know 
           
           It refers to the section itself, see :ref:`my-reference-label`.
        
-       The ``:ref:`` role would then generate a link to the section, with the link title being “Section to cross-reference”. This works just as well when the section and reference are in different source files. Note that *labels must start with an underscore*, but it's reference does not.
+       The ``:ref:`` role would then generate a link to the section, with the link title being “Section to cross-reference”. This works just as well when the section and reference are in different source files. Note that *labels must start with an underscore*, but it's reference does not; additionally, label definitions start with two periods and end with a colon.
      - Labels that aren’t placed before a section title can still be referenced, but you must give the link an explicit title, using this syntax: ``:ref:`Link title <label-name>`.``
 
-#. If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash.
+#. If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash ``*escape* \``with\`` \"\\"``.
 
 Headers
 ^^^^^^^
@@ -319,7 +319,7 @@ For bulleted lists, use indentation to indicate the level of nesting of a bullet
 Code Samples
 ^^^^^^^^^^^^
 
-There are many different ways of using reST to display code samples, -- or any text that should not be formatted -- but we explicity use the ``code-block`` directive for simplicity. Here's an example:
+There are many different ways of using **reST** to display code samples, -- or any text that should not be formatted -- but we explicity use the ``code-block`` directive for simplicity. Here's an example:
 
 .. code-block:: rst
 
@@ -339,7 +339,12 @@ There is one exception to the rule: when you want to display an interactive sess
    >>> print 'this is a Doctest block'
    this is a Doctest block
 
-Again, there is a lot that can be said about markup languages; we haven't even talked about table, roles, explicit markup, or generic directives. But included here is everything you need to get started and includes 90% of the information necessary to write this very Contributing section of the documentation. Additionally, there are many resources already available online and you should avail yourself of whatever helps best:
+One Final Word
+^^^^^^^^^^^^^^
+
+You may have noticed that the *directives* in the above examples all use a similar markup syntax -- i.e. they start with ``.. [name]``. *Explicit markup* is used in **reST** for most constructs. There is a secondary idea of a *directive*: a generic block of *explicit markup*. It is one of the extension mechanisms of **reST**, and Sphinx makes heavy use of it. A directive ends it's generic block with ``::`` after it's name (e.g. ``.. code-block::`` shown above). This syntax is used extensively for more complex features, such as images, roles, comments, and admonitions.
+
+Again, there is a lot that can be said about markup languages; we haven't even talked about table, roles, field lists, or literal blocks. But included here is everything you need to get started and *all* of the information necessary to write this very *Contributing* section of the documentation. Additionally, there are many resources already available online and you should avail yourself of whatever helps best:
 
 * `reStructuredText Primer (recommended guide) <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_
 * `A ReStructuredText Primer (docutils -- maintainers) <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html>`_

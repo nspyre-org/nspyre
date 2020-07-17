@@ -69,4 +69,4 @@ Available devices:  ['my_sg', 'osc']
 10.0 hertz
 
 Note that the instrument server we loaded, and the device parameters we control are
-streamed to and saved in the mongo database, as can be seen in page.
+streamed to and saved in the mongo database.

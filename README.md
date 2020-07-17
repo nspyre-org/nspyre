@@ -1,4 +1,6 @@
 # nspyre
+[![GitHub license](https://img.shields.io/github/license/nspyre-dev/nspyre)](https://github.com/nspyre-dev/nspyre/blob/master/LICENSE)
+[![Documentation Status](https://readthedocs.org/projects/nspyre/badge/?version=latest)](https://nspyre.readthedocs.io/en/latest/?badge=latest)
 Networked Scientific Python Research Environment
 
 ## Installation

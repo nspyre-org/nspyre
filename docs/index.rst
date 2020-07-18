@@ -3,9 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-##################################
 Welcome to nspyre's documentation!
-##################################
+==================================
 
 .. image:: https://img.shields.io/github/license/nspyre-dev/nspyre
    :target: https://github.com/nspyre-dev/nspyre/blob/master/LICENSE

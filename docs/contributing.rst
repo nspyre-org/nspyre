@@ -2,16 +2,37 @@
 Contributing
 ############
 
-If you’re reading this, you probably want to contribute to NSpyre — great! This project has taken a lot of work and still has big strides to take to continue making it a flexible, extensive, and sustainable experimentation platform. Any and all support is greatly appreciated.
+If you’re reading this, you probably want to contribute to NSpyre — great! This
+project has taken a lot of work and still has big strides to take to continue
+making it a flexible, extensive, and sustainable experimentation platform.
+Any and all support is greatly appreciated.
 
-This document lays out guidelines and advice for contributing to this project. If you’re thinking of contributing, please start by reading the immediate info below detailing project specifics to get a feel for how contributing to this project works. If you have any questions, feel free to reach out to one of the primary maintainers. *(Need link/contact info)*
+This document lays out guidelines and advice for contributing to this project.
+If you’re thinking of contributing, please start by reading the immediate info
+below detailing project specifics to get a feel for how contributing to this
+project works. If you have any questions, feel free to reach out to one of the
+primary maintainers. *(Need link/contact info)*
 
-The guide is split into sections based on the type of contribution you’re thinking of making, with a section that covers general guidelines for all contributors.
+The guide is split into sections based on the type of contribution you’re
+thinking of making, with a section that covers general guidelines for all contributors.
 
 Quick Facts
 ===========
 
-For this project, we use a standard *fork & pull* model to collaborate, common practice for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard. Our code follows the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`_ for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, and some of our own caveats as detailed :ref:`here <Code Style>`. For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_ for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org>`_ -- that is, we subscribe to *Docs as Code*. If the above remarks don’t make sense to you, or you simply want a more detailed description of how to do things, continue reading below.
+For this project, we use a standard *fork & pull* model to collaborate, common
+practice for open source projects. If you are interested in helping maintain
+the platform, send us a message after getting involved and we’ll be happy to
+bring you onboard. Our code follows the `Google Style Guide
+<https://google.github.io/styleguide/pyguide.html>`_ for docstrings, with
+standard `PEP 8 <https://pep8.org>`_ formatting, and some of our own caveats as
+detailed :ref:`here <Code Style>`. For documentation, we write in
+`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_,
+using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and
+`ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_
+for site hosting. We follow the philosophy of `WriteTheDocs
+<https://www.writethedocs.org>`_ -- that is, we subscribe to *Docs as Code*.
+If the above remarks don’t make sense to you, or you simply want a more
+detailed description of how to do things, continue reading below.
 
 Philosophy
 ==========
@@ -222,7 +243,7 @@ Guidelines:
 * When presenting Python code, use single-quoted strings (``'hello'`` instead of ``"hello"``); this applies to code as well!
 * Make sure to show examples of code output and expected results. The use of screenshots for GUI elements is acceptable, but make sure the resolution is high enough.
 * Refer to the .rst file for this section as a reference for good format styling.
-* Don't go more than three levels of headings; a maximum of two levels is encouraged.
+* Don't go more than three levels of headings deep; a maximum of two levels is encouraged.
 
 
 Writing Docs
@@ -366,7 +387,7 @@ One Final Word
 
 You may have noticed that the *directives* in the above examples all use a similar markup syntax -- that is, they start with ``.. [name]``. *Explicit markup* is used in **reST** for most constructs. There is also a secondary idea called a *directive* - a generic block of *explicit markup*. It is one of the extension mechanisms of **reST**, and Sphinx makes heavy use of it. A directive ends it's generic block with ``::`` after it's name (e.g. ``.. code-block::`` shown above). This syntax is used extensively for more complex features, such as images, roles, comments, and admonitions.
 
-Again, there is a lot that can be said about markup languages; we haven't even talked about tables, roles, field lists, or substitutions. But included here is everything you need to get started and *all* of the information necessary to write this very *Contributing* section of the documentation. Lastly, there are many resources already available online and you should avail yourself of those which best help:
+Again, there is a lot that can be said about markup languages; we haven't even talked about tables, roles, field lists, or substitutions. But included here is everything you need to get started and *all* of the information necessary to write this very *Contributing* section of the documentation. Lastly, there are many resources already available online and you should avail yourself of them:
 
 * `reStructuredText Primer (recommended guide) <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_
 * `A ReStructuredText Primer (by docutils -- the maintainers) <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html>`_

@@ -6,74 +6,118 @@
 Welcome to nspyre's documentation!
 ==================================
 
+.. image:: https://img.shields.io/github/license/nspyre-dev/nspyre
+   :target: https://github.com/nspyre-dev/nspyre/blob/master/LICENSE
+   :alt: GitHub
+
+.. image:: https://readthedocs.org/projects/nspyre/badge/?version=latest
+   :target: https://nspyre.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
+Pythonic Networked Scientific Experimentation Toolkit
+
+.. toctree::
+   :maxdepth: 4
+   :caption: Contents
+   :hidden:
+
+   install
+   getting_started
+   spyrelet
+   instrument_server
+   the_database
+   view_manager
+
+.. toctree::
+   :maxdepth: 1
+   :caption: API
+   :hidden:
+   
+   api
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
-
+   :caption: Contributing
+   :hidden:
+   
    contributing
 
-Installation
-============
 
-######
-nspyre
-######
+What is NSpyre?
+===============
 
-Networked Scientific Python Research Environment
+NSpyre is a Python Framework for conducting physics experiments. It uses a
+networked approach to allow for the running of experiments using distributed
+equipment over many networked systems. The experimental hardware being controlled
+can thus be connected to different computers, which can in turn be controlled by
+another machine running the *experimental* commands. This allows for the easy
+integration of shared resources in a research environment.
 
-############
-Installation
-############
+.. code-block:: console
+   
+   (conda env) $ python main.py
 
-The following should be run in a standard windows cmd line or equivalent (eg: https://cmder.net/)
+It's built on top of the Lantz (instrumentation communication toolkit) module
+for interfacing with equipment using a variety of protocols and grew out of
+many years of development in the Awschalom Group and others — first from many
+years of LabView and Matlab code into an original *proto-spyre* in python,
+and finally into it’s fully realized networked form.
 
-###############
-Install MongoDB
-###############
+How is it used?
+===============
 
-- Download mongodb v4.2.1 (or greater) from https://www.mongodb.com/download-center/community
-- Install mongodb v4.2.1 using default options
-- Put the bin to the path variable (in system environment variable).
-  For a standard install this will likelly be something like C:\Program Files\MongoDB\Server\4.2\bin
-  This will allow you to call mongod from the command line. and is necessary for the install.bat script to work
+The beauty of NSpyre is that many operations can be performed in multiple ways,
+allowing for maximum flexibility. This includes both command line, GUI, and
+Jupyter interfaces. Experiments and analyses can be written in detailed
+*spyrelets* or added in-situ in a scripting style fashion. This
+*plug-and-play* fashion allows for many modalities, but here is a common usage:
 
-##############
-Install NSpyre
-##############
+.. nbinput:: ipython3
+   :execution-count: 1
+   
+   %gui qt5
+   from nspyre import *
+   from nspyre.instrument_manager import Instrument_Manager
+   from nspyre.widgets.launcher import Spyrelet_Launcher_Widget, Combined_Launcher
 
-Clone the repository
-```
-git clone git@github.com:AlexBourassa/nspyre.git nspyre
-```
-or
-```
-git clone https://github.com/AlexBourassa/nspyre nspyre
-```
+.. nbinput:: ipython3
+   :execution-count: 2
+   
+   %gui qt5 #Sometimes jupyters needs a few runs of this commands for some weird reason
 
-Configure and start the MongoDB server (this will start two mongo server in the same replica set (one primary and one secondary)). By default these are publicly accessible on ports 27017 and port 27018 so if you are not in a secured private network, make sure to add some security configurations to the mongodb1.cfg and mongodb2.cfg files (better support for these security configurations will be integrated in future versions)
-```
-cd nspyre
-install.bat
-```
+.. nbinput:: ipython3
+   :execution-count: 3
+   
+   %gui qt5
+   # Add all the instruments
+   m = Instrument_Manager(timeout=10000)
+   locals().update(m.get_devices())
+   print('Available devices: ', list(m.get_devices().keys()))
+   
+   # Add all the spyrelets
+   all_spyrelets = load_all_spyrelets()
+   locals().update(all_spyrelets)
+   print('Available spyrelets: ', list(all_spyrelets.keys()))
+   
+   # Clean up the mongo database if desired
+   # drop_all_spyrelets(except_list=list(all_spyrelets.keys()))
+   
+   # Make a launcher
+   launcher = Combined_Launcher(spyrelets=all_spyrelets)
 
-Now you need to initialize the replica set. To do so enter the mongo shell and input a rs.initiate command
-```
-mongo
-rs.initiate({_id: "NSpyreSet", members:[{_id: 0, host: 'localhost:27017'},{_id: 1, host: 'localhost:27018'}]})
-quit()
-```
-Finally, if you are planning on using NSpyre from different computers, you will also need to open the appropriate port in the firewall of the server machine (by default these are 27017 and 27018)
+Who uses it? (And who are we)
+=============================
 
-Finally you can create and configure a conda environment.  The pip command must be run from inside the nspyre folder (where the setup.py script is located). Additionally, some part of this install may require the shell to be started with admin rights:
-```
-conda create -n nspyre python=3
-activate nspyre
-pip install -e .
-```
-
-Modify your nspyre/nspyre/config.yaml to suit your specific configuration of nspyre.
-
-
+Primarily developed out of the Awschalom Group at the University of Chicago PME,
+we are an experimental quantum physics research lab with a focus on *Spin Dynamics
+and Quantum Information Processing in the Solid State*. There has been growing
+adoption of nspyre in the immediate surroundings outside our doors, but there is
+hope that this software can be adopted by more and more people from different
+institutions and we can all benefit from these shared resources to lower the
+development time for writing code and foster exchange to improve our research
+and maximize our productivity. Anyone in the research or industrial spaces using
+electrical or other computer controlled equipment with a programming interface
+(or an already written Lantz driver) can benefit from these resources.
 
 Indices and tables
 ==================

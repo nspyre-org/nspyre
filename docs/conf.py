@@ -36,15 +36,19 @@ needs_sphinx = '3.1.2'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.napoleon',
+    'sphinx.ext.mathjax', # for math formulas
+    'sphinx.ext.napoleon', # for numpy and google style docstrings
     #'sphinx_autodoc_typehints',
     #'sphinx.ext.viewcode',
     #'sphinx.ext.extlinks',
     #'sphinx_tabs.tabs',
     #'sphinx_automodapi.automodapi',
     #'jupyter_sphinx',
-    #'nbsphinx'
+    'nbsphinx', # for .ipynb file support (i.e. jupyter notebooks)
+    #'sphinxcontrib.bibtex', # for bibliographic references
+    'sphinx.ext.imgconverter',
+    'sphinxcontrib.rsvgconverter', # for SVG->PDF conversion in LaTeX output
+    'sphinx_copybutton' # for adding 'copy to clipboard' buttons to all text/code boxes
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -88,3 +92,10 @@ html_theme_options = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+html_css_files = ['custom.css']
+
+#html_logo = 'images/logo.png'
+#html_favicon = 'images/favicon.ico'
+
+html_last_updated_fmt = '%b %d, %Y'
+#'%Y/%m/%d'

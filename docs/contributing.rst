@@ -427,6 +427,7 @@ these basic things when starting out (and as a quick refresher!).
    * | Links to external sites contain the link text and a bracketed URL in backticks,
      | followed by an underscore:
      | ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
+   .. _Cross-referencing arbitrary locations:
    * To support cross-referencing to arbitrary locations in any document, the standard **reST**
      labels are used. *References point to labels.* For this to work, label names must be
      unique throughout the entire documentation. There are two ways in which you can refer to labels:

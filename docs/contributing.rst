@@ -395,7 +395,7 @@ The ``documentation-deploy`` branch is used specifically for making documentatio
 commits and staging the documentation before adding to ``master``. If you are
 only making documentation edits (anything in ``docs/``) or writing docstrings for
 the api, then make those changes here. Otherwise, add the documentation commits
-to the same branch the associated source code is being developed on.
+and its associated source code to an appropriate branch for the issues being fixed.
 
 Whenever a commit is make to this branch, it will trigger a rebuild of the
 documentation viewable at the unlisted site ``https://nspyre.readthedocs.io/en/documentation-deploy``
@@ -426,8 +426,10 @@ these basic things when starting out (and as a quick refresher!).
    * Use one backtick (```references with whitespace`_``) for `references with whitespace`_.
    * | Links to external sites contain the link text and a bracketed URL in backticks,
      | followed by an underscore:
-     | ```Link to Write the Docs <https://www.writethedocs.org/>`_``.   
+     | ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
+   
    .. _Cross-referencing arbitrary locations:
+   
    * To support cross-referencing to arbitrary locations in any document, the standard **reST**
      labels are used. *References point to labels.* For this to work, label names must be
      unique throughout the entire documentation. There are two ways in which you can refer to labels:

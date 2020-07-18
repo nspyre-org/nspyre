@@ -184,7 +184,7 @@ There's a few more important considerations that should be made when setting up 
 Code Style
 ----------
 
-The NSpyre codebase follows the Python standard for styling — `PEP 8 <https://pep8.org>`_; it's the definitive guide to style conventions in Python and worth a read. In addition, we have adopted the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`_ for both code and our docstrings. This follows :pep:`8` with some modifications in the spirit of legibility. Finally, the :pep:`257` on docstring conventions and :pep:`848` on type hints using function annotations are encouraged in all but the most obvious cases.
+The NSpyre codebase follows the Python standard for styling — `PEP 8 <https://pep8.org>`_; it's the definitive guide to style conventions in Python and worth a read. In addition, we have adopted the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`_ for both code and our docstrings. This follows :pep:`8` with some modifications in the spirit of legibility. Finally, :pep:`257` on docstring conventions and :pep:`848` on type hints using function annotations are encouraged in all but the most obvious cases.
 
 .. code-block:: python
    
@@ -199,7 +199,7 @@ The NSpyre codebase follows the Python standard for styling — `PEP 8 <https://
            The return value. True for success, False otherwise.
        """
 
-*Type hints* are the annotations appending the function declaration and look like this: ``(param1: int, param2: str) -> bool``. Unlike a static programming language, Python neither requires these type declarations nor does it use them to do runtime type checking. The benefit to putting this information outside the docstrings is to increase readability of docstrings, while also making both static analysis and refactoring easier.
+*Type hints* are the annotations appending the function declaration and look like this: ``(param1: int, param2: str) -> bool``. Unlike a static programming language, Python neither requires these type declarations nor does it use them to do runtime type checking. The benefit to putting this information outside the docstrings is to increase their readability, while also making both static analysis and refactoring easier.
 
 A few other guidelines:
 
@@ -218,6 +218,7 @@ Documentation Style
 When contributing documentation, please do your best to follow the style of the documentation files. This means a soft-limit of 79 characters wide in your text files and a semi-formal, yet friendly and approachable, prose style. Tutorial type information should be placed in the getting started sections. If you are writing documentation for a major spyrelet, create a new .rst file and make sure to add it to the appropriate toctree in index.rst.
 
 Guidelines:
+
 * When presenting Python code, use single-quoted strings (``'hello'`` instead of ``"hello"``); this applies to code as well!
 * Make sure to show examples of code output and expected results. The use of screenshots for GUI elements is acceptable, but make sure the resolution is high enough.
 * Refer to the .rst file for this section as a reference for good format styling.

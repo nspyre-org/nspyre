@@ -391,18 +391,31 @@ The reasons for using a markup language are straight-forward:
 Commits & Testing
 ^^^^^^^^^^^^^^^^^
 
-The ``documentation-deploy`` branch is used specifically for making documentation commits and staging the documentation before adding to ``master``. If you are only making documentation edits (anything in ``docs/``) or writing docstrings for the api, then make those changes here. Otherwise, add the documentation commits to the same branch the associated source code is being developed on.
+The ``documentation-deploy`` branch is used specifically for making documentation
+commits and staging the documentation before adding to ``master``. If you are
+only making documentation edits (anything in ``docs/``) or writing docstrings for
+the api, then make those changes here. Otherwise, add the documentation commits
+to the same branch the associated source code is being developed on.
 
-Whenever a commit is make to this branch, it will trigger a rebuild of the documentation viewable at the unlisted site ``https://nspyre.readthedocs.io/en/documentation-deploy`` for you to confirm formatting. It takes about 60 seconds to build once triggered, so be patient. If you make too many commits too quickly, the rebuild may error out (and lots of small commits are bad anyways). You can use the revision number (i.e. ``Revision 760a94f0.``) at the bottom of the webpage to confirm the rebuild has completed.
+Whenever a commit is make to this branch, it will trigger a rebuild of the
+documentation viewable at the unlisted site ``https://nspyre.readthedocs.io/en/documentation-deploy``
+for you to confirm formatting. It takes about 60 seconds to build once triggered,
+so be patient. If you make too many commits too quickly, the rebuild may error
+out (and lots of small commits are bad anyways). You can use the revision number
+(i.e. ``Revision 760a94f0.``) at the bottom of the webpage to confirm the rebuild has completed.
 
 reStructuredText
 ----------------
 
-There are many resources on **reST** syntax, but we've found it helpful to know these basic things when starting out (and as a quick refresher!).
+There are many resources on **reST** syntax, but we've found it helpful to know
+these basic things when starting out (and as a quick refresher!).
 
-#. Paragraphs in reStructuredText are blocks of text separated by at least one blank line. All lines in the paragraph must be indented by the same amount.
+#. Paragraphs in reStructuredText are blocks of text separated by at least one
+   blank line. All lines in the paragraph must be indented by the same amount.
 
-#. Indentation is important and mixing spaces and tabs causes problems. So like Python, it's best to just use spaces. And typically, you want to **use three spaces**. Yes, you read that correctly, we'll explain why in a minute. (A standard tab is equivalent to four spaces.)
+#. Indentation is important and mixing spaces and tabs causes problems. So like Python, it's
+   best to just use spaces. And typically, you want to **use three spaces**. Yes, you read
+   that correctly, we'll explain why in a minute. (A standard tab is equivalent to four spaces.)
 
 #. Inline markup for font styles is similar to MarkDown:
    
@@ -415,9 +428,12 @@ There are many resources on **reST** syntax, but we've found it helpful to know 
      | followed by an underscore:
      | ```Link to Write the Docs <https://www.writethedocs.org/>`_``.   
    .. _Cross-referencing arbitrary locations:
-   * To support cross-referencing to arbitrary locations in any document, the standard **reST** labels are used. *References point to labels.* For this to work, label names must be unique throughout the entire documentation. There are two ways in which you can refer to labels:
+   * To support cross-referencing to arbitrary locations in any document, the standard **reST**
+     labels are used. *References point to labels.* For this to work, label names must be
+     unique throughout the entire documentation. There are two ways in which you can refer to labels:
      
-     - If you place a label directly before a section title, you can reference to it with :ref:`label-name`. For example:
+     - If you place a label directly before a section title, you can reference to it with
+       :ref:`label-name`. For example:
        
        .. code-block:: rst
           

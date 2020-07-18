@@ -400,4 +400,5 @@ There’s a lot of online resources available covering every imaginable aspect o
   
   - `Continuous Integration <https://www.writethedocs.org/guide/tools/testing/>`_
   - `Workshop tutorial on just about everything you need to contribute <https://dont-be-afraid-to-commit.readthedocs.io/en/latest/contributing.html>`_
+  - `Open Source Contribution Guide <https://www.contribution-guide.org>`_
   - `Jupyter Notebook Tools for Sphinx <https://nbsphinx.readthedocs.io/en/0.7.1/>`_

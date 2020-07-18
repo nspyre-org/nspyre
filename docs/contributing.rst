@@ -427,15 +427,12 @@ these basic things when starting out (and as a quick refresher!).
    * | Links to external sites contain the link text and a bracketed URL in backticks,
      | followed by an underscore:
      | ```Link to Write the Docs <https://www.writethedocs.org/>`_``.
-   
-   .. _Cross-referencing arbitrary locations:
-   
    * To support cross-referencing to arbitrary locations in any document, the standard **reST**
      labels are used. *References point to labels.* For this to work, label names must be
      unique throughout the entire documentation. There are two ways in which you can refer to labels:
      
      - If you place a label directly before a section title, you can reference to it with
-       :ref:`label-name`. For example:
+       ``:ref:`label-name```. For example:
        
        .. code-block:: rst
           
@@ -448,15 +445,23 @@ these basic things when starting out (and as a quick refresher!).
           
           It refers to the section itself, see :ref:`my-reference-label`.
        
-       The ``:ref:`` role would then generate a link to the section, with the link title being “Section to cross-reference”. This works just as well when the section and reference are in different source files. Note that *labels must start with an underscore*, but it's reference does not; additionally, label definitions start with two periods and end with a colon.
-     - Labels that aren’t placed before a section title can still be referenced, but you must give the link an explicit title, using this syntax: ``:ref:`Link title <label-name>`.``
+       The ``:ref:`` role would then generate a link to the section, with the link title being
+       “Section to cross-reference”. This works just as well when the section and reference are
+       in different source files. Note that *labels must start with an underscore*, but it's reference
+       does not; additionally, label definitions start with two periods and end with a colon.
+     - Labels that aren’t placed before a section title can still be referenced, but you must give
+       the link an explicit title, using this syntax: ``:ref:`Link title <label-name>`.``
 
-#. If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters, they have to be escaped with a backslash: ``*escape* \* or \\ with "\\"`` yields *escape* \* or \\ with "\\".
+#. If asterisks \* or backquotes \\ appear in running text and could be confused with inline markup delimiters,
+   they have to be escaped with a backslash: ``*escape* \* or \\ with "\\"`` yields *escape* \* or \\ with "\\".
 
 Headers
 ^^^^^^^
 
-Section Headers are demarcated by underlining (or over- and underlining) the section title using non-alphanumeric characters like dashes, equal signs, or tildes. The row of non-alphanumeric characters must be at least as long as the header text. Use the same character for headers at the same level. The following creates a header:
+Section Headers are demarcated by underlining (or over- and underlining) the section
+title using non-alphanumeric characters like dashes, equal signs, or tildes. The
+row of non-alphanumeric characters must be at least as long as the header text. Use
+the same character for headers at the same level. The following creates a header:
 
 .. code-block:: rst
 
@@ -464,7 +469,10 @@ Section Headers are demarcated by underlining (or over- and underlining) the sec
    Chapter 1    while this creates a header at a different level in the doc:    Section 1.1
    =========                                                                    -----------
 
-A lone top-level section is lifted up to be the document's title. If you use the same non-alphanumeric character for underline-only, and underline-and-overline headers, they will be considered to be at *different* levels. Any non-alphanumeric character can be used, but the Python convention -- which is to be used -- is as follows:
+A lone top-level section is lifted up to be the document's title. If you use the
+same non-alphanumeric character for underline-only, and underline-and-overline
+headers, they will be considered to be at *different* levels. Any non-alphanumeric
+character can be used, but the Python convention -- which is to be used -- is as follows:
 
   * ``#`` with overline, for parts
   * ``*`` with overline, for chapters
@@ -476,7 +484,9 @@ A lone top-level section is lifted up to be the document's title. If you use the
 Lists
 ^^^^^
 
-For enumerated lists, use a number or letter followed by a period, or followed by a right-bracket, or surrounded by brackets. You can also use the `#` symbol for an auto-numbered list:
+For enumerated lists, use a number or letter followed by a period, or followed
+by a right-bracket, or surrounded by brackets. You can also use the `#` symbol
+for an auto-numbered list:
 
 .. code-block:: rst
 
@@ -493,7 +503,8 @@ For enumerated lists, use a number or letter followed by a period, or followed b
   
   #. A numbered listed useful for re-arranging items frequently.
 
-For bulleted lists, use indentation to indicate the level of nesting of a bullet point. You can use ``-``, ``+``, or ``*`` as a bullet point character:
+For bulleted lists, use indentation to indicate the level of nesting of a
+bullet point. You can use ``-``, ``+``, or ``*`` as a bullet point character:
 
 .. code-block:: rst
 
@@ -506,7 +517,9 @@ For bulleted lists, use indentation to indicate the level of nesting of a bullet
 Code Samples
 ^^^^^^^^^^^^
 
-There are many different ways of using **reST** to display code samples, -- or any text that should not be formatted -- but we explicity use the ``code-block`` directive for simplicity. Here's an example:
+There are many different ways of using **reST** to display code samples, -- or
+any text that should not be formatted -- but we explicity use the
+``code-block`` directive for simplicity. Here's an example:
 
 .. code-block:: rst
 
@@ -517,7 +530,12 @@ There are many different ways of using **reST** to display code samples, -- or a
       #some sample code
       print('Hello, World!')
 
-There is one exception to the rule: when you want to display an interactive session. Doctest blocks are text blocks which begin with ">>>", the Python interactive interpreter main prompt, and end with a blank line (an unused prompt is *not* allowed - it will break things). Doctest blocks are treated as a special case of ``literal blocks``, without requiring the literal block syntax. If both are present, the literal block syntax takes priority over Doctest block syntax:
+There is one exception to the rule: when you want to display an interactive
+session. Doctest blocks are text blocks which begin with ">>>", the Python
+interactive interpreter main prompt, and end with a blank line (an unused prompt
+is *not* allowed - it will break things). Doctest blocks are treated as a special
+case of ``literal blocks``, without requiring the literal block syntax. If both
+are present, the literal block syntax takes priority over Doctest block syntax:
 
 .. code-block:: rst
    
@@ -526,12 +544,22 @@ There is one exception to the rule: when you want to display an interactive sess
    >>> print 'this is a Doctest block'
    this is a Doctest block
 
-One Final Word
-^^^^^^^^^^^^^^
+A Final Word
+^^^^^^^^^^^^
 
-You may have noticed that the *directives* in the above examples all use a similar markup syntax -- that is, they start with ``.. [name]``. *Explicit markup* is used in **reST** for most constructs. There is also a secondary idea called a *directive* - a generic block of *explicit markup*. It is one of the extension mechanisms of **reST**, and Sphinx makes heavy use of it. A directive ends it's generic block with ``::`` after it's name (e.g. ``.. code-block::`` shown above). This syntax is used extensively for more complex features, such as images, roles, comments, and admonitions.
+You may have noticed that the *directives* in the above examples all use a similar
+markup syntax -- that is, they start with ``.. [name]``. *Explicit markup* is
+used in **reST** for most constructs. There is also a secondary idea called a *directive*
+- a generic block of *explicit markup*. It is one of the extension mechanisms of
+**reST**, and Sphinx makes heavy use of it. A directive ends it's generic block with
+``::`` after it's name (e.g. ``.. code-block::`` shown above). This syntax is used
+extensively for more complex features, such as images, roles, comments, and admonitions.
 
-Again, there is a lot that can be said about markup languages; we haven't even talked about tables, roles, field lists, or substitutions. But included here is everything you need to get started and *all* of the information necessary to write this very *Contributing* section of the documentation. Lastly, there are many resources already available online and you should avail yourself of them:
+Again, there is a lot that can be said about markup languages; we haven't even
+talked about tables, roles, field lists, or substitutions. But included here is
+everything you need to get started and *all* of the information necessary to write
+this very *Contributing* section of the documentation. Lastly, there are many
+resources already available online and you should avail yourself of them:
 
 * `reStructuredText Primer (recommended guide) <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_
 * `A ReStructuredText Primer (by docutils -- the maintainers) <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html>`_
@@ -542,7 +570,10 @@ Again, there is a lot that can be said about markup languages; we haven't even t
 Resources
 ---------
 
-There’s a lot of online resources available covering every imaginable aspect of software development. Below is a collection of the most useful as they pertain to development in this project; they were referenced heavily in the construct of the above material. Hopefully, they are just as useful to you too.
+There’s a lot of online resources available covering every imaginable aspect of
+software development. Below is a collection of the most useful as they pertain
+to development in this project; they were referenced heavily in the construct
+of the above material. Hopefully, they are just as useful to you too.
 
 * Git & GitHub
   

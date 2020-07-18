@@ -364,28 +364,40 @@ There is one exception to the rule: when you want to display an interactive sess
 One Final Word
 ^^^^^^^^^^^^^^
 
-You may have noticed that the *directives* in the above examples all use a similar markup syntax -- i.e. they start with ``.. [name]``. *Explicit markup* is used in **reST** for most constructs. There is a secondary idea of a *directive*: a generic block of *explicit markup*. It is one of the extension mechanisms of **reST**, and Sphinx makes heavy use of it. A directive ends it's generic block with ``::`` after it's name (e.g. ``.. code-block::`` shown above). This syntax is used extensively for more complex features, such as images, roles, comments, and admonitions.
+You may have noticed that the *directives* in the above examples all use a similar markup syntax -- that is, they start with ``.. [name]``. *Explicit markup* is used in **reST** for most constructs. There is also a secondary idea called a *directive* - a generic block of *explicit markup*. It is one of the extension mechanisms of **reST**, and Sphinx makes heavy use of it. A directive ends it's generic block with ``::`` after it's name (e.g. ``.. code-block::`` shown above). This syntax is used extensively for more complex features, such as images, roles, comments, and admonitions.
 
-Again, there is a lot that can be said about markup languages; we haven't even talked about tables, roles, field lists, or substitutions. But included here is everything you need to get started and *all* of the information necessary to write this very *Contributing* section of the documentation. Additionally, there are many resources already available online and you should avail yourself of whatever helps best:
+Again, there is a lot that can be said about markup languages; we haven't even talked about tables, roles, field lists, or substitutions. But included here is everything you need to get started and *all* of the information necessary to write this very *Contributing* section of the documentation. Lastly, there are many resources already available online and you should avail yourself of those which best help:
 
 * `reStructuredText Primer (recommended guide) <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_
-* `A ReStructuredText Primer (docutils -- maintainers) <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html>`_
-* `Cheatsheet <https://github.com/ralsina/rst-cheatsheet>`_
-* `reference for above guide <https://www.writethedocs.org/guide/writing/reStructuredText/>`_
-* https://developer.lsst.io/restructuredtext/style.html
+* `A ReStructuredText Primer (by docutils -- the maintainers) <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html>`_
+* `Cheatsheet <https://github.com/ralsina/rst-cheatsheet/blob/master/rst-cheatsheet.rst>`_
+* `QuickStart used for above guide ( <https://www.writethedocs.org/guide/writing/reStructuredText/>`_
+* `Detailed guide from the LSST project <https://developer.lsst.io/restructuredtext/style.html>`_
 
 Resources
 ---------
 
-There’s a lot of online resources available for various aspects of software development. Below is a collection of the most useful as they pertain to development in this project. Hopefully they are useful to you as you get up to speed.
+There’s a lot of online resources available covering every imaginable aspect of software development. Below is a collection of the most useful as they pertain to development in this project; they were referenced heavily in the construct of the above material. Hopefully, they are just as useful to you too.
 
-* https://guides.github.com
-* https://cheat.readthedocs.io/en/latest/git.html
-* https://dont-be-afraid-to-commit.readthedocs.io/en/latest/contributing.html
-* https://gist.github.com/RichardBronosky/454964087739a449da04
-* `An Introduction to reStructuredText <https://docutils.readthedocs.io/en/sphinx-docs/ref/rst/introduction.html>`_
-* https://www.writethedocs.org/guide/tools/testing/
-* https://egghead.io/courses/how-to-contribute-to-an-open-source-project-on-github
-* https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#ref-role
-* https://cheat.readthedocs.io/en/latest/rst.html
-* https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
+* Git & GitHub
+  
+  - `GitHub Guides <https://guides.github.com>`_
+  - `Git CheetSheet <https://cheat.readthedocs.io/en/latest/git.html>`_
+  - `GitHub walkthrough video tutorials <https://egghead.io/courses/how-to-contribute-to-an-open-source-project-on-github>`_
+
+* Python Style Conventions
+  
+  - `PEP8 CheetSheet <https://gist.github.com/RichardBronosky/454964087739a449da04>`_
+  - `Docstrings -- Google Style Examples <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html>`_
+
+* reStructuredText
+  
+  - `(Another) reStructuredText CheetSheet <https://cheat.readthedocs.io/en/latest/rst.html>`_
+  - `Sphinx Primer on reST roles <https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html>`_
+  - `An Introduction to reStructuredText (complete specification) <https://docutils.readthedocs.io/en/sphinx-docs/ref/rst/introduction.html>`_
+
+* Miscellaneous
+  
+  - `Continuous Integration <https://www.writethedocs.org/guide/tools/testing/>`_
+  - `Workshop tutorial on just about everything you need to contribute <https://dont-be-afraid-to-commit.readthedocs.io/en/latest/contributing.html>`_
+  - `Jupyter Notebook Tools for Sphinx <https://nbsphinx.readthedocs.io/en/0.7.1/>`_

@@ -20,19 +20,17 @@ Quick Facts
 ===========
 
 For this project, we use a standard *fork & pull* model to collaborate, common
-practice for open source projects. If you are interested in helping maintain
-the platform, send us a message after getting involved and we’ll be happy to
-bring you onboard. Our code follows the `Google Style Guide
-<https://google.github.io/styleguide/pyguide.html>`_ for docstrings, with
-standard `PEP 8 <https://pep8.org>`_ formatting, and some of our own caveats as
-detailed :ref:`here <Code Style>`. For documentation, we write in
+practice for open source projects. If you are interested in helping maintain the
+platform, send us a message after getting involved and we’ll be happy to bring
+you onboard. Our code follows the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`_
+for docstrings, with standard `PEP 8 <https://pep8.org>`_ formatting, and some
+of our own caveats as detailed :ref:`here <Code Style>`. For documentation, we write in
 `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_,
 using `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate files and
 `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_
-for site hosting. We follow the philosophy of `WriteTheDocs
-<https://www.writethedocs.org>`_ -- that is, we subscribe to *Docs as Code*.
-If the above remarks don’t make sense to you, or you simply want a more
-detailed description of how to do things, continue reading below.
+for site hosting. We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org>`_ -- that is,
+we subscribe to *Docs as Code*. If the above remarks don’t make sense to you, or
+you simply want a more detailed description of how to do things, continue reading below.
 
 Philosophy
 ==========
@@ -43,30 +41,73 @@ As `WriteTheDocs <https://www.writethedocs.org/guide/writing/beginners-guide-to-
    | If people can’t figure out *how to install your code*, they won’t use it.
    | If people can’t figure out *how to use your code*, they won’t use it.
 
-If you’ve made it this far, then presumably we’ve satisfied the first two criteria (although we are still working on making the second easier!), and this site is the reason for the third. The key to good software development is good documentation. Along with that is the need to strike a balance between efficiency and complexity. Because this is a scientific and an experimentation platform, certain requirements with speed and structure are necessary. We try to keep things as simple as possible, but we are flexible in approach when necessary. Most importantly, we strive for *sustainable* code.
+If you’ve made it this far, then presumably we’ve satisfied the first two criteria
+(although we are still working on making the second easier!), and this site is
+the reason for the third. The key to good software development is good
+documentation. Along with that is the need to strike a balance between efficiency
+and complexity. Because this is a scientific and an experimentation platform,
+certain requirements with speed and structure are necessary. We try to keep
+things as simple as possible, but we are flexible in approach when necessary.
+Most importantly, we strive for *sustainable* code.
 
 Code Contributions
 ==================
 
-
-We understand that for a lot of people using this project, it might be their first time contributing to an open source project. And getting started on any new project can be intimidating, especially for newcomers. So along with information about our workflow in this project, our style guides, and particular information on how to get involved, we've included some basic information, collated from various sources on a number of important topics. We hope this helps you on your journey. (If you are already a pro, we're happy to have you -- you can skip to our style guide :ref:`here <Code Style>`.)
+We understand that for a lot of people using this project, it might be their
+first time contributing to an open source project. And getting started on any
+new project can be intimidating, especially for newcomers. So along with
+information about our workflow in this project, our style guides, and particular
+information on how to get involved, we've included some basic information,
+collated from various sources on a number of important topics. We hope this helps
+you on your journey. (If you are already a pro, we're happy to have you -- you
+can skip to our style guide :ref:`here <Code Style>`.)
 
 Version Control
 ---------------
 
-First thing’s first — *Git*. `Git <https://git-scm.com>`_ is an example of a *distributed version control system* (DVCS) commonly used for open source and commercial software development. A *version control system* (VCS) tracks the history of changes as people and teams collaborate on projects together. As the project evolves, teams can run tests, fix bugs, and contribute new code with the confidence that any version can be recovered at any time. Developers can review project history to find out:
+First thing’s first — *Git*. `Git <https://git-scm.com>`_ is an example of a
+*distributed version control system* (DVCS) commonly used for open source and
+commercial software development. A *version control system* (VCS) tracks the
+history of changes as people and teams collaborate on projects together. As the
+project evolves, teams can run tests, fix bugs, and contribute new code with
+the confidence that any version can be recovered at any time. Developers can
+review project history to find out:
 
 * Which changes were made?
 * Who made the changes?
 * When were the changes made?
 * Why were changes needed?
 
-Git grew out of the needs of the developers of the Linux kernel and is one of the most widely-used VCS tools available. `GitHub <https://github.com>`_ is a Git hosting repository that builds collaboration directly into the development process by providing developers with tools to ship better code through command line features, issues (threaded discussions), pull requests, code review, and more. If all this information is new, then please read this: `Understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_  — it’s a 5min read and it will make your life a lot easier going forward. (If you want a much deeper explanation and a good reference source to get up to speed on the basics of using Git and GitHub, go to the `Git Handbook <https://guides.github.com/introduction/git-handbook/>`_.)
+Git grew out of the needs of the developers of the Linux kernel and is one of
+the most widely-used VCS tools available. `GitHub <https://github.com>`_ is a
+Git hosting repository that builds collaboration directly into the development
+process by providing developers with tools to ship better code through command
+line features, issues (threaded discussions), pull requests, code review, and
+more. If all this information is new, then please read this: `Understanding the
+GitHub flow <https://guides.github.com/introduction/flow/>`_  — it’s a 5min
+read and it will make your life a lot easier going forward. (If you want a much
+deeper explanation and a good reference source to get up to speed on the basics
+of using Git and GitHub, go to the
+`Git Handbook <https://guides.github.com/introduction/git-handbook/>`_.)
 
 How to Contribute: Forking & Pull Requests
 ------------------------------------------
 
-Great, now that you understand the *why* and *how* of Git & GitHub, let’s explain the workflow to contribute. We use the **fork & pull** model to collaborate. This means that to contribute to the project, you first need to **Fork** the project on GitHub. A GitHub fork is just a copy of a repository (repo). When you *fork* a repo, you are storing a copy of that repo on your personal account. Doing so grants you full *write* access to edit files and develop the code on your version of it. After making changes to the codebase -- squashing bugs, adding features, writing docs -- make a **Pull Request**. When you ``git pull`` on a codebase, that's the git term for *pulling* updated and/or new files from one version of a repo to another; you are simply updating files in a particular direction. Thus, *pulling* applies in many different contexts (more info below). A *pull request*, therefore, is a request you make for the maintainers, of the original repo you forked, to *review & merge* your edits into their version of the code stored on their repo (you can, of course, make pull requests on your own repositories).
+Great, now that you understand the *why* and *how* of Git & GitHub, let’s explain
+the workflow to contribute. We use the **fork & pull** model to collaborate. This
+means that to contribute to the project, you first need to **Fork** the project
+on GitHub. A GitHub fork is just a copy of a repository (repo). When you *fork*
+a repo, you are storing a copy of that repo on your personal account. Doing so
+grants you full *write* access to edit files and develop the code on your
+version of it. After making changes to the codebase -- squashing bugs, adding
+features, writing docs -- make a **Pull Request**. When you ``git pull`` on a
+codebase, that's the git term for *pulling* updated and/or new files from one
+version of a repo to another; you are simply updating files in a particular
+direction. Thus, *pulling* applies in many different contexts (more info below).
+A *pull request*, therefore, is a request you make for the maintainers, of the
+original repo you forked, to *review & merge* your edits into their version of
+the code stored on their repo (you can, of course, make pull requests on your
+own repositories).
 
 To make things concrete, let’s actually perform this using the command line.
 
@@ -74,13 +115,18 @@ To make things concrete, let’s actually perform this using the command line.
    :align: right
    :scale: 50%
 
-First you need to fork the repository of interest. To do so, click the Fork button in the header of the repository.
+First you need to fork the repository of interest. To do so, click the Fork
+button in the header of the repository.
 
   .. tip::
      
-     As this is a github specific step and not a git step, it can’t be completed with the `git <https://git-scm.com>`_ command line tool. However, the `hub <https://hub.github.com>`_ command line tool provides useful extensions.
+     As this is a github specific step and not a git step, it can’t be
+     completed with the `git <https://git-scm.com>`_ command line tool. However, the
+     `hub <https://hub.github.com>`_ command line tool provides useful extensions.
 
-When it’s finished, you’ll be taken to your copy of the NSpyre repository, which will be located at ``https://github.com/[your-username]/nspyre``. The rest can now be completed using the console:
+When it’s finished, you’ll be taken to your copy of the NSpyre repository,
+which will be located at ``https://github.com/[your-username]/nspyre``. The
+rest can now be completed using the console:
 
 .. code-block:: console
    
@@ -111,18 +157,42 @@ When it’s finished, you’ll be taken to your copy of the NSpyre repository, w
    # push changes to github
    git push --set-upstream origin descriptive-branch-title
 
-You will notice the addition of two new terms -- *branch* and *push*. Each repository can have multiple versions of it's codebase that are under development. The ``master`` *branch* is the main version of the code on the repository and is the root branch from which all others originate. This is the official working version that is used out in the wild and the one you eventually want your changes to appear on. When forking a repo, you also get all the different branches at the time of copying. When contributing on an issue, you first want to search existing *branches* to check if someone has already started a branch for work on that issue. If not, start a new one and make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc). Then you need to *checkout* the branch to which you want to make changes, making sure to *add* and *commit* them so they are reflected locally.
+You will notice the addition of two new terms -- *branch* and *push*. Each
+repository can have multiple versions of it's codebase that are under
+development. The ``master`` *branch* is the main version of the code on the
+repository and is the root branch from which all others originate. This is the
+official working version that is used out in the wild and the one you eventually
+want your changes to appear on. When forking a repo, you also get all the different
+branches at the time of copying. When contributing on an issue, you first want
+to search existing *branches* to check if someone has already started a branch
+for work on that issue. If not, start a new one and make sure to give it a
+descriptive title so people easily understand what's being worked on (e.g.
+refactoring-pep8, awg-spyrelet, driver-gui-bug, etc). Then you need to *checkout*
+the branch to which you want to make changes, making sure to *add* and
+*commit* them so they are reflected locally.
 
-Finally, the *push* command updates files from one location to another, but in the opposite direction as *pull*. ``git pull`` brings any changes from the target repo on the servers and updates them into the version/branch that you currently have checked out on your local copy. ``git push`` does the opposite. It takes any changes on your local copy of the branch you have checked out and reflects those changes on the repository. If you don't ``git push`` your commits then they will not be uploaded to the repo; this also means they won't be backed up. So it's good practice to push your progress at least daily so it is uploaded to the repository.
+Finally, the *push* command updates files from one location to another, but in
+the opposite direction as *pull*. ``git pull`` brings any changes from the target
+repo on the servers and updates them into the version/branch that you currently
+have checked out on your local copy. ``git push`` does the opposite. It takes
+any changes on your local copy of the branch you have checked out and reflects
+those changes on the repository. If you don't ``git push`` your commits then they
+will not be uploaded to the repo; this also means they won't be backed up. So it's
+good practice to push your progress at least daily so it is uploaded to the repository.
 
   .. note::
      
-     You can *pull* a branch you are working on from the github repo to get the most up-to-date copy locally, *pull* one branch into another to transfer certain *commits* between them, or *pull* in the reverse direction to bring your updates into the main repo (i.e. *push* from your local console).
+     You can *pull* a branch you are working on from the github repo to get the
+     most up-to-date copy locally, *pull* one branch into another to transfer
+     certain *commits* between them, or *pull* in the reverse direction to bring
+     your updates into the main repo (i.e. *push* from your local console).
 
 Creating a Pull Request
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Once you've vetted your code for errors, checked to make sure you've followed all the project guidelines -- and, most importantly, *documented* your code -- it's time to make a pull request.
+Once you've vetted your code for errors, checked to make sure you've followed
+all the project guidelines -- and, most importantly, *documented* your code
+-- it's time to make a pull request.
 
 .. image:: images/compare-and-pr.png
 
@@ -144,7 +214,11 @@ Once you've vetted your code for errors, checked to make sure you've followed al
    
    # Congrats, you've submitted your first contribution ready for merging!
 
-All that's left is to officially merge your changes into ``master`` and delete the development branch you were working off of, if the associated issues have been closed and the branch is no longer needed. This is something the maintainers of the project will do once it's been confirmed that all the project guidelines have been followed and, in particular, checking your code works!
+All that's left is to officially merge your changes into ``master`` and delete
+the development branch you were working off of, if the associated issues have
+been closed and the branch is no longer needed. This is something the maintainers
+of the project will do once it's been confirmed that all the project guidelines
+have been followed and, in particular, checking your code works!
 
 .. figure:: images/merge-button.png
    :align: center
@@ -156,36 +230,56 @@ All that's left is to officially merge your changes into ``master`` and delete t
    :height: 67.07px
    :width: 557.18px
 
-(For more detailed information on creating a pull request from a fork, see `here <https://docs.github.com/en/enterprise/2.16/user/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork>`_.)
+(For more detailed information on creating a pull request from a fork, see
+`here <https://docs.github.com/en/enterprise/2.16/user/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork>`_.)
 
 A Few More Comments
 ^^^^^^^^^^^^^^^^^^^
 
-There's a few more important considerations that should be made when setting up a good development environment. We will briefly discuss them here.
+There's a few more important considerations that should be made when setting up
+a good development environment. We will briefly discuss them here.
 
 * Setting up a working directory
   
-  People save their code everywhere, in their documents folder, on their desktop, in a hidden folder. Not having a system to managing code is *BAD*; that's why git exists after all. Similarly, you want your code to be in a unified location on your local machine -- not in a place that someone will easily tamper with it, while still being in an easily accessible location if you know where it is.
+  People save their code everywhere, in their documents folder, on their desktop,
+  in a hidden folder. Not having a system to managing code is *BAD*; that's why
+  git exists after all. Similarly, you want your code to be in a unified location
+  on your local machine -- not in a place that someone will easily tamper with
+  it, while still being in an easily accessible location if you know where it is.
   
   .. important::
      
-     To that end, we *highly* recommend that you create a directory at the root level of your local machine called ``SourceCode`` (with whatever camelCase, snake_case, or other styling you prefer). Create a new subdirectory for every project going forward.
+     To that end, we *highly* recommend that you create a directory at the root
+     level of your local machine called ``SourceCode`` (with whatever
+     camelCase, snake_case, or other styling you prefer). Create a new
+     subdirectory for every project going forward.
   
   .. warning::
      
-     So for NSpyre, if you call ``git clone https://github.com/[username]/nspyre.git`` inside SourceCode, you will get a new directory called nspyre, containing your repo (as shown above).
+     So for NSpyre, if you call ``git clone https://github.com/[username]/nspyre.git``
+     inside SourceCode, you will get a new directory called nspyre, containing your
+     repo (as shown above).
 
 * Virual Enivronments
   
   .. note::
      
-     Make sure you have some sort of virtual environment implemented in your workflow. The environment management tools built into Anaconda are great if you are already using Anaconda for your scientific packages. If you are just using pip, then check out `venv <https://docs.python.org/3/tutorial/venv.html>`_ -- it has a lot of improvements over virtualenv and is the preferred way for Python 3.3 or newer, which is why it's now included by default.
+     Make sure you have some sort of virtual environment implemented in your
+     workflow. The environment management tools built into Anaconda are great
+     if you are already using Anaconda for your scientific packages. If you are
+     just using pip, then check out `venv <https://docs.python.org/3/tutorial/venv.html>`_
+     -- it has a lot of improvements over virtualenv and is the preferred way
+     for Python 3.3 or newer, which is why it's now included by default.
 
 * Development tools
 
   .. tip::
      
-     The above steps for forking a repo and making a pull request were performed on the command line. In addition to performing these steps directly on GitHub.com, many popular text editors and IDEs have integrated tools for using git/github directly within their environments. (PyCharm, Sublime Text, and VS Code are a few favorites)
+     The above steps for forking a repo and making a pull request were performed
+     on the command line. In addition to performing these steps directly on
+     GitHub.com, many popular text editors and IDEs have integrated tools for
+     using git/github directly within their environments. (PyCharm, Sublime
+     Text, and VS Code are a few favorites)
 
 * Perform ``git checkout`` and ``git branch`` in one command:
   
@@ -205,7 +299,12 @@ There's a few more important considerations that should be made when setting up 
 Code Style
 ----------
 
-The NSpyre codebase follows the Python standard for styling — `PEP 8 <https://pep8.org>`_; it's the definitive guide to style conventions in Python and worth a read. In addition, we have adopted the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`_ for both code and our docstrings. This follows :pep:`8` with some modifications in the spirit of legibility. Finally, :pep:`257` on docstring conventions and :pep:`848` on type hints using function annotations are encouraged in all but the most obvious cases.
+The NSpyre codebase follows the Python standard for styling — `PEP 8 <https://pep8.org>`_;
+it's the definitive guide to style conventions in Python and worth a read. In addition,
+we have adopted the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`_
+for both code and our docstrings. This follows :pep:`8` with some modifications in
+the spirit of legibility. Finally, :pep:`257` on docstring conventions and :pep:`848`
+on type hints using function annotations are encouraged in all but the most obvious cases.
 
 .. code-block:: python
    
@@ -220,14 +319,21 @@ The NSpyre codebase follows the Python standard for styling — `PEP 8 <https://
            The return value. True for success, False otherwise.
        """
 
-*Type hints* are the annotations appending the function declaration and look like this: ``(param1: int, param2: str) -> bool``. Unlike a static programming language, Python neither requires these type declarations nor does it use them to do runtime type checking. The benefit to putting this information outside the docstrings is to increase their readability, while also making both static analysis and refactoring easier.
+*Type hints* are the annotations appending the function declaration and look
+like this: ``(param1: int, param2: str) -> bool``. Unlike a static programming
+language, Python neither requires these type declarations nor does it use them
+to do runtime type checking. The benefit to putting this information outside
+the docstrings is to increase their readability, while also making both static
+analysis and refactoring easier.
 
 A few other guidelines:
 
 * Line-length can exceed 79 characters, to 100, when convenient.
-* Always use single-quoted strings (e.g. ``'#single-quote'``), unless a single-quote occurs within the string; escaping ``\'`` may be sensible as well.
+* Always use single-quoted strings (e.g. ``'#single-quote'``), unless a
+  single-quote occurs within the string; escaping ``\'`` may be sensible as well.
 
-All functions, methods, and classes are to contain docstrings. Object data model methods (e.g. ``__repr__``) are typically the exception to this rule.
+All functions, methods, and classes are to contain docstrings. Object data
+model methods (e.g. ``__repr__``) are typically the exception to this rule.
 
 
 Documentation Contributions
@@ -236,12 +342,19 @@ Documentation Contributions
 Documentation Style
 -------------------
 
-When contributing documentation, please do your best to follow the style of the documentation files. This means a soft-limit of 79 characters wide in your text files and a semi-formal, yet friendly and approachable, prose style. Tutorial type information should be placed in the getting started sections. If you are writing documentation for a major spyrelet, create a new .rst file and make sure to add it to the appropriate toctree in index.rst.
+When contributing documentation, please do your best to follow the style of the
+documentation files. This means a soft-limit of 79 characters wide in your text
+files and a semi-formal, yet friendly and approachable, prose style. Tutorial
+type information should be placed in the getting started sections. If you are
+writing documentation for a major spyrelet, create a new .rst file and make
+sure to add it to the appropriate toctree in index.rst.
 
 Guidelines:
 
-* When presenting Python code, use single-quoted strings (``'hello'`` instead of ``"hello"``); this applies to code as well!
-* Make sure to show examples of code output and expected results. The use of screenshots for GUI elements is acceptable, but make sure the resolution is high enough.
+* When presenting Python code, use single-quoted strings (``'hello'`` instead
+  of ``"hello"``); this applies to code as well!
+* Make sure to show examples of code output and expected results. The use of
+  screenshots for GUI elements is acceptable, but make sure the resolution is high enough.
 * Refer to the .rst file for this section as a reference for good format styling.
 * Don't go more than three levels of headings deep; a maximum of two levels is encouraged.
 
@@ -249,9 +362,21 @@ Guidelines:
 Writing Docs
 ------------
 
-Documentation improvements are always welcome! The documentation files live in the ``docs/`` directory of the codebase. They’re written in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, and use `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate the full suite of documentation, with site hosting provided by `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_. Writing documentation is a great way to start contributing, especially if you are new, and will help get you familiar with the codebase.
+Documentation improvements are always welcome! The documentation files live in
+the ``docs/`` directory of the codebase. They’re written in
+`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_,
+and use `Sphinx <https://www.sphinx-doc.org/en/master/>`_ to generate the full
+suite of documentation, with site hosting provided by
+`ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_.
+Writing documentation is a great way to start contributing, especially if you
+are new, and will help get you familiar with the codebase.
 
-reStructuredText is an easy-to-read, what-you-see-is-what-you-get plaintext markup syntax and parser system. It is useful for inline program documentation (such as Python docstrings), for quickly creating simple web pages, and for standalone documents. `Markdown <https://daringfireball.net/projects/markdown/>`_ is another, slightly simpler alternative. reStructuredText is a bit harder to use, but is more powerful and is widely used for Python documentation.
+reStructuredText is an easy-to-read, what-you-see-is-what-you-get plaintext
+markup syntax and parser system. It is useful for inline program documentation
+(such as Python docstrings), for quickly creating simple web pages, and for
+standalone documents. `Markdown <https://daringfireball.net/projects/markdown/>`_
+is another, slightly simpler alternative. reStructuredText is a bit harder to
+use, but is more powerful and is widely used for Python documentation.
 
 The reasons for using a markup language are straight-forward:
 
@@ -260,7 +385,8 @@ The reasons for using a markup language are straight-forward:
 * renders nicely into HTML (this looks nice, doesn't it?)
 
 | Don’t believe us? Then go to the .rst file for this webpage and see for yourself.
-| (The .rst file for this webpage is also an excellent source to get familiar with the markup syntax and as a reference for how to write documentation too.)
+| (The .rst file for this webpage is also an excellent source to get familiar
+  with the markup syntax and as a reference for how to write documentation too.)
 
 Commits & Testing
 ^^^^^^^^^^^^^^^^^

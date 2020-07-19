@@ -10,6 +10,7 @@
 """
 
 from nspyre.utils.config_file import get_config_param, load_config
+from nspyre.utils.utils import monkey_wrap
 import os
 import logging
 import rpyc
@@ -104,7 +105,9 @@ class Instrument_Manager():
             except:
                 raise InstrumentManagerError('Instrument server [%s] has no '
                             'loaded device [%s]' % (s_id, s_dev)) from None
-            
+
+            # TODO Q_ object registry conversion
+
             logging.info('instrument manager loaded device [%s] from '
                             ' server [%s]' % (d, s_id))
         return devs
@@ -114,10 +117,13 @@ class Instrument_Manager():
         filename = os.path.join(this_dir, config_file)
         self.config = load_config(filename)
 
+    # TODO finalize -> self.disconnect_servers()
+
 if __name__ == '__main__':
     # configure server logging behavior
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s -- %(levelname)s -- %(message)s',
                         handlers=[logging.StreamHandler()])
     im = Instrument_Manager('config.yaml')
+    import pdb; pdb.set_trace()
     print(im.get_devices())

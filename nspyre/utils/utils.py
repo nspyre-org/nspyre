@@ -24,6 +24,7 @@ def monkey_wrap(wrapped_func, before_func, after_func):
     before! args: (arg1, arg2) kwargs: {}
     <internal_method runs>
     after!"""
+    # TODO set original scope wrapped_func = _wrap
     def _wrap(*args, **kwargs):
         if before_func:
             before_func(args, kwargs)

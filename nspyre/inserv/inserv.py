@@ -127,11 +127,11 @@ class InstrumentServer(rpyc.Service):
         # TODO
         import lantz
         lantz.core.feat.Feat.__get__ = \
-                monkey_wrap(lantz.core.feat.Feat.__get__,
+                monkey_wrap(lantz.core.feat.Feat.__set__,
                                 lambda a,k: print('args: %s kwargs: %s' % (a,k)),
                                 None)
         lantz.core.feat.DictFeat.__get__ = \
-                monkey_wrap(lantz.core.feat.DictFeat.__get__,
+                monkey_wrap(lantz.core.feat.DictFeat.__set__,
                                 lambda a,k: print('args: %s kwargs: %s' % (a,k)),
                                 None)
 

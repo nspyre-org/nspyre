@@ -1,4 +1,7 @@
 # nspyre
+[![GitHub license](https://img.shields.io/github/license/nspyre-dev/nspyre)](https://github.com/nspyre-dev/nspyre/blob/master/LICENSE)
+[![Documentation Status](https://readthedocs.org/projects/nspyre/badge/?version=latest)](https://nspyre.readthedocs.io/en/latest/?badge=latest)
+
 Networked Scientific Python Research Environment
 
 ## Installation
@@ -31,7 +34,7 @@ install.bat
 Now you need to initialize the replica set. To do so enter the mongo shell and input a rs.initiate command
 ```
 mongo
-rs.initiate({_id: "NSpyreSet", members:[{_id: 0, host: 'localhost:27017'},{_id: 1, host: 'localhost:27018'}]})
+rs.initiate({_id: "NSpyreSet", members:[{_id: 0, host: '0.0.0.0:27017'},{_id: 1, host: '0.0.0.0:27018'}]})
 quit()
 ```
 Finally, if you are planning on using NSpyre from different computers, you will also need to open the appropriate port in the firewall of the server machine (by default these are 27017 and 27018)
@@ -41,6 +44,11 @@ Finally you can create and configure a conda environment.  The pip command must 
 conda create -n nspyre python=3
 activate nspyre
 pip install -e .
+```
+
+PyZMQ must be installed manually from within the conda environment with:
+```
+conda install pyzmq
 ```
 
 Modify your nspyre/nspyre/config.yaml to suit your specific configuration of nspyre.

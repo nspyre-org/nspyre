@@ -1,0 +1,5 @@
+sphinx == 3.1.2
+ipykernel
+nbsphinx
+sphinxcontrib-svg2pdfconverter
+sphinx-copybutton

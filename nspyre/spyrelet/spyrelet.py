@@ -16,7 +16,7 @@ from nspyre.utils import *
 import pandas as pd
 import numpy as np
 
-from lantz import Q_
+from pint import Quantity as Q_
 from pint.util import infer_base_unit
 import traceback
 import inspect

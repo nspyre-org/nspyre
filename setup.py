@@ -29,7 +29,6 @@ setup(name='nspyre',
 		'pyqt5>=5.13.2',
 		'msgpack>=0.6.2',
 		'msgpack-numpy>=0.4.4.3',
-		#'pyzmq>=18.0.2', use conda install for now
 		'pymongo>=3.9.0',
 		'pandas>=0.25.2',
 		'QScintilla>=2.11.3',
@@ -41,7 +40,8 @@ setup(name='nspyre',
 		'lantzdev[full]>=0.5',
 		'colorama>=0.4.3',
 		'pyserial>=3.4',
-		'pyusb>=1.0.2'
+		'pyusb>=1.0.2',
+		'waiting>=1.4.1'
 		],
 	platforms='any',
 	classifiers=[

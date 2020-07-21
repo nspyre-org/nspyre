@@ -13,7 +13,7 @@
 import logging
 from nspyre.utils.config_file import get_config_param, load_config, \
                                     get_class_from_str
-from nspyre.utils.utils import monkey_wrap
+from nspyre.utils.utils import MonkeyWrapper
 import rpyc
 import os
 import _thread
@@ -22,6 +22,9 @@ from cmd import Cmd
 import time
 from rpyc.utils.server import ThreadedServer 
 import argparse
+import waiting
+from lantz import Q_
+from pint import Quantity
 
 ###########################
 # Globals
@@ -73,6 +76,7 @@ class InstrumentServer(rpyc.Service):
         self.start_server()
 
     def restart(self, config_file=None, mongodb_addr=None):
+        """Restart the server AND reload the config file and all devices"""
         logging.info('restarting...')
         self.update_config(config_file)
         self.reload_server_config()
@@ -98,7 +102,7 @@ class InstrumentServer(rpyc.Service):
         try:
             self.db_client.drop_database(self.db_name)
         except:
-            raise InstrumentServerError('Failed connecting to mongodb [%s]' \
+            raise InstrumentServerError('Failed connecting to mongodb [%s]'
                                         % (self.db_addr)) from None
         logging.info('connected to mongodb server [%s]', self.db_addr)
 
@@ -109,37 +113,44 @@ class InstrumentServer(rpyc.Service):
         try:
             dev_class = get_class_from_str(dev_class)
         except:
-            raise InstrumentServerError('Tried to initialize device [%s] ' \
+            raise InstrumentServerError('Tried to initialize device [%s] '
                                         'with unrecognized class [%s]'
                                         % (dev_name, dev_class)) from None
+
+        def dev_set_attr(obj, attr, val):
+            if isinstance(val, Quantity):
+                # pint has an associated unit registry, and Quantity objects
+                # cannot be shared between registries. Because Quantity objects
+                # coming from the remote client have a different unit registry,
+                # they must be converted to Quantity objects of the local lantz
+                # registry (aka Q_ -> defined in lantz __init__.py).
+                # see pint documentation for details
+                try:
+                    setattr(obj, attr, Q_(val.m, str(val.u)))
+                except:
+                    raise InstrumentServerError('Remote client attempted '
+                        'setting instrument server device [%s] attribute [%s] '
+                        'to a unit not found in the pint unit registry' % \
+                        (obj, attr))
+            else:
+                setattr(obj, attr, val)
+            # TODO update mongodb
 
         # get an instance of the device
         try:
             self.devs[dev_name] = \
-                    dev_class(*dev_args, **dev_kwargs)
+                    MonkeyWrapper(dev_class(*dev_args, **dev_kwargs),
+                                    set_attr_override=dev_set_attr)
         except:
-            raise InstrumentServerError('Failed to get instance of device ' \
-                                        '[%s] of class [%s]'
+            raise InstrumentServerError('Failed to get instance of device '
+                                        '%s of class %s'
                                         % (dev_name, dev_class)) from None
-
-        # method for overriding lantz feature getter/setters
-        # see monkey_wrap() for more info
-        # TODO
-        import lantz
-        lantz.core.feat.Feat.__get__ = \
-                monkey_wrap(lantz.core.feat.Feat.__set__,
-                                lambda a,k: print('args: %s kwargs: %s' % (a,k)),
-                                None)
-        lantz.core.feat.DictFeat.__get__ = \
-                monkey_wrap(lantz.core.feat.DictFeat.__set__,
-                                lambda a,k: print('args: %s kwargs: %s' % (a,k)),
-                                None)
 
         # initialize it
         try:
             self.devs[dev_name].initialize()
         except:
-            raise InstrumentServerError('Device [%s] initialization sequence ' \
+            raise InstrumentServerError('Device [%s] initialization sequence '
                                         'failed' % (dev_name)) from None
 
         logging.info('added device %s [%a] [%a]' % (dev_name,
@@ -150,7 +161,7 @@ class InstrumentServer(rpyc.Service):
         try:
             self.devs.pop(dev_name).finalize()
         except:
-            raise InstrumentServerError('Failed deleting device [%s]' \
+            raise InstrumentServerError('Failed deleting device [%s]'
                                         % (dev_name)) from None
         logging.info('deleted %s' % (dev_name))
 
@@ -183,12 +194,10 @@ class InstrumentServer(rpyc.Service):
 
     def on_connect(self, conn):
         """Called when a client connects to the RPyC server"""
-        # TODO print client address
         logging.info('client [%s] connected' % (conn))
 
     def on_disconnect(self, conn):
         """Called when a client discconnects from the RPyC server"""
-        # TODO print client address
         logging.info('client [%s] disconnected' % (conn))
 
     def reload_server(self):
@@ -199,25 +208,25 @@ class InstrumentServer(rpyc.Service):
     def start_server(self):
         """Start the RPyC server"""
         if self._rpyc_server:
-            logging.warning('can\'t start the rpyc server because one ' \
+            logging.warning('can\'t start the rpyc server because one '
                             'is already running')
             return
         _thread.start_new_thread(self._rpyc_server_thread, ())
-        # allow time for the rpyc server to start
-        # TODO synchronous wait for it to start with a signal
-        time.sleep(0.1)
+        # wait for the server to start
+        waiting.wait(lambda: self._rpyc_server and self._rpyc_server.active,
+                        sleep_seconds=0.1)
 
     def stop_server(self):
         """Stop the RPyC server"""
         if not self._rpyc_server:
-            logging.warning('can\'t stop the rpyc server because there ' \
+            logging.warning('can\'t stop the rpyc server because there '
                             'isn\'t one running')
             return
         logging.info('stopping RPyC server...')
         self._rpyc_server.close()
+        # wait for the server to stop
+        waiting.wait(lambda: not self._rpyc_server.active, sleep_seconds=0.1)
         self._rpyc_server = None
-        # TODO synchronous wait until thread has exited
-        time.sleep(0.1)
 
     def _rpyc_server_thread(self):
         """Thread for running the RPyC server asynchronously"""
@@ -226,7 +235,7 @@ class InstrumentServer(rpyc.Service):
                             protocol_config={'allow_all_attrs' : True,
                                             'allow_setattr' : True,
                                             'allow_delattr' : True,
-                                            'sync_request_timeout' : 10})
+                                            'sync_request_timeout' : 2000})
         self._rpyc_server.start()
         logging.info('RPyC server stopped')
 
@@ -244,11 +253,12 @@ class CmdPrompt(Cmd):
         for d in self.inserv.devs.keys():
             print(d)
 
-    def do_update_config(self, arg_string):
-        """Reload the server config file\n<string> the config file path"""
+    def do_config(self, arg_string):
+        """Reload the server config file\n<string> [optional] the file path"""
         args = arg_string.split(' ')
         if len(args) > 1:
-            print('Expected 1 arg: device name, or 0 args for default config')
+            print('Expected 1 arg: config file path, '
+                    'or 0 args for default config')
             return
         # attempt to reload the config file
         try:
@@ -258,7 +268,7 @@ class CmdPrompt(Cmd):
             print('Failed to reload config file')
             return
 
-    def do_reload_dev(self, arg_string):
+    def do_dev(self, arg_string):
         """Restart the connection with a device\n<string> the device name"""
         args = arg_string.split(' ')
         if not arg_string or len(args) > 1:
@@ -271,7 +281,7 @@ class CmdPrompt(Cmd):
             print('Failed to reload device [%s]' % dev_name)
             return
 
-    def do_reload_all(self, arg_string):
+    def do_dev_all(self, arg_string):
         """Restart the connection with all devices"""
         if arg_string:
             print('Expected 0 args')
@@ -282,7 +292,7 @@ class CmdPrompt(Cmd):
             print('Failed to reload all devices')
             return
 
-    def do_reload_mongo(self, arg_string):
+    def do_mongo(self, arg_string):
         """Restart the connection with the mongodb server"""
         if arg_string:
             print('Expected 0 args')
@@ -294,7 +304,7 @@ class CmdPrompt(Cmd):
             return
 
     def do_restart(self, arg_string):
-        """Restart the server by reloading the config file and all devices"""
+        """Restart the server AND reload the config file and all devices"""
         if arg_string:
             print('Expected 0 args')
             return
@@ -304,7 +314,18 @@ class CmdPrompt(Cmd):
             print('Failed to restart')
             return
 
-    def do_stop(self, arg_string):
+    def do_server_restart(self, arg_string):
+        """Restart the rpyc server"""
+        if arg_string:
+            print('Expected 0 args')
+            return
+        try:
+            self.inserv.reload_server()
+        except:
+            print('Failed to restart server')
+            return
+
+    def do_server_stop(self, arg_string):
         """Stop the rpyc server"""
         if arg_string:
             print('Expected 0 args')
@@ -312,10 +333,10 @@ class CmdPrompt(Cmd):
         try:
             self.inserv.stop_server()
         except:
-            print('Failed to stop')
+            print('Failed to stop server')
             return
 
-    def do_start(self, arg_string):
+    def do_server_start(self, arg_string):
         """Start the rpyc server"""
         if arg_string:
             print('Expected 0 args')
@@ -323,7 +344,7 @@ class CmdPrompt(Cmd):
         try:
             self.inserv.start_server()
         except:
-            print('Failed to start')
+            print('Failed to start server')
             return
 
     def do_debug(self, arg_string):
@@ -356,7 +377,7 @@ if __name__ == '__main__':
                             help='server log file location')
     arg_parser.add_argument('-m', '--mongo',
                             default=None,
-                            help='mongodb address e.g. ' \
+                            help='mongodb address e.g. '
                             'mongodb://192.168.1.27:27017/')
     arg_parser.add_argument('-q', '--quiet',
                             action='store_true',

@@ -10,7 +10,8 @@
 """
 
 from nspyre.utils.config_file import get_config_param, load_config
-from nspyre.utils.utils import monkey_wrap
+from nspyre.utils.utils import MonkeyWrapper
+from pint import Quantity
 import os
 import logging
 import rpyc
@@ -63,6 +64,8 @@ class Instrument_Manager():
         """Attempt connection to an instrument server"""
         try:
             self.servers[s_id] = rpyc.connect(s_addr, s_port)
+            # TODO
+            self.servers[s_id]._config['allow_all_attrs'] = True
         except:
             raise InstrumentManagerError('Failed to connect to '
                             'instrument server [%s] at address [%s]'
@@ -98,15 +101,36 @@ class Instrument_Manager():
             s_dev = get_config_param(self.config, ['devices', d,
                                                     'server_device'])
 
+            # pint has an associated unit registry, and Quantity objects
+            # cannot be shared between registries. Because Quantity objects
+            # coming from the instrument server have a different unit registry,
+            # they must be converted to Quantity objects of the local registry.
+            # see pint documentation for details
+            def dev_get_attr(obj, attr):
+                ret = getattr(obj, attr)
+                if isinstance(ret, Quantity):
+                    try:
+                        quantity_ret = Quantity(ret.m, str(ret.u))
+                    except:
+                        raise InstrumentManagerError('Instrument server [%s] '
+                            'device (manager) [%s]<->[%s] (server) attribute '
+                            '[%s] returned a unit not found in the pint unit '
+                            'registry' % (s_id, d, s_dev, attr))
+                    return quantity_ret
+                else:
+                    return ret
+
             # retrieve the actual device object from the instrument server
             try:
-                # see inserv.py and RPyC documentation for how this works
-                devs[d] = self.servers[s_id].root.devs[s_dev]
+                # see inserv.py and RPyC documentation for how
+                # the device is retrieved from the instrument server
+                # monkey wrap the device so we can override it's getter
+                # to fix pint unit registry issue
+                devs[d] = MonkeyWrapper(self.servers[s_id].root.devs[s_dev],
+                                        get_attr_override=dev_get_attr)
             except:
                 raise InstrumentManagerError('Instrument server [%s] has no '
                             'loaded device [%s]' % (s_id, s_dev)) from None
-
-            # TODO Q_ object registry conversion
 
             logging.info('instrument manager loaded device [%s] from '
                             ' server [%s]' % (d, s_id))
@@ -117,13 +141,22 @@ class Instrument_Manager():
         filename = os.path.join(this_dir, config_file)
         self.config = load_config(filename)
 
-    # TODO finalize -> self.disconnect_servers()
+    def __enter__(self):
+        """Python context manager setup"""
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Python context manager teardown"""
+        self.disconnect_servers()
 
 if __name__ == '__main__':
     # configure server logging behavior
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s -- %(levelname)s -- %(message)s',
                         handlers=[logging.StreamHandler()])
-    im = Instrument_Manager('config.yaml')
-    import pdb; pdb.set_trace()
-    print(im.get_devices())
+    with Instrument_Manager('config.yaml') as im:
+        devs = im.get_devices()
+        devs['my_sg1'].amplitude = Quantity(1.0, 'volt')
+        print('found devices:\n%s' % (devs))
+        print(Quantity(5, 'volt') + devs['my_sg1'].amplitude)
+        import pdb; pdb.set_trace()

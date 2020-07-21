@@ -7,8 +7,57 @@ import yaml
 import os
 from importlib import import_module
 import traceback
-import nspyre.utils.config_file
 
+class MonkeyWrapper():
+    """Monkey patch technique for wrapping objects defined
+    in 3rd party modules, for example:
+    ----------------------------------
+    import uncontrolled_module
+    def get_override(obj, attr):
+        ret = getattr(obj, attr)
+        print('got object %s attribute %s = %s' % (obj, attr, ret))
+        return ret
+    def set_override(obj, attr, val):
+        print('setting object %s attribute %s to %s' % (obj, attr, val))
+        setattr(obj, attr, val)
+    obj = uncontrolled_module.some_class()
+    wrapped_obj = MonkeyWrapper(obj,
+                                get_attr_override=get_override,
+                                set_attr_override=set_override)
+    wrapped_obj.internal_attribute = 5
+    a = wrapped_obj.internal_attribute
+    -------- should return -> --------
+    setting object <obj> attribute internal_attribute to 5
+    got object <obj> attribute internal_attribute = 5
+    """
+    def __init__(self, wrapped_obj,
+                    get_attr_override=None,
+                    set_attr_override=None):
+        """ """
+        # we can't use self.<instance_var> because that will call __setattr__
+        self.__dict__['wrapped_obj'] = wrapped_obj
+        self.__dict__['get_attr_override'] = get_attr_override
+        self.__dict__['set_attr_override'] = set_attr_override
+
+    def __getattr__(self, attr):
+        """Override the wrapped object's getattr(); call our custom 
+        monkey-wrapping function instead, if defined"""
+        if self.__dict__['get_attr_override']:
+            return self.__dict__['get_attr_override']\
+                    (self.__dict__['wrapped_obj'], attr)
+        else:
+            return getattr(self.__dict__['wrapped_obj'], attr)
+
+    def __setattr__(self, attr, val):
+        """Override the wrapped object's set_attr(); call our custom 
+        monkey-wrapping function instead, if defined"""
+        if self.__dict__['set_attr_override']:
+            self.__dict__['set_attr_override']\
+                (self.__dict__['wrapped_obj'], attr, val)
+        else:
+            setattr(self.__dict__['wrapped_obj'], attr, val)
+
+# TODO unused
 def monkey_wrap(wrapped_func, before_func, after_func):
     """Monkey patch technique for wrapping functions defined
     in 3rd party modules, for example:
@@ -18,7 +67,7 @@ def monkey_wrap(wrapped_func, before_func, after_func):
                 lambda args, kwargs: print('before! args: %s kwargs: %s' % \
                                             (args, kwargs)),
                 lambda args, kwargs: print('after!'))
-    obj = some_class()
+    obj = uncontrolled_module.some_class()
     obj.internal_method(arg1, arg2)
     should return ->
     before! args: (arg1, arg2) kwargs: {}

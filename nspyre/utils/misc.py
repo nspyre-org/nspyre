@@ -35,6 +35,8 @@ class MonkeyWrapper():
                     set_attr_override=None):
         """ """
         # we can't use self.<instance_var> because that will call __setattr__
+        # and __getattr__, so we have to get/set our instance variables
+        # using __dict__
         self.__dict__['wrapped_obj'] = wrapped_obj
         self.__dict__['get_attr_override'] = get_attr_override
         self.__dict__['set_attr_override'] = set_attr_override
@@ -57,40 +59,20 @@ class MonkeyWrapper():
         else:
             setattr(self.__dict__['wrapped_obj'], attr, val)
 
-# TODO unused
-def monkey_wrap(wrapped_func, before_func, after_func):
-    """Monkey patch technique for wrapping functions defined
-    in 3rd party modules, for example:
-    import uncontrolled_module
-    uncontrolled_module.some_class.internal_method = \
-        monkey_wrap(uncontrolled_module.some_class.internal_method, 
-                lambda args, kwargs: print('before! args: %s kwargs: %s' % \
-                                            (args, kwargs)),
-                lambda args, kwargs: print('after!'))
-    obj = uncontrolled_module.some_class()
-    obj.internal_method(arg1, arg2)
-    should return ->
-    before! args: (arg1, arg2) kwargs: {}
-    <internal_method runs>
-    after!"""
-    # TODO set original scope wrapped_func = _wrap
-    def _wrap(*args, **kwargs):
-        if before_func:
-            before_func(args, kwargs)
-        wrapped_func(*args, **kwargs)
-        if after_func:
-            after_func(args, kwargs)
-    return _wrap
-
-def join_nspyre_path(p):
-    """Return an absolute path composed of the root directory plus the argument
-    expressed relative to the nspyre root directory"""
-    return os.path.join(os.path.dirname(__file__), p)
-
-def get_class_from_str(class_str):
+def load_class_from_str(class_str):
+    """Return a python class object from a string"""
     class_name = class_str.split('.')[-1]
-    mod = import_module(class_str.replace('.'+class_name, ''))
+    mod = import_module(class_str.replace('.' + class_name, ''))
     return getattr(mod, class_name)
+
+
+# def join_nspyre_path(p):
+#     return os.path.join(os.path.dirname(__file__), p)
+
+# def get_class_from_str(class_str):
+#     class_name = class_str.split('.')[-1]
+#     mod = import_module(class_str.replace('.'+class_name, ''))
+#     return getattr(mod, class_name)
 
     # for addr in mongodb_addrs:
     #     client = pymongo.MongoClient(addr, re)
@@ -180,6 +162,20 @@ def get_class_from_str(class_str):
 #             return self.FUNCS[func_name](**d)
 #         else:
 #             return self.FUNCS[func_name](**d)*units
+
+# def get_configs(filename=None):
+#     filename = join_nspyre_path('config.yaml') if filename is None else filename
+#     with open(filename, 'r') as f:
+#         d = yaml.safe_load(f)
+#     return d
+
+def join_nspyre_path(path):
+    return os.path.join(os.path.dirname(__file__), path)
+
+def get_class_from_str(class_str):
+    class_name = class_str.split('.')[-1]
+    mod = import_module(class_str.replace('.'+class_name, ''))
+    return getattr(mod, class_name)
 
 def load_all_spyrelets():
     cfg = get_configs()

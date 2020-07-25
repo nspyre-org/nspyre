@@ -12,7 +12,6 @@
 import pymongo
 from nspyre.instrument_manager import Instrument_Manager
 from nspyre.utils import *
-# from instrument_server import Remote_Device
 import pandas as pd
 import numpy as np
 

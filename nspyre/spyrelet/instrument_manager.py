@@ -10,7 +10,7 @@
 """
 
 from nspyre.utils.config_file import get_config_param, load_config
-from nspyre.utils.utils import MonkeyWrapper
+from nspyre.utils.misc import MonkeyWrapper
 from pint import Quantity
 import os
 import logging
@@ -64,7 +64,8 @@ class Instrument_Manager():
         """Attempt connection to an instrument server"""
         try:
             self.servers[s_id] = rpyc.connect(s_addr, s_port)
-            # TODO
+            # this allows the instrument server to have full access to this
+            # client's object dictionaries - necessary for some lantz commands
             self.servers[s_id]._config['allow_all_attrs'] = True
         except:
             raise InstrumentManagerError('Failed to connect to '
@@ -159,4 +160,3 @@ if __name__ == '__main__':
         devs['my_sg1'].amplitude = Quantity(1.0, 'volt')
         print('found devices:\n%s' % (devs))
         print(Quantity(5, 'volt') + devs['my_sg1'].amplitude)
-        import pdb; pdb.set_trace()

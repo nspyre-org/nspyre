@@ -1,7 +1,6 @@
 from PyQt5 import QtCore, QtWidgets
 from nspyre.widgets.image import ImageWidget
-from nspyre.utils import join_nspyre_path
-from nspyre.utils import get_configs
+from nspyre.utils.utils import join_nspyre_path, get_configs
 from subprocess import Popen
 import os
 import time
@@ -54,3 +53,41 @@ if __name__ == '__main__':
     w = Spyre_Launcher()
     w.show()
     app.exec_()
+
+    # parse command-line arguments
+    arg_parser = argparse.ArgumentParser(prog='inserv',
+                            usage='%(prog)s [options]',
+                            description='Run an nspyre instrument server')
+    arg_parser.add_argument('-c', '--config',
+                            default=DEFAULT_CONFIG,
+                            help='server configuration file location')
+    arg_parser.add_argument('-l', '--log',
+                            default=DEFAULT_LOG,
+                            help='server log file location')
+    arg_parser.add_argument('-m', '--mongo',
+                            default=None,
+                            help='mongodb address e.g. '
+                            'mongodb://192.168.1.27:27017/')
+    arg_parser.add_argument('-q', '--quiet',
+                            action='store_true',
+                            help='disable logging')
+    arg_parser.add_argument('-v', '--verbose',
+                            action='store_true',
+                            help='log debug messages')
+    cmd_args = arg_parser.parse_args()
+
+    # configure server logging behavior
+    if not cmd_args.quiet:
+        logging.basicConfig(level=logging.DEBUG if cmd_args.verbose
+                        else logging.INFO,
+                        format='%(asctime)s -- %(levelname)s -- %(message)s',
+                        handlers=[logging.FileHandler(cmd_args.log, 'w+'),
+                                logging.StreamHandler()])
+    # init and start RPyC server
+    logging.info('starting instrument server...')
+    inserv = InstrumentServer(cmd_args.config, cmd_args.mongo)
+
+    # start the shell prompt event loop
+    cmd_prompt = InservCmdPrompt(inserv)
+    cmd_prompt.prompt = 'inserv > '
+    cmd_prompt.cmdloop('instrument server started...')

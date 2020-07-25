@@ -1,4 +1,4 @@
-# Name and port to run the RPyC instrument server on
+# name and port to run the RPyC instrument server on
 server_settings:
   name: inserv1
   port: 5556
@@ -6,8 +6,8 @@ server_settings:
 # address of the mongodb server
 mongodb_addr: 'mongodb://localhost:27017/'
 
-# This list will be used by the instrument server to automatically load 
-# the specified devices. The syntax is:
+# this list will be used by the instrument server to automatically load 
+# the specified devices - the syntax is:
 #   device_name:
 #     class: 'device class'
 #     args: [<*args>]

@@ -1,6 +1,6 @@
 from pyqtgraph import SpinBox as _SpinBox
 from PyQt5 import QtCore
-from pint import Quantity as Q_
+from lantz import Q_
 from pint.util import infer_base_unit
 
 class SpinBox(_SpinBox):

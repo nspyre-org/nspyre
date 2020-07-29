@@ -1,0 +1,19 @@
+# address of the mongodb server
+mongodb_addr: 'mongodb://localhost:27017/'
+
+# Experiment list
+# Each experiment entry should have an
+# alias:
+#   class: 'spyrelet class'
+#   spyrelets: A dictionary containing the sub-spyrelet to be used
+#   args: Argument used to instanciate the spyrelet.  This included device alias dict, spyrelets dict and other CONSTS parametters
+experiments:
+  s2:
+    class: nspyre.user.test_spyrelets.SubSpyrelet
+    args:
+      device_alias: {sg: 'my_sg1'}
+
+  my_exp:
+    class: nspyre.user.test_spyrelets.MyExperiment
+    spyrelets: {s2: s2}
+    args: {device_alias: {sg: 'my_sg1', osc: 'my_osc1'}}

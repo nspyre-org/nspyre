@@ -1,33 +1,46 @@
+#!/usr/bin/env python
 """
     spyre.widgets.instrument_manager.py
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This instrument manager is a Widget which can connect to an Instrument server and control the associated devices
+    This instrument manager is a Widget which can connect to a set of
+    instrument servers and control the associated devices
 
     Author: Alexandre Bourassa
     Date: 10/30/2019
+    Modified: Jacob Feder 7/25/2020
 """
 
-from collections import OrderedDict, Hashable
-import traceback
-
-import pyqtgraph as pg
+#from collections import OrderedDict, Hashable
 from PyQt5 import QtWidgets, QtCore
 import sip
-
-from nspyre.instrument_server import Instrument_Server_Client, load_remote_device
-from nspyre.instrument_manager import Instrument_Manager
+from nspyre.spyrelet.instrument_manager import Instrument_Manager
 from nspyre.widgets.feat import get_feat_widget
-
-from nspyre.utils import get_class_from_str
-
+from nspyre.utils.misc import load_class_from_str, join_nspyre_path
+from nspyre.definitions import MONGO_SERVERS_KEY
+from nspyre.spyrelet.mongo_listener import Synched_Mongo_Database
 from lantz import Q_
 
-class Instrument_Manager_Widget(QtWidgets.QWidget):
+###########################
+# Globals
+###########################
 
+###########################
+# Exceptions
+###########################
+
+class InstrumentManagerWidgetError(Exception):
+    """General InstrumentManagerWidget exception"""
+    def __init__(self, msg):
+        super().__init__(msg)
+
+###########################
+# Classes
+###########################
+
+class Instrument_Manager_Widget(QtWidgets.QWidget):
+    """ """
     def __init__(self, manager, parent=None):
-        if not manager.fully_mongo:
-            raise Exception("Instrument_Manager_Widget requires an Instrument Manager which is fully mongo")
         super().__init__(parent=parent)
         self.manager = manager
 
@@ -41,7 +54,7 @@ class Instrument_Manager_Widget(QtWidgets.QWidget):
         layout.addWidget(self.tree)
         self.setLayout(layout)
 
-        #Set some resonable sizes
+        # set some reasonable sizes
         s = QtWidgets.QApplication.desktop().screenGeometry()
         self.resize(s.width()//3,9*s.height()//10)
         # self.tree.resizeColumnToContents(0)
@@ -49,89 +62,85 @@ class Instrument_Manager_Widget(QtWidgets.QWidget):
         self.tree.header().setStretchLastSection(False)
         self.tree.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         self.tree.header().setSectionResizeMode(1, QtWidgets.QHeaderView.Interactive)
-        # 
         self.tree.setColumnWidth(1, 1*s.width()//10)
 
         self.reset_all()
+        for s_name in self.manager.servers:
+            s_db_name = MONGO_SERVERS_KEY.format(s_name)
+            sync_db = Synched_Mongo_Database(MONGO_SERVERS_KEY.format(s_name),
+                                            self.manager.mongo_addr)
+            sync_db.updated_row.connect(self._update_feat_value)
+            sync_db.col_dropped.connect(self.remove_instr)
 
-        self.manager.launch_watchers()
-        for c in self.manager.clients:
-            c['watcher'].updated_row.connect(self._update_feat_value)
-            c['watcher'].col_dropped.connect(self.remove_instr)
-
-    def _update_feat_value(self, dname, row):
+    def _update_feat_value(self, dev_name, row):
         fname = row['name']
-        if not dname in self.feat_items:
-            self.update_instr(dname)
+        if not dev_name in self.feat_items:
+            self.update_instr(dev_name)
             return
         if row['type'] == 'feat':
             if (not row['value'] is None) and (not row['units'] is None):
                 value = Q_(row['value'], row['units'])
             else:
                 value = row['value']
-            self.feat_items[dname][fname].set_requested.emit(value)
+            self.feat_items[dev_name][fname].set_requested.emit(value)
         elif row['type'] == 'dictfeat':
             value = row['value'].copy()
             for i, val in enumerate(row['value']):
                 if (not row['value'][i] is None) and (not row['units'] is None):
                     value[i] = Q_(row['value'][i], row['units'])
-            for key, w in self.feat_items[dname][fname].childs.items():
-                self.feat_items[dname][fname].set_requested.emit(key, value)
+            for key, w in self.feat_items[dev_name][fname].childs.items():
+                self.feat_items[dev_name][fname].set_requested.emit(key, value)
 
-    
     def reset_all(self):
         self.tree.clear()
-        for dname in self.manager.instr:
-            self.update_instr(dname)
+        for dev_name in self.manager.devs:
+            self.update_instr(dev_name)
 
-    def update_instr(self, dname):
-        try:
-            self.tree.setSortingEnabled(False)
+    def update_instr(self, dev_specifier):
+        # try: TODO
+        self.tree.setSortingEnabled(False)
 
-            dclass = self.manager.get(dname)['class']
-            c = get_class_from_str(dclass)
+        # extract the server/device name from the device specifier
+        # in the form 'server_name/dev_name'
+        device = self.manager.devs[dev_specifier]
+        server_name, dev_name = dev_specifier.split('/')
+        instr_item = QtWidgets.QTreeWidgetItem(self.tree, [dev_name, ''])
+        # mongodb collection containing the device attributes
+        dev_collection = self.manager.mongo_client[MONGO_SERVERS_KEY.format(server_name)][dev_name]
+        self.feat_items[dev_name] = {}
+        for attribute in dev_collection.find():
+            if attribute['type'] == 'dictfeat':
+                feat_item = DictFeatTreeWidgetItem(attribute, self.tree, device)
+                instr_item.addChild(feat_item.item)
+            elif attribute['type'] == 'feat':
+                feat_item = FeatTreeWidgetItem(attribute, self.tree, device)
+                instr_item.addChild(feat_item.item)
+                self.tree.setItemWidget(feat_item.item, 1, feat_item.w)
+            elif attribute['type'] == 'action':
+                feat_item = ActionTreeWidgetItem(attribute, self.tree, device)
+                instr_item.addChild(feat_item.item)
+                self.tree.setItemWidget(feat_item.item, 1, feat_item.w)
+            self.feat_items[dev_name][attribute['name']] = feat_item
+            self.tree.setItemWidget(feat_item.item, 0, QtWidgets.QLabel(attribute['name']))
+        self.tree.setSortingEnabled(True)
+        self.tree.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        # except:
+        #     print("Could not load {}".format(dev_name))
+        #     self.remove_instr(dev_name)
 
-            self.manager.get(dname)['zmq'].get_none_feat(dname)
-        
-            instr_item = QtWidgets.QTreeWidgetItem(self.tree, [dname, ''])
-            feats = self.manager.get(dname)['mongo'].find({},{'_id':False})
-            
-            self.feat_items[dname] = dict()
-            for feat in feats:
-                if feat['type'] == 'dictfeat':
-                    feat_item = DictFeatTreeWidgetItem(feat, self.tree, self.manager.get(dname)['dev'])
-                    instr_item.addChild(feat_item.item)
-                elif feat['type'] == 'feat':
-                    feat_item = FeatTreeWidgetItem(feat, self.tree, self.manager.get(dname)['dev'])
-                    instr_item.addChild(feat_item.item)
-                    self.tree.setItemWidget(feat_item.item, 1, feat_item.w)
-                elif feat['type'] == 'action':
-                    feat_item = ActionTreeWidgetItem(feat, self.tree, self.manager.get(dname)['dev'])
-                    instr_item.addChild(feat_item.item)
-                    self.tree.setItemWidget(feat_item.item, 1, feat_item.w)
-                self.feat_items[dname][feat['name']] = feat_item
-                self.tree.setItemWidget(feat_item.item, 0, QtWidgets.QLabel(feat['name']))
-
-            self.tree.setSortingEnabled(True)
-            self.tree.sortByColumn(0, QtCore.Qt.AscendingOrder)
-        except:
-            print("Could not load {}".format(dname))
-            self.remove_instr(dname)
-
-    def remove_instr(self, dname):
-        if dname in self.feat_items:
-            self.feat_items.pop(dname)
+    def remove_instr(self, dev_name):
+        if dev_name in self.feat_items:
+            self.feat_items.pop(dev_name)
         root = self.tree.invisibleRootItem()
         for i in range(root.childCount()):
             c = root.child(i)
-            if c.text(0) == dname:
-                print('Removing device {}'.format(dname))
+            if c.text(0) == dev_name:
+                print('Removing device {}'.format(dev_name))
                 root.removeChild(c)
                 sip.delete(c)
                 c = None
                 break
         return
-
 
 class FeatTreeWidgetItem(QtCore.QObject):
     set_requested = QtCore.pyqtSignal(object) # This signal will be triggered externally when the display value needs to be changed (argument is value)
@@ -157,9 +166,6 @@ class FeatTreeWidgetItem(QtCore.QObject):
         val = getattr(self.dev, self.feat['name'])
         self.set_requested.emit(val)
 
-        
-
-
 class DictFeatTreeWidgetItem(QtCore.QObject):
     set_requested = QtCore.pyqtSignal(object, object) # This signal will be triggered externally when the display value needs to be changed (arguments are <key, new value>)
     go_clicked = QtCore.pyqtSignal(object) # This signal will be triggered when the "go button" is clicked (argument is key)
@@ -170,10 +176,10 @@ class DictFeatTreeWidgetItem(QtCore.QObject):
         self.dev = dev
         self.feat = feat
         self.item = QtWidgets.QTreeWidgetItem(1)
-        self.childs = OrderedDict()
+        self.childs = {}
         temp_feat = feat.copy()
         for i,key in enumerate(feat['keys']):
-            assert isinstance(key, Hashable)
+            #assert isinstance(key, Hashable) TODO
             temp_feat['value'] = feat['value'][i]
             w = get_feat_widget(temp_feat)
             item = QtWidgets.QTreeWidgetItem(1)
@@ -205,7 +211,6 @@ class DictFeatTreeWidgetItem(QtCore.QObject):
         val = getattr(self.dev, self.feat['name'])[key]
         self.childs[key].set_requested.emit(val)
 
-
 class ActionTreeWidgetItem(QtCore.QObject):
     clicked = QtCore.pyqtSignal()
 
@@ -225,8 +230,7 @@ class ActionTreeWidgetItem(QtCore.QObject):
 if __name__ ==  '__main__':
     from nspyre.widgets.app import NSpyreApp
     app = NSpyreApp([])
-
-    m = Instrument_Manager(timeout=10000)
-    w = Instrument_Manager_Widget(m)
-    w.show()
-    app.exec_()
+    with Instrument_Manager() as im:
+        w = Instrument_Manager_Widget(im)
+        w.show()
+        app.exec_()

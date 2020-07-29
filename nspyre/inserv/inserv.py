@@ -4,7 +4,7 @@
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     This module:
     - loads the server config file
-    - connects to all of the instruments specified in the config file
+    - connects to all of the instruments specified in the config files
     - creates a RPyC (python remote procedure call) server to allow remote
         machines to access the instruments
     - serves a shell prompt allowing the user runtime control of the server
@@ -14,9 +14,14 @@
 """
 
 import logging
-from nspyre.utils.config_file import load_config, load_raw_config, \
-                                    write_config, get_config_param
-from nspyre.utils.misc import load_class_from_str, MonkeyWrapper
+from nspyre.config.config_files import get_config_param, load_config, \
+                                        meta_config_add, meta_config_remove, \
+                                        meta_config_files
+from nspyre.utils.misc import load_class_from_str, join_nspyre_path, \
+                                MonkeyWrapper
+from nspyre.definitions import SERVER_META_CONFIG_YAML, MONGO_SERVERS_KEY, \
+                                MONGO_SERVERS_SETTINGS, MONGO_CONNECT_TIMEOUT, \
+                                MONGO_RS
 import rpyc
 import os
 import _thread
@@ -29,15 +34,15 @@ import waiting
 from lantz import DictFeat, Q_
 from pint import Quantity
 import sys
+import visa
 
 ###########################
 # Globals
 ###########################
 
-META_CONFIG_YAML = 'meta_config.yaml'
 DEFAULT_LOG = 'server.log'
-
-this_dir = os.path.dirname(os.path.realpath(__file__))
+# in ms
+RPYC_TIMEOUT = 5000
 
 ###########################
 # Exceptions
@@ -55,60 +60,87 @@ class InstrumentServerError(Exception):
 class InstrumentServer(rpyc.Service):
     """RPyC provider that loads lantz devices and exposes them to the remote
     client"""
-    def __init__(self, config_file=None, mongodb_addr=None):
+    def __init__(self, config_file, mongo_addr=None):
         super().__init__()
         # configuration
         self.config = {}
         self.config_file = None
         self.name = None
-        # rpyc server settings
+        # server settings
+        self.ip = None
         self.port = None
         # rpyc server object
         self._rpyc_server = None
         # mongodb
         self.db_name = None
-        self.db_addr = None
-        self.db_client = None
+        self.mongo_addr = None
+        self.mongo_client = None
         self.db = None
         # lantz devices
         self.devs = {}
 
         self.update_config(config_file)
         self.reload_server_config()
-        self.reload_mongo(mongodb_addr)
-        self.reload_devices()
         self.start_server()
+        self.reload_devices()
 
-    def restart(self, config_file=None, mongodb_addr=None):
+    def restart(self, config_file=None, mongo_addr=None):
         """Restart the server AND reload the config file and all devices"""
         logging.info('restarting...')
         self.update_config(config_file)
         self.reload_server_config()
-        self.reload_mongo(mongodb_addr)
         self.reload_devices()
         self.reload_server()
 
     def reload_server_config(self):
         """Reload RPyC server settings from the config"""
         self.name = get_config_param(self.config, ['server_settings', 'name'])
+        self.ip = get_config_param(self.config, ['server_settings', 'ip'])
         self.port = get_config_param(self.config, ['server_settings', 'port'])
         
-    def reload_mongo(self, mongodb_addr=None):
+    def connect_mongo(self, mongo_addr=None):
         """Config and connect to the mongodb database"""
-        self.db_name = 'Instrument_Server[%s]' % (self.name)
-        self.db_addr = mongodb_addr if mongodb_addr else \
+        self.db_name = MONGO_SERVERS_KEY.format(self.name)
+        self.mongo_addr = mongo_addr if mongo_addr else \
                             get_config_param(self.config, ['mongodb_addr'])
-        logging.info('connecting to mongodb server [%s]...' % (self.db_addr))
-        # TODO disconnect first?, timeout
-        self.db_client = pymongo.MongoClient(mongodb_addr,
-                                            replicaset='NSpyreSet')
-        self.db = self.db_client[self.db_name]
+        logging.info('connecting to mongodb server [{}]...'.\
+                        format(self.mongo_addr))
+        self.mongo_client = pymongo.MongoClient(mongo_addr,
+                            replicaset=MONGO_RS,
+                            serverSelectionTimeoutMS=MONGO_CONNECT_TIMEOUT)
+        self.db = self.mongo_client[self.db_name]
+        # mongodb doesn't do any actual database queries until you try to
+        # perform an action on the database, so this is the point where
+        # connection will occur
         try:
-            self.db_client.drop_database(self.db_name)
+            current_db = self.mongo_client[self.db_name]\
+                                    [MONGO_SERVERS_SETTINGS].find_one()
         except:
-            raise InstrumentServerError('Failed connecting to mongodb [%s]'
-                                        % (self.db_addr)) from None
-        logging.info('connected to mongodb server [%s]' % (self.db_addr))
+            raise InstrumentServerError('Failed connecting to mongodb [{}]'.\
+                                        format(self.mongo_addr)) from None
+        try:
+            current_db_address = current_db['address']
+        except:
+            current_db_address = self.ip
+        # check that there isn't already an instrument server with same
+        # name but different address
+        if current_db_address != self.ip:
+            raise InstrumentServerError('An instrument server with the name '
+                    '[{}] and a different address [{}] is already present on '
+                    'mongodb. Instrument servers must have unique names.'.\
+                    format(self.name, current_db_address)) from None
+        self.mongo_client.drop_database(self.db_name)
+        # add a special settings document so clients can auto-detect us
+        self.db[MONGO_SERVERS_SETTINGS].insert_one({'address' : self.ip,
+                                                    'port' : self.port})
+        logging.info('connected to mongodb server [{}]'.format(self.mongo_addr))
+
+    def disconnect_mongo(self):
+        """Disconnect from the mongodb database"""
+        # remove the database entry from mongo
+        self.mongo_client.drop_database(self.db_name)
+        # disconnect
+        self.mongo_client.close()
 
     def add_device(self, dev_name, dev_class, dev_args, dev_kwargs):
         """Add and initialize a device"""
@@ -117,9 +149,9 @@ class InstrumentServer(rpyc.Service):
         try:
             dev_class = load_class_from_str(dev_class)
         except:
-            raise InstrumentServerError('Tried to initialize device [%s] '
-                                        'with unrecognized class [%s]'
-                                        % (dev_name, dev_class)) from None
+            raise InstrumentServerError('Tried to initialize device [{}] '
+                                        'with unrecognized class [{}]'.\
+                                        format(dev_name, dev_class)) from None
 
         # a monkey-patching function for overriding writing devices feats
         def dev_set_attr(obj, attr, val):
@@ -130,13 +162,13 @@ class InstrumentServer(rpyc.Service):
                 # they must be converted to Quantity objects of the local lantz
                 # registry (aka Q_ -> defined in lantz __init__.py).
                 # see pint documentation for details
-                # try: TODO
-                setattr(obj, attr, Q_(val.m, str(val.u)))
-                # except:
-                #     raise InstrumentServerError('Remote client attempted '
-                #         'setting instrument server device [%s] attribute [%s] '
-                #         'to a unit not found in the pint unit registry' % \
-                #         (obj, attr))
+                try:
+                    setattr(obj, attr, Q_(val.m, str(val.u)))
+                except:
+                    raise InstrumentServerError('Remote client attempted '
+                        'setting instrument server device [{}] attribute [{}] '
+                        'to a unit not found in the pint unit registry'.\
+                        format(obj, attr))
             else:
                 setattr(obj, attr, val)
             # update the mongodb entry for this feat
@@ -154,11 +186,10 @@ class InstrumentServer(rpyc.Service):
                                     set_attr_override=dev_set_attr)
         except:
             raise InstrumentServerError('Failed to get instance of device '
-                                        '%s of class %s'
-                                        % (dev_name, dev_class)) from None
+                                        '{} of class {}'.\
+                                        format(dev_name, dev_class)) from None
 
         # collect all of the lantz feature attributes
-        self.db[dev_name].drop()
         feat_attr_list = list()
         for feat_name, feat in dev_class._lantz_feats.items():
             attrs = feat.__dict__['_config']
@@ -202,6 +233,7 @@ class InstrumentServer(rpyc.Service):
         for action_name, action in dev_class._lantz_actions.items():
             feat_attr_list.append({'name' : action_name, 'type' : 'action'})
 
+        self.db[dev_name].drop()
         # add all of the lantz feature attributes to the database
         self.db[dev_name].insert_many(feat_attr_list)
 
@@ -209,20 +241,20 @@ class InstrumentServer(rpyc.Service):
         try:
             self.devs[dev_name].initialize()
         except:
-            raise InstrumentServerError('Device [%s] initialization sequence '
-                                        'failed' % (dev_name)) from None
+            raise InstrumentServerError('Device [{}] initialization sequence '
+                                        'failed'.format(dev_name)) from None
 
-        logging.info('added device %s with args: %a kwargs: %a' % \
-                        (dev_name, dev_args, dev_kwargs))
+        logging.info('added device [{}] with args: {} kwargs: {}'.\
+                        format(dev_name, dev_args, dev_kwargs))
 
     def del_device(self, dev_name):
         """Remove and finalize a device"""
         try:
             self.devs.pop(dev_name).finalize()
         except:
-            raise InstrumentServerError('Failed deleting device [%s]'
-                                        % (dev_name)) from None
-        logging.info('deleted %s' % (dev_name))
+            raise InstrumentServerError('Failed deleting device [{}]'.\
+                                        format(dev_name)) from None
+        logging.info('deleted [{}]'.format(dev_name))
 
     def reload_device(self, dev_name):
         """Remove a device, then reload it from the stored config"""
@@ -249,17 +281,16 @@ class InstrumentServer(rpyc.Service):
         if config_file:
             self.config_file = config_file
         # reload the config dictionary
-        self.config = load_config(self.config_file)
-        congif_file_names = get_config_param(meta_config, ['config_files'])
-        logging.info('loaded config files %a' % (congif_file_names))
+        self.config, files = load_config(self.config_file)
+        logging.info('loaded config files {}'.format(files))
 
     def on_connect(self, conn):
         """Called when a client connects to the RPyC server"""
-        logging.info('client [%s] connected' % (conn))
+        logging.info('client [{}] connected'.format(conn))
 
     def on_disconnect(self, conn):
         """Called when a client discconnects from the RPyC server"""
-        logging.info('client [%s] disconnected' % (conn))
+        logging.info('client [{}] disconnected'.format(conn))
 
     def reload_server(self):
         """Restart the RPyC server"""
@@ -272,6 +303,7 @@ class InstrumentServer(rpyc.Service):
             logging.warning('can\'t start the rpyc server because one '
                             'is already running')
             return
+        self.connect_mongo()
         _thread.start_new_thread(self._rpyc_server_thread, ())
         # wait for the server to start
         waiting.wait(lambda: self._rpyc_server and self._rpyc_server.active,
@@ -279,6 +311,7 @@ class InstrumentServer(rpyc.Service):
 
     def stop_server(self):
         """Stop the RPyC server"""
+        self.disconnect_mongo()
         if not self._rpyc_server:
             logging.warning('can\'t stop the rpyc server because there '
                             'isn\'t one running')
@@ -293,10 +326,10 @@ class InstrumentServer(rpyc.Service):
         """Thread for running the RPyC server asynchronously"""
         logging.info('starting RPyC server...')
         self._rpyc_server = ThreadedServer(self, port=self.port,
-                            protocol_config={'allow_all_attrs' : True,
-                                            'allow_setattr' : True,
-                                            'allow_delattr' : True,
-                                            'sync_request_timeout' : 2000})
+                        protocol_config={'allow_all_attrs' : True,
+                                        'allow_setattr' : True,
+                                        'allow_delattr' : True,
+                                        'sync_request_timeout' : RPYC_TIMEOUT})
         self._rpyc_server.start()
         logging.info('RPyC server stopped')
 
@@ -341,7 +374,7 @@ class InservCmdPrompt(Cmd):
         try:
             self.inserv.reload_device(dev_name)
         except:
-            print('Failed to reload device [%s]' % dev_name)
+            print('Failed to reload device [{}]'.format(dev_name))
             return
 
     def do_dev_all(self, arg_string):
@@ -353,17 +386,6 @@ class InservCmdPrompt(Cmd):
             self.inserv.reload_devices()
         except:
             print('Failed to reload all devices')
-            return
-
-    def do_mongo(self, arg_string):
-        """Restart the connection with the mongodb server"""
-        if arg_string:
-            print('Expected 0 args')
-            return
-        try:
-            self.inserv.reload_mongo()
-        except:
-            print('Failed to reload mongodb server')
             return
 
     def do_restart(self, arg_string):
@@ -423,12 +445,16 @@ class InservCmdPrompt(Cmd):
         if arg_string:
             print('Expected 0 args')
             return
+        logging.info('exiting...')
+        # close all open resources
         self.inserv.stop_server()
-        logging.info('exiting shell...')
+        for dev_name in list(self.inserv.devs):
+            self.inserv.del_device(dev_name)
+        visa.ResourceManager().close()
         raise SystemExit
 
 ###########################
-# functions
+# standalone main
 ###########################
 
 if __name__ == '__main__':
@@ -438,66 +464,71 @@ if __name__ == '__main__':
                             description='Run an nspyre instrument server')
     arg_parser.add_argument('-c', '--config', nargs='+',
                             default=None,
-                            help='permanently add a server configuration '
+                            help='permanently add a configuration '
                             'file(s) to the list to be imported on startup')
     arg_parser.add_argument('-d', '--delconfig', nargs='+',
                             default=None,
-                            help='remove a server configuration file(s) from '
-                            'the list to be imported on startup')
+                            help='remove a configuration file(s) from '
+                            'the list to be imported on startup - pass either '
+                            'the file path or its index')
     arg_parser.add_argument('-e', '--list_configs',
                             action='store_true',
-                            help='list the server configuration files to be '
+                            help='list the configuration files to be '
                             'imported on startup')
     arg_parser.add_argument('-l', '--log',
                             default=DEFAULT_LOG,
-                            help='server log file location')
+                            help='log to the provided file location')
     arg_parser.add_argument('-m', '--mongo',
                             default=None,
-                            help='mongodb address e.g. '
-                            'mongodb://192.168.1.27:27017/')
+                            help='use the provided mongodb address rather than '
+                            'the one listed in the config (e.g. '
+                            'mongodb://192.168.1.27:27017/)') 
     arg_parser.add_argument('-q', '--quiet',
                             action='store_true',
                             help='disable logging')
-    arg_parser.add_argument('-v', '--verbose',
-                            action='store_true',
-                            help='log debug messages')
+    arg_parser.add_argument('-v', '--verbosity',
+                            default='info',
+                            help='the verbosity of logging - options are: '
+                            'debug, info, warning, error')
     cmd_args = arg_parser.parse_args()
 
     # configure server logging behavior
     if not cmd_args.quiet:
-        logging.basicConfig(level=logging.DEBUG if cmd_args.verbose
-                        else logging.INFO,
+        if cmd_args.verbosity.lower() == 'debug':
+            log_level = logging.DEBUG
+        elif cmd_args.verbosity.lower() == 'info':
+            log_level = logging.INFO
+        elif cmd_args.verbosity.lower() == 'warning':
+            log_level = logging.WARNING
+        elif cmd_args.verbosity.lower() == 'error':
+            log_level = logging.ERROR
+        else:
+            raise InstrumentServerError('didn\'t recognize logging level [{}]'.\
+                                        format(cmd_args.verbosity)) from None
+
+        logging.basicConfig(level=log_level,
                         format='%(asctime)s -- %(levelname)s -- %(message)s',
                         handlers=[logging.FileHandler(cmd_args.log, 'w+'),
                                 logging.StreamHandler()])
-    
-    meta_config = load_raw_config(META_CONFIG_YAML)
+
     if cmd_args.config:
         # the user asked us to add config files to the meta-config
-        config_list = get_config_param(meta_config, ['config_files'])
-        meta_config['config_files'] = config_list + cmd_args.config
-        write_config(meta_config, META_CONFIG_YAML)
+        meta_config_add(SERVER_META_CONFIG_YAML, cmd_args.config)
         sys.exit(0)
     if cmd_args.delconfig:
         # the user asked us to remove config files from the meta-config
-        config_list = get_config_param(meta_config, ['config_files'])
-        for c in cmd_args.delconfig:
-            if c in config_list:
-                config_list.remove(c)
-            else:
-                logging.error('config file %s was not found' % (c))
-                sys.exit(-1)
-        meta_config['config_files'] = config_list
-        write_config(meta_config, META_CONFIG_YAML)
+        meta_config_remove(SERVER_META_CONFIG_YAML, cmd_args.delconfig)
         sys.exit(0)
     if cmd_args.list_configs:
         # the user asked us to list the config files from the meta-config
-        print(get_config_param(meta_config, ['config_files']))
+        files  = meta_config_files(SERVER_META_CONFIG_YAML)
+        for i in range(len(files)):
+            print('{}: {}'.format(i, files[i]))
         sys.exit(0)
 
     # init and start RPyC server
     logging.info('starting instrument server...')
-    inserv = InstrumentServer(META_CONFIG_YAML, cmd_args.mongo)
+    inserv = InstrumentServer(SERVER_META_CONFIG_YAML, cmd_args.mongo)
 
     # start the shell prompt event loop
     cmd_prompt = InservCmdPrompt(inserv)

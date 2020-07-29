@@ -5,8 +5,12 @@ import inspect
 from bson import ObjectId
 import yaml
 import os
+import sys
 from importlib import import_module
 import traceback
+from nspyre.definitions import _join_nspyre_path, CLIENT_META_CONFIG_YAML, \
+                                MONGO_RS
+import pymongo
 
 class MonkeyWrapper():
     """Monkey patch technique for wrapping objects defined
@@ -65,9 +69,10 @@ def load_class_from_str(class_str):
     mod = import_module(class_str.replace('.' + class_name, ''))
     return getattr(mod, class_name)
 
-
-# def join_nspyre_path(p):
-#     return os.path.join(os.path.dirname(__file__), p)
+def join_nspyre_path(path):
+    """Return a full path from a path given relative to the nspyre root 
+    directory"""
+    return _join_nspyre_path(path)
 
 # def get_class_from_str(class_str):
 #     class_name = class_str.split('.')[-1]
@@ -163,19 +168,17 @@ def load_class_from_str(class_str):
 #         else:
 #             return self.FUNCS[func_name](**d)*units
 
-# def get_configs(filename=None):
-#     filename = join_nspyre_path('config.yaml') if filename is None else filename
-#     with open(filename, 'r') as f:
-#         d = yaml.safe_load(f)
-#     return d
+def get_configs(filename=None):
+    if not filename:
+        filename = join_nspyre_path(CLIENT_META_CONFIG_YAML)
+    cfg,_ = load_config(filename)
+    return cfg
 
-def join_nspyre_path(path):
-    return os.path.join(os.path.dirname(__file__), path)
-
-def get_class_from_str(class_str):
-    class_name = class_str.split('.')[-1]
-    mod = import_module(class_str.replace('.'+class_name, ''))
-    return getattr(mod, class_name)
+def get_mongo_client(mongodb_addr=None):
+    if mongodb_addr is None:
+        cfg = get_configs()
+        mongodb_addr = cfg['mongodb_addr']
+    return pymongo.MongoClient(mongodb_addr, replicaset=MONGO_RS)
 
 def load_all_spyrelets():
     cfg = get_configs()

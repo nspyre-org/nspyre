@@ -41,7 +41,8 @@ setup(name='nspyre',
 		'colorama>=0.4.3',
 		'pyserial>=3.4',
 		'pyusb>=1.0.2',
-		'waiting>=1.4.1'
+		'waiting>=1.4.1',
+		'parse>=1.16.0'
 		],
 	platforms='any',
 	classifiers=[

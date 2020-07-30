@@ -43,5 +43,6 @@ class SpinBox(_SpinBox):
     def setValue(self, value=None, **kwargs):
         if type(value) is Q_:
             value = value.to_base_units().m
+            # import pdb; pdb.set_trace()
         # print(value)
         super().setValue(value=value, **kwargs)

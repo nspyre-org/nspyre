@@ -9,14 +9,16 @@ OPLOG=1024
 #systemctl start mongodb.service
 
 # start the db servers
-mongod --dbpath $DIR/db1 --logpath $DIR/logs/db1 --bind_ip_all --port $DB1_PORT --replSet $REPLSET --oplogSize $OPLOG --fork
-mongod --dbpath $DIR/db2 --logpath $DIR/logs/db2 --bind_ip_all --port $DB2_PORT --replSet $REPLSET --oplogSize $OPLOG --fork
+mongod --dbpath $DIR/db1 --logpath $DIR/logs/db1 --bind_ip_all \
+		--port $DB1_PORT --replSet $REPLSET --oplogSize $OPLOG --fork
+mongod --dbpath $DIR/db2 --logpath $DIR/logs/db2 --bind_ip_all \
+		--port $DB2_PORT --replSet $REPLSET --oplogSize $OPLOG --fork
 
-# only needs to performed for first-time setup 
-# or if the db1/db2 directories were cleared
+# only needs to performed for first-time setup
+# or if the db1/db2 directories were cleared,
+# but no disadvantage of running it anyway
 # add both servers to a replica set to allow them to start serving the db
-# TODO use same port as specificed in .cfg
 mongo --eval "rs.initiate({_id:'${REPLSET}', members:[ \
-{_id: 0, host: 'localhost:27017'}, \
-{_id: 1, host: 'localhost:27018'}  \
+{_id: 0, host: 'localhost:${DB1_PORT}'}, \
+{_id: 1, host: 'localhost:${DB2_PORT}'}  \
 ]})"

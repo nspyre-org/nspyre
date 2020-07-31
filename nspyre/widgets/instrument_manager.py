@@ -19,6 +19,7 @@ from nspyre.widgets.feat import get_feat_widget
 from nspyre.utils.misc import load_class_from_str, join_nspyre_path
 from nspyre.definitions import MONGO_SERVERS_KEY
 from nspyre.spyrelet.mongo_listener import Synched_Mongo_Database
+import logging
 from lantz import Q_
 
 ###########################
@@ -65,12 +66,14 @@ class Instrument_Manager_Widget(QtWidgets.QWidget):
         self.tree.setColumnWidth(1, 1*s.width()//10)
 
         self.reset_all()
+        self.synched_dbs = {}
         for s_name in self.manager.servers:
             s_db_name = MONGO_SERVERS_KEY.format(s_name)
-            sync_db = Synched_Mongo_Database(MONGO_SERVERS_KEY.format(s_name),
+            self.synched_dbs[s_name] = Synched_Mongo_Database(
+                                            MONGO_SERVERS_KEY.format(s_name),
                                             self.manager.mongo_addr)
-            sync_db.updated_row.connect(self._update_feat_value)
-            sync_db.col_dropped.connect(self.remove_instr)
+            self.synched_dbs[s_name].updated_row.connect(self._update_feat_value)
+            self.synched_dbs[s_name].col_dropped.connect(self.remove_instr)
 
     def _update_feat_value(self, dev_name, row):
         fname = row['name']
@@ -228,7 +231,13 @@ class ActionTreeWidgetItem(QtCore.QObject):
         getattr(self.dev, self.action['name'])()
 
 if __name__ ==  '__main__':
+    # configure server logging behavior
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s -- %(levelname)s -- %(message)s',
+                        handlers=[logging.StreamHandler()])
     from nspyre.widgets.app import NSpyreApp
+    from PyQt5.QtCore import pyqtRemoveInputHook
+    pyqtRemoveInputHook()
     app = NSpyreApp([])
     with Instrument_Manager() as im:
         w = Instrument_Manager_Widget(im)

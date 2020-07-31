@@ -50,8 +50,10 @@ RPYC_TIMEOUT = 5000
 
 class InstrumentServerError(Exception):
     """General InstrumentServer exception"""
-    def __init__(self, msg):
+    def __init__(self, error, msg):
         super().__init__(msg)
+        if error:
+            logging.exception(error)
 
 ###########################
 # Classes
@@ -115,9 +117,9 @@ class InstrumentServer(rpyc.Service):
         try:
             current_db = self.mongo_client[self.db_name]\
                                     [MONGO_SERVERS_SETTINGS].find_one()
-        except:
-            raise InstrumentServerError('Failed connecting to mongodb [{}]'.\
-                                        format(self.mongo_addr)) from None
+        except Exception as exc:
+            raise InstrumentServerError(exc, 'Failed connecting to mongodb '
+                                    '[{}]'.format(self.mongo_addr)) from None
         try:
             current_db_address = current_db['address']
         except:
@@ -148,8 +150,8 @@ class InstrumentServer(rpyc.Service):
         # get the device lantz class
         try:
             dev_class = load_class_from_str(dev_class)
-        except:
-            raise InstrumentServerError('Tried to initialize device [{}] '
+        except Exception as exc:
+            raise InstrumentServerError(exc, 'Tried to initialize device [{}] '
                                         'with unrecognized class [{}]'.\
                                         format(dev_name, dev_class)) from None
 
@@ -164,8 +166,8 @@ class InstrumentServer(rpyc.Service):
                 # see pint documentation for details
                 try:
                     setattr(obj, attr, Q_(val.m, str(val.u)))
-                except:
-                    raise InstrumentServerError('Remote client attempted '
+                except Exception as exc:
+                    raise InstrumentServerError(exc, 'Remote client attempted '
                         'setting instrument server device [{}] attribute [{}] '
                         'to a unit not found in the pint unit registry'.\
                         format(obj, attr))
@@ -184,8 +186,8 @@ class InstrumentServer(rpyc.Service):
             self.devs[dev_name] = \
                     MonkeyWrapper(dev_class(*dev_args, **dev_kwargs),
                                     set_attr_override=dev_set_attr)
-        except:
-            raise InstrumentServerError('Failed to get instance of device '
+        except Exception as exc:
+            raise InstrumentServerError(exc, 'Failed to get instance of device '
                                         '{} of class {}'.\
                                         format(dev_name, dev_class)) from None
 
@@ -240,9 +242,12 @@ class InstrumentServer(rpyc.Service):
         # initialize the device
         try:
             self.devs[dev_name].initialize()
-        except:
-            raise InstrumentServerError('Device [{}] initialization sequence '
-                                        'failed'.format(dev_name)) from None
+        except Exception as exc:
+            logging.debug(exc)
+            self.devs.pop(dev_name)
+            logging.error('device [{}] initialization sequence failed'.\
+                            format(dev_name))
+            return
 
         logging.info('added device [{}] with args: {} kwargs: {}'.\
                         format(dev_name, dev_args, dev_kwargs))
@@ -251,8 +256,8 @@ class InstrumentServer(rpyc.Service):
         """Remove and finalize a device"""
         try:
             self.devs.pop(dev_name).finalize()
-        except:
-            raise InstrumentServerError('Failed deleting device [{}]'.\
+        except Exception as exc:
+            raise InstrumentServerError(exc, 'Failed deleting device [{}]'.\
                                         format(dev_name)) from None
         logging.info('deleted [{}]'.format(dev_name))
 
@@ -360,7 +365,8 @@ class InservCmdPrompt(Cmd):
         try:
             self.inserv.update_config(config_file=\
                                     args[0] if arg_string else None)
-        except:
+        except Exception as exc:
+            logging.exception(exc)
             print('Failed to reload config files')
             return
 
@@ -373,7 +379,8 @@ class InservCmdPrompt(Cmd):
         dev_name = args[0]
         try:
             self.inserv.reload_device(dev_name)
-        except:
+        except Exception as exc:
+            logging.exception(exc)
             print('Failed to reload device [{}]'.format(dev_name))
             return
 
@@ -384,7 +391,8 @@ class InservCmdPrompt(Cmd):
             return
         try:
             self.inserv.reload_devices()
-        except:
+        except Exception as exc:
+            logging.exception(exc)
             print('Failed to reload all devices')
             return
 
@@ -395,7 +403,8 @@ class InservCmdPrompt(Cmd):
             return
         try:
             self.inserv.restart()
-        except:
+        except Exception as exc:
+            logging.exception(exc)
             print('Failed to restart')
             return
 
@@ -406,7 +415,8 @@ class InservCmdPrompt(Cmd):
             return
         try:
             self.inserv.reload_server()
-        except:
+        except Exception as exc:
+            logging.exception(exc)
             print('Failed to restart server')
             return
 
@@ -417,7 +427,8 @@ class InservCmdPrompt(Cmd):
             return
         try:
             self.inserv.stop_server()
-        except:
+        except Exception as exc:
+            logging.exception(exc)
             print('Failed to stop server')
             return
 
@@ -428,7 +439,8 @@ class InservCmdPrompt(Cmd):
             return
         try:
             self.inserv.start_server()
-        except:
+        except Exception as exc:
+            logging.exception(exc)
             print('Failed to start server')
             return
 

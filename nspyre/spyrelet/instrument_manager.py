@@ -14,7 +14,7 @@ from nspyre.utils.misc import MonkeyWrapper
 from nspyre.definitions import CLIENT_META_CONFIG_YAML, MONGO_CONNECT_TIMEOUT, \
                                 MONGO_SERVERS_KEY, MONGO_SERVERS_SETTINGS, \
                                 MONGO_RS
-from pint import Quantity
+from lantz import Q_
 import parse
 import pymongo
 import os
@@ -140,9 +140,9 @@ class Instrument_Manager():
                 # see pint documentation for details
                 def dev_get_attr(obj, attr):
                     ret = getattr(obj, attr)
-                    if isinstance(ret, Quantity):
+                    if isinstance(ret, Q_):
                         try:
-                            quantity_ret = Quantity(ret.m, str(ret.u))
+                            quantity_ret = Q_(ret.m, str(ret.u))
                         except:
                             raise InstrumentManagerError('Instrument server '
                                 '[{}] device [{}] attribute [{}] returned a '
@@ -179,6 +179,6 @@ if __name__ == '__main__':
                         handlers=[logging.StreamHandler()])
     with Instrument_Manager() as im:
         sg_loc = 'local1/fake_sg'
-        im.devs[sg_loc].amplitude = Quantity(1.0, 'volt')
+        im.devs[sg_loc].amplitude = Q_(1.0, 'volt')
         print('found devices:\n{}'.format(im.devs))
-        print(Quantity(5, 'volt') + im.devs[sg_loc].amplitude)
+        print(Q_(5, 'volt') + im.devs[sg_loc].amplitude)

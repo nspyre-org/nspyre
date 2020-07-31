@@ -41,8 +41,11 @@ class SpinBox(_SpinBox):
         return uval
 
     def setValue(self, value=None, **kwargs):
-        if type(value) is Q_:
+        if isinstance(value, Q_):
+            import pdb; pdb.set_trace()
             value = value.to_base_units().m
-            # import pdb; pdb.set_trace()
-        # print(value)
+        from pint import Quantity
+        if isinstance(value, Quantity):
+            import pdb; pdb.set_trace()
+        print(value)
         super().setValue(value=value, **kwargs)

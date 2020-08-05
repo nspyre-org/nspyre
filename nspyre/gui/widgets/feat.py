@@ -1,10 +1,10 @@
-from PyQt5 import QtWidgets, QtCore
-import pyqtgraph as pg
-from lantz import Q_
 from collections import OrderedDict, Iterable
 
-from nspyre.widgets.spinbox import SpinBox
+from PyQt5 import QtWidgets, QtCore
+from pyqtgraph import ComboBox
+from lantz import Q_
 
+from nspyre.gui.widgets.spinbox import SpinBox
 
 def get_feat_widget(feat):
     if feat['values'] is not None:
@@ -102,7 +102,7 @@ class ComboBoxFeatWidget(BaseFeatWidget):
 
     def __init__(self, values, parent=None):
         self.values = values
-        self.val_w = pg.ComboBox()
+        self.val_w = ComboBox()
         if isinstance(self.values, OrderedDict):
             for key, value in self.values.items():
                 self.val_w.addItem(str(key), str(value))

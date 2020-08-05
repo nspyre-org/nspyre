@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
-class NSpyreApp(QtWidgets.QApplication):
+from PyQt5.QtCore import pyqtRemoveInputHook
 
+class NSpyreApp(QtWidgets.QApplication):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.set_theme()

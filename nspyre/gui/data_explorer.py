@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from PyQt5 import QtWidgets, QtCore
 import pandas as pd
 import os

@@ -1,3 +1,16 @@
+#!/usr/bin/env python
+"""
+    spyre.gui.instrument_manager.py
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    This instrument manager is a Widget which can connect to a set of
+    instrument servers and control the associated devices
+
+    Author: Alexandre Bourassa
+    Date: 10/30/2019
+    Modified: Jacob Feder 7/25/2020
+"""
+
 from PyQt5 import QtWidgets, QtCore
 from nspyre.spyrelet import Spyrelet_Launcher
 from nspyre.widgets.param_widget import ParamWidget
@@ -19,7 +32,6 @@ class Progress_Bar(QtWidgets.QWidget):
         layout.addWidget(self.pbar)
         layout.addWidget(self.text)
         self.setLayout(layout)
-        
     
     def reset(self):
         self.vars = []

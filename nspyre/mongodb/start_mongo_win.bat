@@ -6,9 +6,9 @@ set DB2_PORT=27018
 set REPLSET=NSpyreSet
 set OPLOG=1024
 
-set DB1_DIR=%THIS_DIR%db1
-set DB2_DIR=%THIS_DIR%db2
-set LOG_DIR=%THIS_DIR%logs
+set DB1_DIR=%THIS_DIR%db_files\db1
+set DB2_DIR=%THIS_DIR%db_files\db2
+set LOG_DIR=%THIS_DIR%db_files\logs
 set DB1_LOG=%LOG_DIR%\db1
 set DB2_LOG=%LOG_DIR%\db2
 

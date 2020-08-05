@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-    spyre.widgets.instrument_manager.py
+    spyre.gui.instrument_manager.py
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This instrument manager is a Widget which can connect to a set of
@@ -11,16 +11,18 @@
     Modified: Jacob Feder 7/25/2020
 """
 
-#from collections import OrderedDict, Hashable
+import logging
+
 from PyQt5 import QtWidgets, QtCore
 import sip
-from nspyre.spyrelet.instrument_manager import Instrument_Manager
-from nspyre.widgets.feat import get_feat_widget
+from lantz import Q_
+
+from nspyre.inserv.inserv_gateway import InservGateway
+from nspyre.gui.widgets.feat import get_feat_widget
 from nspyre.utils.misc import load_class_from_str, join_nspyre_path
 from nspyre.definitions import MONGO_SERVERS_KEY
-from nspyre.spyrelet.mongo_listener import Synched_Mongo_Database
-import logging
-from lantz import Q_
+from nspyre.mongodb.mongo_listener import Synched_Mongo_Database
+from nspyre.gui.app import NSpyreApp
 
 ###########################
 # Globals
@@ -146,9 +148,13 @@ class Instrument_Manager_Widget(QtWidgets.QWidget):
         return
 
 class FeatTreeWidgetItem(QtCore.QObject):
-    set_requested = QtCore.pyqtSignal(object) # This signal will be triggered externally when the display value needs to be changed (argument is value)
-    go_clicked = QtCore.pyqtSignal() # This signal will be triggered when the "go button" is clicked
-    read_clicked = QtCore.pyqtSignal()  # This signal will be triggered when the "read button" is clicked
+    # This signal will be triggered externally when the display value needs
+    # to be changed (argument is value)
+    set_requested = QtCore.pyqtSignal(object)
+    # This signal will be triggered when the "go button" is clicked
+    go_clicked = QtCore.pyqtSignal()
+    # This signal will be triggered when the "read button" is clicked
+    read_clicked = QtCore.pyqtSignal()
     def __init__(self, feat, parent_tree, dev):
         super().__init__()
         self.dev = dev
@@ -161,11 +167,9 @@ class FeatTreeWidgetItem(QtCore.QObject):
         self.w.read_clicked.connect(self.get_dev)
 
     def set_dev(self):
-        # print('set_dev', self.dev, self.feat['name'], self.w.getter())
         setattr(self.dev, self.feat['name'], self.w.getter())
 
     def get_dev(self):
-        # print('get_dev', self.dev, self.feat['name'])
         val = getattr(self.dev, self.feat['name'])
         self.set_requested.emit(val)
 
@@ -235,11 +239,8 @@ if __name__ ==  '__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s -- %(levelname)s -- %(message)s',
                         handlers=[logging.StreamHandler()])
-    from nspyre.widgets.app import NSpyreApp
-    from PyQt5.QtCore import pyqtRemoveInputHook
-    pyqtRemoveInputHook()
     app = NSpyreApp([])
-    with Instrument_Manager() as im:
+    with InservGateway() as im:
         w = Instrument_Manager_Widget(im)
         w.show()
         app.exec_()

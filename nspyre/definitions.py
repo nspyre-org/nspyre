@@ -23,3 +23,7 @@ MONGO_SERVERS_KEY = 'inserv[{}]'
 MONGO_EXPERIMENTS_KEY = 'experiment[{}]'
 # in ms
 MONGO_CONNECT_TIMEOUT = 5000
+# connection timeout in ms
+RPYC_CONN_TIMEOUT = 5000
+# send/receive timeout in ms
+RPYC_SYNC_TIMEOUT = 5000

@@ -21,7 +21,7 @@ from nspyre.utils.misc import load_class_from_str, join_nspyre_path, \
                                 MonkeyWrapper
 from nspyre.definitions import SERVER_META_CONFIG_YAML, MONGO_SERVERS_KEY, \
                                 MONGO_SERVERS_SETTINGS, MONGO_CONNECT_TIMEOUT, \
-                                MONGO_RS
+                                MONGO_RS, RPYC_SYNC_TIMEOUT
 import rpyc
 import os
 import _thread
@@ -41,8 +41,6 @@ import visa
 ###########################
 
 DEFAULT_LOG = 'server.log'
-# in ms
-RPYC_TIMEOUT = 5000
 
 ###########################
 # Exceptions
@@ -164,17 +162,22 @@ class InstrumentServer(rpyc.Service):
                 # they must be converted to Quantity objects of the local lantz
                 # registry (aka Q_ -> defined in lantz __init__.py).
                 # see pint documentation for details
-                try:
-                    setattr(obj, attr, Q_(val.m, str(val.u)))
-                except Exception as exc:
-                    raise InstrumentServerError(exc, 'Remote client attempted '
-                        'setting instrument server device [{}] attribute [{}] '
-                        'to a unit not found in the pint unit registry'.\
-                        format(obj, attr))
-            else:
+                val = Q_(val.m, str(val.u))
+            try:
                 setattr(obj, attr, val)
+            except Exception as exc:
+                raise InstrumentServerError(exc, 'Remote client failed '
+                    'setting instrument server device [{}] attribute [{}] '
+                    'to [{}]'.format(obj, attr, val))
             # update the mongodb entry for this feat
-            base_units = self.devs[dev_name]._lantz_feats[attr]._kwargs['units']
+            try:
+                base_units = self.devs[dev_name]._lantz_feats[attr].\
+                                                _kwargs['units']
+            except Exception as exc:
+                raise InstrumentServerError(exc, 'Remote client failed '
+                    'setting instrument server device [{}] attribute [{}] '
+                    'to [{}] - is the device loaded on the instrument server '
+                    'and initialized?'.format(obj, attr))
             formatted_val = val.to(base_units).m if isinstance(val, Quantity) \
                                                 else val
             self.db[dev_name].update_one({'name':attr},
@@ -332,9 +335,9 @@ class InstrumentServer(rpyc.Service):
         logging.info('starting RPyC server...')
         self._rpyc_server = ThreadedServer(self, port=self.port,
                         protocol_config={'allow_all_attrs' : True,
-                                        'allow_setattr' : True,
-                                        'allow_delattr' : True,
-                                        'sync_request_timeout' : RPYC_TIMEOUT})
+                                    'allow_setattr' : True,
+                                    'allow_delattr' : True,
+                                    'sync_request_timeout' : RPYC_SYNC_TIMEOUT})
         self._rpyc_server.start()
         logging.info('RPyC server stopped')
 

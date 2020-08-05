@@ -74,6 +74,13 @@ def join_nspyre_path(path):
     directory"""
     return _join_nspyre_path(path)
 
+def debug_qt():
+    """Set a tracepoint in the Python debugger that works with Qt"""
+    from PyQt5.QtCore import pyqtRemoveInputHook
+    from pdb import set_trace
+    pyqtRemoveInputHook()
+    set_trace()
+
     # for addr in mongodb_addrs:
     #     client = pymongo.MongoClient(addr, re)
     #     if client.is_primary:

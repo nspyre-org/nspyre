@@ -1,9 +1,10 @@
 """
-    nspyre.spyrelet.instrument_manager.py
+    nspyre.client.InservGateway.py
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module manages and centralizes connections to one or more instrument
-    servers
+    servers. All instrument server connections should be done through the
+    InservGateway class.
 
     Author: Jacob Feder
     Date: 7/11/2020
@@ -13,7 +14,7 @@ from nspyre.config.config_files import get_config_param, load_config
 from nspyre.utils.misc import MonkeyWrapper
 from nspyre.definitions import CLIENT_META_CONFIG_YAML, MONGO_CONNECT_TIMEOUT, \
                                 MONGO_SERVERS_KEY, MONGO_SERVERS_SETTINGS, \
-                                MONGO_RS
+                                MONGO_RS, RPYC_CONN_TIMEOUT
 from lantz import Q_
 from pint import Quantity
 import parse
@@ -30,8 +31,8 @@ import rpyc
 # Exceptions
 ###########################
 
-class InstrumentManagerError(Exception):
-    """General InstrumentManager exception"""
+class InservGatewayError(Exception):
+    """General InservGateway exception"""
     def __init__(self, msg):
         super().__init__(msg)
 
@@ -39,9 +40,9 @@ class InstrumentManagerError(Exception):
 # Classes / functions
 ###########################
 
-class Instrument_Manager():
-    """Loads a configuration file, then attempts to connect to all specified
-        instrument servers"""
+class InservGateway():
+    """Loads a configuration file, then attempts to connect to all 
+    instrument servers"""
     def __init__(self, config_file=CLIENT_META_CONFIG_YAML, mongo_addr=None):
         # config dictionary
         self.config = {}
@@ -72,11 +73,11 @@ class Instrument_Manager():
     def connect_servers(self):
         """Auto discover and attempt connection to all of the instrument
         servers in mongodb"""
-        # retrieve the instrument server settings from mongo
+        # retrieve all of the instrument server settings from mongo
         try:
             all_db_names = self.mongo_client.list_database_names()
         except:
-            raise InstrumentManagerError('Failed connecting to mongodb [{}]'.\
+            raise InservGatewayError('Failed connecting to mongodb [{}]'.\
                                         format(self.mongo_addr)) from None
         logging.info('connected to mongodb server [{}]'.format(self.mongo_addr))
         for db_name in all_db_names:
@@ -102,16 +103,16 @@ class Instrument_Manager():
         """Attempt connection to an instrument server"""
         try:
             self.servers[s_id] = rpyc.connect(s_addr, s_port,
-                                        config={'timeout' : 10.0})
+                                        config={'timeout' : RPYC_CONN_TIMEOUT})
             # this allows the instrument server to have full access to this
             # client's object dictionaries - appears necessary for lantz
             self.servers[s_id]._config['allow_all_attrs'] = True
         except:
-            raise InstrumentManagerError('Failed to connect to '
+            raise InservGatewayError('Failed to connect to '
                             'instrument server [{}] at address [{}]'.\
                             format(s_id, s_addr)) from None
-        logging.info('instrument manager connected to instrument server [{}]'.\
-                        format(s_id))
+        logging.info('instrument server gateway connected to instrument '
+                    'server [{}]'.format(s_id))
 
     def disconnect_server(self, s_id):
         """Disconnect from an instrument server and remove it's associated 
@@ -120,9 +121,9 @@ class Instrument_Manager():
             self.servers[s_id].close()
             del self.servers[s_id]
         except:
-            raise InstrumentManagerError('Failed to disconnect from '
+            raise InservGatewayError('Failed to disconnect from '
                             'instrument server [{}]'.format(s_id)) from None
-        logging.info('instrument manager disconnected '
+        logging.info('instrument server gateway disconnected '
                         'from server [{}]'.format(s_id))
 
     def load_devices(self):
@@ -145,7 +146,7 @@ class Instrument_Manager():
                         try:
                             quantity_ret = Q_(ret.m, str(ret.u))
                         except:
-                            raise InstrumentManagerError('Instrument server '
+                            raise InservGatewayError('Instrument server '
                                 '[{}] device [{}] attribute [{}] returned a '
                                 'unit not found in the pint unit registry'.\
                                 format(server_name, dev_name, attr))
@@ -157,13 +158,13 @@ class Instrument_Manager():
                 devs[server_name + '/' + dev_name] = \
                 MonkeyWrapper(self.servers[server_name].root.devs[dev_name],
                                 get_attr_override=dev_get_attr)
-                logging.info('instrument manager loaded device [{}] from '
-                                ' server [{}]'.format(dev_name, server_name))
+                logging.info('instrument server gateway loaded device [{}] '
+                            'from server [{}]'.format(dev_name, server_name))
         return devs
 
     def update_config(self, filename):
         """Reload the config file"""
-        self.config,_ = load_config(filename)
+        self.config, _ = load_config(filename)
 
     def __enter__(self):
         """Python context manager setup"""
@@ -178,7 +179,8 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s -- %(levelname)s -- %(message)s',
                         handlers=[logging.StreamHandler()])
-    with Instrument_Manager() as im:
+    # TODO unit testing module
+    with InservGateway() as im:
         sg_loc = 'local1/fake_sg'
         im.devs[sg_loc].amplitude = Q_(1.0, 'volt')
         print('found devices:\n{}'.format(im.devs))

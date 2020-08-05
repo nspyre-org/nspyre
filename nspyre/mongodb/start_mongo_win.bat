@@ -13,9 +13,10 @@ set DB1_LOG=%LOG_DIR%\db1
 set DB2_LOG=%LOG_DIR%\db2
 
 rem kill existing mongod instances
-taskkill /f /im mongod.exe
+taskkill /t /f /im mongod.exe
 
 rem remove dbs and logs
+rem TODO
 rd /s /q %DB1_DIR%\*
 rd /s /q %DB2_DIR%\*
 rd /s /q %LOG_DIR%\*

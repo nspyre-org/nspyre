@@ -1,6 +1,19 @@
-import yaml
+#!/usr/bin/env python
+"""
+This module handles reading and writing YAML configuration files
+
+Author: Jacob Feder
+Date: 7/25/2020
+"""
+
 import os
 from importlib import import_module
+
+import yaml
+
+###########################
+# Globals
+###########################
 
 META_CONFIG_FILES_ENTRY = 'config_files'
 

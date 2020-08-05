@@ -1,13 +1,10 @@
 """
-    nspyre.client.InservGateway.py
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This module manages and centralizes connections to one or more instrument
+servers. All instrument server connections should be done through the
+InservGateway class.
 
-    This module manages and centralizes connections to one or more instrument
-    servers. All instrument server connections should be done through the
-    InservGateway class.
-
-    Author: Jacob Feder
-    Date: 7/11/2020
+Author: Jacob Feder
+Date: 7/11/2020
 """
 
 from nspyre.config.config_files import get_config_param, load_config

@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 """
-    spyre.gui.instrument_manager.py
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This instrument manager is a GUI which can connect to a set of
+instrument servers and control the associated devices
 
-    This instrument manager is a Widget which can connect to a set of
-    instrument servers and control the associated devices
-
-    Author: Alexandre Bourassa
-    Date: 10/30/2019
-    Modified: Jacob Feder 7/25/2020
+Author: Alexandre Bourassa
+Date: 10/30/2019
+Modified: Jacob Feder 7/25/2020
 """
 
 import logging
@@ -17,7 +14,7 @@ from PyQt5 import QtWidgets, QtCore
 import sip
 from lantz import Q_
 
-from nspyre.inserv.inserv_gateway import InservGateway
+from nspyre.inserv.gateway import InservGateway
 from nspyre.gui.widgets.feat import get_feat_widget
 from nspyre.utils.misc import load_class_from_str, join_nspyre_path
 from nspyre.definitions import MONGO_SERVERS_KEY
@@ -70,6 +67,7 @@ class Instrument_Manager_Widget(QtWidgets.QWidget):
         self.reset_all()
         self.synched_dbs = {}
         for s_name in self.manager.servers:
+            # TODO dropdown for each server
             s_db_name = MONGO_SERVERS_KEY.format(s_name)
             self.synched_dbs[s_name] = Synched_Mongo_Database(
                                             MONGO_SERVERS_KEY.format(s_name),

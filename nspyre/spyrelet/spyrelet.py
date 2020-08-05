@@ -9,20 +9,24 @@
     Modified: Jacob Feder 7/11/2020
 """
 
-import pymongo
-from nspyre.instrument_manager import Instrument_Manager
-from nspyre.utils import *
-import pandas as pd
-import numpy as np
-
-from lantz import Q_
-from pint.util import infer_base_unit
+# std
+import threading
+from collections import OrderedDict
 import traceback
 import inspect
-from collections import OrderedDict
+
+# 3rd party
+import pymongo
+import pandas as pd
+import numpy as np
+from lantz import Q_
+from pint.util import infer_base_unit
 from tqdm.auto import tqdm
-from nspyre.data_handling import save_data
-import threading
+
+# nspyre
+from nspyre.gui.data_handling import save_data
+from nspyre.instrument_manager import Instrument_Manager
+from nspyre.utils import *
 
 ###########################
 # Exceptions
@@ -71,17 +75,14 @@ class Spyrelet():
     # time. This can store anything the users want
     CONSTS = dict()
 
-    def __init__(self, unique_name, spyrelets={}, device_alias={},
-                    mongodb_addr=None, manager=None, **consts):
+    def __init__(self, unique_name, manager, spyrelets={}, device_alias={},
+                    mongodb_addr=None, **consts):
         self.name = unique_name
         self.progress = tqdm
         self.spyrelets = spyrelets
         self.CONSTS = self.CONSTS.copy()
         self.CONSTS.update(**consts)
         self.last_kwargs = dict()
-
-        if manager is None:
-            manager = Instrument_Manager(config file)
 
         self.mongodb_addr = mongodb_addr
         self.validate()
@@ -306,7 +307,6 @@ class Spyrelet():
         if not (valid_fina and valid_init):
             raise Exception('Signature of initialize and finalize function must be the same as that of main for spyrelet: ' + self.name)
 
-
 class Spyrelet_Launcher():
     def __init__(self, spyrelet):
         self.spyrelet = spyrelet
@@ -346,6 +346,3 @@ class Spyrelet_Launcher():
         pos_or_kw_params = [params[k] for k in self.pos_or_kw_params]
         others = {k:val for k, val in params.items() if not k in self.pos_or_kw_params}
         return self.spyrelet.run(*pos_or_kw_params, progress=progress, **others)
-        
-        
-            

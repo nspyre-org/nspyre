@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 """
-    nspyre.inserv.inserv.py
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    This module:
+This module:
     - loads the server config file
     - connects to all of the instruments specified in the config files
     - creates a RPyC (python remote procedure call) server to allow remote
         machines to access the instruments
     - serves a shell prompt allowing the user runtime control of the server
 
-    Author: Jacob Feder
-    Date: 7/8/2020
+Author: Jacob Feder
+Date: 7/8/2020
 """
 
 import logging

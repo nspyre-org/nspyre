@@ -8,7 +8,6 @@
 
 import numpy as np
 import time
-from pint import Quantity as Q_
 
 # __all__ = ['Plot1D', 'Plot2D', 'PlotFormatInit', 'PlotFormatUpdate', 
 #            'Spyrelet', 'LinePlotWidget', 'HeatmapPlotWidget', 'Q_', 

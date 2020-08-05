@@ -240,14 +240,14 @@ class InstrumentServer(rpyc.Service):
         self.db[dev_name].insert_many(feat_attr_list)
 
         # initialize the device
-        try:
-            self.devs[dev_name].initialize()
-        except Exception as exc:
-            logging.debug(exc)
-            self.devs.pop(dev_name)
-            logging.error('device [{}] initialization sequence failed'.\
-                            format(dev_name))
-            return
+        # try:
+        self.devs[dev_name].initialize()
+        # except Exception as exc:
+        #     logging.debug(exc)
+        #     self.devs.pop(dev_name)
+        #     logging.error('device [{}] initialization sequence failed'.\
+        #                     format(dev_name))
+        #     return
 
         logging.info('added device [{}] with args: {} kwargs: {}'.\
                         format(dev_name, dev_args, dev_kwargs))

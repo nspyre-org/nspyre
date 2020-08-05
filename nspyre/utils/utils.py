@@ -1,4 +1,4 @@
-from pint import Quantity as Q_
+# from lantz import Q_
 from collections.abc import Iterable
 import numpy as np
 import inspect
@@ -91,54 +91,6 @@ def get_class_from_str(class_str):
     class_name = class_str.split('.')[-1]
     mod = import_module(class_str.replace('.'+class_name, ''))
     return getattr(mod, class_name)
-
-    # for addr in mongodb_addrs:
-    #     client = pymongo.MongoClient(addr, re)
-    #     if client.is_primary:
-    #         print("Connected to Mongo master at: {}".format(addr))
-    #         return client
-    # raise Exception('Could not find Mongo Master!')
-
-# def cleanup_register(client):
-#     if type(client) is str:
-#         client = pymongo.MongoClient(client)
-#     db_list = client['Spyre_Live_Data'].list_collection_names()
-#     reg_list = [x['_id'] for x in client['Spyre_Live_Data']['Register'].find({},{'_id':True})]
-#     for name in reg_list:
-#         if not name in db_list:
-#             client['Spyre_Live_Data']['Register'].delete_one({'_id': name})
-
-# def custom_encode(d):
-#     out = dict()
-#     for k,val in d.items():
-#         if type(val) == Q_:
-#             out[k] = {'__type__':'Quantity', 'm':val.m, 'units':str(val.units)}
-#         elif type(val) == RangeDict:
-#             out[k] = {'__type__':'RangeDict'}
-#             out[k].update(custom_encode(val))
-#         elif type(val) == np.ndarray:
-#             out[k] = {'__type__':'ndarray', 'val':val.tolist()}
-#         else:
-#             out[k] = val
-#     return out
-
-# def custom_decode(d):
-#     out = dict()
-#     for k,val in d.items():
-#         if isinstance(val, Iterable) and '__type__' in val:
-#             if val['__type__'] == 'Quantity':
-#                 out[k] = Q_(val['m'], val['units'])
-#             elif val['__type__'] == 'RangeDict':
-#                 out[k] = custom_decode(val)
-#             elif val['__type__'] == 'ndarray':
-#                 out[k] = np.array(val['val'])
-#         else:
-#             out[k] = val
-#     return out
-
-
-# def arange(start, stop, step, dtype=None):
-#     return np.arange(start, stop, step, dtype=dtype)
 
 # class RangeDict(dict):
 #     FUNCS = {'linspace':np.linspace, 'arange':arange, 'logspace':np.logspace}

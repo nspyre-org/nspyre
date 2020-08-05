@@ -73,7 +73,7 @@ class BaseFeatWidget(QtWidgets.QWidget):
         self.read_button.clicked.connect(self.read_clicked)
         layout.addWidget(self.read_button)
         return
-        
+
     def set_readonly(self, readonly):
         if readonly:
             self.val_w.setEnabled(False)

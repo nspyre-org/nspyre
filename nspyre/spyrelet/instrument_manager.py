@@ -15,6 +15,7 @@ from nspyre.definitions import CLIENT_META_CONFIG_YAML, MONGO_CONNECT_TIMEOUT, \
                                 MONGO_SERVERS_KEY, MONGO_SERVERS_SETTINGS, \
                                 MONGO_RS
 from lantz import Q_
+from pint import Quantity
 import parse
 import pymongo
 import os
@@ -140,7 +141,7 @@ class Instrument_Manager():
                 # see pint documentation for details
                 def dev_get_attr(obj, attr):
                     ret = getattr(obj, attr)
-                    if isinstance(ret, Q_):
+                    if isinstance(ret, Quantity):
                         try:
                             quantity_ret = Q_(ret.m, str(ret.u))
                         except:

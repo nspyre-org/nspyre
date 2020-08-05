@@ -18,7 +18,7 @@ MONGO_RS = 'NSpyreSet'
 # that contains the instrument server settings
 MONGO_SERVERS_SETTINGS = '_settings'
 # All instrument server databases in mongodb will be of this form
-MONGO_SERVERS_KEY = 'instrument_server[{}]'
+MONGO_SERVERS_KEY = 'inserv[{}]'
 # All experiment databases in mongodb will be of this form
 MONGO_EXPERIMENTS_KEY = 'experiment[{}]'
 # in ms

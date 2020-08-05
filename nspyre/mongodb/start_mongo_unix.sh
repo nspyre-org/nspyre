@@ -2,22 +2,40 @@
 
 # script for starting the mongodb server
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 DB1_PORT=27017
 DB2_PORT=27018
 REPLSET=NSpyreSet
 OPLOG=1024
+
+DB1_DIR=$THIS_DIR/db1
+DB2_DIR=$THIS_DIR/db2
+LOG_DIR=$THIS_DIR/logs
+DB1_LOG=$LOG_DIR/db1
+DB2_LOG=$LOG_DIR/db2
+
 # may be required to start the mongodb daemon?
 #systemctl start mongodb.service
 
 # kill existing mongod instances
 killall mongod
 
+# remove dbs and logs
+rm -rf $DB1_DIR/*
+rm -rf $DB2_DIR/*
+rm -rf $LOG_DIR/*
+
 # start the db servers
-mongod --dbpath $DIR/db1 --logpath $DIR/logs/db1 --bind_ip_all \
+mongod --dbpath $DB1_DIR --logpath $DB1_LOG --bind_ip_all \
 		--port $DB1_PORT --replSet $REPLSET --oplogSize $OPLOG --fork
-mongod --dbpath $DIR/db2 --logpath $DIR/logs/db2 --bind_ip_all \
+mongod --dbpath $DB2_DIR --logpath $DB2_LOG --bind_ip_all \
 		--port $DB2_PORT --replSet $REPLSET --oplogSize $OPLOG --fork
+
+# allow time for mongod to start
+sleep 2
+# TODO tail log file instead
+# ( tail -f -n0 $DB1_LOG & ) | grep -qE -- '[initandlisten] waiting for connections|[initandlisten] now exiting'
+# ( tail -f -n0 $DB2_LOG & ) | grep -qE -- '[initandlisten] waiting for connections|[initandlisten] now exiting'
 
 # only needs to performed for first-time setup
 # or if the db1/db2 directories were cleared,

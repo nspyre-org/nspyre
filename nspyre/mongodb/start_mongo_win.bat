@@ -6,14 +6,28 @@ set DB2_PORT=27018
 set REPLSET=NSpyreSet
 set OPLOG=1024
 
+set DB1_DIR=%THIS_DIR%db1
+set DB2_DIR=%THIS_DIR%db2
+set LOG_DIR=%THIS_DIR%logs
+set DB1_LOG=%LOG_DIR%\db1
+set DB2_LOG=%LOG_DIR%\db2
+
 rem kill existing mongod instances
 taskkill /f /im mongod.exe
 
+rem remove dbs and logs
+rd /s /q %DB1_DIR%\*
+rd /s /q %DB2_DIR%\*
+rd /s /q %LOG_DIR%\*
+
 rem start the db servers
-start /b mongod --dbpath %THIS_DIR%db1 --logpath %THIS_DIR%logs\db1 ^
+start /b mongod --dbpath %DB1_DIR% --logpath %DB1_LOG% ^
 	--bind_ip_all --port %DB1_PORT% --replSet %REPLSET% --oplogSize %OPLOG%
-start /b mongod --dbpath %THIS_DIR%db2 --logpath %THIS_DIR%logs\db2 ^
+start /b mongod --dbpath %DB2_DIR% --logpath %DB2_LOG% ^
 	--bind_ip_all --port %DB2_PORT% --replSet %REPLSET% --oplogSize %OPLOG%
+
+rem allow time for mongod to start
+SLEEP 2
 
 rem only needs to performed for first-time setup
 rem or if the db1/db2 directories were cleared,

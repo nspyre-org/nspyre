@@ -1,29 +1,56 @@
+"""
+This module defines basic constants and functions that will be used
+throughout nspyre
+
+Author: Jacob Feder
+Date: 7/8/2020
+"""
+
+###########################
+# imports
+###########################
+
+# std
 import os
+
+# 3rd party
+from pint import UnitRegistry
+
+# create a pint registry universal to nspyre
+ureg = UnitRegistry()
+Q_ = ureg.Quantity
 
 # root directory of nspyre
 NSPYRE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-def _join_nspyre_path(path):
+def join_nspyre_path(path):
     """Return a full path from a path given relative to the nspyre root 
     directory"""
     return os.path.join(NSPYRE_ROOT, path)
 
 # config files
-CLIENT_META_CONFIG_YAML =  _join_nspyre_path('config/client_meta_config.yaml')
-SERVER_META_CONFIG_YAML = _join_nspyre_path('config/server_meta_config.yaml')
+CLIENT_META_CONFIG_YAML = join_nspyre_path('config/client_meta_config.yaml')
+SERVER_META_CONFIG_YAML = join_nspyre_path('config/server_meta_config.yaml')
 
+# format for accessing instrument server devices from a client, where the first
+# item is the server name and the second is the device name (both defined in the
+# server config file)
+INSERV_DEV_ACCESSOR = '{}/{}'
 # mongodb replicaset name
 MONGO_RS = 'NSpyreSet'
-# Mongodb instrument server databases will contain a special document
+# all spyrelet databases in mongodb will be of this form
+MONGO_SPYRELETS_KEY = 'spyrelet[{}]'
+# mongodb instrument server databases will contain a special document
 # that contains the instrument server settings
-MONGO_SERVERS_SETTINGS = '_settings'
+MONGO_SERVERS_SETTINGS_KEY = '_settings'
 # All instrument server databases in mongodb will be of this form
 MONGO_SERVERS_KEY = 'inserv[{}]'
-# All experiment databases in mongodb will be of this form
-MONGO_EXPERIMENTS_KEY = 'experiment[{}]'
 # in ms
 MONGO_CONNECT_TIMEOUT = 5000
-# connection timeout in ms
+# rpyc connection timeout in ms
 RPYC_CONN_TIMEOUT = 5000
-# send/receive timeout in ms
+# rpyc send/receive timeout in ms
 RPYC_SYNC_TIMEOUT = 5000
+
+# config file key for mongodb address
+CONFIG_MONGO_ADDR_KEY = 'mongodb_addr'

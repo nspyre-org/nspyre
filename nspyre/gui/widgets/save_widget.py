@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets
 import time
-from nspyre.data_handling import save_data
+from nspyre.gui.data_handling import save_data
 
 class Save_Widget(QtWidgets.QWidget):
 

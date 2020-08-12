@@ -9,37 +9,67 @@
     Modified: Jacob Feder 7/11/2020
 """
 
+###########################
+# imports
+###########################
+
 # std
 import threading
 from collections import OrderedDict
 import traceback
 import inspect
+from copy import copy
+from importlib.util import spec_from_file_location, module_from_spec
+import os
+import sys
+from importlib import import_module
+import logging
 
 # 3rd party
 import pymongo
 import pandas as pd
 import numpy as np
-from lantz import Q_
 from pint.util import infer_base_unit
 from tqdm.auto import tqdm
 
 # nspyre
 from nspyre.gui.data_handling import save_data
-from nspyre.instrument_manager import Instrument_Manager
-from nspyre.utils import *
+from nspyre.config.config_files import load_config, get_config_param, \
+                                    ConfigEntryNotFoundError
+from nspyre.utils.misc import load_class_from_str, get_mongo_client, \
+                            custom_decode, custom_encode, RangeDict
+from nspyre.definitions import Q_
+
+###########################
+# Globals
+###########################
+
+# config file key for spyrelets
+CONFIG_SPYRELETS_KEY = 'spyrelets'
+# config file key for the python file of the spyrelet
+CONFIG_SPYRELETS_FILE_KEY = 'file'
+# config file key for the class of the spyrelet
+CONFIG_SPYRELETS_CLASS_KEY = 'class'
+# config file key for the device aliases of a spyrelet
+CONFIG_DEVS_KEY = 'device_aliases'
+# config file key for the sub-spyrelets of a spyrelet
+CONFIG_SUB_SPYRELETS_KEY = 'spyrelets'
+# config file key for spyrelet arguments
+CONFIG_SPYRELETS_ARGS_KEY = 'args'
 
 ###########################
 # Exceptions
 ###########################
 
-class MissingDeviceError(Exception):
-    pass
-
-class MissingSpyreletError(Exception):
-    pass
-
 class StopRunning(Exception):
     pass
+
+class SpyreletLoadError(Exception):
+    """Exception while loading a Spyrelet"""
+    def __init__(self, error, msg):
+        super().__init__(msg)
+        if error:
+            logging.exception(error)
 
 ###########################
 # Classes / functions
@@ -75,7 +105,7 @@ class Spyrelet():
     # time. This can store anything the users want
     CONSTS = dict()
 
-    def __init__(self, unique_name, manager, spyrelets={}, device_alias={},
+    def __init__(self, unique_name, manager, device_aliases={}, spyrelets={},
                     mongodb_addr=None, **consts):
         self.name = unique_name
         self.progress = tqdm
@@ -96,36 +126,36 @@ class Spyrelet():
         self.col = self.client['Spyre_Live_Data'][unique_name]
         self.client['Spyre_Live_Data']['Register'].update_one({'_id':unique_name},{'$set':reg_entry}, upsert=True)
         self.clear_data()
-
-        # This is imported here otherwise the import may occur before the Remote_Device_Instance is dynamically generated...
-        # from instrument_server import Remote_Device
-
-        devices = manager.get_devices()
-        for dname, dclass in self.REQUIRED_DEVICES.items():
-            real_dname = device_alias[dname] if dname in device_alias else dname
-            if real_dname in devices:
-                # isRemoteDevice = issubclass(type(devices[dname]), Remote_Device)
-                #This is a convoluted way of checking subclass
-                isRemoteDevice = any(['spyre.instrument_server.Remote_Device' in str(c) for c in inspect.getmro(type(devices[real_dname]))])
-
-                if isRemoteDevice :
-                    inst_dclass = get_class_from_str(devices[real_dname].info['class'])
-                    dev = devices[real_dname]
-                else:
-                    inst_dclass = type(devices[real_dname])
-                    dev = devices[real_dname]
-                if issubclass(inst_dclass, dclass):
-                    setattr(self, dname, dev)
-            else:
-                raise MissingDeviceError("Device requirements for this spyrelets ({}) was not met.  Misssing: {}".format(self.name, dname))
         
+        # check that the server devices are accessible and add them as
+        # instance variables
+        for dev_alias in self.REQUIRED_DEVICES:
+            try:
+                dev_accessor = device_aliases[dev_alias]
+            except Exception as exc:
+                raise SpyreletLoadError(exc, 'Spyrelet [{}] requires the '
+                        'device [{}] but it wasn\'t defined in the [{}] '
+                        'section of the config file'.format(unique_name, \
+                            dev_alias, CONFIG_DEVS_KEY)) from None
+            if dev_accessor in manager.devs:
+                setattr(self, dev_alias, manager.devs[dev_accessor])
+            else:
+                raise SpyreletLoadError(None, 'Spyrelet [{}] requires the '
+                        'device [{}] (alias [{}]) but either the instrument '
+                        'server is unreachable, or the device isn\'t available '
+                        'on the server'.\
+                        format(unique_name, dev_accessor, dev_alias))
+
+        # check that the sub spyrelets are loaded and add them as
+        # instance variables
         for sname, sclass in self.REQUIRED_SPYRELETS.items():
             if sname in spyrelets and isinstance(spyrelets[sname], sclass):
                 setattr(self, sname, spyrelets[sname])
             else:
-                raise MissingSpyreletError("Sub-Spyrelet requirements for this spyrelets ({}) was not met.  Misssing: {}".format(self.name, sname))
+                raise SpyreletLoadError('Spyrelet [{}] requires the '
+                        'sub-spyrelet [{}] but it wasn\'t loaded'.\
+                        format(unique_name, sname))
 
-    
     def set_defaults(self, **params_dict):
         d = {'defaults.{}'.format(key):val for key,val in custom_encode(params_dict).items()}
         if len(d):
@@ -294,8 +324,8 @@ class Spyrelet():
             if not p.kind in [inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.VAR_KEYWORD]:
                 raise Exception('Invalid main signature, Spyrelets do not support positional only, keyword only or var_positional arguments')
 
-        is_default = lambda sig: list(sig.parameters.keys()) == ['args', 'kwargs'] and \
-                                 sig.parameters['args'].kind == inspect.Parameter.VAR_POSITIONAL and \
+        is_default = lambda sig: list(sig.parameters.keys()) == [CONFIG_SPYRELETS_ARGS_KEY, 'kwargs'] and \
+                                 sig.parameters[CONFIG_SPYRELETS_ARGS_KEY].kind == inspect.Parameter.VAR_POSITIONAL and \
                                  sig.parameters['kwargs'].kind == inspect.Parameter.VAR_KEYWORD
         
         is_equal = lambda s1, s2: list(s1.parameters.keys()) == list(s2.parameters.keys()) and \
@@ -346,3 +376,108 @@ class Spyrelet_Launcher():
         pos_or_kw_params = [params[k] for k in self.pos_or_kw_params]
         others = {k:val for k, val in params.items() if not k in self.pos_or_kw_params}
         return self.spyrelet.run(*pos_or_kw_params, progress=progress, **others)
+
+def load_all_spyrelets(manager, filepath=None):
+    """Load all of the spyrelets from the config file"""
+    cfg = load_config(filepath)
+    # spyrelet parameters to parse
+    spyrelet_configs,_ = copy(get_config_param(cfg, [CONFIG_SPYRELETS_KEY]))
+    # loaded spyrelets
+    loaded_spyrelets = {}
+    
+    # recursive function that loads a spyrelet from the config
+    # and also loads all sub-spyrelets
+    def load_spyrelet(spyrelet_name):
+        if spyrelet_name in loaded_spyrelets:
+            raise SpyreletLoadError(None, 'spyrelet [{}] is already '
+                                        'defined'.format(spyrelet_name))
+        
+        # discover any sub-spyrelets
+        try:
+            sub_spyrelet_names,_ = get_config_param(cfg, \
+                                        [CONFIG_SPYRELETS_KEY, spyrelet_name, \
+                                        CONFIG_SUB_SPYRELETS_KEY])
+        except ConfigEntryNotFoundError:
+            logging.debug('spyrelet [{}] no sub-spyrelets found'.\
+                            format(spyrelet_name))
+            sub_spyrelet_names = {}
+        
+        # iterate through the sub-spyrelets and load them
+        sub_spyrelets = {}
+        for s in sub_spyrelet_names:
+            if s in loaded_spyrelets:
+                sub_spyrelets[s] = loaded_spyrelets[s]
+            else:
+                try:
+                    sub_spyrelets[s] = load_spyrelet(s)
+                except:
+                    raise SpyreletLoadError(None, 'spyrelet [{}] '
+                                        'sub-spyrelet [{}] failed to load'.\
+                                        format(spyrelet_name, s))
+        
+        # discover spyrelet file and class
+        spyrelet_file_path,_ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY , \
+                                    spyrelet_name, CONFIG_SPYRELETS_FILE_KEY])
+        spyrelet_class_name, spyrelet_cfg_file_path = get_config_param(cfg, \
+                                    [CONFIG_SPYRELETS_KEY, spyrelet_name, \
+                                    CONFIG_SPYRELETS_CLASS_KEY])
+        # resolve the spyrelet file location
+        # if the path isn't absolute resolve it relative to the config file
+        if not os.path.isabs(spyrelet_file_path):
+            spyrelet_cfg_file_dir = os.path.dirname(spyrelet_cfg_file_path)
+            spyrelet_file_path = os.path.abspath(os.path.join( \
+                                    spyrelet_cfg_file_dir, spyrelet_file_path))
+        spyrelet_dir, spyrelet_file_name = os.path.split(spyrelet_file_path)
+        # remove .py extension
+        spyrelet_file_name = spyrelet_file_name.split('.py')[0]
+        # load the spyrelet class from its python file
+        sys.path.append(spyrelet_dir)
+        spyrelet_module = import_module(spyrelet_file_name)
+        spyrelet_class = getattr(spyrelet_module, spyrelet_class_name)
+        
+        # discover the spyrelet devices
+        try:
+            dev_aliases,_ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY, \
+                                spyrelet_name, CONFIG_DEVS_KEY])
+        except ConfigEntryNotFoundError:
+            logging.debug('spyrelet [{}] no device aliases found'.\
+                            format(spyrelet_name))
+            dev_aliases = {}
+        
+        # discover the spyrelet arguments
+        try:
+            args,_ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY, \
+                                spyrelet_name, CONFIG_SPYRELETS_ARGS_KEY])
+        except ConfigEntryNotFoundError:
+            logging.debug('spyrelet [{}] no args found'.format(spyrelet_name))
+            args = {}
+        args = custom_decode(args)
+        
+        # create the spyrelet
+        spyrelet = spyrelet_class(spyrelet_name, manager, \
+                                device_aliases=dev_aliases, \
+                                spyrelets=sub_spyrelets, **args)
+        loaded_spyrelets[spyrelet_name] = spyrelet
+        logging.info('loaded spyrelet [{}]'.format(spyrelet_name))
+
+        # remove this spyrelet from the list of spyrelets to be loaded
+        del spyrelet_configs[spyrelet_name]
+        return spyrelet
+
+    # parse the spyrelets, loading them as we go until there
+    # are none left
+    while bool(spyrelet_configs):
+        load_spyrelet(next(iter(spyrelet_configs)))
+    return loaded_spyrelets
+
+def drop_spyrelet(name, client=None):
+    if client is None: client = get_mongo_client()
+    client['Spyre_Live_Data'][name].drop()
+    client['Spyre_Live_Data']['Register'].delete_one({'_id': name})
+
+def drop_all_spyrelets(except_list=[], client=None):
+    if client is None: client = get_mongo_client()
+    all_in_reg = [x['_id'] for x in client['Spyre_Live_Data']['Register'].find({},{})]
+    for name in all_in_reg:
+        if not name in except_list:
+            drop_spyrelet(name, client=client)

@@ -1,32 +1,44 @@
-from lantz.drivers.examples.dummydrivers import DummyOsci
-from lantz.drivers.examples.fungen import LantzSignalGenerator
+###########################
+# imports
+###########################
+
+# std
 import numpy as np
 import time
-from nspyre.views import Plot1D, Plot2D, PlotFormatInit, PlotFormatUpdate
-from nspyre.spyrelet import Spyrelet
-from nspyre.widgets.plotting import LinePlotWidget
-from nspyre.colors import colors
 from itertools import cycle
+import logging
+
+# nspyre
+from nspyre.gui.widgets.views import Plot1D, Plot2D, PlotFormatInit, PlotFormatUpdate
+from nspyre.spyrelet.spyrelet import Spyrelet
+from nspyre.gui.widgets.plotting import LinePlotWidget
+from nspyre.gui.colors import colors
+from nspyre.definitions import Q_
 
 COLORS = cycle(colors.keys())
 
+###########################
+# Classes
+###########################
+
 class SubSpyrelet(Spyrelet):
-    REQUIRED_DEVICES = {
-        'sg': LantzSignalGenerator,
-    }
+    REQUIRED_DEVICES = [
+        'sg'
+    ]
 
     PARAMS = {
         'iterations':{
             'type':int,
             'positive':True},
+        'amplitude':{
+            'type':float,
+            'positive':True},
     }
 
-    def main(self, iterations, A=1.1):
+    def main(self, iterations, amplitude):
         for i in self.progress(range(iterations)):
-            self.sg.amplitude = A
+            self.sg.amplitude = amplitude
             time.sleep(0.1)
-            # print(i)
-            # time.time()
             self.acquire({
                 'ind': i,
                 'rand': np.random.uniform(1,2, 100),
@@ -54,20 +66,20 @@ class SubSpyrelet(Spyrelet):
             item.setPen(colors[next(COLORS)])
 
 class MyExperiment(Spyrelet):
-    REQUIRED_DEVICES = {
-        'sg': LantzSignalGenerator,
-        'osc': DummyOsci
-    }
+    REQUIRED_DEVICES = [
+        'sg',
+        'osc'
+    ]
 
     REQUIRED_SPYRELETS = {
         's2': SubSpyrelet
     }
 
     PARAMS = {
-        'amplitude':{
+        'amplitude': {
                 'type': float,
                 'units':'V'},
-        'fs':{
+        'fs': {
             'type': range,
             'units':'GHz'},
     }
@@ -75,11 +87,8 @@ class MyExperiment(Spyrelet):
     def main(self, fs, amplitude):
         for i, f in enumerate(self.progress(fs)):
             self.sg.frequency = f
-            # print(f)
-            self.call(self.s2, 100, A=amplitude)
-            # print(self.s2.data)
+            self.call(self.s2, 100, amplitude)
             val = self.s2.data.rand.mean().mean()
-            # print(val)
             self.acquire({
                 'ind':i,
                 'f':f,
@@ -88,10 +97,10 @@ class MyExperiment(Spyrelet):
             })
 
     def initialize(self, fs, amplitude):
-        print('initialize')
+        logging.info('initializing [{}]...'.format(self.name))
 
     def finalize(self, fs, amplitude):
-        print('finalize')
+        logging.info('finalizing [{}]...'.format(self.name))
 
     @Plot1D
     def plot_results(df, cache):
@@ -105,10 +114,6 @@ class MyExperiment(Spyrelet):
     def init_formatter(plot):
         plot.xlabel = 'My x axis (a.u.)'
         plot.ylabel = 'Signal (in bananas)'
-
-
-    
-    
 
 # if __name__=='__main__':
 #     from nspyre.instrument_manager import Instrument_Manager

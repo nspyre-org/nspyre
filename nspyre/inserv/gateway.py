@@ -7,18 +7,29 @@ Author: Jacob Feder
 Date: 7/11/2020
 """
 
-from nspyre.config.config_files import get_config_param, load_config
-from nspyre.utils.misc import MonkeyWrapper
-from nspyre.definitions import CLIENT_META_CONFIG_YAML, MONGO_CONNECT_TIMEOUT, \
-                                MONGO_SERVERS_KEY, MONGO_SERVERS_SETTINGS, \
-                                MONGO_RS, RPYC_CONN_TIMEOUT
-from lantz import Q_
+###########################
+# imports
+###########################
+
+# std
+import os
+import logging
+
+# 3rd party
+
 from pint import Quantity
 import parse
 import pymongo
-import os
-import logging
+
 import rpyc
+
+# nspyre
+from nspyre.config.config_files import get_config_param, load_config
+from nspyre.utils.misc import MonkeyWrapper
+from nspyre.definitions import CLIENT_META_CONFIG_YAML, MONGO_CONNECT_TIMEOUT, \
+                                MONGO_SERVERS_KEY, MONGO_SERVERS_SETTINGS_KEY, \
+                                MONGO_RS, RPYC_CONN_TIMEOUT, INSERV_DEV_ACCESSOR
+from nspyre.definitions import Q_
 
 ###########################
 # Globals
@@ -59,8 +70,10 @@ class InservGateway():
     def config_mongo(self, mongo_addr=None):
         """Set up the mongodb database (but connection won't take place until
         a query is made)"""
-        self.mongo_addr = mongo_addr if mongo_addr else \
-                            get_config_param(self.config, ['mongodb_addr'])
+        if mongo_addr:
+            self.mongo_addr = mongo_addr
+        else:
+            self.mongo_addr,_ = get_config_param(self.config, ['mongodb_addr'])
         logging.info('connecting to mongodb server [{}]...'.\
                             format(self.mongo_addr))
         self.mongo_client = pymongo.MongoClient(mongo_addr,
@@ -86,7 +99,7 @@ class InservGateway():
                 server_name = server_name[0]
                 # retrieve the server settings dictionary
                 db_entry = self.mongo_client[db_name]\
-                                            [MONGO_SERVERS_SETTINGS].find_one()
+                                    [MONGO_SERVERS_SETTINGS_KEY].find_one()
                 self.connect_server(server_name,
                                     db_entry['address'],
                                     db_entry['port'])
@@ -152,7 +165,7 @@ class InservGateway():
                         return ret
                 # monkey wrap the device so we can override it's getter
                 # to fix pint unit registry issue
-                devs[server_name + '/' + dev_name] = \
+                devs[INSERV_DEV_ACCESSOR.format(server_name, dev_name)] = \
                 MonkeyWrapper(self.servers[server_name].root.devs[dev_name],
                                 get_attr_override=dev_get_attr)
                 logging.info('instrument server gateway loaded device [{}] '
@@ -161,7 +174,7 @@ class InservGateway():
 
     def update_config(self, filename):
         """Reload the config file"""
-        self.config, _ = load_config(filename)
+        self.config = load_config(filename)
 
     def __enter__(self):
         """Python context manager setup"""

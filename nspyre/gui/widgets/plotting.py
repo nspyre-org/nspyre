@@ -9,12 +9,12 @@ from pyqtgraph import functions as fn
 pg.setConfigOptions(imageAxisOrder='row-major')
 import numpy as np
 
-from nspyre.colormap import viridis
-from nspyre.colors import cyclic_colors, colors
-from nspyre.widgets.splitter_widget import Splitter, SplitterOrientation
+from nspyre.gui.colormap import viridis
+from nspyre.gui.colors import cyclic_colors, colors
+from nspyre.gui.widgets.splitter_widget import Splitter, SplitterOrientation
 
-from nspyre.widgets.spinbox import SpinBox
-from nspyre.widgets.code_editor import Scintilla_Code_Editor, Monokai_Python_Lexer
+from nspyre.gui.widgets.spinbox import SpinBox
+from nspyre.gui.widgets.code_editor import Scintilla_Code_Editor, Monokai_Python_Lexer
 
 import traceback
 import inspect

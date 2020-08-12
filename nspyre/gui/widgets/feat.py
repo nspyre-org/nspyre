@@ -1,10 +1,12 @@
 from collections import OrderedDict, Iterable
 
+# 3rd party
 from PyQt5 import QtWidgets, QtCore
 from pyqtgraph import ComboBox
-from lantz import Q_
 
+# nspyre
 from nspyre.gui.widgets.spinbox import SpinBox
+from nspyre.definitions import Q_
 
 def get_feat_widget(feat):
     if feat['values'] is not None:

@@ -11,7 +11,6 @@
 
 from PyQt5 import QtCore, QtWidgets
 from nspyre.widgets.image import ImageWidget
-from nspyre.config.config_files import load_config
 from nspyre.utils.misc import join_nspyre_path
 from subprocess import Popen
 import argparse

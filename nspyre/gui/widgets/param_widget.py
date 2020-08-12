@@ -1,11 +1,12 @@
+# 3rd party
 from PyQt5 import QtWidgets
 import pyqtgraph as pg
-from lantz import Q_
 import numpy as np
 from collections import OrderedDict
 
-from nspyre.widgets.spinbox import SpinBox
-from nspyre.utils import RangeDict
+from nspyre.definitions import Q_
+from nspyre.gui.widgets.spinbox import SpinBox
+from nspyre.utils.misc import RangeDict
 
 class Rangespace(QtWidgets.QWidget):
     def __init__(self, units=None, parent=None, default=None):

@@ -11,28 +11,36 @@ Author: Jacob Feder
 Date: 7/8/2020
 """
 
+###########################
+# imports
+###########################
+
+# std
 import logging
+import os
+import _thread
+import sys
+
+# 3rd party
+import rpyc
+from rpyc.utils.server import ThreadedServer 
+import pymongo
+from cmd import Cmd
+import argparse
+import waiting
+import visa
+from lantz import Q_, DictFeat
+from pint import Quantity
+
+# nspyre
 from nspyre.config.config_files import get_config_param, load_config, \
                                         meta_config_add, meta_config_remove, \
                                         meta_config_files
-from nspyre.utils.misc import load_class_from_str, join_nspyre_path, \
-                                MonkeyWrapper
+from nspyre.utils.misc import load_class_from_str, MonkeyWrapper
 from nspyre.definitions import SERVER_META_CONFIG_YAML, MONGO_SERVERS_KEY, \
-                                MONGO_SERVERS_SETTINGS, MONGO_CONNECT_TIMEOUT, \
-                                MONGO_RS, RPYC_SYNC_TIMEOUT
-import rpyc
-import os
-import _thread
-import pymongo
-from cmd import Cmd
-import time
-from rpyc.utils.server import ThreadedServer 
-import argparse
-import waiting
-from lantz import DictFeat, Q_
-from pint import Quantity
-import sys
-import visa
+                MONGO_SERVERS_SETTINGS_KEY, MONGO_CONNECT_TIMEOUT, \
+                MONGO_RS, RPYC_SYNC_TIMEOUT, CONFIG_MONGO_ADDR_KEY, \
+                join_nspyre_path
 
 ###########################
 # Globals
@@ -92,15 +100,18 @@ class InstrumentServer(rpyc.Service):
 
     def reload_server_config(self):
         """Reload RPyC server settings from the config"""
-        self.name = get_config_param(self.config, ['server_settings', 'name'])
-        self.ip = get_config_param(self.config, ['server_settings', 'ip'])
-        self.port = get_config_param(self.config, ['server_settings', 'port'])
-        
+        self.name,_ = get_config_param(self.config, ['server_settings', 'name'])
+        self.ip,_ = get_config_param(self.config, ['server_settings', 'ip'])
+        self.port,_ = get_config_param(self.config, ['server_settings', 'port'])
+
     def connect_mongo(self, mongo_addr=None):
         """Config and connect to the mongodb database"""
         self.db_name = MONGO_SERVERS_KEY.format(self.name)
-        self.mongo_addr = mongo_addr if mongo_addr else \
-                            get_config_param(self.config, ['mongodb_addr'])
+        if mongo_addr:
+            self.mongo_addr = mongo_addr
+        else:
+            self.mongo_addr,_ = get_config_param(self.config, \
+                                                [CONFIG_MONGO_ADDR_KEY])
         logging.info('connecting to mongodb server [{}]...'.\
                         format(self.mongo_addr))
         self.mongo_client = pymongo.MongoClient(mongo_addr,
@@ -112,7 +123,7 @@ class InstrumentServer(rpyc.Service):
         # connection will occur
         try:
             current_db = self.mongo_client[self.db_name]\
-                                    [MONGO_SERVERS_SETTINGS].find_one()
+                                    [MONGO_SERVERS_SETTINGS_KEY].find_one()
         except Exception as exc:
             raise InstrumentServerError(exc, 'Failed connecting to mongodb '
                                     '[{}]'.format(self.mongo_addr)) from None
@@ -129,7 +140,7 @@ class InstrumentServer(rpyc.Service):
                     format(self.name, current_db_address)) from None
         self.mongo_client.drop_database(self.db_name)
         # add a special settings document so clients can auto-detect us
-        self.db[MONGO_SERVERS_SETTINGS].insert_one({'address' : self.ip,
+        self.db[MONGO_SERVERS_SETTINGS_KEY].insert_one({'address' : self.ip,
                                                     'port' : self.port})
         logging.info('connected to mongodb server [{}]'.format(self.mongo_addr))
 
@@ -151,7 +162,7 @@ class InstrumentServer(rpyc.Service):
                                         'with unrecognized class [{}]'.\
                                         format(dev_name, dev_class)) from None
 
-        # a monkey-patching function for overriding writing devices feats
+        # a monkey-patching function for overriding writing device feats
         def dev_set_attr(obj, attr, val):
             if isinstance(val, Quantity):
                 # pint has an associated unit registry, and Quantity objects
@@ -164,6 +175,7 @@ class InstrumentServer(rpyc.Service):
             try:
                 setattr(obj, attr, val)
             except Exception as exc:
+                import pdb; pdb.set_trace()
                 raise InstrumentServerError(exc, 'Remote client failed '
                     'setting instrument server device [{}] attribute [{}] '
                     'to [{}]'.format(obj, attr, val))
@@ -176,10 +188,13 @@ class InstrumentServer(rpyc.Service):
                     'setting instrument server device [{}] attribute [{}] '
                     'to [{}] - is the device loaded on the instrument server '
                     'and initialized?'.format(obj, attr))
-            formatted_val = val.to(base_units).m if isinstance(val, Quantity) \
-                                                else val
-            self.db[dev_name].update_one({'name':attr},
-                                        {'$set':{'value':formatted_val}},
+            if isinstance(val, Quantity):
+                val_base_units = float(val.to(base_units).m)
+            # TODO might need to account for other datatypes like strings etc.
+            else:
+                val_base_units = float(val)
+            self.db[dev_name].update_one({'name' : attr},
+                                        {'$set' : {'value' : val_base_units}},
                                         upsert=True)
 
         # get an instance of the device
@@ -241,14 +256,14 @@ class InstrumentServer(rpyc.Service):
         self.db[dev_name].insert_many(feat_attr_list)
 
         # initialize the device
-        # try:
-        self.devs[dev_name].initialize()
-        # except Exception as exc:
-        #     logging.debug(exc)
-        #     self.devs.pop(dev_name)
-        #     logging.error('device [{}] initialization sequence failed'.\
-        #                     format(dev_name))
-        #     return
+        try:
+            self.devs[dev_name].initialize()
+        except Exception as exc:
+            logging.debug(exc)
+            self.devs.pop(dev_name)
+            logging.error('device [{}] initialization sequence failed'.\
+                            format(dev_name))
+            return
 
         logging.info('added device [{}] with args: {} kwargs: {}'.\
                         format(dev_name, dev_args, dev_kwargs))
@@ -266,18 +281,19 @@ class InstrumentServer(rpyc.Service):
         """Remove a device, then reload it from the stored config"""
         if dev_name in self.devs:
             self.del_device(dev_name)
-        dev_params = get_config_param(self.config, ['devices', dev_name])
-        dev_class = get_config_param(self.config,
+        dev_params,_ = get_config_param(self.config, ['devices', dev_name])
+        dev_class,_ = get_config_param(self.config,
                                     ['devices', dev_name, 'class'])
-        dev_args = get_config_param(self.config,
+        dev_args,_ = get_config_param(self.config,
                                     ['devices', dev_name, 'args'])
-        dev_kwargs = get_config_param(self.config,
+        dev_kwargs,_ = get_config_param(self.config,
                                     ['devices', dev_name, 'kwargs'])
         self.add_device(dev_name, dev_class, dev_args, dev_kwargs)
 
     def reload_devices(self):
         """Reload all devices"""
-        for dev_name in get_config_param(self.config, ['devices']):
+        devs,_ = get_config_param(self.config, ['devices'])
+        for dev_name in devs:
             self.reload_device(dev_name)
         logging.info('reloaded all devices')
 
@@ -287,8 +303,8 @@ class InstrumentServer(rpyc.Service):
         if config_file:
             self.config_file = config_file
         # reload the config dictionary
-        self.config, files = load_config(self.config_file)
-        logging.info('loaded config files {}'.format(files))
+        self.config = load_config(self.config_file)
+        logging.info('loaded config files {}'.format(self.config.keys()))
 
     def on_connect(self, conn):
         """Called when a client connects to the RPyC server"""

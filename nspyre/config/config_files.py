@@ -6,10 +6,19 @@ Author: Jacob Feder
 Date: 7/25/2020
 """
 
+###########################
+# imports
+###########################
+
+# std
 import os
 from importlib import import_module
 
+# 3rd party
 import yaml
+
+# nspyre
+from nspyre.definitions import join_nspyre_path, CLIENT_META_CONFIG_YAML
 
 ###########################
 # Globals
@@ -54,7 +63,7 @@ def load_raw_config(filepath):
 def meta_config_add(meta_config_file, files):
     """Add config files to the meta-config"""
     meta_config = load_raw_config(meta_config_file)
-    config_list = get_config_param(meta_config, [META_CONFIG_FILES_ENTRY])
+    config_list,_ = get_config_param(meta_config, [META_CONFIG_FILES_ENTRY])
     new_files = []
     for f in files:
         if os.path.isabs(f):
@@ -70,7 +79,7 @@ def meta_config_add(meta_config_file, files):
 def meta_config_remove(meta_config_file, files):
     """Remove config files from the meta-config"""
     meta_config = load_raw_config(meta_config_file)
-    config_list = get_config_param(meta_config, [META_CONFIG_FILES_ENTRY])
+    config_list,_ = get_config_param(meta_config, [META_CONFIG_FILES_ENTRY])
     for c in files:
         try:
             c_int = int(c)
@@ -87,30 +96,30 @@ def meta_config_remove(meta_config_file, files):
     write_config(meta_config, meta_config_file)
 
 def meta_config_files(meta_config_file):
+    """Return the paths of the config files in the meta-config"""
     meta_config = load_raw_config(meta_config_file)
-    config_list = get_config_param(meta_config, [META_CONFIG_FILES_ENTRY])
+    config_list,_ = get_config_param(meta_config, [META_CONFIG_FILES_ENTRY])
     return config_list
 
-def load_config(filepath):
+def load_config(meta_config_path=None):
     """Takes a 'meta' config file that specifies the location of other config
-    files to load, then make a dictionary that is a union of the dictionaries in
-    the specified configs. Repeated dictionary entries in different config files
-    will be overwritten."""
+    files to load, then make a dictionary where the keys are the config file
+    names and the values are the config dictionaries of that file."""
+    if not meta_config_path:
+        meta_config_path = join_nspyre_path(CLIENT_META_CONFIG_YAML)
     # load the meta config
-    meta_config = load_raw_config(filepath)
+    meta_config = load_raw_config(meta_config_path)
     # get the config file paths
-    config_files = get_config_param(meta_config, ['config_files'])
-    union_dict = {}
+    config_files = meta_config[META_CONFIG_FILES_ENTRY]
+    config_dict = {}
     # iterate through the config file paths, load their dictionaries, and add
-    # them to the combined dictionary, overwriting keys/values if redefined
-    # TODO do a recursive dictionary union rather than replace/overwrite?
-    meta_config_dir = os.path.dirname(filepath)
+    # them to the combined dictionary
+    meta_config_dir = os.path.dirname(meta_config_path)
     for cfg_file in config_files:
         if not os.path.isabs(cfg_file):
             cfg_file = os.path.join(meta_config_dir, cfg_file)
-        union_dict.update(load_raw_config(cfg_file))
-    # return the final config dictionary as well as the files that were loaded
-    return (union_dict, config_files)
+        config_dict[cfg_file] = load_raw_config(cfg_file)
+    return config_dict
 
 def write_config(config_dict, filepath):
     """Write a dictionary to a YAML file"""
@@ -119,11 +128,23 @@ def write_config(config_dict, filepath):
         yaml.dump(config_dict, file)
 
 def get_config_param(config_dict, path):
-    """Navigate a YAML-loaded config file and return a particular parameter"""
-    loc = config_dict
-    for p in path:
-        try:
-            loc = loc[p]
-        except KeyError:
-            raise ConfigEntryNotFoundError(path) from None
-    return loc
+    """Navigate a YAML-loaded config file and return a particular parameter 
+    given by 'path'. If multiple config files contain the first element of
+    'path', this will attempt to navigate the the first config file it finds
+    that contains the first element of 'path'."""
+    first_elem = path[0]
+    for conf in config_dict:
+        # first find the config file containing the first path element
+        loc = config_dict[conf]
+        if first_elem in loc:
+            # now descend into the config dictionary, following the keys
+            # one-by-one in path
+            for p in path:
+                try:
+                    loc = loc[p]
+                except KeyError:
+                    raise ConfigEntryNotFoundError(path) from None
+            return loc, conf
+    # if we reach this point the first path element wasn't found in any
+    # config file entries
+    raise ConfigEntryNotFoundError(path) from None

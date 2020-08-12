@@ -1,11 +1,12 @@
-from nspyre.utils import custom_encode, custom_decode, get_mongo_client, get_configs
 from collections import OrderedDict
+import traceback
+import time
+
 import json
 import pymongo
 import pandas as pd
-from nspyre.instrument_manager import Instrument_Manager
-import traceback
-import time
+
+from nspyre.utils.misc import get_mongo_client
 
 def get_exp_state_from_db(mongodb_addr=None, debug=False):
     c = get_mongo_client(mongodb_addr=mongodb_addr)
@@ -34,21 +35,20 @@ def get_exp_state_from_db(mongodb_addr=None, debug=False):
                 if debug: traceback.print_exc()
     return state
 
-
 def gen_exp_state(mode='current', mongodb_addr=None, debug=False):
     if mode == 'current':
         return get_exp_state_from_db(mongodb_addr=mongodb_addr, debug=debug)
-    elif mode =='renew':
-        #Here will directly query all the instrument for their states
-        raise NotImplementedError()
-        state_dict = OrderedDict()
-        try:
-            m = Instrument_Manager()
-        except:
-            print("Could not start the instrument manager")
-            if debug: traceback.print_exc()
-    elif mode == 'disable':
-        return {}
+    # elif mode =='renew':
+    #     #Here will directly query all the instrument for their states
+    #     raise NotImplementedError()
+    #     state_dict = OrderedDict()
+    #     try:
+    #         m = Instrument_Manager()
+    #     except:
+    #         print("Could not start the instrument manager")
+    #         if debug: traceback.print_exc()
+    # elif mode == 'disable':
+    #     return {}
     else:
         raise Exception("Invalid mode to generate the experimental state")
 

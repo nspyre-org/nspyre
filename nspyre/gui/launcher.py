@@ -6,19 +6,25 @@ Author: Alexandre Bourassa
 Date: 10/30/2019
 """
 
+###########################
+# imports
+###########################
+
 # std
 import time
 import traceback
-from itertools import tee
+import logging
 
 # 3rd party
 from PyQt5 import QtWidgets, QtCore
 
 # nspyre
 from nspyre.spyrelet.spyrelet import Spyrelet_Launcher
-from nspyre.widgets.param_widget import ParamWidget
-from nspyre.widgets.save_widget import Save_Widget
-from nspyre.utils import RangeDict, get_configs, get_class_from_str, load_all_spyrelets
+from nspyre.gui.widgets.param_widget import ParamWidget
+from nspyre.gui.widgets.save_widget import Save_Widget
+from nspyre.spyrelet.spyrelet import load_all_spyrelets
+from nspyre.gui.app import NSpyreApp
+from nspyre.inserv.gateway import InservGateway
 
 class Progress_Bar(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
@@ -178,7 +184,7 @@ class Spyrelet_Run_Thread(QtCore.QThread):
 
 
 class Combined_Launcher(QtWidgets.QWidget):
-    def __init__(self, parent=None, spyrelets=None):
+    def __init__(self, manager, parent=None, spyrelets=None):
         super().__init__(parent=parent)
         layout = QtWidgets.QVBoxLayout()
         self.selector = QtWidgets.QComboBox()
@@ -190,7 +196,7 @@ class Combined_Launcher(QtWidgets.QWidget):
 
 
         #Create the launchers
-        spyrelets = load_all_spyrelets() if spyrelets is None else spyrelets
+        spyrelets = load_all_spyrelets(manager) if spyrelets is None else spyrelets
         self.launchers = {name: Spyrelet_Launcher_Widget(s) for name, s in spyrelets.items()}
         # cfg = get_configs()
         # names = list(cfg['experiment_list'].keys())
@@ -231,11 +237,12 @@ class Combined_Launcher(QtWidgets.QWidget):
         # self.container_layout.
 
 if __name__=='__main__':
-    from nspyre.widgets.app import NSpyreApp
+    # configure server logging behavior
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s -- %(levelname)s -- %(message)s',
+                        handlers=[logging.StreamHandler()])
     app = NSpyreApp([])
-    w = Combined_Launcher()
-    w.show()
-    app.exec_()
-        
-
-    
+    with InservGateway() as im:
+        w = Combined_Launcher(im)
+        w.show()
+        app.exec_()

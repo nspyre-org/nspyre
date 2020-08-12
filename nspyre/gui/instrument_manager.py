@@ -8,22 +8,23 @@ Date: 10/30/2019
 Modified: Jacob Feder 7/25/2020
 """
 
+###########################
+# imports
+###########################
+
+# std
 import logging
 
+# 3rd party
 from PyQt5 import QtWidgets, QtCore
 import sip
-from lantz import Q_
 
+# nspyre
 from nspyre.inserv.gateway import InservGateway
 from nspyre.gui.widgets.feat import get_feat_widget
-from nspyre.utils.misc import load_class_from_str, join_nspyre_path
-from nspyre.definitions import MONGO_SERVERS_KEY
+from nspyre.definitions import Q_, join_nspyre_path, MONGO_SERVERS_KEY
 from nspyre.mongodb.mongo_listener import Synched_Mongo_Database
 from nspyre.gui.app import NSpyreApp
-
-###########################
-# Globals
-###########################
 
 ###########################
 # Exceptions

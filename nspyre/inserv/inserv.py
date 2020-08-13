@@ -20,6 +20,7 @@ import logging
 import os
 import _thread
 import sys
+import pdb
 
 # 3rd party
 import rpyc
@@ -175,7 +176,6 @@ class InstrumentServer(rpyc.Service):
             try:
                 setattr(obj, attr, val)
             except Exception as exc:
-                import pdb; pdb.set_trace()
                 raise InstrumentServerError(exc, 'Remote client failed '
                     'setting instrument server device [{}] attribute [{}] '
                     'to [{}]'.format(obj, attr, val))
@@ -466,7 +466,6 @@ class InservCmdPrompt(Cmd):
         if arg_string:
             print('Expected 0 args')
             return
-        import pdb
         pdb.set_trace()
 
     def do_quit(self, arg_string):

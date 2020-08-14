@@ -8,22 +8,22 @@ DB2_PORT=27018
 REPLSET=NSpyreSet
 OPLOG=1024
 
-DB1_DIR=$THIS_DIR/db_files/db1
-DB2_DIR=$THIS_DIR/db_files/db2
-LOG_DIR=$THIS_DIR/db_files/logs
+DBDATA_DIR=$THIS_DIR/db_files
+DB1_DIR=$DBDATA_DIR/db1
+DB2_DIR=$DBDATA_DIR/db2
+LOG_DIR=$DBDATA_DIR/logs
 DB1_LOG=$LOG_DIR/db1
 DB2_LOG=$LOG_DIR/db2
-
-# may be required to start the mongodb daemon?
-#systemctl start mongodb.service
 
 # kill existing mongod instances
 killall mongod
 
 # remove dbs and logs
-rm -rf $DB1_DIR/*
-rm -rf $DB2_DIR/*
-rm -rf $LOG_DIR/*
+rm -rf $DBDATA_DIR
+mkdir $DBDATA_DIR
+mkdir $DB1_DIR
+mkdir $DB2_DIR
+mkdir $LOG_DIR
 
 # start the db servers
 mongod --dbpath $DB1_DIR --logpath $DB1_LOG --bind_ip_all \

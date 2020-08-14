@@ -6,9 +6,10 @@ set DB2_PORT=27018
 set REPLSET=NSpyreSet
 set OPLOG=1024
 
-set DB1_DIR=%THIS_DIR%db_files\db1
-set DB2_DIR=%THIS_DIR%db_files\db2
-set LOG_DIR=%THIS_DIR%db_files\logs
+set DBDATA_DIR=%THIS_DIR%db_files
+set DB1_DIR=%DBDATA_DIR%\db1
+set DB2_DIR=%DBDATA_DIR%\db2
+set LOG_DIR=%DBDATA_DIR%\logs
 set DB1_LOG=%LOG_DIR%\db1
 set DB2_LOG=%LOG_DIR%\db2
 
@@ -16,10 +17,11 @@ rem kill existing mongod instances
 taskkill /t /f /im mongod.exe
 
 rem remove dbs and logs
-rem TODO
-rd /s /q %DB1_DIR%\*
-rd /s /q %DB2_DIR%\*
-rd /s /q %LOG_DIR%\*
+del /s /q %DBDATA_DIR%
+mkdir %DBDATA_DIR%
+mkdir %DB1_DIR%
+mkdir %DB2_DIR%
+mkdir %LOG_DIR%
 
 rem start the db servers
 start /b mongod --dbpath %DB1_DIR% --logpath %DB1_LOG% ^

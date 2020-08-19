@@ -16,6 +16,8 @@ Date: 7/8/2020
 ###########################
 
 # std
+import argparse
+from cmd import Cmd
 import logging
 import os
 import _thread
@@ -26,8 +28,6 @@ import pdb
 import rpyc
 from rpyc.utils.server import ThreadedServer 
 import pymongo
-from cmd import Cmd
-import argparse
 import waiting
 import visa
 from lantz import Q_, DictFeat
@@ -38,19 +38,19 @@ from nspyre.config.config_files import get_config_param, load_config, \
                                         meta_config_add, meta_config_remove, \
                                         meta_config_files
 from nspyre.utils.misc import load_class_from_str, MonkeyWrapper
-from nspyre.definitions import SERVER_META_CONFIG_YAML, MONGO_SERVERS_KEY, \
+from nspyre.definitions import SERVER_META_CONFIG_PATH, MONGO_SERVERS_KEY, \
                 MONGO_SERVERS_SETTINGS_KEY, MONGO_CONNECT_TIMEOUT, \
                 MONGO_RS, RPYC_SYNC_TIMEOUT, CONFIG_MONGO_ADDR_KEY, \
                 join_nspyre_path
 
 ###########################
-# Globals
+# globals
 ###########################
 
 DEFAULT_LOG = 'server.log'
 
 ###########################
-# Exceptions
+# exceptions
 ###########################
 
 class InstrumentServerError(Exception):
@@ -61,7 +61,7 @@ class InstrumentServerError(Exception):
             logging.exception(error)
 
 ###########################
-# Classes
+# classes
 ###########################
 
 class InstrumentServer(rpyc.Service):
@@ -197,11 +197,27 @@ class InstrumentServer(rpyc.Service):
                                         {'$set' : {'value' : val_base_units}},
                                         upsert=True)
 
+        # a monkey-patching function for overriding reading device feats
+        def dev_get_attr(obj, attr):
+            try:
+                ret = getattr(obj, attr)
+            except AttributeError:
+                # if the object doesn't have the given attribute, we must
+                # reraise this error so that hasattr() works properly
+                raise AttributeError
+            except Exception as exc:
+                raise InstrumentServerError(exc, 'Remote client failed '
+                    'getting instrument server device [{}] attribute [{}] '
+                    '- is the device loaded on the instrument server '
+                    'and initialized?'.format(obj, attr))
+            return ret
+
         # get an instance of the device
         try:
             self.devs[dev_name] = \
                     MonkeyWrapper(dev_class(*dev_args, **dev_kwargs),
-                                    set_attr_override=dev_set_attr)
+                                    set_attr_override=dev_set_attr,
+                                    get_attr_override=dev_get_attr)
         except Exception as exc:
             raise InstrumentServerError(exc, 'Failed to get instance of device '
                                         '{} of class {}'.\
@@ -304,7 +320,8 @@ class InstrumentServer(rpyc.Service):
             self.config_file = config_file
         # reload the config dictionary
         self.config = load_config(self.config_file)
-        logging.info('loaded config files {}'.format(self.config.keys()))
+        logging.info('loaded config files {}'.\
+                        format(list(self.config.keys())))
 
     def on_connect(self, conn):
         """Called when a client connects to the RPyC server"""
@@ -541,22 +558,22 @@ if __name__ == '__main__':
 
     if cmd_args.config:
         # the user asked us to add config files to the meta-config
-        meta_config_add(SERVER_META_CONFIG_YAML, cmd_args.config)
+        meta_config_add(SERVER_META_CONFIG_PATH, cmd_args.config)
         sys.exit(0)
     if cmd_args.delconfig:
         # the user asked us to remove config files from the meta-config
-        meta_config_remove(SERVER_META_CONFIG_YAML, cmd_args.delconfig)
+        meta_config_remove(SERVER_META_CONFIG_PATH, cmd_args.delconfig)
         sys.exit(0)
     if cmd_args.list_configs:
         # the user asked us to list the config files from the meta-config
-        files  = meta_config_files(SERVER_META_CONFIG_YAML)
+        files  = meta_config_files(SERVER_META_CONFIG_PATH)
         for i in range(len(files)):
             print('{}: {}'.format(i, files[i]))
         sys.exit(0)
 
     # init and start RPyC server
     logging.info('starting instrument server...')
-    inserv = InstrumentServer(SERVER_META_CONFIG_YAML, cmd_args.mongo)
+    inserv = InstrumentServer(SERVER_META_CONFIG_PATH, cmd_args.mongo)
 
     # start the shell prompt event loop
     cmd_prompt = InservCmdPrompt(inserv)

@@ -18,7 +18,7 @@ from nspyre.definitions import Q_
 COLORS = cycle(colors.keys())
 
 ###########################
-# Classes
+# classes
 ###########################
 
 class SubSpyrelet(Spyrelet):

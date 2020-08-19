@@ -24,10 +24,9 @@ from nspyre.inserv.gateway import InservGateway
 from nspyre.gui.widgets.feat import get_feat_widget
 from nspyre.definitions import Q_, join_nspyre_path, MONGO_SERVERS_KEY
 from nspyre.mongodb.mongo_listener import Synched_Mongo_Database
-from nspyre.gui.app import NSpyreApp
 
 ###########################
-# Exceptions
+# exceptions
 ###########################
 
 class InstrumentManagerWidgetError(Exception):
@@ -36,7 +35,7 @@ class InstrumentManagerWidgetError(Exception):
         super().__init__(msg)
 
 ###########################
-# Classes
+# classes
 ###########################
 
 class Instrument_Manager_Widget(QtWidgets.QWidget):
@@ -234,6 +233,8 @@ class ActionTreeWidgetItem(QtCore.QObject):
         getattr(self.dev, self.action['name'])()
 
 if __name__ ==  '__main__':
+    from nspyre.gui.app import NSpyreApp
+
     # configure server logging behavior
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s -- %(levelname)s -- %(message)s',

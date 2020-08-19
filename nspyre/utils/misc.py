@@ -26,25 +26,24 @@ import yaml
 import pymongo
 
 # nspyre
-from nspyre.definitions import Q_, CLIENT_META_CONFIG_YAML, MONGO_RS, \
-                                CONFIG_MONGO_ADDR_KEY, MONGO_SPYRELETS_KEY
+from nspyre.definitions import Q_, MONGO_RS, CONFIG_MONGO_ADDR_KEY
 from nspyre.config.config_files import load_config, get_config_param
 
 ###########################
-# Classes / functions
+# classes / functions
 ###########################
 
-class MonkeyWrapper():
+class MonkeyWrapper(object):
     """Monkey patch technique for wrapping objects defined
     in 3rd party modules, for example:
     ----------------------------------
     import uncontrolled_module
     def get_override(obj, attr):
         ret = getattr(obj, attr)
-        print('got object %s attribute %s = %s' % (obj, attr, ret))
+        print('got object {} attribute {} = {}'.format(obj, attr, ret))
         return ret
     def set_override(obj, attr, val):
-        print('setting object %s attribute %s to %s' % (obj, attr, val))
+        print('setting object {} attribute {} to {}'.format(obj, attr, val))
         setattr(obj, attr, val)
     obj = uncontrolled_module.some_class()
     wrapped_obj = MonkeyWrapper(obj,
@@ -59,7 +58,6 @@ class MonkeyWrapper():
     def __init__(self, wrapped_obj,
                     get_attr_override=None,
                     set_attr_override=None):
-        """ """
         # we can't use self.<instance_var> because that will call __setattr__
         # and __getattr__, so we have to get/set our instance variables
         # using __dict__
@@ -98,14 +96,14 @@ def debug_qt():
     pyqtRemoveInputHook()
     set_trace()
 
-# def cleanup_register(client):
-#     if type(client) is str:
-#         client = pymongo.MongoClient(client)
-#     db_list = client['Spyre_Live_Data'].list_collection_names()
-#     reg_list = [x['_id'] for x in client['Spyre_Live_Data']['Register'].find({},{'_id':True})]
-#     for name in reg_list:
-#         if not name in db_list:
-#             client['Spyre_Live_Data']['Register'].delete_one({'_id': name})
+def cleanup_register(client):
+    if type(client) is str:
+        client = pymongo.MongoClient(client)
+    db_list = client['Spyre_Live_Data'].list_collection_names()
+    reg_list = [x['_id'] for x in client['Spyre_Live_Data']['Register'].find({},{'_id':True})]
+    for name in reg_list:
+        if not name in db_list:
+            client['Spyre_Live_Data']['Register'].delete_one({'_id': name})
 
 def custom_encode(d):
     out = dict()

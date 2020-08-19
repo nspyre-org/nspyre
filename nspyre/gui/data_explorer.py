@@ -1,13 +1,29 @@
 #!/usr/bin/env python
+"""
+    ?
 
-from PyQt5 import QtWidgets, QtCore
-import pandas as pd
+    Author: Alexandre Bourassa
+"""
+
+###########################
+# imports
+###########################
+
+# std
 import os
 
-from nspyre.widgets.view_manager import View_Manager
-from nspyre.widgets.splitter_widget import Splitter, SplitterOrientation
-from nspyre.data_handling import load_data
+# 3rd party
+from PyQt5 import QtWidgets, QtCore
+import pandas as pd
 
+# nspyre
+from nspyre.gui.view_manager import View_Manager
+from nspyre.gui.widgets.splitter_widget import Splitter, SplitterOrientation
+from nspyre.gui.data_handling import load_data
+
+###########################
+# classes
+###########################
 
 class Permanent_QFileDialog(QtWidgets.QFileDialog):
     def done(self, r):
@@ -103,10 +119,8 @@ class Data_Explorer(QtWidgets.QWidget):
             item = self.view_manager.items[sname][view_names[1]] # Element 0 should be __top
         self.view_manager.tree.setCurrentItem(item)
 
-    
-
 if __name__ == '__main__':
-    from nspyre.widgets.app import NSpyreApp
+    from nspyre.gui.app import NSpyreApp
     app = NSpyreApp([])
     w = Data_Explorer()
     w.show()

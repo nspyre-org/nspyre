@@ -12,25 +12,41 @@ Date: 7/8/2020
 
 # std
 import os
+from pathlib import Path
 
 # 3rd party
 from pint import UnitRegistry
+
+###########################
+# fundamental operations
+###########################
 
 # create a pint registry universal to nspyre
 ureg = UnitRegistry()
 Q_ = ureg.Quantity
 
 # root directory of nspyre
-NSPYRE_ROOT = os.path.dirname(os.path.abspath(__file__))
+NSPYRE_ROOT = Path(__file__).parent
 
 def join_nspyre_path(path):
     """Return a full path from a path given relative to the nspyre root 
     directory"""
-    return os.path.join(NSPYRE_ROOT, path)
+    return NSPYRE_ROOT / path
+
+###########################
+# resources
+###########################
 
 # config files
-CLIENT_META_CONFIG_YAML = join_nspyre_path('config/client_meta_config.yaml')
-SERVER_META_CONFIG_YAML = join_nspyre_path('config/server_meta_config.yaml')
+CLIENT_META_CONFIG_PATH = join_nspyre_path('config/client_meta_config.yaml')
+SERVER_META_CONFIG_PATH = join_nspyre_path('config/server_meta_config.yaml')
+
+# images
+LOGO_PATH = str(join_nspyre_path('gui/images/spyre.png'))
+
+###########################
+# globals
+###########################
 
 # format for accessing instrument server devices from a client, where the first
 # item is the server name and the second is the device name (both defined in the

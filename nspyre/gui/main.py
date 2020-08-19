@@ -9,27 +9,36 @@
     Modified: Jacob Feder 7/25/2020
 """
 
-from PyQt5 import QtCore, QtWidgets
-from nspyre.widgets.image import ImageWidget
-from nspyre.utils.misc import join_nspyre_path
-from subprocess import Popen
-import argparse
+###########################
+# imports
+###########################
+
+# std
 import logging
 import os
 import time
+from subprocess import Popen
+import argparse
+
+# 3rd party
+from PyQt5 import QtCore, QtWidgets
+
+# nspyre
+from nspyre.gui.image import ImageWidget
+from nspyre.definitions import join_nspyre_path, LOGO_PATH
 
 ###########################
-# Globals
+# globals
 ###########################
 
 DEFAULT_LOG = 'nspyre.log'
 
 ###########################
-# Exceptions
+# exceptions
 ###########################
 
 ###########################
-# Classes
+# classes
 ###########################
 
 class NSpyre_Launcher(QtWidgets.QWidget):
@@ -37,34 +46,34 @@ class NSpyre_Launcher(QtWidgets.QWidget):
         super().__init__(parent=parent)
         
         main_layout = QtWidgets.QVBoxLayout()
-        im = ImageWidget(join_nspyre_path('images/spyre.png'))
+        im = ImageWidget(LOGO_PATH)
         main_layout.addWidget(im)
 
         # btn_widget = QtWidgets.QWidget()
         # btn_layout = QtWidgets.QHBoxLayout()
 
-        self.inst_server_btn = QtWidgets.QPushButton('Start Instrument Server')
+        #self.inst_server_btn = QtWidgets.QPushButton('Start Instrument Server')
         self.inst_manager_btn = QtWidgets.QPushButton('Start Instrument Manager')
         self.view_manager_btn = QtWidgets.QPushButton('Start View Manager')
         self.spyrelet_launcher_btn = QtWidgets.QPushButton('Start Spyrelet Launcher')
         self.data_explorer_btn = QtWidgets.QPushButton('Data Explorer')
 
-        main_layout.addWidget(self.inst_server_btn)
+        #main_layout.addWidget(self.inst_server_btn)
         main_layout.addWidget(self.inst_manager_btn)
         main_layout.addWidget(self.view_manager_btn)
         main_layout.addWidget(self.spyrelet_launcher_btn)
         main_layout.addWidget(self.data_explorer_btn)
 
-        self.inst_server_btn.clicked.connect(lambda: self.launch('instrument_server.py', new_console=True))
-        self.inst_manager_btn.clicked.connect(lambda: self.launch('widgets/instrument_manager.py'))
-        self.view_manager_btn.clicked.connect(lambda: self.launch('widgets/view_manager.py'))
-        self.spyrelet_launcher_btn.clicked.connect(lambda: self.launch('widgets/launcher.py'))
-        self.data_explorer_btn.clicked.connect(lambda: self.launch('widgets/data_explorer.py'))
+        #self.inst_server_btn.clicked.connect(lambda: self.launch('instrument_server.py', new_console=True))
+        self.inst_manager_btn.clicked.connect(lambda: \
+            self.launch(join_nspyre_path('gui/instrument_manager.py')))
+        self.view_manager_btn.clicked.connect(lambda: self.launch('gui/view_manager.py'))
+        self.spyrelet_launcher_btn.clicked.connect(lambda: self.launch('gui/launcher.py'))
+        self.data_explorer_btn.clicked.connect(lambda: self.launch('gui/data_explorer.py'))
 
         self.setLayout(main_layout)
     
     def launch(self, nspyre_py_file, new_console=False):
-        start = time.time()
         if new_console:
             pass
             # TODO cross-platform
@@ -74,13 +83,13 @@ class NSpyre_Launcher(QtWidgets.QWidget):
             # Popen(cmd, shell=True)
         else:
             Popen(['python', join_nspyre_path(nspyre_py_file)])
-        print(time.time()-start)
 
 ###########################
 # standalone main
 ###########################
 
 if __name__ == '__main__':
+    from nspyre.gui.app import NSpyreApp
     # parse command-line arguments
     arg_parser = argparse.ArgumentParser(prog='nspyre',
                             usage='%(prog)s [options]',
@@ -134,8 +143,6 @@ if __name__ == '__main__':
                                 logging.StreamHandler()])
 
     logging.info('starting nspyre...')
-
-    from nspyre.widgets.app import NSpyreApp
     app = NSpyreApp([])
     w = NSpyre_Launcher()
     w.show()

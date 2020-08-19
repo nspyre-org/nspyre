@@ -23,8 +23,11 @@ from nspyre.spyrelet.spyrelet import Spyrelet_Launcher
 from nspyre.gui.widgets.param_widget import ParamWidget
 from nspyre.gui.widgets.save_widget import Save_Widget
 from nspyre.spyrelet.spyrelet import load_all_spyrelets
-from nspyre.gui.app import NSpyreApp
 from nspyre.inserv.gateway import InservGateway
+
+###########################
+# classes
+###########################
 
 class Progress_Bar(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
@@ -241,6 +244,7 @@ if __name__=='__main__':
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s -- %(levelname)s -- %(message)s',
                         handlers=[logging.StreamHandler()])
+    from nspyre.gui.app import NSpyreApp
     app = NSpyreApp([])
     with InservGateway() as im:
         w = Combined_Launcher(im)

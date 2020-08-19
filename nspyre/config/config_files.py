@@ -11,23 +11,23 @@ Date: 7/25/2020
 ###########################
 
 # std
-import os
+from pathlib import Path
 from importlib import import_module
 
 # 3rd party
 import yaml
 
 # nspyre
-from nspyre.definitions import join_nspyre_path, CLIENT_META_CONFIG_YAML
+from nspyre.definitions import join_nspyre_path, CLIENT_META_CONFIG_PATH
 
 ###########################
-# Globals
+# globals
 ###########################
 
 META_CONFIG_FILES_ENTRY = 'config_files'
 
 ###########################
-# Exceptions
+# exceptions
 ###########################
 
 class ConfigEntryNotFoundError(Exception):
@@ -35,19 +35,20 @@ class ConfigEntryNotFoundError(Exception):
     entry"""
     def __init__(self, config_path, msg=None):
         if msg is None:
-            msg = 'Config file was expected to contain parameter: { %s } ' \
-                    'but it wasn\'t found.' % \
-                    (' -> '.join(config_path))
+            msg = 'Config file was expected to contain parameter: [{}] ' \
+                    'but it wasn\'t found'.format(' -> '.join(config_path))
         super().__init__(msg)
         self.config_path = config_path
 
 class ConfigError(Exception):
     """General Config file exception"""
-    def __init__(self, msg):
+    def __init__(self, error, msg):
         super().__init__(msg)
+        if error:
+            logging.exception(error)
 
 ###########################
-# Classes / functions
+# classes / functions
 ###########################
 
 # A meta-config.yaml file contains a single entry with key 
@@ -66,13 +67,10 @@ def meta_config_add(meta_config_file, files):
     config_list,_ = get_config_param(meta_config, [META_CONFIG_FILES_ENTRY])
     new_files = []
     for f in files:
-        if os.path.isabs(f):
-            f_name = f
-        else:
-            f_name = os.path.abspath(os.path.join(os.getcwd(), f))
-        if not os.path.isfile(f_name):
-            raise FileNotFoundError('file %s not found' % (f_name))
-        new_files.append(f_name)
+        f_path = Path(f).resolve()
+        if not f_path.isfile():
+            raise FileNotFoundError('file [{}] not found'.format(f_name))
+        new_files.append(str(f_path))
     meta_config[META_CONFIG_FILES_ENTRY] = config_list + new_files
     write_config(meta_config, meta_config_file)
 
@@ -90,8 +88,8 @@ def meta_config_remove(meta_config_file, files):
             if c in config_list:
                 config_list.remove(c)
             else:
-                raise ConfigError('config file %s was not found in the '
-                                    'meta-config' % (c)) from None
+                raise ConfigError(None, 'config file [{}] was not found in the '
+                                    'meta-config'.format(c)) from None
     meta_config[META_CONFIG_FILES_ENTRY] = config_list
     write_config(meta_config, meta_config_file)
 
@@ -106,7 +104,7 @@ def load_config(meta_config_path=None):
     files to load, then make a dictionary where the keys are the config file
     names and the values are the config dictionaries of that file."""
     if not meta_config_path:
-        meta_config_path = join_nspyre_path(CLIENT_META_CONFIG_YAML)
+        meta_config_path = CLIENT_META_CONFIG_PATH
     # load the meta config
     meta_config = load_raw_config(meta_config_path)
     # get the config file paths
@@ -114,11 +112,12 @@ def load_config(meta_config_path=None):
     config_dict = {}
     # iterate through the config file paths, load their dictionaries, and add
     # them to the combined dictionary
-    meta_config_dir = os.path.dirname(meta_config_path)
-    for cfg_file in config_files:
-        if not os.path.isabs(cfg_file):
-            cfg_file = os.path.join(meta_config_dir, cfg_file)
-        config_dict[cfg_file] = load_raw_config(cfg_file)
+    meta_config_dir = meta_config_path.parent
+    for c in config_files:
+        cfg_path = Path(c)
+        if not cfg_path.is_absolute():
+            cfg_path = meta_config_path.parent / cfg_path
+        config_dict[str(cfg_path)] = load_raw_config(cfg_path)
     return config_dict
 
 def write_config(config_dict, filepath):

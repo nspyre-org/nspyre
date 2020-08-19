@@ -26,17 +26,17 @@ import rpyc
 # nspyre
 from nspyre.config.config_files import get_config_param, load_config
 from nspyre.utils.misc import MonkeyWrapper
-from nspyre.definitions import CLIENT_META_CONFIG_YAML, MONGO_CONNECT_TIMEOUT, \
+from nspyre.definitions import CLIENT_META_CONFIG_PATH, MONGO_CONNECT_TIMEOUT, \
                                 MONGO_SERVERS_KEY, MONGO_SERVERS_SETTINGS_KEY, \
                                 MONGO_RS, RPYC_CONN_TIMEOUT, INSERV_DEV_ACCESSOR
 from nspyre.definitions import Q_
 
 ###########################
-# Globals
+# globals
 ###########################
 
 ###########################
-# Exceptions
+# exceptions
 ###########################
 
 class InservGatewayError(Exception):
@@ -45,13 +45,13 @@ class InservGatewayError(Exception):
         super().__init__(msg)
 
 ###########################
-# Classes / functions
+# classes / functions
 ###########################
 
 class InservGateway():
     """Loads a configuration file, then attempts to connect to all 
     instrument servers"""
-    def __init__(self, config_file=CLIENT_META_CONFIG_YAML, mongo_addr=None):
+    def __init__(self, config_file=CLIENT_META_CONFIG_PATH, mongo_addr=None):
         # config dictionary
         self.config = {}
         # list of available instrument servers fetched from mongo

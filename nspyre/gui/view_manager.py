@@ -1,24 +1,42 @@
 #!/usr/bin/env python
+"""
+    ?
 
-from PyQt5 import QtWidgets, QtCore, QtGui
-import pyqtgraph as pg
+    Author: Alexandre Bourassa
+"""
 
-from nspyre.widgets.plotting import LinePlotWidget, HeatmapPlotWidget
-from nspyre.widgets.splitter_widget import Splitter, SplitterOrientation
-# from nspyre.utils import connect_to_master
-from nspyre.mongo_listener import Synched_Mongo_Database
-from nspyre.views import Spyrelet_Views
-from nspyre.utils import cleanup_register, join_nspyre_path, custom_decode
-from nspyre.widgets.image import ImageWidget
-from nspyre.widgets.code_editor import Scintilla_Code_Editor, Monokai_Python_Lexer
-import pymongo
+###########################
+# imports
+###########################
 
-import numpy as np
-import pandas as pd
+# std
 import time
 import inspect
 import traceback
 import textwrap
+
+# 3rd party
+from PyQt5 import QtWidgets, QtCore, QtGui
+import pyqtgraph as pg
+import pymongo
+import numpy as np
+import pandas as pd
+
+# nspyre
+from nspyre.gui.widgets.plotting import LinePlotWidget, HeatmapPlotWidget
+from nspyre.gui.widgets.splitter_widget import Splitter, SplitterOrientation
+from nspyre.mongodb.mongo_listener import Synched_Mongo_Database
+from nspyre.gui.widgets.views import Spyrelet_Views
+from nspyre.definitions import join_nspyre_path
+from nspyre.spyrelet.spyrelet import custom_decode
+from nspyre.utils.misc import cleanup_register
+from nspyre.gui.image import ImageWidget
+from nspyre.gui.widgets.code_editor import Scintilla_Code_Editor, \
+                Monokai_Python_Lexer
+
+###########################
+# classes
+###########################
 
 class CustomView():
     def __init__(self, code_editor, w1D, w2D, plot_layout, initial_df, initial_cache):
@@ -183,7 +201,8 @@ class View_Manager(QtWidgets.QWidget):
         self.plot_layout = QtWidgets.QStackedLayout()
         plot_container = QtWidgets.QWidget()
         plot_container.setLayout(self.plot_layout)
-        self.default_image = ImageWidget(join_nspyre_path('images/logo.png'))
+        self.default_image = ImageWidget(str(\
+                                join_nspyre_path('images/logo.png')))
         self.plot_layout.addWidget(self.default_image)
         
         self.common_lineplotwidget = LinePlotWidget()
@@ -254,7 +273,7 @@ class View_Manager(QtWidgets.QWidget):
     def add_col(self, col_name, try_update=True):
         if col_name == 'Register':
             return
-        sclass = self.db.get_df('Register').loc[col_name]['class']
+        sclass = self.db.get_df('Register').loc[col_name].name
         spyrelet_views = Spyrelet_Views(sclass)
         
         if col_name in self.views:
@@ -370,8 +389,7 @@ class View_Manager(QtWidgets.QWidget):
                 ev.accept()
 
 if __name__ == '__main__':
-    from nspyre.widgets.app import NSpyreApp
-    from nspyre.utils import get_configs
+    from nspyre.gui.app import NSpyreApp
     app = NSpyreApp([])
     w = View_Manager(react_to_drop=False)
     w.show()

@@ -16,8 +16,11 @@ set DB2_LOG=%LOG_DIR%\db2
 rem kill existing mongod instances
 taskkill /t /f /im mongod.exe
 
+rem allow time for mongod to release access to db files
+SLEEP 1
+
 rem remove dbs and logs
-del /s /q %DBDATA_DIR%
+rd /s /q %DBDATA_DIR%
 mkdir %DBDATA_DIR%
 mkdir %DB1_DIR%
 mkdir %DB2_DIR%
@@ -30,7 +33,7 @@ start /b mongod --dbpath %DB2_DIR% --logpath %DB2_LOG% ^
 	--bind_ip_all --port %DB2_PORT% --replSet %REPLSET% --oplogSize %OPLOG%
 
 rem allow time for mongod to start
-SLEEP 2
+SLEEP 1
 
 rem only needs to performed for first-time setup
 rem or if the db1/db2 directories were cleared,

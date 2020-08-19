@@ -20,7 +20,7 @@ import traceback
 import inspect
 from copy import copy
 from importlib.util import spec_from_file_location, module_from_spec
-import os
+from pathlib import Path
 import sys
 from importlib import import_module
 import logging
@@ -36,12 +36,12 @@ from tqdm.auto import tqdm
 from nspyre.gui.data_handling import save_data
 from nspyre.config.config_files import load_config, get_config_param, \
                                     ConfigEntryNotFoundError
-from nspyre.utils.misc import load_class_from_str, get_mongo_client, \
-                            custom_decode, custom_encode, RangeDict
+from nspyre.utils.misc import get_mongo_client, custom_decode, custom_encode, \
+                                RangeDict
 from nspyre.definitions import Q_
 
 ###########################
-# Globals
+# globals
 ###########################
 
 # config file key for spyrelets
@@ -58,7 +58,7 @@ CONFIG_SUB_SPYRELETS_KEY = 'spyrelets'
 CONFIG_SPYRELETS_ARGS_KEY = 'args'
 
 ###########################
-# Exceptions
+# exceptions
 ###########################
 
 class StopRunning(Exception):
@@ -72,7 +72,7 @@ class SpyreletLoadError(Exception):
             logging.exception(error)
 
 ###########################
-# Classes / functions
+# classes / functions
 ###########################
 
 class Spyrelet():
@@ -119,7 +119,7 @@ class Spyrelet():
         
         reg_entry = {
             '_id':unique_name,
-            'class':"{}.{}".format(self.__class__.__module__, self.__class__.__name__),
+            'class': 'unused' #"{}.{}".format(self.__class__.__module__, self.__class__.__name__),
         }
 
         self.client = get_mongo_client(mongodb_addr)
@@ -377,6 +377,30 @@ class Spyrelet_Launcher():
         others = {k:val for k, val in params.items() if not k in self.pos_or_kw_params}
         return self.spyrelet.run(*pos_or_kw_params, progress=progress, **others)
 
+def load_spyrelet_class(spyrelet_name, cfg):
+    """Load a spyrelet class from a file (whose location is defined in cfg)"""
+    # discover spyrelet file and class
+    spyrelet_path_str,_ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY , \
+                                spyrelet_name, CONFIG_SPYRELETS_FILE_KEY])
+    spyrelet_class_name, spyrelet_cfg_path_str = get_config_param(cfg, \
+                                [CONFIG_SPYRELETS_KEY, spyrelet_name, \
+                                CONFIG_SPYRELETS_CLASS_KEY])
+    # resolve the spyrelet file location
+    # if the path isn't absolute resolve it relative to the config file
+    spyrelet_path = Path(spyrelet_path_str)
+    if not spyrelet_path.is_absolute():
+        spyrelet_path = (Path(spyrelet_cfg_path_str).parent / \
+                                spyrelet_path).resolve()
+    spyrelet_dir = spyrelet_path.parent
+    spyrelet_file_name = str(spyrelet_path.name)
+    # remove .py extension
+    spyrelet_file_name = spyrelet_file_name.split('.py')[0]
+    # load the spyrelet class from its python file
+    sys.path.append(str(spyrelet_dir))
+    spyrelet_module = import_module(spyrelet_file_name)
+    spyrelet_class = getattr(spyrelet_module, spyrelet_class_name)
+    return spyrelet_class
+
 def load_all_spyrelets(manager, filepath=None):
     """Load all of the spyrelets from the config file"""
     cfg = load_config(filepath)
@@ -415,26 +439,9 @@ def load_all_spyrelets(manager, filepath=None):
                                         'sub-spyrelet [{}] failed to load'.\
                                         format(spyrelet_name, s))
         
-        # discover spyrelet file and class
-        spyrelet_file_path,_ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY , \
-                                    spyrelet_name, CONFIG_SPYRELETS_FILE_KEY])
-        spyrelet_class_name, spyrelet_cfg_file_path = get_config_param(cfg, \
-                                    [CONFIG_SPYRELETS_KEY, spyrelet_name, \
-                                    CONFIG_SPYRELETS_CLASS_KEY])
-        # resolve the spyrelet file location
-        # if the path isn't absolute resolve it relative to the config file
-        if not os.path.isabs(spyrelet_file_path):
-            spyrelet_cfg_file_dir = os.path.dirname(spyrelet_cfg_file_path)
-            spyrelet_file_path = os.path.abspath(os.path.join( \
-                                    spyrelet_cfg_file_dir, spyrelet_file_path))
-        spyrelet_dir, spyrelet_file_name = os.path.split(spyrelet_file_path)
-        # remove .py extension
-        spyrelet_file_name = spyrelet_file_name.split('.py')[0]
-        # load the spyrelet class from its python file
-        sys.path.append(spyrelet_dir)
-        spyrelet_module = import_module(spyrelet_file_name)
-        spyrelet_class = getattr(spyrelet_module, spyrelet_class_name)
-        
+        # discover and load the spyrelet class
+        spyrelet_class = load_spyrelet_class(spyrelet_name, cfg)
+
         # discover the spyrelet devices
         try:
             dev_aliases,_ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY, \

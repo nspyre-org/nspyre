@@ -18,6 +18,9 @@ DB2_LOG=$LOG_DIR/db2
 # kill existing mongod instances
 killall mongod
 
+# allow time for mongod to release ports
+sleep 2
+
 # remove dbs and logs
 rm -rf $DBDATA_DIR
 mkdir $DBDATA_DIR

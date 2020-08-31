@@ -1,27 +1,45 @@
-# name of the instrument server that the client will use to connect
-# ip address of the instrument server as seen by the client
-# port to run the RPyC instrument server on
 server_settings:
+  # name of the instrument server that the client will use to connect
   name: 'local1'
+  # ip address / domain name of the instrument server as seen by the client
+  # recommended to use a local network static ip for remote clients, e.g.:
+  # ip: '192.168.0.15'
   ip: 'localhost' # only allow client connections from the same machine
-  # ip: '192.168.0.15' # use a local network static ip for remote clients
+  # port to run the RPyC instrument server on
   port: 5556
 
-# address of the mongodb server
+# address of the mongodb server in the format 'mongodb://<ip>:<port>/'
 mongodb_addr: 'mongodb://localhost:27017/'
 
-# this list will be used by the instrument server to automatically load 
-# the specified devices - the syntax is:
-#   device_name:
-#     class: 'device class'
-#     args: [<*args>]
-#     kwargs: {<**kwargs>}
+# the devices entry will be used by the instrument server to automatically load
+# the specified devices on startup - the syntax is:
+devices_doc: # 'devices' for the real one
+  device_name1:
+    # lantz class specified as a path in the style of a python import starting
+    # from the lantz drivers folder,
+    # e.g. 'examples.LantzSignalGenerator' or 'examples.dummydrivers.DummyOsci'
+    lantz_class: 'lantz driver'
+    # instead of 'lantz_class', can also be specified by 'class' / 'class_file'
+    class: 'python class name' # e.g. 'LantzSignalGenerator'
+    # python file containing the class above (can be absolute or relative to
+    # this config file), e.g. class_file: '../path/to/driver/fungen.py'
+    class_file: 'file path'
+    # list of arguments to be passed to the constructor for the driver
+    args: ['arg1', 'arg2', 'arg3']
+    # list of keyword arguments to be passed to the constructor for the driver
+    kwargs:
+      key1: 'value1'
+      key2: 'value2'
+  device_name2:
+    # etc...
+
+# actual devices
 devices:
   fake_sg:
-    class: lantz.drivers.examples.LantzSignalGenerator
+    lantz_class: examples.LantzSignalGenerator
     args: [TCPIP::localhost::5678::SOCKET]
     kwargs: {}
   fake_osc:
-    class: lantz.drivers.examples.dummydrivers.DummyOsci
+    lantz_class: examples.dummydrivers.DummyOsci
     args: []
     kwargs: {}

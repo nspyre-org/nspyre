@@ -37,7 +37,7 @@ from nspyre.gui.data_handling import save_data
 from nspyre.config.config_files import load_config, get_config_param, \
                                     ConfigEntryNotFoundError
 from nspyre.utils.misc import get_mongo_client, custom_decode, custom_encode, \
-                                RangeDict
+                                RangeDict, load_class_from_file
 from nspyre.definitions import Q_
 
 ###########################
@@ -391,15 +391,7 @@ def load_spyrelet_class(spyrelet_name, cfg):
     if not spyrelet_path.is_absolute():
         spyrelet_path = (Path(spyrelet_cfg_path_str).parent / \
                                 spyrelet_path).resolve()
-    spyrelet_dir = spyrelet_path.parent
-    spyrelet_file_name = str(spyrelet_path.name)
-    # remove .py extension
-    spyrelet_file_name = spyrelet_file_name.split('.py')[0]
-    # load the spyrelet class from its python file
-    sys.path.append(str(spyrelet_dir))
-    spyrelet_module = import_module(spyrelet_file_name)
-    spyrelet_class = getattr(spyrelet_module, spyrelet_class_name)
-    return spyrelet_class
+    return load_class_from_file(spyrelet_path, spyrelet_class_name)
 
 def load_all_spyrelets(manager, filepath=None):
     """Load all of the spyrelets from the config file"""

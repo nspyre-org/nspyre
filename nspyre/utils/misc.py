@@ -84,10 +84,23 @@ class MonkeyWrapper(object):
             setattr(self.__dict__['wrapped_obj'], attr, val)
 
 def load_class_from_str(class_str):
-    """Return a python class object from a string"""
+    """Load a python class object (available in the local scope)
+    from a string"""
     class_name = class_str.split('.')[-1]
     mod = import_module(class_str.replace('.' + class_name, ''))
     return getattr(mod, class_name)
+
+def load_class_from_file(file_path, class_name):
+    """Load a python class object from an external python file"""
+    file_dir = file_path.parent
+    file_name = str(file_path.name)
+    # remove .py extension
+    file_name = file_name.split('.py')[0]
+    # load the spyrelet class from its python file
+    sys.path.append(str(file_dir))
+    loaded_module = import_module(file_name)
+    loaded_class = getattr(loaded_module, class_name)
+    return loaded_class
 
 def debug_qt():
     """Set a tracepoint in the Python debugger that works with Qt"""

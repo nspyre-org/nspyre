@@ -18,6 +18,7 @@ Date: 7/8/2020
 # std
 import argparse
 from cmd import Cmd
+from pathlib import Path
 import logging
 import os
 import _thread
@@ -35,9 +36,10 @@ from pint import Quantity
 
 # nspyre
 from nspyre.config.config_files import get_config_param, load_config, \
-                                        meta_config_add, meta_config_remove, \
-                                        meta_config_files
-from nspyre.utils.misc import load_class_from_str, MonkeyWrapper
+                                    meta_config_add, meta_config_remove, \
+                                    meta_config_files, ConfigEntryNotFoundError
+from nspyre.utils.misc import MonkeyWrapper, load_class_from_str, \
+                                load_class_from_file
 from nspyre.definitions import SERVER_META_CONFIG_PATH, MONGO_SERVERS_KEY, \
                 MONGO_SERVERS_SETTINGS_KEY, MONGO_CONNECT_TIMEOUT, \
                 MONGO_RS, RPYC_SYNC_TIMEOUT, CONFIG_MONGO_ADDR_KEY, \
@@ -48,6 +50,12 @@ from nspyre.definitions import SERVER_META_CONFIG_PATH, MONGO_SERVERS_KEY, \
 ###########################
 
 DEFAULT_LOG = 'server.log'
+
+CONFIG_SERVER_SETTINGS = 'server_settings'
+CONFIG_SERVER_DEVICES = 'devices'
+CONFIG_SERVER_DEVICE_LANTZ_CLASS = 'lantz_class'
+CONFIG_SERVER_DEVICE_CLASS_FILE = 'class_file'
+CONFIG_SERVER_DEVICE_CLASS_NAME = 'class'
 
 ###########################
 # exceptions
@@ -101,9 +109,12 @@ class InstrumentServer(rpyc.Service):
 
     def reload_server_config(self):
         """Reload RPyC server settings from the config"""
-        self.name,_ = get_config_param(self.config, ['server_settings', 'name'])
-        self.ip,_ = get_config_param(self.config, ['server_settings', 'ip'])
-        self.port,_ = get_config_param(self.config, ['server_settings', 'port'])
+        self.name,_ = get_config_param(self.config, \
+                        [CONFIG_SERVER_SETTINGS, 'name'])
+        self.ip,_ = get_config_param(self.config, \
+                        [CONFIG_SERVER_SETTINGS, 'ip'])
+        self.port,_ = get_config_param(self.config, \
+                        [CONFIG_SERVER_SETTINGS, 'port'])
 
     def connect_mongo(self, mongo_addr=None):
         """Config and connect to the mongodb database"""
@@ -152,16 +163,57 @@ class InstrumentServer(rpyc.Service):
         # disconnect
         self.mongo_client.close()
 
-    def add_device(self, dev_name, dev_class, dev_args, dev_kwargs):
+    def add_device(self, dev_name):
         """Add and initialize a device"""
 
-        # get the device lantz class
+        # load the device parameters from the config file
+        
+        # first try getting the driver's lantz class
         try:
-            dev_class = load_class_from_str(dev_class)
-        except Exception as exc:
-            raise InstrumentServerError(exc, 'Tried to initialize device [{}] '
-                                        'with unrecognized class [{}]'.\
-                                        format(dev_name, dev_class)) from None
+            dev_lantz_class, dev_class_cfg_file = get_config_param(self.config,
+                                        [CONFIG_SERVER_DEVICES, dev_name, \
+                                        CONFIG_SERVER_DEVICE_LANTZ_CLASS])
+            try:
+                dev_class = load_class_from_str('lantz.drivers.' + \
+                                                dev_lantz_class)
+            except Exception as exc:
+                raise InstrumentServerError(exc, 'The specified lantz driver '
+                    '[{}] for device [{}] couldn\'t be loaded'.\
+                    format(dev_lantz_class, dev_name))
+        except ConfigEntryNotFoundError:
+            # if the lantz class isn't defined, try getting an absolute file
+            # path and class name
+            try:
+                dev_class_file_str, dev_class_file_cfg_file = \
+                                    get_config_param(self.config,
+                                            [CONFIG_SERVER_DEVICES, dev_name, 
+                                            CONFIG_SERVER_DEVICE_CLASS_FILE])
+                dev_class_name, _ = get_config_param(self.config,
+                                            [CONFIG_SERVER_DEVICES, dev_name, 
+                                            CONFIG_SERVER_DEVICE_CLASS_NAME])
+            except ConfigEntryNotFoundError:
+                raise InstrumentServerError(exc, 'The device [{}] didn\'t '
+                    'contain an entry for either a lantz class "{}" or a file '
+                    'path "{}" / class name "{}" to define it\'s driver type'.\
+                    format(dev_name, CONFIG_SERVER_DEVICE_LANTZ_CLASS, 
+                            CONFIG_SERVER_DEVICE_CLASS_FILE, 
+                            CONFIG_SERVER_DEVICE_CLASS_NAME))
+            dev_class_path = Path(dev_class_file_str)
+            # resolve relative paths
+            if not dev_class_path.is_absolute():
+                dev_class_path = (Path(dev_class_file_cfg_file).parent / \
+                                    dev_class_path).resolve()
+            try:
+                dev_class = load_class_from_file(dev_class_path, dev_class_name)
+            except Exception as exc:
+                raise InstrumentServerError(exc, 'The specified class [{}] '
+                    'from file [{}] for device [{}] couldn\'t be loaded'.\
+                    format(dev_class_name, dev_class_path, dev_name))
+
+        dev_args,_ = get_config_param(self.config,
+                                    [CONFIG_SERVER_DEVICES, dev_name, 'args'])
+        dev_kwargs,_ = get_config_param(self.config,
+                                    [CONFIG_SERVER_DEVICES, dev_name, 'kwargs'])
 
         # a monkey-patching function for overriding writing device feats
         def dev_set_attr(obj, attr, val):
@@ -297,14 +349,7 @@ class InstrumentServer(rpyc.Service):
         """Remove a device, then reload it from the stored config"""
         if dev_name in self.devs:
             self.del_device(dev_name)
-        dev_params,_ = get_config_param(self.config, ['devices', dev_name])
-        dev_class,_ = get_config_param(self.config,
-                                    ['devices', dev_name, 'class'])
-        dev_args,_ = get_config_param(self.config,
-                                    ['devices', dev_name, 'args'])
-        dev_kwargs,_ = get_config_param(self.config,
-                                    ['devices', dev_name, 'kwargs'])
-        self.add_device(dev_name, dev_class, dev_args, dev_kwargs)
+        self.add_device(dev_name)
 
     def reload_devices(self):
         """Reload all devices"""

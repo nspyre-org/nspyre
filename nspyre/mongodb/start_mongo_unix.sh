@@ -16,7 +16,7 @@ DB1_LOG=$LOG_DIR/db1
 DB2_LOG=$LOG_DIR/db2
 
 # kill existing mongod instances
-killall mongod
+killall -q mongod
 
 # allow time for mongod to release ports
 sleep 2

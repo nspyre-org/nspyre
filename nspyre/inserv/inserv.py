@@ -188,10 +188,10 @@ class InstrumentServer(rpyc.Service):
                                     get_config_param(self.config,
                                             [CONFIG_SERVER_DEVICES, dev_name, 
                                             CONFIG_SERVER_DEVICE_CLASS_FILE])
-                dev_class_name, _ = get_config_param(self.config,
+                dev_class_name,_ = get_config_param(self.config,
                                             [CONFIG_SERVER_DEVICES, dev_name, 
                                             CONFIG_SERVER_DEVICE_CLASS_NAME])
-            except ConfigEntryNotFoundError:
+            except ConfigEntryNotFoundError as exc:
                 raise InstrumentServerError(exc, 'The device [{}] didn\'t '
                     'contain an entry for either a lantz class "{}" or a file '
                     'path "{}" / class name "{}" to define it\'s driver type'.\

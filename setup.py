@@ -43,6 +43,9 @@ setup(name='nspyre',
 		'lantzdev>=0.5',
 		],
 	platforms='any',
+        entry_points={
+		'console_scripts': ['nspyre = nspyre.gui.main:main']
+		},
 	classifiers=[
 		"Programming Language :: Python :: 3",
 		"License :: OSI Approved :: MIT License",

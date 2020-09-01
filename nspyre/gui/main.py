@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-    nspyre.main.py
+    nspyre.gui.main.py
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     This module runs the main nspyre GUI, which allows the user to easily
     launch other tools
@@ -87,8 +87,7 @@ class NSpyre_Launcher(QtWidgets.QWidget):
 ###########################
 # standalone main
 ###########################
-
-if __name__ == '__main__':
+def main(args=None):
     from nspyre.gui.app import NSpyreApp
     # parse command-line arguments
     arg_parser = argparse.ArgumentParser(prog='nspyre',
@@ -147,3 +146,6 @@ if __name__ == '__main__':
     w = NSpyre_Launcher()
     w.show()
     app.exec_()
+
+if __name__ == '__main__':
+    main()

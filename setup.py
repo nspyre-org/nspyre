@@ -17,7 +17,7 @@ long_description = '\n\n'.join([read('LICENSE'),
 __doc__ = long_description
 
 setup(name='nspyre',
-      version='0.3.0rc0',
+      version='0.3.0rc1',
       packages=['nspyre', ],
       license='MIT',
       description='Networked Scientific Python Research Environment',

@@ -4,6 +4,7 @@ python:
 install:
   - pip install .
 script:
+  - pip check
 deploy:
   provider: pypi
   username: __token__

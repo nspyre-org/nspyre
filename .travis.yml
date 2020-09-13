@@ -4,7 +4,9 @@ python:
 install:
   - pip install .
 script:
-  - pip check
+  - pip install check-manifest
+  - cd ~/src/nspyre
+  - check-manifest --ignore 'tests/**' -vv
 deploy:
   provider: pypi
   username: __token__

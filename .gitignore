@@ -1,4 +1,14 @@
-NSpyre.egg-info
-nspyre.egg-info
-.ipynb_checkpoints/
+# general things to ignore
+build/
+dist/
+*.egg-info/
+*.egg
+*.ipynb_checkpoints/
+*.py[cod]
 __pycache__/
+*.so
+*~
+
+# due to using tox and pytest
+.tox
+.cache

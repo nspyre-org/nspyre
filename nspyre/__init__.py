@@ -13,3 +13,5 @@ import time
 #            'Spyrelet', 'LinePlotWidget', 'HeatmapPlotWidget', 'Q_', 
 #            'load_data', 'instrument_manager', 'load_all_spyrelets', 
 #            'drop_all_spyrelets', 'np', 'time']
+
+__version__ = '0.3.0rc1'

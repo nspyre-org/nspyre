@@ -54,7 +54,7 @@ setup(
         'Framework :: Jupyter',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
         'Operating System :: Microsoft :: Windows',
         'Operating System :: POSIX',
@@ -80,15 +80,17 @@ setup(
     zip_safe=False,
     python_requires='>=3.8, <4',
     install_requires=[
+        # SciPy
+        'numpy>=1.19.2',
+        'scipy>=1.5.2',
+        'pandas>=1.1.2',
         # MongoDB
         'pymongo>=3.11.0',
         # Qt
         'pyqt5>=5.15.0',
         'pyqtgraph>=0.11.0',
-        # SciPy
-        'numpy>=1.19.2',
-        'scipy>=1.5.2',
-        'pandas>=1.1.2',
+        # VISA
+        'pyvisa>=1.10.1',
         # Lantz
         'pint>=0.15',
         'lantzdev>=0.5.2',

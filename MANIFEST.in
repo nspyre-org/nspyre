@@ -1,0 +1,14 @@
+include AUTHORS LICENSE pyproject.toml *.ipynb *.md
+
+# Stubs
+include src/nspyre/gui/widgets/sip
+
+# Tests
+recursive-include tests *.py
+
+# Documentation
+include docs/Makefile docs/make.bat docs/requirements.txt
+recursive-include docs *.css
+recursive-include docs *.png
+recursive-include docs *.py
+recursive-include docs *.rst

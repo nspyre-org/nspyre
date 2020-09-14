@@ -8,3 +8,6 @@ build-backend = "setuptools.build_meta"
 # package should a) use black and b) fix the WRONG default.
 [tool.black]
 line-length = 79
+
+[tool.check-manifest]
+ignore = [".travis.yml"]

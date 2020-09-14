@@ -125,7 +125,7 @@ def main(args=None):
                             'debug, info, warning, error')
     cmd_args = arg_parser.parse_args()
 
-    # configure server logging behavior
+    # configure logging behavior
     if not cmd_args.quiet:
         if cmd_args.verbosity.lower() == 'debug':
             log_level = logging.DEBUG

@@ -39,7 +39,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 setup(
     name='nspyre',
     version=version,
-    license='BSD 3-Clause License',
+    license='MIT',
     description='Networked Scientific Python Research Environment',
     long_description=long_description,
     long_description_content_type='text/markdown',

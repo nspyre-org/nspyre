@@ -64,7 +64,7 @@ def load_raw_config(filepath):
 def meta_config_add(meta_config_file, files):
     """Add config files to the meta-config"""
     meta_config = load_raw_config(meta_config_file)
-    config_list,_ = get_config_param(meta_config, [META_CONFIG_FILES_ENTRY])
+    config_list = meta_config[META_CONFIG_FILES_ENTRY]
     new_files = []
     for f in files:
         f_path = Path(f).resolve()
@@ -77,7 +77,7 @@ def meta_config_add(meta_config_file, files):
 def meta_config_remove(meta_config_file, files):
     """Remove config files from the meta-config"""
     meta_config = load_raw_config(meta_config_file)
-    config_list,_ = get_config_param(meta_config, [META_CONFIG_FILES_ENTRY])
+    config_list = meta_config[META_CONFIG_FILES_ENTRY]
     for c in files:
         try:
             c_int = int(c)
@@ -96,7 +96,7 @@ def meta_config_remove(meta_config_file, files):
 def meta_config_files(meta_config_file):
     """Return the paths of the config files in the meta-config"""
     meta_config = load_raw_config(meta_config_file)
-    config_list,_ = get_config_param(meta_config, [META_CONFIG_FILES_ENTRY])
+    config_list = meta_config[META_CONFIG_FILES_ENTRY]
     return config_list
 
 def load_config(meta_config_path=None):

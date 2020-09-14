@@ -19,6 +19,7 @@ import os
 import time
 from subprocess import Popen
 import argparse
+from pathlib import Path
 
 # 3rd party
 from PyQt5 import QtCore, QtWidgets
@@ -31,7 +32,8 @@ from nspyre.definitions import join_nspyre_path, LOGO_PATH
 # globals
 ###########################
 
-DEFAULT_LOG = 'nspyre.log'
+THIS_DIR = Path(__file__).parent
+DEFAULT_LOG = THIS_DIR / 'nspyre.log'
 
 ###########################
 # exceptions
@@ -136,7 +138,7 @@ def main(args=None):
         elif cmd_args.verbosity.lower() == 'error':
             log_level = logging.ERROR
         else:
-            raise InstrumentServerError('didn\'t recognize logging level [%s]' \
+            raise Exception('didn\'t recognize logging level [%s]' \
                                         % (cmd_args.verbosity)) from None
 
         logging.basicConfig(level=log_level,

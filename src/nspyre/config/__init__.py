@@ -13,15 +13,19 @@ Date: 9/13/2020
 # std
 import argparse
 import logging
+from pathlib import Path
 
 # nspyre
 from nspyre.definitions import CLIENT_META_CONFIG_PATH, SERVER_META_CONFIG_PATH
+from nspyre.config.config_files import meta_config_add, meta_config_remove, \
+                                meta_config_files
 
 ###########################
 # globals
 ###########################
 
-DEFAULT_LOG = 'cli_config.log'
+THIS_DIR = Path(__file__).parent
+DEFAULT_LOG = THIS_DIR / 'config.log'
 
 ###########################
 # exceptions
@@ -77,7 +81,7 @@ def main():
         elif cmd_args.verbosity.lower() == 'error':
             log_level = logging.ERROR
         else:
-            raise InstrumentServerError('didn\'t recognize logging level [{}]'.\
+            raise Exception('didn\'t recognize logging level [{}]'.\
                                         format(cmd_args.verbosity)) from None
 
         logging.basicConfig(level=log_level,
@@ -86,23 +90,23 @@ def main():
                                 logging.StreamHandler()])
 
     if cmd_args.client_or_server == 'client':
-        META_CONFIG_PATH = CLIENT_META_CONFIG_PATH
+        meta_config_path = CLIENT_META_CONFIG_PATH
     elif cmd_args.client_or_server == 'server':
-        META_CONFIG_PATH = SERVER_META_CONFIG_PATH
+        meta_config_path = SERVER_META_CONFIG_PATH
     else:
         raise NSpyreConfigError('expected either [client] or [server]')
 
     if cmd_args.config:
         # the user asked us to add config files to the meta-config
-        meta_config_add(META_CONFIG_PATH, cmd_args.config)
+        meta_config_add(meta_config_path, cmd_args.config)
         return
     if cmd_args.delconfig:
         # the user asked us to remove config files from the meta-config
-        meta_config_remove(META_CONFIG_PATH, cmd_args.delconfig)
+        meta_config_remove(meta_config_path, cmd_args.delconfig)
         return
     if cmd_args.list_configs:
         # the user asked us to list the config files from the meta-config
-        files  = meta_config_files(META_CONFIG_PATH)
+        files  = meta_config_files(meta_config_path)
         for i in range(len(files)):
             print('{}: {}'.format(i, files[i]))
         return

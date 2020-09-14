@@ -103,6 +103,9 @@ setup(
     entry_points={
         'console_scripts': [
             'nspyre=nspyre.gui:main',
+            'nspyre-config=nspyre.config:main',
+            'nspyre-mongo=nspyre.mongodb:main',
+            'nspyre-inserv=nspyre.inserv:main',
         ],
     },
     project_urls={

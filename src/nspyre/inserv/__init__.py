@@ -16,6 +16,7 @@ import argparse
 from cmd import Cmd
 import logging
 import pdb
+from pathlib import Path
 
 # 3rd party
 import visa
@@ -28,7 +29,8 @@ from nspyre.definitions import SERVER_META_CONFIG_PATH
 # globals
 ###########################
 
-DEFAULT_LOG = 'server.log'
+THIS_DIR = Path(__file__).parent
+DEFAULT_LOG = THIS_DIR / 'inserv.log'
 
 ###########################
 # classes / functions

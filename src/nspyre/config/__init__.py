@@ -41,7 +41,7 @@ class NSpyreConfigError(Exception):
 def main():
     """Entry point for instrument server CLI"""
     # parse command-line arguments
-    arg_parser = argparse.ArgumentParser(prog='nspyre config',
+    arg_parser = argparse.ArgumentParser(prog='nspyre-config',
                             description='Set the nspyre configuration files')
     arg_parser.add_argument('-c', '--config', nargs='+',
                             default=None,

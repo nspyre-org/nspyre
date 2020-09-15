@@ -1,2 +1,2 @@
 config_files:
-  - client_default_config.yaml
+- client_default_config.yaml

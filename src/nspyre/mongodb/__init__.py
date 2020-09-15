@@ -36,7 +36,7 @@ class OSNotSupportedError(Exception):
 def main():
     """Entry point for mongodb CLI"""
     # parse command-line arguments
-    arg_parser = argparse.ArgumentParser(prog='nspyre mongodb',
+    arg_parser = argparse.ArgumentParser(prog='nspyre-mongo',
                             description='Start / restart the MongoDB server')
     cmd_args = arg_parser.parse_args()
     if platform == 'linux' or platform == 'linux2' or platform == 'darwin':

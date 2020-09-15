@@ -165,7 +165,7 @@ class InservCmdPrompt(Cmd):
 def main():
     """Entry point for instrument server CLI"""
     # parse command-line arguments
-    arg_parser = argparse.ArgumentParser(prog='inserv',
+    arg_parser = argparse.ArgumentParser(prog='nspyre-inserv',
                             description='Run an nspyre instrument server')
     arg_parser.add_argument('-l', '--log',
                             default=DEFAULT_LOG,

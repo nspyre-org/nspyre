@@ -1,7 +1,11 @@
 include AUTHORS LICENSE pyproject.toml *.ipynb *.md
 
-# Stubs
-include src/nspyre/gui/widgets/sip
+# Config files
+include src/nspyre/config/*.yaml
+
+# MongoDB scripts
+include src/nspyre/mongodb/start_mongo_unix.sh
+include src/nspyre/mongodb/start_mongo_win.bat
 
 # Tests
 recursive-include tests *.py

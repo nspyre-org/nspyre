@@ -14,4 +14,4 @@ import time
 #            'load_data', 'instrument_manager', 'load_all_spyrelets', 
 #            'drop_all_spyrelets', 'np', 'time']
 
-__version__ = '0.3.0'
+__version__ = '0.3.0rc1'

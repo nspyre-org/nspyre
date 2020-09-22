@@ -98,7 +98,6 @@ setup(
         # Utilities
         'parse>=1.18.0',
         'tqdm>=4.49.0',
-        'waiting>=1.4.1',
         'rpyc>=4.1.5',
     ],
     entry_points={

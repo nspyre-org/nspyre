@@ -16,13 +16,12 @@ Date: 7/8/2020
 # std
 from pathlib import Path
 import logging
-import _thread
+import threading
 
 # 3rd party
 import rpyc
 from rpyc.utils.server import ThreadedServer 
 import pymongo
-import waiting
 from lantz import Q_, DictFeat
 from pint import Quantity
 
@@ -46,6 +45,9 @@ CONFIG_SERVER_DEVICES = 'devices'
 CONFIG_SERVER_DEVICE_LANTZ_CLASS = 'lantz_class'
 CONFIG_SERVER_DEVICE_CLASS_FILE = 'class_file'
 CONFIG_SERVER_DEVICE_CLASS_NAME = 'class'
+
+START_EVENT = threading.Event()
+STOP_EVENT = threading.Event()
 
 ###########################
 # exceptions
@@ -378,8 +380,11 @@ class InstrumentServer(rpyc.Service):
                             'is already running')
             return
         self.connect_mongo()
-        _thread.start_new_thread(self._rpyc_server_thread, ())
+        thread = threading.Thread(target=self._rpyc_server_thread)
+        thread.start()
         # wait for the server to start
+        START_EVENT.wait()
+        START_EVENT.clear()
         waiting.wait(lambda: self._rpyc_server and self._rpyc_server.active,
                         sleep_seconds=0.1)
 
@@ -393,7 +398,8 @@ class InstrumentServer(rpyc.Service):
         logging.info('stopping RPyC server...')
         self._rpyc_server.close()
         # wait for the server to stop
-        waiting.wait(lambda: not self._rpyc_server.active, sleep_seconds=0.1)
+        STOP_EVENT.wait()
+        STOP_EVENT.clear()
         self._rpyc_server = None
 
     def _rpyc_server_thread(self):
@@ -404,5 +410,7 @@ class InstrumentServer(rpyc.Service):
                                     'allow_setattr' : True,
                                     'allow_delattr' : True,
                                     'sync_request_timeout' : RPYC_SYNC_TIMEOUT})
+        START_EVENT.set()
         self._rpyc_server.start()
+        STOP_EVENT.set()
         logging.info('RPyC server stopped')

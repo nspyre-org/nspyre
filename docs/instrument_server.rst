@@ -10,7 +10,7 @@ The Instrument Server is where the lantz driver actually lives. Commands
 received on the ZMQ (socket) connection are relayed to the lantz driver.
 
 The file for the instrument server, *instrument_server.py*, is located in the
-main NSpyre folder (e.g. here it is *C:\GitHub\NSpyre-Dev\nspyre*). It boots a
+main NSpyre folder (e.g. here it is *C:\GitHub\nspyre-org\nspyre*). It boots a
 server with all the default arguments, which are located in the *config.yaml*
 file located in the same folder.
 

@@ -1,5 +1,8 @@
 include AUTHORS LICENSE pyproject.toml *.ipynb *.md
 
+# Stubs
+include src/nspyre/gui/images/*.png
+
 # Config files
 include src/nspyre/config/*.yaml
 

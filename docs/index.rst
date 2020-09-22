@@ -6,8 +6,8 @@
 Welcome to nspyre's documentation!
 ==================================
 
-.. image:: https://img.shields.io/github/license/nspyre-dev/nspyre
-   :target: https://github.com/nspyre-dev/nspyre/blob/master/LICENSE
+.. image:: https://img.shields.io/github/license/nspyre-org/nspyre
+   :target: https://github.com/nspyre-org/nspyre/blob/master/LICENSE
    :alt: GitHub
 
 .. image:: https://readthedocs.org/projects/nspyre/badge/?version=latest

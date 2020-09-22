@@ -39,11 +39,11 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 setup(
     name='nspyre',
     version=version,
-    license='MIT',
+    license='BSD 3-Clause License',
     description='Networked Scientific Python Research Environment',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/NSpyre-Dev/nspyre',
+    url='https://github.com/nspyre-org/nspyre',
     author='Alexandre Bourassa',
     author_email='abourassa@uchicago.edu',
     maintainer='Michael Solomon',
@@ -89,6 +89,7 @@ setup(
         # Qt
         'pyqt5>=5.15.0',
         'pyqtgraph>=0.11.0',
+        'qscintilla2>=2.11.2'
         # VISA
         'pyvisa>=1.10.1',
         # Lantz
@@ -104,13 +105,13 @@ setup(
         'console_scripts': [
             'nspyre=nspyre.gui:main',
             'nspyre-config=nspyre.config:main',
-            'nspyre-mongo=nspyre.mongodb:main',
+            'nspyre-mongodb=nspyre.mongodb:main',
             'nspyre-inserv=nspyre.inserv:main',
         ],
     },
     project_urls={
-        'Bug Reports': 'https://github.com/NSpyre-Dev/nspyre/issues',
-        'Source': 'https://github.com/NSpyre-Dev/nspyre/',
+        'Bug Reports': 'https://github.com/nspyre-org/nspyre/issues',
+        'Source': 'https://github.com/nspyre-org/nspyre/',
     },
     include_package_data=True,
     options={'bdist_wheel': {'universal': '1'}},

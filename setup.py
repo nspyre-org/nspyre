@@ -89,9 +89,9 @@ setup(
         # Qt
         'pyqt5>=5.15.0',
         'pyqtgraph>=0.11.0',
-        'qscintilla2>=2.11.2'
+        'qscintilla2>=2.10'
         # VISA
-        'pyvisa>=1.10.1',
+        'pyvisa>=1.9',
         # Lantz
         'pint>=0.15',
         'lantzdev>=0.5.2',

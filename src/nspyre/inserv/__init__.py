@@ -19,7 +19,7 @@ import pdb
 from pathlib import Path
 
 # 3rd party
-import visa
+import pyvisa
 
 # nspyre
 from nspyre.inserv.inserv import InstrumentServer
@@ -159,7 +159,7 @@ class InservCmdPrompt(Cmd):
         self.inserv.stop_server()
         for dev_name in list(self.inserv.devs):
             self.inserv.del_device(dev_name)
-        visa.ResourceManager().close()
+        pyvisa.ResourceManager().close()
         raise SystemExit
 
 def main():

@@ -17,6 +17,7 @@ Date: 7/8/2020
 from pathlib import Path
 import logging
 import threading
+import time
 
 # 3rd party
 import rpyc
@@ -46,8 +47,7 @@ CONFIG_SERVER_DEVICE_LANTZ_CLASS = 'lantz_class'
 CONFIG_SERVER_DEVICE_CLASS_FILE = 'class_file'
 CONFIG_SERVER_DEVICE_CLASS_NAME = 'class'
 
-START_EVENT = threading.Event()
-STOP_EVENT = threading.Event()
+RPYC_SERVER_STOP_EVENT = threading.Event()
 
 ###########################
 # exceptions
@@ -383,10 +383,8 @@ class InstrumentServer(rpyc.Service):
         thread = threading.Thread(target=self._rpyc_server_thread)
         thread.start()
         # wait for the server to start
-        START_EVENT.wait()
-        START_EVENT.clear()
-        waiting.wait(lambda: self._rpyc_server and self._rpyc_server.active,
-                        sleep_seconds=0.1)
+        while not (self._rpyc_server and self._rpyc_server.active):
+            time.sleep(0.1)
 
     def stop_server(self):
         """Stop the RPyC server"""
@@ -398,8 +396,10 @@ class InstrumentServer(rpyc.Service):
         logging.info('stopping RPyC server...')
         self._rpyc_server.close()
         # wait for the server to stop
-        STOP_EVENT.wait()
-        STOP_EVENT.clear()
+        while self._rpyc_server.active:
+            time.sleep(0.1)
+        RPYC_SERVER_STOP_EVENT.wait()
+        RPYC_SERVER_STOP_EVENT.clear()
         self._rpyc_server = None
 
     def _rpyc_server_thread(self):
@@ -410,7 +410,6 @@ class InstrumentServer(rpyc.Service):
                                     'allow_setattr' : True,
                                     'allow_delattr' : True,
                                     'sync_request_timeout' : RPYC_SYNC_TIMEOUT})
-        START_EVENT.set()
         self._rpyc_server.start()
-        STOP_EVENT.set()
         logging.info('RPyC server stopped')
+        RPYC_SERVER_STOP_EVENT.set()

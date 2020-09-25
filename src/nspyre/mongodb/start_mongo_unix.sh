@@ -38,7 +38,9 @@ while [ -d $DBDATA_BACKUP_DIR"/"$DB_DATA_BACKUP_NAME"_"$i ]; do
 	i=$((i+1))
 done
 # move the current db files to the backup folder
-mv $DBDATA_DIR $DBDATA_BACKUP_DIR"/"$DB_DATA_BACKUP_NAME"_"$i
+if [ -d $DBDATA_DIR ]; then
+	mv $DBDATA_DIR $DBDATA_BACKUP_DIR"/"$DB_DATA_BACKUP_NAME"_"$i
+fi
 # make new folders for the db files
 mkdir $DBDATA_DIR
 mkdir $DB1_DIR

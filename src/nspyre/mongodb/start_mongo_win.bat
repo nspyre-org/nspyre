@@ -36,7 +36,9 @@ if exist %DBDATA_BACKUP_DIR%/%DB_DATA_BACKUP_NAME%_%i% (
     goto :while
 )
 rem move the current db files to the backup folder
-move %DBDATA_DIR% %DBDATA_BACKUP_DIR%/%DB_DATA_BACKUP_NAME%_%i%
+if exist %DBDATA_DIR% (
+	move %DBDATA_DIR% %DBDATA_BACKUP_DIR%/%DB_DATA_BACKUP_NAME%_%i%
+)
 rem make new folders for the db files
 mkdir %DBDATA_DIR%
 mkdir %DB1_DIR%

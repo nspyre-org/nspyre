@@ -33,7 +33,7 @@ Pythonic Networked Scientific Experimentation Toolkit
    :caption: Misc Guides
    :hidden:
 
-   ni-daqmx
+   guides/ni-daqmx
 
 .. toctree::
    :maxdepth: 1

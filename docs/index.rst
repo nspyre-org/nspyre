@@ -30,6 +30,13 @@ Pythonic Networked Scientific Experimentation Toolkit
 
 .. toctree::
    :maxdepth: 1
+   :caption: Misc Guides
+   :hidden:
+
+   ni-daqmx
+
+.. toctree::
+   :maxdepth: 1
    :caption: API
    :hidden:
    

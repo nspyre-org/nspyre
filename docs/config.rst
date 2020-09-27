@@ -1,6 +1,9 @@
-###################
+#############
+Configuration
+#############
+
 Configuration Files
-###################
+===================
 
 There are two sets of configuration files in nspyre. One is for the instrument 
 server, and one for the spyrelets and other tools connecting to the instrument 
@@ -8,7 +11,7 @@ server. These are referred to as the "server" and "client", respectively. The co
 ``nspyre-config --help``, but some usage examples are shown below.
 
 Adding Config Files
-###################
+-------------------
 To add a new client config file, use the command:
 .. code-block:: console
    > nspyre-config client -c path/to/client_config.yaml
@@ -20,7 +23,7 @@ And a server config:
 The paths are allowed to be relative to the current working directory.
 
 Listing Configs Files
-#####################
+---------------------
 The console command below lists the set of config files that the client collects its configuration entries from:
 .. code-block:: console
    > nspyre-config client -e
@@ -29,7 +32,7 @@ The console command below lists the set of config files that the client collects
    >
 
 Removing Config Files
-#####################
+---------------------
 To remove a config file, use the ``-d`` option, then the path of the config file to remove:
 .. code-block:: console
    > nspyre-config client -e
@@ -50,16 +53,15 @@ Or they can be deleted by entry number e.g.:
    0: client_default_config.yaml
    >
 
-#####################
 Configuration Entries
-#####################
+=====================
 
 The client and server each have a separate set of configuration entries that they expect to be contained somewhere in their list of config files. The configuration entries may be all in a single file, or split into multiple if desired. However, if multiple top-level entries of the same name exist, the one from the last-read config file will take precedence. The config files are read in the same order as they are listed with ``nspyre-config -e``.
 
 The config entries for the client and server are listed and documented below with example config files.
 
 Server Config
-#############
+-------------
 
 .. code-block:: yaml
    server_settings:
@@ -109,7 +111,7 @@ Server Config
        kwargs: {}
 
 Client Config
-#############
+-------------
 
 .. code-block:: yaml
    # address of the mongodb server

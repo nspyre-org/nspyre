@@ -13,18 +13,23 @@ server. These are referred to as the "server" and "client", respectively. The co
 Adding Config Files
 -------------------
 To add a new client config file, use the command:
+
 .. code-block:: console
    > nspyre-config client -c path/to/client_config.yaml
    >
+
 And a server config:
+
 .. code-block:: console
    > nspyre-config server -c path/to/server_config.yaml
    >
+
 The paths are allowed to be relative to the current working directory.
 
 Listing Configs Files
 ---------------------
 The console command below lists the set of config files that the client collects its configuration entries from:
+
 .. code-block:: console
    > nspyre-config client -e
    0: client_default_config.yaml
@@ -34,6 +39,7 @@ The console command below lists the set of config files that the client collects
 Removing Config Files
 ---------------------
 To remove a config file, use the ``-d`` option, then the path of the config file to remove:
+
 .. code-block:: console
    > nspyre-config client -e
    0: client_default_config.yaml
@@ -44,6 +50,7 @@ To remove a config file, use the ``-d`` option, then the path of the config file
    >
 
 Or they can be deleted by entry number e.g.:
+
 .. code-block:: console
    > nspyre-config client -e
    0: client_default_config.yaml

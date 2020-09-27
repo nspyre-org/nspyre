@@ -22,7 +22,7 @@ import argparse
 from pathlib import Path
 
 # 3rd party
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 
 # nspyre
 from nspyre.gui.image import ImageWidget
@@ -46,6 +46,8 @@ DEFAULT_LOG = THIS_DIR / 'nspyre.log'
 class NSpyre_Launcher(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
+        self.setWindowTitle('nspyre')
+        self.setWindowIcon(QtGui.QIcon('images/favicon.ico'))
         
         main_layout = QtWidgets.QVBoxLayout()
         im = ImageWidget(LOGO_PATH)

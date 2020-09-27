@@ -1,5 +1,5 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import pyqtRemoveInputHook
+from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class NSpyreApp(QtWidgets.QApplication):
     def __init__(self, *args, **kwargs):
@@ -14,7 +14,7 @@ class NSpyreApp(QtWidgets.QApplication):
         palette = QtGui.QPalette()
         palette.setColor(QtGui.QPalette.Window, dark)
         palette.setColor(QtGui.QPalette.WindowText, QtCore.Qt.white)
-        palette.setColor(QtGui.QPalette.Base, QtGui.QColor(25,25,25))
+        palette.setColor(QtGui.QPalette.Base, QtGui.QColor(25, 25, 25))
         palette.setColor(QtGui.QPalette.AlternateBase, dark)
         palette.setColor(QtGui.QPalette.ToolTipBase, QtCore.Qt.white)
         palette.setColor(QtGui.QPalette.ToolTipText, QtCore.Qt.white)

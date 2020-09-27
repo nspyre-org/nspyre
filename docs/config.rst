@@ -15,12 +15,14 @@ Adding Config Files
 To add a new client config file, use the command:
 
 .. code-block:: console
+   
    > nspyre-config client -c path/to/client_config.yaml
    >
 
 And a server config:
 
 .. code-block:: console
+   
    > nspyre-config server -c path/to/server_config.yaml
    >
 
@@ -31,6 +33,7 @@ Listing Configs Files
 The console command below lists the set of config files that the client collects its configuration entries from:
 
 .. code-block:: console
+
    > nspyre-config client -e
    0: client_default_config.yaml
    1: /path/to/client_config.yaml
@@ -41,6 +44,7 @@ Removing Config Files
 To remove a config file, use the ``-d`` option, then the path of the config file to remove:
 
 .. code-block:: console
+
    > nspyre-config client -e
    0: client_default_config.yaml
    1: /path/to/client_config.yaml
@@ -52,6 +56,7 @@ To remove a config file, use the ``-d`` option, then the path of the config file
 Or they can be deleted by entry number e.g.:
 
 .. code-block:: console
+
    > nspyre-config client -e
    0: client_default_config.yaml
    1: /path/to/client_config.yaml
@@ -71,6 +76,7 @@ Server Config
 -------------
 
 .. code-block:: yaml
+
    server_settings:
      # name of the instrument server that the client will use to connect
      name: 'local1'
@@ -121,6 +127,7 @@ Client Config
 -------------
 
 .. code-block:: yaml
+   
    # address of the mongodb server
    mongodb_addr: 'mongodb://localhost:27017/'
    

@@ -23,6 +23,7 @@ Pythonic Networked Scientific Experimentation Toolkit
 
    install
    getting_started
+   config
    spyrelet
    instrument_server
    the_database

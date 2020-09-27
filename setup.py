@@ -81,15 +81,15 @@ setup(
     python_requires='>=3.8, <4',
     install_requires=[
         # SciPy
-        'numpy>=1.19.2',
+        'numpy>=1.19.1',
         'scipy>=1.5.2',
         'pandas>=1.1.2',
         # MongoDB
-        'pymongo>=3.11.0',
+        'pymongo>=3.10.1',
         # Qt
-        'pyqt5>=5.15.0',
+        'pyqt5>=5.12.3',
         'pyqtgraph>=0.11.0',
-        'qscintilla>=2.11.5',
+        'qscintilla>=2.11.2',
         # VISA
         'pyvisa>=1.10.1',
         # Lantz

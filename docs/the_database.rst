@@ -11,7 +11,7 @@ If you are using conda, this will be in
 ``/path/to/conda/envs/<conda env name>/lib/python3.8(or current python version)/site-packages/nspyre/mongodb/db_files_backup``.
 Finally, it starts and initializes a new database instance.
 
-If you want to directly view data in the database in real-time, you can download `MongoDB Compass`_ and connect via the same ``mongodb_addr`` specified in the client and server `configuration files`_, e.g. ``mongodb://localhost:27017/``
+If you want to directly view data in the database in real-time, you can download `MongoDB Compass`_ and connect via the same ``mongodb_addr`` specified in the client and server `Configuration Files`_, e.g. ``mongodb://localhost:27017/``
 
 .. _MongoDB Compass: https://www.mongodb.com/try/download/compass
 

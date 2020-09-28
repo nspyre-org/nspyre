@@ -61,10 +61,6 @@ can thus be connected to different computers, which can in turn be controlled by
 another machine running the *experimental* commands. This allows for the easy
 integration of shared resources in a research environment.
 
-.. code-block:: console
-   
-   (conda env) $ python main.py
-
 It's built on top of the Lantz (instrumentation communication toolkit) module
 for interfacing with equipment using a variety of protocols and grew out of
 many years of development in the Awschalom Group and others — first from many
@@ -78,7 +74,38 @@ The beauty of NSpyre is that many operations can be performed in multiple ways,
 allowing for maximum flexibility. This includes both command line, GUI, and
 Jupyter interfaces. Experiments and analyses can be written in detailed
 *spyrelets* or added in-situ in a scripting style fashion. This
-*plug-and-play* fashion allows for many modalities, but here is a common usage:
+*plug-and-play* fashion allows for many modalities, but to get up to speed quickly,
+here is some quickstart information:
+
+Start the main GUI menu:
+
+.. code-block:: console
+
+   $ nspyre
+
+.. figure:: images/start-gui.png
+   :align: center
+   :scale: 100%
+
+Set the configuration file for nspyre:
+
+.. code-block:: console
+
+   $ nspyre-config client -c path/to/client_config.yaml
+
+Start (or restart) the MongoDB server:
+
+.. code-block:: console
+
+   $ nsypre-mongodb
+
+Start an instrument server for running hardware:
+
+.. code-block:: console
+
+   $ nspyre-inserv
+
+Run nspyre using a jupyter notebook:
 
 .. nbinput:: ipython3
    :execution-count: 1

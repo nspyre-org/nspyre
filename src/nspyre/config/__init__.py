@@ -66,8 +66,8 @@ def main():
                             default='info',
                             help='the verbosity of logging - options are: '
                             'debug, info, warning, error')
-    arg_parser.add_argument('client_or_server', help='pass [client] to modify '
-        'the client configuration files, [server] for the instrument server')
+    arg_parser.add_argument('client_or_inserv', help='pass [client] to modify '
+        'the client configuration files, [inserv] for the instrument server')
     cmd_args = arg_parser.parse_args()
 
     # configure server logging behavior
@@ -89,12 +89,12 @@ def main():
                         handlers=[logging.FileHandler(cmd_args.log, 'w+'),
                                 logging.StreamHandler()])
 
-    if cmd_args.client_or_server == 'client':
+    if cmd_args.client_or_inserv == 'client':
         meta_config_path = CLIENT_META_CONFIG_PATH
-    elif cmd_args.client_or_server == 'server':
+    elif cmd_args.client_or_inserv == 'inserv':
         meta_config_path = SERVER_META_CONFIG_PATH
     else:
-        raise NSpyreConfigError('expected either [client] or [server]')
+        raise NSpyreConfigError('expected either [client] or [inserv]')
 
     if cmd_args.config:
         # the user asked us to add config files to the meta-config

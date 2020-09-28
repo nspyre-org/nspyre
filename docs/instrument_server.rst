@@ -10,7 +10,7 @@ The Instrument Server (inserv for short) connects to and controls all of the phy
 
 .. _RPyC: https://rpyc.readthedocs.io/en/latest/
 
-The inserv can be started using the ``nspyre-inserv`` command. Details about its operation can be found by typing ``nspyre-inserv --help``. On startup, the server will attempt connection to the MongoDB database, as well as all of the instruments specified in it's config file. Once it has successfully started, the inserv will serve a shell prompt:
+The inserv can be started using the ``nspyre-inserv`` command. Details about its operation can be found by typing ``nspyre-inserv --help``. On startup, the server will attempt connection to the MongoDB database, as well as all of the instruments specified in its config file. Once it has successfully started, the inserv will serve a shell prompt:
    
 .. code-block:: console
    

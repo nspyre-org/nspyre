@@ -38,28 +38,28 @@ Reference Materials and Manuals:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * NI-DAQmx C Reference Help:
-  `[1] `_ https://zone.ni.com/reference/en-XX/help/370471AM-01/
+  _`[1] ` https://zone.ni.com/reference/en-XX/help/370471AM-01/
 
 * NI-DAQmx Terminal Names:
-  `[2] `_ https://www.ni.com/documentation/en/ni-daqmx/latest/mxcncpts/termnames/
+  _`[2] ` https://www.ni.com/documentation/en/ni-daqmx/latest/mxcncpts/termnames/
 
 * DAQ X Series User Manual:
-  `[3] `_ https://www.ni.com/pdf/manuals/370784k.pdf
+  _`[3] ` https://www.ni.com/pdf/manuals/370784k.pdf
 
 * NI PCIe-6343 Supported Properties: (most common DAQ in QML/PME labs)
-  `[4] `_ https://zone.ni.com/reference/en-XX/help/370471AM-01/cdaqmxsupp/pcie-6343/
+  _`[4] ` https://zone.ni.com/reference/en-XX/help/370471AM-01/cdaqmxsupp/pcie-6343/
 
 Getting Started, How Tos, and Guides:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * 10 Most Important NI-DAQmx Functions:
-  `[5] `_ https://www.ni.com/en-gb/support/documentation/supplemental/06/learn-10-functions-in-ni-daqmx-and-handle-80-percent-of-your-dat.html
+  _`[5] ` https://www.ni.com/en-gb/support/documentation/supplemental/06/learn-10-functions-in-ni-daqmx-and-handle-80-percent-of-your-dat.html
 
 * Understanding NI-DAQmx Timing and Synchronization:
-  `[6] `_ https://www.ni.com/en-gb/support/documentation/supplemental/06/timing-and-synchronization-features-of-ni-daqmx.html
+  _`[6] ` https://www.ni.com/en-gb/support/documentation/supplemental/06/timing-and-synchronization-features-of-ni-daqmx.html
 
 * Getting Started with NI-DAQmx (LabVIEW):
-  `[7] `_ https://www.ni.com/tutorial/5469/en/
+  _`[7] ` https://www.ni.com/tutorial/5469/en/
 
 
 See https://nidaqmx-python.readthedocs.io/en/latest/ for more details.
@@ -92,7 +92,7 @@ languages refer to the same function call in the C core libraries.
 
 The current documentation of the nidaqmx package is limited. Since
 all the APIs interface with the common C core libraries, it is
-therefore recommended that you refer to the NI-DAQmx C Reference [1]
+therefore recommended that you refer to the NI-DAQmx C Reference `[1] `_
 as you begin using nidaqmx. An effective method at gaining
 familiarity and making quick progress with nidaqmx is to search for
 the C core function that implements the functionality you require.
@@ -192,7 +192,7 @@ objects (particularly Channel class objects) are initialized within
 the object of the Task class to whom the channel, trigger, timing,
 or IO stream modifies. (For more information on the core NI-DAQmx
 functions needed to implement a data acquisition scheme, see the
-primer '10 Most Important NI-DAQmx Functions' [5].)
+primer '10 Most Important NI-DAQmx Functions' `[5] `_.)
 
 Virtual channels, or sometimes referred to generically as channels,
 are software entities that encapsulate the physical (hardware)

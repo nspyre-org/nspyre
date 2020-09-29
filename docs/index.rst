@@ -85,8 +85,8 @@ Start the main GUI menu:
 
 .. figure:: images/startup-gui.png
    :align: center
-   :height: 646px
-   :width: 848px
+   :height: 581.4px
+   :width: 763.2px
 
 Set the configuration file for nspyre:
 

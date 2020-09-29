@@ -168,7 +168,7 @@ class RangeDict(dict):
 
     def __setitem__(self, key, val):
         if key == 'func':
-            raise KeyError('Cannot redefine the func, you should reinstanciate with new parametters')
+            raise KeyError('Cannot redefine the func, you should reinstantiate with new parameters')
         elif key in inspect.signature(self.FUNCS[self['func']]).parameters:
             return dict.__setitem__(self, key, val)
 
@@ -190,5 +190,5 @@ class RangeDict(dict):
 def get_mongo_client(mongodb_addr=None):
     if mongodb_addr is None:
         cfg = load_config()
-        mongodb_addr,_ = get_config_param(cfg, [CONFIG_MONGO_ADDR_KEY])
+        mongodb_addr, _ = get_config_param(cfg, [CONFIG_MONGO_ADDR_KEY])
     return pymongo.MongoClient(mongodb_addr, replicaset=MONGO_RS)

@@ -70,6 +70,8 @@ def meta_config_add(meta_config_file, files):
         f_path = Path(f).resolve()
         if not f_path.is_file():
             raise FileNotFoundError('file [{}] not found'.format(f_path))
+        if str(f_path) in config_list:
+            raise ConfigError(None, 'the config file {} is already available'.format(f))
         new_files.append(str(f_path))
     meta_config[META_CONFIG_FILES_ENTRY] = config_list + new_files
     write_config(meta_config, meta_config_file)

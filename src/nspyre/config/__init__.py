@@ -47,7 +47,7 @@ def main():
                             default=None,
                             help='permanently add a configuration '
                             'file(s) to the list to be imported on startup')
-    arg_parser.add_argument('-d', '--delconfig', nargs='+',
+    arg_parser.add_argument('-d', '--delete-config', nargs='+',
                             default=None,
                             help='remove a configuration file(s) from '
                             'the list to be imported on startup - pass either '
@@ -100,9 +100,9 @@ def main():
         # the user asked us to add config files to the meta-config
         meta_config_add(meta_config_path, cmd_args.config)
         return
-    if cmd_args.delconfig:
+    if cmd_args.delete-config:
         # the user asked us to remove config files from the meta-config
-        meta_config_remove(meta_config_path, cmd_args.delconfig)
+        meta_config_remove(meta_config_path, cmd_args.delete-config)
         return
     if cmd_args.list_configs:
         # the user asked us to list the config files from the meta-config

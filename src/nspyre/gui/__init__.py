@@ -104,7 +104,7 @@ def main(args=None):
                             default=None,
                             help='permanently add a configuration '
                             'file(s) to the list to be imported on startup')
-    arg_parser.add_argument('-d', '--delconfig', nargs='+',
+    arg_parser.add_argument('-d', '--delete-config', nargs='+',
                             default=None,
                             help='remove a configuration file(s) from '
                             'the list to be imported on startup')

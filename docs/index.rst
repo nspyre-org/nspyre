@@ -83,7 +83,7 @@ Start the main GUI menu:
 
    $ nspyre
 
-.. figure:: images/start-gui.png
+.. figure:: images/startup-gui.png
    :align: center
    :scale: 100%
 

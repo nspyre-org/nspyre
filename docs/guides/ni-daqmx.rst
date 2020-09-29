@@ -35,22 +35,26 @@ Some helpful resources when working with nidaqmx
 ------------------------------------------------
 
 Reference Materials and Manuals:
-    * NI-DAQmx C Reference Help:
-        [1] https://zone.ni.com/reference/en-XX/help/370471AM-01/
-    * NI-DAQmx Terminal Names:
-        [2] https://www.ni.com/documentation/en/ni-daqmx/latest/mxcncpts/termnames/
-    * DAQ X Series User Manual:
-        [3] https://www.ni.com/pdf/manuals/370784k.pdf
-    * NI PCIe-6343 Supported Properties: (most common DAQ in QML/PME labs)
-        [4] https://zone.ni.com/reference/en-XX/help/370471AM-01/cdaqmxsupp/pcie-6343/
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* NI-DAQmx C Reference Help:
+  [1]_ https://zone.ni.com/reference/en-XX/help/370471AM-01/
+* NI-DAQmx Terminal Names:
+  [2]_ https://www.ni.com/documentation/en/ni-daqmx/latest/mxcncpts/termnames/
+* DAQ X Series User Manual:
+  [3]_ https://www.ni.com/pdf/manuals/370784k.pdf
+* NI PCIe-6343 Supported Properties: (most common DAQ in QML/PME labs)
+  [4]_ https://zone.ni.com/reference/en-XX/help/370471AM-01/cdaqmxsupp/pcie-6343/
 
 Getting Started, How Tos, and Guides:
-    * 10 Most Important NI-DAQmx Functions:
-        [5] https://www.ni.com/en-gb/support/documentation/supplemental/06/learn-10-functions-in-ni-daqmx-and-handle-80-percent-of-your-dat.html
-    * Understanding NI-DAQmx Timing and Synchronization:
-        [6] https://www.ni.com/en-gb/support/documentation/supplemental/06/timing-and-synchronization-features-of-ni-daqmx.html
-    * Getting Started with NI-DAQmx (LabVIEW):
-        [7] https://www.ni.com/tutorial/5469/en/
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* 10 Most Important NI-DAQmx Functions:
+  `[5]`_ https://www.ni.com/en-gb/support/documentation/supplemental/06/learn-10-functions-in-ni-daqmx-and-handle-80-percent-of-your-dat.html
+* Understanding NI-DAQmx Timing and Synchronization:
+  `[6]`_ https://www.ni.com/en-gb/support/documentation/supplemental/06/timing-and-synchronization-features-of-ni-daqmx.html
+* Getting Started with NI-DAQmx (LabVIEW):
+  `[7]`_ https://www.ni.com/tutorial/5469/en/
 
 
 See https://nidaqmx-python.readthedocs.io/en/latest/ for more details.
@@ -126,10 +130,15 @@ VI's and property nodes is given below:
 | Task VI                           | -> task = nidaqmx.Task()  | (Task)                |
 +-----------------------------------+---------------------------+-----------------------+
 | Create Virtual Channel VI         | -> task.ai_channels       | (AIChannelCollection) |
+|                                   |                           |                       |
 |                                   |    task.ao_channels       | (AOChannelCollection) |
+|                                   |                           |                       |
 |                                   |    task.ci_channels       | (CIChannelCollection) |
+|                                   |                           |                       |
 |                                   |    task.co_channels       | (COChannelCollection) |
+|                                   |                           |                       |
 |                                   |    task.di_channels       | (DIChannelCollection) |
+|                                   |                           |                       |
 |                                   |    task.do_channels       | (DOChannelCollection) |
 +-----------------------------------+---------------------------+-----------------------+
 | Trigger VI                        | -> task.triggers          | (Triggers)            |
@@ -139,14 +148,19 @@ VI's and property nodes is given below:
 | Start Task VI                     | -> task.start()           |                       |
 +-----------------------------------+---------------------------+-----------------------+
 | Read VI                           | -> task.read()            |                       |
+|                                   |                           |                       |
 |                                   |    task.in_stream         | (InStream)            |
+|                                   |                           |                       |
 |                                   |    (see stream_readers)   |                       |
 +-----------------------------------+---------------------------+-----------------------+
 | Write VI                          | -> task.write()           |                       |
+|                                   |                           |                       |
 |                                   |    task.out_stream        | (OutStream)           |
+|                                   |                           |                       |
 |                                   |    (see stream_writers)   |                       |
 +-----------------------------------+---------------------------+-----------------------+
 | Wait Until Done VI                | -> task.wait_until_done() |                       |
+|                                   |                           |                       |
 |                                   |    task.is_task_done()    |                       |
 +-----------------------------------+---------------------------+-----------------------+
 | Stop Task VI                      | -> task.stop()            |                       |
@@ -188,7 +202,7 @@ measurement types, such as an analog input temperature channel and
 an analog input voltage channel. The Python Task class in nidaqmx
 has a Collection container for each type of physical channel, to
 which Channel objects of the corresponding class are added using the
-appropriate add_[channel type]_[measurement type] method for the
+appropriate ``add_[channel type]_[measurement type]`` method for the
 desired measurement type.
 
 With all this background knowledge out of the way, let's walk
@@ -303,9 +317,9 @@ task must be created to start the Sample Clock for the counter.
 When a device controlled by NI-DAQmx does something, it performs
 an action. Two very common actions are producing a sample and
 starting a waveform acquisition. (Although we are doing neither
-here, the digital input channel configured in samp_clk_task is
-setup for a waveform acquisition, except the samp_clk_task.read(
-*args) operation is never given to read any waveforms.)
+here, the digital input channel configured in ``samp_clk_task`` is
+setup for a waveform acquisition, except the ``samp_clk_task.read(
+*args)`` operation is never given to read any waveforms.)
 
 Every NI-DAQmx action needs a stimulus or cause. When the
 stimulus occurs, the action is performed. Causes for actions are
@@ -324,7 +338,7 @@ corresponding trigger object associated to the task to which
 the trigger should apply; the Task class has a Triggers
 container which holds all of its associated triggers. The start
 and reference triggers are used so frequently that they can be
-set using a cfg_[detection type]_[trigger type] method - from
+set using a ``cfg_[detection type]_[trigger type]`` method - from
 their respective StartTrigger and ReferenceTrigger classes -
 instead of assigning the trigger attributes individually.
 
@@ -351,8 +365,8 @@ streams should be used instead.
 
 To this end, nidaqmx has a set of stream reader (writer) classes
 for the different types of channels. Each task's read (write)
-stream is given by the Instream (OutStream) returned by
-task.in_stream (task.out_stream). These stream readers (writers)
+stream is given by the ``Instream (OutStream)`` returned by
+``task.in_stream (task.out_stream)``. These stream readers (writers)
 require a buffer to be passed from which it can directly read
 (write) to; if the buffer is not the appropriate size an error
 will be thrown.
@@ -378,14 +392,14 @@ will be thrown.
 
 After completing a task, stop the task. If it will no longer be
 used, clear the task to de-allocate all reserved resources. The
-nidaqmx task.close() method clears the specified task. If the
+nidaqmx ``task.close()`` method clears the specified task. If the
 task is currently running, the function first stops the task and
 then releases all of its resources. Once a task has been closed,
 it cannot be used unless it is recreated by re-adding channels
 any other parameters; it does not need to be reinitialized.
-Thus, if a task will be used again, the nidaqmx task.stop()
+Thus, if a task will be used again, the nidaqmx ``task.stop()``
 function should be used to stop the task, but not clear it; then
-task.start() will continue the task again.
+``task.start()`` will continue the task again.
 
 .. code-block:: python
 

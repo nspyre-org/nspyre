@@ -38,23 +38,23 @@ Reference Materials and Manuals:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * NI-DAQmx C Reference Help:
-  [1]_ https://zone.ni.com/reference/en-XX/help/370471AM-01/
+  `[1] `_ https://zone.ni.com/reference/en-XX/help/370471AM-01/
 * NI-DAQmx Terminal Names:
-  [2]_ https://www.ni.com/documentation/en/ni-daqmx/latest/mxcncpts/termnames/
+  `[2] `_ https://www.ni.com/documentation/en/ni-daqmx/latest/mxcncpts/termnames/
 * DAQ X Series User Manual:
-  [3]_ https://www.ni.com/pdf/manuals/370784k.pdf
+  `[3] `_ https://www.ni.com/pdf/manuals/370784k.pdf
 * NI PCIe-6343 Supported Properties: (most common DAQ in QML/PME labs)
-  [4]_ https://zone.ni.com/reference/en-XX/help/370471AM-01/cdaqmxsupp/pcie-6343/
+  `[4] `_ https://zone.ni.com/reference/en-XX/help/370471AM-01/cdaqmxsupp/pcie-6343/
 
 Getting Started, How Tos, and Guides:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * 10 Most Important NI-DAQmx Functions:
-  `[5]`_ https://www.ni.com/en-gb/support/documentation/supplemental/06/learn-10-functions-in-ni-daqmx-and-handle-80-percent-of-your-dat.html
+  `[5] `_ https://www.ni.com/en-gb/support/documentation/supplemental/06/learn-10-functions-in-ni-daqmx-and-handle-80-percent-of-your-dat.html
 * Understanding NI-DAQmx Timing and Synchronization:
-  `[6]`_ https://www.ni.com/en-gb/support/documentation/supplemental/06/timing-and-synchronization-features-of-ni-daqmx.html
+  `[6] `_ https://www.ni.com/en-gb/support/documentation/supplemental/06/timing-and-synchronization-features-of-ni-daqmx.html
 * Getting Started with NI-DAQmx (LabVIEW):
-  `[7]`_ https://www.ni.com/tutorial/5469/en/
+  `[7] `_ https://www.ni.com/tutorial/5469/en/
 
 
 See https://nidaqmx-python.readthedocs.io/en/latest/ for more details.
@@ -124,49 +124,50 @@ generic functionality. A brief reference of the most commonly used
 VI's and property nodes is given below:
 
 
-+-----------------------------------+---------------------------+-----------------------+
-| [NI-DAQmx VI]                     |                           | [Python class]        |
-+===================================+===========================+=======================+
-| Task VI                           | -> task = nidaqmx.Task()  | (Task)                |
-+-----------------------------------+---------------------------+-----------------------+
-| Create Virtual Channel VI         | -> task.ai_channels       | (AIChannelCollection) |
-|                                   |                           |                       |
-|                                   |    task.ao_channels       | (AOChannelCollection) |
-|                                   |                           |                       |
-|                                   |    task.ci_channels       | (CIChannelCollection) |
-|                                   |                           |                       |
-|                                   |    task.co_channels       | (COChannelCollection) |
-|                                   |                           |                       |
-|                                   |    task.di_channels       | (DIChannelCollection) |
-|                                   |                           |                       |
-|                                   |    task.do_channels       | (DOChannelCollection) |
-+-----------------------------------+---------------------------+-----------------------+
-| Trigger VI                        | -> task.triggers          | (Triggers)            |
-+-----------------------------------+---------------------------+-----------------------+
-| Timing VI                         | -> task.timing            | (Timing)              |
-+-----------------------------------+---------------------------+-----------------------+
-| Start Task VI                     | -> task.start()           |                       |
-+-----------------------------------+---------------------------+-----------------------+
-| Read VI                           | -> task.read()            |                       |
-|                                   |                           |                       |
-|                                   |    task.in_stream         | (InStream)            |
-|                                   |                           |                       |
-|                                   |    (see stream_readers)   |                       |
-+-----------------------------------+---------------------------+-----------------------+
-| Write VI                          | -> task.write()           |                       |
-|                                   |                           |                       |
-|                                   |    task.out_stream        | (OutStream)           |
-|                                   |                           |                       |
-|                                   |    (see stream_writers)   |                       |
-+-----------------------------------+---------------------------+-----------------------+
-| Wait Until Done VI                | -> task.wait_until_done() |                       |
-|                                   |                           |                       |
-|                                   |    task.is_task_done()    |                       |
-+-----------------------------------+---------------------------+-----------------------+
-| Stop Task VI                      | -> task.stop()            |                       |
-+-----------------------------------+---------------------------+-----------------------+
-| Clear Task VI                     | -> task.close()           |                       |
-+-----------------------------------+---------------------------+-----------------------+
++-----------------------------------+-------------------------------+-----------------------+
+| [NI-DAQmx VI]                     |                               | [Python class]        |
++===================================+===============================+=======================+
+| Task VI                           | -> ``task = nidaqmx.Task()``  | (Task)                |
++-----------------------------------+-------------------------------+-----------------------+
+| Create Virtual Channel VI         | -> ``task.ai_channels``       | (AIChannelCollection) |
+|                                   |                               |                       |
+|                                   |    ``task.ao_channels``       | (AOChannelCollection) |
+|                                   |                               |                       |
+|                                   |    ``task.ci_channels``       | (CIChannelCollection) |
+|                                   |                               |                       |
+|                                   |    ``task.co_channels``       | (COChannelCollection) |
+|                                   |                               |                       |
+|                                   |    ``task.di_channels``       | (DIChannelCollection) |
+|                                   |                               |                       |
+|                                   |    ``task.do_channels``       | (DOChannelCollection) |
++-----------------------------------+-------------------------------+-----------------------+
+| Trigger VI                        | -> ``task.triggers``          | (Triggers)            |
++-----------------------------------+-------------------------------+-----------------------+
+| Timing VI                         | -> ``task.timing``            | (Timing)              |
++-----------------------------------+-------------------------------+-----------------------+
+| Start Task VI                     | -> ``task.start()``           |                       |
++-----------------------------------+-------------------------------+-----------------------+
+| Read VI                           | -> ``task.read()``            |                       |
+|                                   |    ``task.in_stream``         | (InStream)            |
+|                                   |    ``(see stream_readers)``   |                       |
++-----------------------------------+-------------------------------+-----------------------+
+|                                   |                               |                       |
+| Write VI                          | -> ``task.write()``           |                       |
+|                                   |                               |                       |
+|                                   |    ``task.out_stream``        | (OutStream)           |
+|                                   |                               |                       |
+|                                   |    ``(see stream_writers)``   |                       |
+|                                   |                               |                       |
++-----------------------------------+-------------------------------+-----------------------+
+|                                   |                               |                       |
+| Wait Until Done VI                | -> ``task.wait_until_done()`` |                       |
+|                                   |    ``task.is_task_done()``    |                       |
+|                                   |                               |                       |
++-----------------------------------+-------------------------------+-----------------------+
+| Stop Task VI                      | -> ``task.stop()``            |                       |
++-----------------------------------+-------------------------------+-----------------------+
+| Clear Task VI                     | -> ``task.close()``           |                       |
++-----------------------------------+-------------------------------+-----------------------+
 
 +-----------------------------------+-----------------------------------------------------------+
 | [NI-DAQmx Propety Node]           |                                                           |
@@ -417,7 +418,7 @@ function should be used to stop the task, but not clear it; then
    # read_task.start() will now raise an error.
 
 The nidaqmx Python package handles errors raised my NI-DAQmx through
-its DaqError and DaqWarning Exception classes and passes them along
+its ``DaqError`` and ``DaqWarning`` Exception classes and passes them along
 in Python with any associated error messages. Thus, any error or
 warning from nidaqmx can be caught uses DaqError and DaqWarning. It
 is suggested that any program utilized nidaqmx handle these

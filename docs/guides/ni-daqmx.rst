@@ -39,10 +39,13 @@ Reference Materials and Manuals:
 
 * NI-DAQmx C Reference Help:
   `[1] `_ https://zone.ni.com/reference/en-XX/help/370471AM-01/
+
 * NI-DAQmx Terminal Names:
   `[2] `_ https://www.ni.com/documentation/en/ni-daqmx/latest/mxcncpts/termnames/
+
 * DAQ X Series User Manual:
   `[3] `_ https://www.ni.com/pdf/manuals/370784k.pdf
+
 * NI PCIe-6343 Supported Properties: (most common DAQ in QML/PME labs)
   `[4] `_ https://zone.ni.com/reference/en-XX/help/370471AM-01/cdaqmxsupp/pcie-6343/
 
@@ -51,8 +54,10 @@ Getting Started, How Tos, and Guides:
 
 * 10 Most Important NI-DAQmx Functions:
   `[5] `_ https://www.ni.com/en-gb/support/documentation/supplemental/06/learn-10-functions-in-ni-daqmx-and-handle-80-percent-of-your-dat.html
+
 * Understanding NI-DAQmx Timing and Synchronization:
   `[6] `_ https://www.ni.com/en-gb/support/documentation/supplemental/06/timing-and-synchronization-features-of-ni-daqmx.html
+
 * Getting Started with NI-DAQmx (LabVIEW):
   `[7] `_ https://www.ni.com/tutorial/5469/en/
 

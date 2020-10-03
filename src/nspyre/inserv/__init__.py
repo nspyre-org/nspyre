@@ -148,7 +148,7 @@ class InservCmdPrompt(Cmd):
             print('Expected 0 args')
             return
         pdb.set_trace()
-
+        
     def do_quit(self, arg_string):
         """Quit the program"""
         if arg_string:

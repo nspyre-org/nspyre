@@ -23,8 +23,9 @@ import time
 import rpyc
 from rpyc.utils.server import ThreadedServer 
 import pymongo
+#from lantz.core import ureg, Q_
 from lantz import Q_, DictFeat
-from pint import Quantity
+import pint
 
 # nspyre
 from nspyre.config.config_files import get_config_param, load_config, \
@@ -36,6 +37,38 @@ from nspyre.definitions import MONGO_SERVERS_KEY, \
                 MONGO_SERVERS_SETTINGS_KEY, MONGO_CONNECT_TIMEOUT, \
                 MONGO_RS, RPYC_SYNC_TIMEOUT, CONFIG_MONGO_ADDR_KEY, \
                 join_nspyre_path
+
+###########################
+# pint serialization
+###########################
+
+# pint has an associated unit registry, and Quantity objects
+# cannot be shared between registries. Because Quantity objects
+# coming from the remote client have a different unit registry,
+# they must be converted to Quantity objects of the local lantz
+# registry (aka Q_ -> defined in lantz/core __init__.py). RPyC
+# serializes objects using "brine". We will make a custom
+# brine serializer for Quantity objects to properly pack and
+# unpack them using the local unit registry.
+# For more details, see pint documentation and
+# https://github.com/tomerfiliba-org/rpyc/blob/master/rpyc/core/brine.py
+
+#pint.set_application_registry(ureg)
+rpyc.core.brine.TAG_PINT_Q = b"\xFA"
+@rpyc.core.brine.register(rpyc.core.brine._dump_registry, type(Q_(1, 'V')))
+def _dump_quantity(obj, stream):
+    print('brining {}'.format(obj))
+    stream.append(rpyc.core.brine.TAG_PINT_Q)
+    rpyc.core.brine._dump(obj.to_tuple(), stream)
+
+@rpyc.core.brine.register(rpyc.core.brine._load_registry,
+                        rpyc.core.brine.TAG_PINT_Q)
+def _load_quantity(stream):
+    q = Q_.from_tuple(rpyc.core.brine._load(stream))
+    print('unbrining {}'.format(q))
+    return q
+rpyc.core.brine.simple_types = rpyc.core.brine.simple_types.union(\
+                                frozenset([type(Q_(1, 'V'))]))
 
 ###########################
 # globals
@@ -209,14 +242,6 @@ class InstrumentServer(rpyc.Service):
 
         # a monkey-patching function for overriding writing device feats
         def dev_set_attr(obj, attr, val):
-            if isinstance(val, Quantity):
-                # pint has an associated unit registry, and Quantity objects
-                # cannot be shared between registries. Because Quantity objects
-                # coming from the remote client have a different unit registry,
-                # they must be converted to Quantity objects of the local lantz
-                # registry (aka Q_ -> defined in lantz __init__.py).
-                # see pint documentation for details
-                val = Q_(val.m, str(val.u))
             try:
                 setattr(obj, attr, val)
             except Exception as exc:
@@ -224,22 +249,22 @@ class InstrumentServer(rpyc.Service):
                     'setting instrument server device [{}] attribute [{}] '
                     'to [{}]'.format(obj, attr, val))
             # update the mongodb entry for this feat
-            try:
-                base_units = self.devs[dev_name]._lantz_feats[attr].\
-                                                _kwargs['units']
-            except Exception as exc:
-                raise InstrumentServerError(exc, 'Remote client failed '
-                    'setting instrument server device [{}] attribute [{}] '
-                    'to [{}] - is the device loaded on the instrument server '
-                    'and initialized?'.format(obj, attr))
-            if isinstance(val, Quantity):
-                val_base_units = float(val.to(base_units).m)
-            # TODO might need to account for other datatypes like strings etc.
-            else:
-                val_base_units = float(val)
-            self.db[dev_name].update_one({'name' : attr},
-                                        {'$set' : {'value' : val_base_units}},
-                                        upsert=True)
+            # try:
+            #     base_units = self.devs[dev_name]._lantz_feats[attr].\
+            #                                     _kwargs['units']
+            # except Exception as exc:
+            #     raise InstrumentServerError(exc, 'Remote client failed '
+            #         'setting instrument server device [{}] attribute [{}] '
+            #         'to [{}] - is the device loaded on the instrument server '
+            #         'and initialized?'.format(obj, attr))
+            # if isinstance(val, Quantity):
+            #     val_base_units = float(val.to(base_units).m)
+            # # TODO might need to account for other datatypes like strings etc.
+            # else:
+            #     val_base_units = float(val)
+            # self.db[dev_name].update_one({'name' : attr},
+            #                             {'$set' : {'value' : val_base_units}},
+            #                             upsert=True)
 
         # a monkey-patching function for overriding reading device feats
         def dev_get_attr(obj, attr):
@@ -258,10 +283,7 @@ class InstrumentServer(rpyc.Service):
 
         # get an instance of the device
         try:
-            self.devs[dev_name] = \
-                    MonkeyWrapper(dev_class(*dev_args, **dev_kwargs),
-                                    set_attr_override=dev_set_attr,
-                                    get_attr_override=dev_get_attr)
+            self.devs[dev_name] = dev_class(*dev_args, **dev_kwargs)
         except Exception as exc:
             raise InstrumentServerError(exc, 'Failed to get instance of device '
                                         '{} of class {}'.\
@@ -406,7 +428,8 @@ class InstrumentServer(rpyc.Service):
         """Thread for running the RPyC server asynchronously"""
         logging.info('starting RPyC server...')
         self._rpyc_server = ThreadedServer(self, port=self.port,
-                        protocol_config={'allow_all_attrs' : True,
+                        protocol_config={'allow_pickle' : True,
+                                    'allow_all_attrs' : True,
                                     'allow_setattr' : True,
                                     'allow_delattr' : True,
                                     'sync_request_timeout' : RPYC_SYNC_TIMEOUT})

@@ -83,9 +83,10 @@ Start the main GUI menu:
 
    $ nspyre
 
-.. figure:: images/start-gui.png
+.. figure:: images/startup-gui.png
    :align: center
-   :scale: 100%
+   :height: 581.4px
+   :width: 763.2px
 
 Set the configuration file for nspyre:
 
@@ -135,7 +136,7 @@ Run nspyre using a jupyter notebook:
    print('Available spyrelets: ', list(all_spyrelets.keys()))
    
    # Clean up the mongo database if desired
-   # drop_all_spyrelets(except_list=list(all_spyrelets.keys()))
+   # unload_all_spyrelets(except_list=list(all_spyrelets.keys()))
    
    # Make a launcher
    launcher = Combined_Launcher(spyrelets=all_spyrelets)

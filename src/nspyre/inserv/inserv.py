@@ -3,7 +3,7 @@ This module:
     - loads the server config file
     - connects to all of the instruments specified in the config files
     - creates a RPyC (python remote procedure call) server to allow remote
-        machines to access the instruments
+        machines to access the instruments (should be done using InservGateway)
 
 Author: Jacob Feder
 Date: 7/8/2020
@@ -18,57 +18,30 @@ from pathlib import Path
 import logging
 import threading
 import time
+from functools import partial
+import copy
 
 # 3rd party
 import rpyc
 from rpyc.utils.server import ThreadedServer 
 import pymongo
-#from lantz.core import ureg, Q_
 from lantz import Q_, DictFeat
-import pint
+from pint import Quantity
 
 # nspyre
+from nspyre.utils.misc import register_quantity_brining
 from nspyre.config.config_files import get_config_param, load_config, \
                                     meta_config_add, meta_config_remove, \
                                     meta_config_files, ConfigEntryNotFoundError
-from nspyre.utils.misc import MonkeyWrapper, load_class_from_str, \
-                                load_class_from_file
+from nspyre.utils.misc import load_class_from_str, load_class_from_file
 from nspyre.definitions import MONGO_SERVERS_KEY, \
                 MONGO_SERVERS_SETTINGS_KEY, MONGO_CONNECT_TIMEOUT, \
                 MONGO_RS, RPYC_SYNC_TIMEOUT, CONFIG_MONGO_ADDR_KEY, \
                 join_nspyre_path
 
-###########################
-# pint serialization
-###########################
-
-# pint has an associated unit registry, and Quantity objects
-# cannot be shared between registries. Because Quantity objects
-# coming from the remote client have a different unit registry,
-# they must be converted to Quantity objects of the local lantz
-# registry (aka Q_ -> defined in lantz/core __init__.py). RPyC
-# serializes objects using "brine". We will make a custom
-# brine serializer for Quantity objects to properly pack and
-# unpack them using the local unit registry.
-# For more details, see pint documentation and
-# https://github.com/tomerfiliba-org/rpyc/blob/master/rpyc/core/brine.py
-
-#pint.set_application_registry(ureg)
-rpyc.core.brine.TAG_PINT_Q = b"\xFA"
-@rpyc.core.brine.register(rpyc.core.brine._dump_registry, type(Q_(1, 'V')))
-def _dump_quantity(obj, stream):
-    print('brining {}'.format(obj))
-    stream.append(rpyc.core.brine.TAG_PINT_Q)
-    rpyc.core.brine._dump(obj.to_tuple(), stream)
-
-@rpyc.core.brine.register(rpyc.core.brine._load_registry,
-                        rpyc.core.brine.TAG_PINT_Q)
-def _load_quantity(stream):
-    q = Q_.from_tuple(rpyc.core.brine._load(stream))
-    print('unbrining {}'.format(q))
-    return q
-rpyc.core.brine.simple_types = rpyc.core.brine.simple_types.union(\
-                                frozenset([type(Q_(1, 'V'))]))
+# for properly serializing/deserializing quantity objects using the local
+# pint unit registry
+register_quantity_brining(Q_)
 
 ###########################
 # globals
@@ -81,6 +54,13 @@ CONFIG_SERVER_DEVICE_CLASS_FILE = 'class_file'
 CONFIG_SERVER_DEVICE_CLASS_NAME = 'class'
 
 RPYC_SERVER_STOP_EVENT = threading.Event()
+
+def test(key, value, old_value):
+    print('{}: {} -> {}'.format(key, old_value, value))
+    # print('{}[{}]: {} -> {}'.format(attr, key, old_value, value))
+    # if isinstance(value, Quantity):
+    #     value = value.to(self.devs[dev_name].\
+    #                         _lantz_feats[attr]._kwargs['units']).m
 
 ###########################
 # exceptions
@@ -118,6 +98,13 @@ class InstrumentServer(rpyc.Service):
         self.db = None
         # lantz devices
         self.devs = {}
+
+        # storage container for hook methods that update mongodb feats when
+        # lantz feats are changed - this is required because pysignal uses
+        # weakrefs, so any local functions you pass to it will fail when they
+        # go out of scope
+        self.feat_hook_functions = {}
+        self.dictfeat_hook_functions = {}
 
         self.update_config(config_file)
         self.reload_server_config()
@@ -240,47 +227,6 @@ class InstrumentServer(rpyc.Service):
         dev_kwargs,_ = get_config_param(self.config,
                                     [CONFIG_SERVER_DEVICES, dev_name, 'kwargs'])
 
-        # a monkey-patching function for overriding writing device feats
-        def dev_set_attr(obj, attr, val):
-            try:
-                setattr(obj, attr, val)
-            except Exception as exc:
-                raise InstrumentServerError(exc, 'Remote client failed '
-                    'setting instrument server device [{}] attribute [{}] '
-                    'to [{}]'.format(obj, attr, val))
-            # update the mongodb entry for this feat
-            # try:
-            #     base_units = self.devs[dev_name]._lantz_feats[attr].\
-            #                                     _kwargs['units']
-            # except Exception as exc:
-            #     raise InstrumentServerError(exc, 'Remote client failed '
-            #         'setting instrument server device [{}] attribute [{}] '
-            #         'to [{}] - is the device loaded on the instrument server '
-            #         'and initialized?'.format(obj, attr))
-            # if isinstance(val, Quantity):
-            #     val_base_units = float(val.to(base_units).m)
-            # # TODO might need to account for other datatypes like strings etc.
-            # else:
-            #     val_base_units = float(val)
-            # self.db[dev_name].update_one({'name' : attr},
-            #                             {'$set' : {'value' : val_base_units}},
-            #                             upsert=True)
-
-        # a monkey-patching function for overriding reading device feats
-        def dev_get_attr(obj, attr):
-            try:
-                ret = getattr(obj, attr)
-            except AttributeError:
-                # if the object doesn't have the given attribute, we must
-                # reraise this error so that hasattr() works properly
-                raise AttributeError
-            except Exception as exc:
-                raise InstrumentServerError(exc, 'Remote client failed '
-                    'getting instrument server device [{}] attribute [{}] '
-                    '- is the device loaded on the instrument server '
-                    'and initialized?'.format(obj, attr))
-            return ret
-
         # get an instance of the device
         try:
             self.devs[dev_name] = dev_class(*dev_args, **dev_kwargs)
@@ -289,10 +235,47 @@ class InstrumentServer(rpyc.Service):
                                         '{} of class {}'.\
                                         format(dev_name, dev_class)) from None
 
+        # initialize the device
+        try:
+            self.devs[dev_name].initialize()
+        except Exception as exc:
+            logging.error(exc)
+            self.devs.pop(dev_name)
+            logging.error('device [{}] initialization sequence failed'.\
+                            format(dev_name))
+            return
+
         # collect all of the lantz feature attributes
-        feat_attr_list = list()
-        for feat_name, feat in dev_class._lantz_feats.items():
-            attrs = feat.__dict__['_config']
+        feat_attr_list = []
+        for feat_name, feat in list(dev_class._lantz_feats.items()) + \
+                            list(dev_class._lantz_dictfeats.items()):
+            # add a custom hook for updating mongodb whenever the feat/dictfeat is written
+            if isinstance(feat, DictFeat):
+                def update_mongo_dictfeat(value, old_value, key, attr=feat_name):
+                    print('{}[{}]: {} -> {}'.format(attr, key, old_value, value))
+                    if isinstance(value, Quantity):
+                        value = value.to(self.devs[dev_name].\
+                                            _lantz_dictfeats[attr]._kwargs['units']).m
+                    self.db[dev_name].update_one({'name' : attr},
+                                {'$set' : {'value.{}'.format(key) : value}},
+                                upsert=True)
+                self.dictfeat_hook_functions[feat_name] = update_mongo_dictfeat
+                getattr(self.devs[dev_name], feat_name + '_changed').connect(self.dictfeat_hook_functions[feat_name])
+            else:
+                def update_mongo_feat(value, old_value, attr=feat_name):
+                    print('{}: {} -> {}'.format(attr, old_value, value))
+                    if isinstance(value, Quantity):
+                        value = value.to(self.devs[dev_name].\
+                                            _lantz_feats[attr]._kwargs['units']).m
+                    self.db[dev_name].update_one({'name' : attr},
+                                {'$set' : {'value' : value}},
+                                upsert=True)
+                self.feat_hook_functions[feat_name] = update_mongo_feat
+                getattr(self.devs[dev_name], feat_name + '_changed').connect(self.feat_hook_functions[feat_name])
+
+            attrs = copy.deepcopy(feat.__dict__['_config'])
+            if isinstance(feat, DictFeat) and 'keys' in feat.__dict__:
+                attrs['keys'] = feat.__dict__['keys']
 
             if attrs['limits']:
                 if len(attrs['limits']) == 1:
@@ -314,7 +297,7 @@ class InstrumentServer(rpyc.Service):
                 keys = None
 
             if 'keys' in attrs and attrs['keys'] and isinstance(feat, DictFeat):
-                value = [None] * len(attrs['values'])
+                value = [None] * len(attrs['keys'])
             else:
                 value = None
 
@@ -336,16 +319,6 @@ class InstrumentServer(rpyc.Service):
         self.db[dev_name].drop()
         # add all of the lantz feature attributes to the database
         self.db[dev_name].insert_many(feat_attr_list)
-
-        # initialize the device
-        try:
-            self.devs[dev_name].initialize()
-        except Exception as exc:
-            logging.debug(exc)
-            self.devs.pop(dev_name)
-            logging.error('device [{}] initialization sequence failed'.\
-                            format(dev_name))
-            return
 
         logging.info('added device [{}] with args: {} kwargs: {}'.\
                         format(dev_name, dev_args, dev_kwargs))

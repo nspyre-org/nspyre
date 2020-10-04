@@ -21,45 +21,17 @@ import pymongo
 import rpyc
 
 # nspyre
+from nspyre.utils.misc import register_quantity_brining
 from nspyre.config.config_files import get_config_param, load_config
-from nspyre.utils.misc import MonkeyWrapper
 from nspyre.definitions import CLIENT_META_CONFIG_PATH, MONGO_CONNECT_TIMEOUT, \
                             MONGO_SERVERS_KEY, MONGO_SERVERS_SETTINGS_KEY, \
                             MONGO_RS, RPYC_CONN_TIMEOUT, RPYC_SYNC_TIMEOUT, \
                             INSERV_DEV_ACCESSOR
-from nspyre.definitions import ureg, Q_
+from nspyre.definitions import Q_
 
-###########################
-# pint serialization
-###########################
-
-# pint has an associated unit registry, and Quantity objects
-# cannot be shared between registries. Because Quantity objects
-# coming from the remote client have a different unit registry,
-# they must be converted to Quantity objects of the local lantz
-# registry (aka Q_ -> defined in lantz/core __init__.py). RPyC
-# serializes objects using "brine". We will make a custom
-# brine serializer for Quantity objects to properly pack and
-# unpack them using the local unit registry.
-# For more details, see pint documentation and
-# https://github.com/tomerfiliba-org/rpyc/blob/master/rpyc/core/brine.py
-
-#pint.set_application_registry(ureg)
-rpyc.core.brine.TAG_PINT_Q = b"\xFA"
-@rpyc.core.brine.register(rpyc.core.brine._dump_registry, type(Q_(1, 'V')))
-def _dump_quantity(obj, stream):
-    print('brining {}'.format(obj))
-    stream.append(rpyc.core.brine.TAG_PINT_Q)
-    rpyc.core.brine._dump(obj.to_tuple(), stream)
-
-@rpyc.core.brine.register(rpyc.core.brine._load_registry,
-                        rpyc.core.brine.TAG_PINT_Q)
-def _load_quantity(stream):
-    q = Q_.from_tuple(rpyc.core.brine._load(stream))
-    print('unbrining {}'.format(q))
-    return q
-rpyc.core.brine.simple_types = rpyc.core.brine.simple_types.union(\
-                                frozenset([type(Q_(1, 'V'))]))
+# for properly serializing/deserializing quantity objects using the local
+# pint unit registry
+register_quantity_brining(Q_)
 
 ###########################
 # globals
@@ -77,6 +49,12 @@ class InservGatewayError(Exception):
 ###########################
 # classes / functions
 ###########################
+
+class InservWrapper():
+    """This class is a representation of the instrument server from the 
+    client's perspective. It contains server connection information, and an 
+    instance variable object for each device connected to the remote instrument 
+    server"""
 
 class InservGateway():
     """Loads a configuration file, then attempts to connect to all 
@@ -176,27 +154,6 @@ class InservGateway():
             # see inserv.py and RPyC documentation for how
             # the device is retrieved from the instrument server
             for dev_name in self.servers[server_name].root.devs:
-                # pint has an associated unit registry, and Quantity objects
-                # cannot be shared between registries. Because Quantity objects
-                # coming from the instrument server have a different unit
-                # registry they must be converted to Quantity objects of the
-                # local registry.
-                # see pint documentation for details
-                def dev_get_attr(obj, attr):
-                    ret = getattr(obj, attr)
-                    # if isinstance(ret, Quantity):
-                    #     try:
-                    #         quantity_ret = Q_(ret.m, str(ret.u))
-                    #     except:
-                    #         raise InservGatewayError('Instrument server '
-                    #             '[{}] device [{}] attribute [{}] returned a '
-                    #             'unit not found in the pint unit registry'.\
-                    #             format(server_name, dev_name, attr))
-                    #     return quantity_ret
-                    # else:
-                    return ret
-                # monkey wrap the device so we can override it's getter
-                # to fix pint unit registry issue
                 devs[INSERV_DEV_ACCESSOR.format(server_name, dev_name)] = \
                                 self.servers[server_name].root.devs[dev_name]
                 logging.info('instrument server gateway loaded device [{}] '
@@ -222,10 +179,12 @@ if __name__ == '__main__':
                         handlers=[logging.StreamHandler()])
     # TODO unit testing module
     with InservGateway() as im:
-        sg_loc = 'local1/fake_sg'
-        #import pdb; pdb.set_trace()
-        #im.devs[sg_loc].amplitude = Q_(2.0, 'volt')
-        im.devs[sg_loc].dout[1] = Q_(1.0, 'volt')
-        print(im.devs[sg_loc].dout[1])# = Q_(1.0, 'volt')
+        # sg_loc = 'local1/fake_sg'
+        # im.devs[sg_loc].amplitude = Q_(2.0, 'volt')
+        # im.devs[sg_loc].amplitude = Q_(10.0, 'volt')
+        # im.devs[sg_loc].dout[1] = Q_(0.0, 'volt')
+        # im.devs[sg_loc].dout[2] = Q_(2.0, 'volt')
+        # im.devs[sg_loc].dout[3] = Q_(3.0, 'volt')
+        # im.devs[sg_loc].dout[1] = Q_(1.0, 'volt')
         #print('found devices:\n{}'.format(im.devs))
         #print(Q_(5, 'volt') + im.devs[sg_loc].amplitude)

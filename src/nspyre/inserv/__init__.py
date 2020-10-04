@@ -179,7 +179,7 @@ def main():
                             action='store_true',
                             help='disable logging')
     arg_parser.add_argument('-v', '--verbosity',
-                            default='info',
+                            default='debug',
                             help='the verbosity of logging - options are: '
                             'debug, info, warning, error')
     cmd_args = arg_parser.parse_args()

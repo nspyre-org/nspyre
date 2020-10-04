@@ -13,13 +13,13 @@ spyrelets:
   s2:
     file: '../spyrelet/examples/test_spyrelets.py'
     class: 'SubSpyrelet'
-    device_aliases: {sg: 'local1/fake_sg'}
+    device_aliases: {sg: 'local1/fake_tcpip_sg'}
 
   my_exp:
     file: '../spyrelet/examples/test_spyrelets.py'
     class: 'MyExperiment'
     device_aliases:
-      sg: 'local1/fake_sg'
+      sg: 'local1/fake_tcpip_sg'
       osc: 'local1/fake_osc'
     spyrelets: {s2: 's2'}
     args: {}

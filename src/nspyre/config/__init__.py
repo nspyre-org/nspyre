@@ -100,7 +100,7 @@ def main():
         # the user asked us to add config files to the meta-config
         meta_config_add(meta_config_path, cmd_args.config)
         return
-    if cmd_args.delete-config:
+    if cmd_args.delete_config:
         # the user asked us to remove config files from the meta-config
         meta_config_remove(meta_config_path, cmd_args.delete-config)
         return

@@ -53,7 +53,9 @@ def register_quantity_brining(quantity_class):
                                 type(quantity_class(1, 'V')))
     def _dump_quantity(obj, stream):
         stream.append(rpyc.core.brine.TAG_PINT_Q)
-        rpyc.core.brine._dump(obj.to_tuple(), stream)
+        quantity_tuple = obj.to_tuple()
+        rpyc.core.brine._dump((float(quantity_tuple[0]), \
+                                quantity_tuple[1]), stream)
 
     # function for deserializing quantity objects
     @rpyc.core.brine.register(rpyc.core.brine._load_registry,

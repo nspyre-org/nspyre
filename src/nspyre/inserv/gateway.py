@@ -179,6 +179,7 @@ if __name__ == '__main__':
                         handlers=[logging.StreamHandler()])
     # TODO unit testing module
     with InservGateway() as im:
+        pass
         # sg_loc = 'local1/fake_sg'
         # im.devs[sg_loc].amplitude = Q_(2.0, 'volt')
         # im.devs[sg_loc].amplitude = Q_(10.0, 'volt')

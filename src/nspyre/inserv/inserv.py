@@ -235,16 +235,6 @@ class InstrumentServer(rpyc.Service):
                                         '{} of class {}'.\
                                         format(dev_name, dev_class)) from None
 
-        # initialize the device
-        try:
-            self.devs[dev_name].initialize()
-        except Exception as exc:
-            logging.error(exc)
-            self.devs.pop(dev_name)
-            logging.error('device [{}] initialization sequence failed'.\
-                            format(dev_name))
-            return
-
         # collect all of the lantz feature attributes
         feat_attr_list = []
         for feat_name, feat in list(dev_class._lantz_feats.items()) + \
@@ -319,6 +309,16 @@ class InstrumentServer(rpyc.Service):
         self.db[dev_name].drop()
         # add all of the lantz feature attributes to the database
         self.db[dev_name].insert_many(feat_attr_list)
+
+        # initialize the device
+        try:
+            self.devs[dev_name].initialize()
+        except Exception as exc:
+            logging.error(exc)
+            self.devs.pop(dev_name)
+            logging.error('device [{}] initialization sequence failed'.\
+                            format(dev_name))
+            return
 
         logging.info('added device [{}] with args: {} kwargs: {}'.\
                         format(dev_name, dev_args, dev_kwargs))

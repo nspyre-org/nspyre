@@ -403,7 +403,7 @@ def load_spyrelet_class(spyrelet_name, cfg):
                                 spyrelet_path).resolve()
     return load_class_from_file(spyrelet_path, spyrelet_class_name)
 
-def load_spyrelet(spyrelet_name, manager, cfg=None, filepath=None):
+def load_spyrelet(spyrelet_name, manager, sub_spyrelet=False, cfg=None, filepath=None):
     """
     recursive function that loads a spyrelet from the config
     and also loads all sub-spyrelets
@@ -411,8 +411,11 @@ def load_spyrelet(spyrelet_name, manager, cfg=None, filepath=None):
     if cfg is None:
         cfg = load_config(filepath)
     if spyrelet_name in _LOADED_SPYRELETS:
-        raise SpyreletLoadError(None, 'spyrelet [{}] is already '
-                                      'defined'.format(spyrelet_name))
+        if sub_spyrelet:
+            return
+        else:
+            raise SpyreletLoadError(None, 'spyrelet [{}] is already '
+                                          'defined'.format(spyrelet_name))
 
     # discover any sub-spyrelets
     try:
@@ -431,7 +434,7 @@ def load_spyrelet(spyrelet_name, manager, cfg=None, filepath=None):
             sub_spyrelets[s] = _LOADED_SPYRELETS[s]
         else:
             try:
-                sub_spyrelets[s] = load_spyrelet(s)
+                sub_spyrelets[s] = load_spyrelet(s, sub_spyrelet=True, cfg=cfg)
             except:
                 raise SpyreletLoadError(None, 'spyrelet [{}] '
                                               'sub-spyrelet [{}] failed to load'. \
@@ -465,10 +468,7 @@ def load_spyrelet(spyrelet_name, manager, cfg=None, filepath=None):
     _LOADED_SPYRELETS[spyrelet_name] = spyrelet
     logging.info('loaded spyrelet [{}]'.format(spyrelet_name))
 
-    # remove this spyrelet from the list of spyrelets to be loaded
-    del spyrelet_configs[spyrelet_name]
     return spyrelet
-
 
 def load_all_spyrelets(manager, filepath=None):
     """Load all of the spyrelets from the config file"""
@@ -478,12 +478,16 @@ def load_all_spyrelets(manager, filepath=None):
     # check to see if any spyrelets are loaded
     if _LOADED_SPYRELETS:
         raise SpyreletLoadError(None, 'the following spyrelets were already '
-                                        'so nothing was done: {}'.format(_LOADED_SPYRELETS))
+                                        'loaded so nothing was done: {}'.\
+                                        format(_LOADED_SPYRELETS))
 
     # parse the spyrelets, loading them as we go until there
     # are none left
     while bool(spyrelet_configs):
-        load_spyrelet(next(iter(spyrelet_configs)), manager, cfg)
+        spyrelet_name = next(iter(spyrelet_configs))
+        load_spyrelet(spyrelet_name, manager, cfg)
+        # remove this spyrelet from the list of spyrelets to be loaded
+        del spyrelet_configs[spyrelet_name]
     return _LOADED_SPYRELETS
 
 def unload_spyrelet(name, client=None):

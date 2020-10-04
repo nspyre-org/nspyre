@@ -35,6 +35,10 @@ devices_doc: # 'devices' for the real one
 
 # actual devices
 devices:
+  fake_tcpip_sg:
+    lantz_class: examples.LantzSignalGenerator
+    args: [TCPIP::localhost::5678::SOCKET]
+    kwargs: {}
   fake_sg:
     lantz_class: examples.dummydrivers.DummyFunGen
     args: []

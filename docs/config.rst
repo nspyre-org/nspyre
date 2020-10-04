@@ -92,7 +92,7 @@ Server Config
    
    # the devices entry will be used by the instrument server to automatically load
    # the specified devices on startup - the syntax is:
-   devices_doc: # 'devices' for the real one
+   devices_example: # 'devices' for the real one
      device_name1:
        # lantz class specified as a path in the style of a python import starting
        # from the lantz drivers folder,

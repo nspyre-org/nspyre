@@ -16,14 +16,14 @@ import inspect
 import os
 import sys
 import traceback
-from importlib import import_module
-import importlib.util
+import importlib
 
 # 3rd party
 import numpy as np
 from bson import ObjectId
 import yaml
 import pymongo
+import rpyc
 
 # nspyre
 from nspyre.definitions import Q_, MONGO_RS, CONFIG_MONGO_ADDR_KEY
@@ -33,61 +33,48 @@ from nspyre.config.config_files import load_config, get_config_param
 # classes / functions
 ###########################
 
-class MonkeyWrapper(object):
-    """Monkey patch technique for wrapping objects defined
-    in 3rd party modules, for example:
-    ----------------------------------
-    import uncontrolled_module
-    def get_override(obj, attr):
-        ret = getattr(obj, attr)
-        print('got object {} attribute {} = {}'.format(obj, attr, ret))
-        return ret
-    def set_override(obj, attr, val):
-        print('setting object {} attribute {} to {}'.format(obj, attr, val))
-        setattr(obj, attr, val)
-    obj = uncontrolled_module.some_class()
-    wrapped_obj = MonkeyWrapper(obj,
-                                get_attr_override=get_override,
-                                set_attr_override=set_override)
-    wrapped_obj.internal_attribute = 5
-    a = wrapped_obj.internal_attribute
-    -------- should return -> --------
-    setting object <obj> attribute internal_attribute to 5
-    got object <obj> attribute internal_attribute = 5
+def register_quantity_brining(quantity_class):
+    """pint has an associated unit registry, and Quantity objects 
+    cannot be shared between registries. Because Quantity objects 
+    passed from the client to server or vice versa have a different 
+    unit registry, they must be converted to Quantity objects of the 
+    local registry. RPyC serializes objects using "brine". We will 
+    make a custom brine serializer for Quantity objects to properly 
+    pack and unpack them using the local unit registry.
+    For more details, see pint documentation and
+    https://github.com/tomerfiliba-org/rpyc/blob/master/rpyc/core/brine.py
+
+    quantity_class: the Quantity class object from the local pint registry
     """
-    def __init__(self, wrapped_obj,
-                    get_attr_override=None,
-                    set_attr_override=None):
-        # we can't use self.<instance_var> because that will call __setattr__
-        # and __getattr__, so we have to get/set our instance variables
-        # using __dict__
-        self.__dict__['wrapped_obj'] = wrapped_obj
-        self.__dict__['get_attr_override'] = get_attr_override
-        self.__dict__['set_attr_override'] = set_attr_override
+    rpyc.core.brine.TAG_PINT_Q = b"\xFA"
 
-    def __getattr__(self, attr):
-        """Override the wrapped object's getattr(); call our custom 
-        monkey-wrapping function instead, if defined"""
-        if self.__dict__['get_attr_override']:
-            return self.__dict__['get_attr_override']\
-                    (self.__dict__['wrapped_obj'], attr)
-        else:
-            return getattr(self.__dict__['wrapped_obj'], attr)
+    # function for serializing quantity objects
+    @rpyc.core.brine.register(rpyc.core.brine._dump_registry,
+                                type(quantity_class(1, 'V')))
+    def _dump_quantity(obj, stream):
+        stream.append(rpyc.core.brine.TAG_PINT_Q)
+        rpyc.core.brine._dump(obj.to_tuple(), stream)
 
-    def __setattr__(self, attr, val):
-        """Override the wrapped object's set_attr(); call our custom 
-        monkey-wrapping function instead, if defined"""
-        if self.__dict__['set_attr_override']:
-            self.__dict__['set_attr_override']\
-                (self.__dict__['wrapped_obj'], attr, val)
-        else:
-            setattr(self.__dict__['wrapped_obj'], attr, val)
+    # function for deserializing quantity objects
+    @rpyc.core.brine.register(rpyc.core.brine._load_registry,
+                            rpyc.core.brine.TAG_PINT_Q)
+    def _load_quantity(stream):
+        q = quantity_class.from_tuple(rpyc.core.brine._load(stream))
+        return q
+    rpyc.core.brine.simple_types = rpyc.core.brine.simple_types.union(\
+                                    frozenset([type(quantity_class(1, 'V'))]))
 
 def load_class_from_str(class_str):
     """Load a python class object (available in the local scope)
     from a string"""
     class_name = class_str.split('.')[-1]
-    mod = import_module(class_str.replace('.' + class_name, ''))
+    module_name = class_str.replace('.' + class_name, '')
+    if module_name in sys.modules:
+        # we just need to reload it
+        mod = importlib.reload(sys.modules[module_name])
+    else:
+        # load the module
+        mod = importlib.import_module(module_name)
     return getattr(mod, class_name)
 
 def load_class_from_file(file_path, class_name):
@@ -98,7 +85,7 @@ def load_class_from_file(file_path, class_name):
     file_name = file_name.split('.py')[0]
     # load the spyrelet class from its python file
     sys.path.append(str(file_dir))
-    loaded_module = import_module(file_name)
+    loaded_module = importlib.import_module(file_name)
     loaded_class = getattr(loaded_module, class_name)
     return loaded_class
 

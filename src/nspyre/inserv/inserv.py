@@ -20,6 +20,7 @@ import threading
 import time
 from functools import partial
 import copy
+from collections import OrderedDict
 
 # 3rd party
 import rpyc
@@ -222,9 +223,9 @@ class InstrumentServer(rpyc.Service):
                     'from file [{}] for device [{}] couldn\'t be loaded'.\
                     format(dev_class_name, dev_class_path, dev_name))
 
-        dev_args,_ = get_config_param(self.config,
+        dev_args, _ = get_config_param(self.config,
                                     [CONFIG_SERVER_DEVICES, dev_name, 'args'])
-        dev_kwargs,_ = get_config_param(self.config,
+        dev_kwargs, _ = get_config_param(self.config,
                                     [CONFIG_SERVER_DEVICES, dev_name, 'kwargs'])
 
         # get an instance of the device
@@ -239,29 +240,6 @@ class InstrumentServer(rpyc.Service):
         feat_attr_list = []
         for feat_name, feat in list(dev_class._lantz_feats.items()) + \
                             list(dev_class._lantz_dictfeats.items()):
-            # add a custom hook for updating mongodb whenever the feat/dictfeat is written
-            if isinstance(feat, DictFeat):
-                def update_mongo_dictfeat(value, old_value, key, attr=feat_name):
-                    print('{}[{}]: {} -> {}'.format(attr, key, old_value, value))
-                    if isinstance(value, Quantity):
-                        value = value.to(self.devs[dev_name].\
-                                            _lantz_dictfeats[attr]._kwargs['units']).m
-                    self.db[dev_name].update_one({'name' : attr},
-                                {'$set' : {'value.{}'.format(key) : value}},
-                                upsert=True)
-                self.dictfeat_hook_functions[feat_name] = update_mongo_dictfeat
-                getattr(self.devs[dev_name], feat_name + '_changed').connect(self.dictfeat_hook_functions[feat_name])
-            else:
-                def update_mongo_feat(value, old_value, attr=feat_name):
-                    print('{}: {} -> {}'.format(attr, old_value, value))
-                    if isinstance(value, Quantity):
-                        value = value.to(self.devs[dev_name].\
-                                            _lantz_feats[attr]._kwargs['units']).m
-                    self.db[dev_name].update_one({'name' : attr},
-                                {'$set' : {'value' : value}},
-                                upsert=True)
-                self.feat_hook_functions[feat_name] = update_mongo_feat
-                getattr(self.devs[dev_name], feat_name + '_changed').connect(self.feat_hook_functions[feat_name])
 
             attrs = copy.deepcopy(feat.__dict__['_config'])
             if isinstance(feat, DictFeat) and 'keys' in feat.__dict__:
@@ -272,7 +250,6 @@ class InstrumentServer(rpyc.Service):
                     limits = [0, attrs['limits'][0]]
                 else:
                     limits = attrs['limits']
-
             else:
                 limits = None
 
@@ -282,7 +259,7 @@ class InstrumentServer(rpyc.Service):
                 values = None
             
             if 'keys' in attrs and attrs['keys']:
-                keys = list(attrs['keys']).sort()
+                keys = list(attrs['keys'])
             else:
                 keys = None
 
@@ -302,6 +279,30 @@ class InstrumentServer(rpyc.Service):
                 'keys':     keys,
                 'value':    value
             })
+
+            # add a custom hook for updating mongodb whenever the feat/dictfeat is written
+            if isinstance(feat, DictFeat):
+                def update_mongo_dictfeat(value, old_value, key, attr=feat_name, keys=keys):
+                    print('{}[{}]: {} -> {}'.format(attr, key, old_value, value))
+                    if isinstance(value, Quantity):
+                        value = value.to(self.devs[dev_name]._lantz_dictfeats[attr]._kwargs['units']).m
+                    self.db[dev_name].update_one({'name': attr},
+                                                 {'$set': {'value.{}'.format(keys.index(key)): value}},
+                                                 upsert=True)
+
+                self.dictfeat_hook_functions[feat_name] = update_mongo_dictfeat
+                getattr(self.devs[dev_name], feat_name + '_changed').connect(self.dictfeat_hook_functions[feat_name])
+            else:
+                def update_mongo_feat(value, old_value, attr=feat_name):
+                    print('{}: {} -> {}'.format(attr, old_value, value))
+                    if isinstance(value, Quantity):
+                        value = value.to(self.devs[dev_name]._lantz_feats[attr]._kwargs['units']).m
+                    self.db[dev_name].update_one({'name': attr},
+                                                 {'$set': {'value': value}},
+                                                 upsert=True)
+
+                self.feat_hook_functions[feat_name] = update_mongo_feat
+                getattr(self.devs[dev_name], feat_name + '_changed').connect(self.feat_hook_functions[feat_name])
 
         for action_name, action in dev_class._lantz_actions.items():
             feat_attr_list.append({'name' : action_name, 'type' : 'action'})

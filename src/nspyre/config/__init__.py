@@ -18,7 +18,8 @@ from pathlib import Path
 # nspyre
 from nspyre.definitions import CLIENT_META_CONFIG_PATH, SERVER_META_CONFIG_PATH
 from nspyre.config.config_files import meta_config_add, meta_config_remove, \
-                                meta_config_files
+                                meta_config_files, meta_config_enabled_idx, \
+                                meta_config_set_enabled_idx
 
 ###########################
 # globals
@@ -43,7 +44,7 @@ def main():
     # parse command-line arguments
     arg_parser = argparse.ArgumentParser(prog='nspyre-config',
                             description='Set the nspyre configuration files')
-    arg_parser.add_argument('-c', '--config', nargs='+',
+    arg_parser.add_argument('-a', '--add-config', nargs='+',
                             default=None,
                             help='permanently add a configuration '
                             'file(s) to the list to be imported on startup')
@@ -52,16 +53,17 @@ def main():
                             help='remove a configuration file(s) from '
                             'the list to be imported on startup - pass either '
                             'the file path or its index')
-    arg_parser.add_argument('-e', '--list_configs',
+    arg_parser.add_argument('-l', '--list-configs',
                             action='store_true',
                             help='list the configuration files to be '
                             'imported on startup')
-    arg_parser.add_argument('-l', '--log',
-                            default=DEFAULT_LOG,
-                            help='log to the provided file location')
     arg_parser.add_argument('-q', '--quiet',
                             action='store_true',
                             help='disable logging')
+    arg_parser.add_argument('-s', '--set-config',
+                            default=None,
+                            help='set the active config file that will be used '
+                            'by nspyre')
     arg_parser.add_argument('-v', '--verbosity',
                             default='info',
                             help='the verbosity of logging - options are: '
@@ -86,8 +88,7 @@ def main():
 
         logging.basicConfig(level=log_level,
                         format='%(asctime)s -- %(levelname)s -- %(message)s',
-                        handlers=[logging.FileHandler(cmd_args.log, 'w+'),
-                                logging.StreamHandler()])
+                        handlers=[logging.StreamHandler()])
 
     if cmd_args.client_or_inserv == 'client':
         meta_config_path = CLIENT_META_CONFIG_PATH
@@ -96,20 +97,24 @@ def main():
     else:
         raise NSpyreConfigError('expected either [client] or [inserv]')
 
-    if cmd_args.config:
+    if cmd_args.add_config:
         # the user asked us to add config files to the meta-config
-        meta_config_add(meta_config_path, cmd_args.config)
-        return
+        meta_config_add(meta_config_path, cmd_args.add_config)
     if cmd_args.delete_config:
         # the user asked us to remove config files from the meta-config
-        meta_config_remove(meta_config_path, cmd_args.delete-config)
-        return
+        meta_config_remove(meta_config_path, cmd_args.delete_config)
+    if cmd_args.set_config:
+        # the user asked to change the enabled config
+        meta_config_set_enabled_idx(meta_config_path, cmd_args.set_config)
     if cmd_args.list_configs:
         # the user asked us to list the config files from the meta-config
-        files  = meta_config_files(meta_config_path)
-        for i in range(len(files)):
-            print('{}: {}'.format(i, files[i]))
-        return
+        files = meta_config_files(meta_config_path)
+        idx = meta_config_enabled_idx(meta_config_path)
+        if files:
+            for i in range(len(files)):
+                print('{} {}: {}'.format('*' if i == idx else ' ', i, files[i]))
+        else:
+            print('no configuration files exist - use --add-config to add files')
 
 ###########################
 # standalone main

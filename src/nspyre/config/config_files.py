@@ -13,6 +13,7 @@ Date: 7/25/2020
 # std
 from pathlib import Path
 from importlib import import_module
+import logging
 
 # 3rd party
 import yaml
@@ -25,6 +26,7 @@ from nspyre.definitions import join_nspyre_path, CLIENT_META_CONFIG_PATH
 ###########################
 
 META_CONFIG_FILES_ENTRY = 'config_files'
+META_CONFIG_ENABLED_IDX = 'enabled'
 
 ###########################
 # exceptions
@@ -79,20 +81,41 @@ def meta_config_add(meta_config_file, files):
 def meta_config_remove(meta_config_file, files):
     """Remove config files from the meta-config"""
     meta_config = load_raw_config(meta_config_file)
+    enabled_idx = meta_config_enabled_idx(meta_config_file)
     config_list = meta_config[META_CONFIG_FILES_ENTRY]
+    # list of indicies to remove from config_list
+    pop_list = []
+    # go through the list of config files / indicies and generate
+    # a list of indicies to remove
     for c in files:
         try:
-            c_int = int(c)
-            # ran if c is an integer indicating an index rather than a file path
-            config_list.pop(c_int)
-        except:
-            # otherwise c is a file path string
-            if c in config_list:
-                config_list.remove(c)
-            else:
-                raise ConfigError(None, 'config file [{}] was not found in the '
-                                    'meta-config'.format(c)) from None
+            idx = int(c)
+        except ValueError:
+            # the user passed the config name as a string, so we should first
+            # find its index
+            try:
+                idx = meta_config[META_CONFIG_FILES_ENTRY].index(c)
+            except ValueError as exc:
+                raise ConfigError(exc, 'config file [{}] was not found in the '
+                                'meta-config - check that the file path shown '
+                                'using --list-configs matches given input'.\
+                                format(c)) from None
+        pop_list.append(idx)
+
+    pop_list.sort(reverse=True)
+    for idx in pop_list:
+        try:
+            config_list.pop(idx)
+        except IndexError as exc:
+            raise ConfigError(exc, 'tried to remove config file index [{}] '
+                'that was out of range'.format(idx))# from None
+
+    # if the user removed the currently enabled config
+    if enabled_idx in pop_list:
+        enabled_idx = 0
+
     meta_config[META_CONFIG_FILES_ENTRY] = config_list
+    meta_config[META_CONFIG_ENABLED_IDX] = enabled_idx
     write_config(meta_config, meta_config_file)
 
 def meta_config_files(meta_config_file):
@@ -100,6 +123,29 @@ def meta_config_files(meta_config_file):
     meta_config = load_raw_config(meta_config_file)
     config_list = meta_config[META_CONFIG_FILES_ENTRY]
     return config_list
+
+def meta_config_enabled_idx(meta_config_file):
+    """Return the index of the enabled config"""
+    meta_config = load_raw_config(meta_config_file)
+    return meta_config[META_CONFIG_ENABLED_IDX]
+
+def meta_config_set_enabled_idx(meta_config_file, idx_or_str):
+    """Return the index of the enabled config"""
+    meta_config = load_raw_config(meta_config_file)
+    try:
+        idx = int(idx_or_str)
+    except ValueError:
+        # the user passed the config name as a string, so we should first
+        # find its index
+        try:
+            idx = meta_config[META_CONFIG_FILES_ENTRY].index(idx_or_str)
+        except ValueError as exc:
+            raise ConfigError(exc, 'config file [{}] was not found in the '
+                'meta-config - check that the file path shown '
+                'using --list-configs matches given input'.\
+                format(idx_or_str)) from None
+    meta_config[META_CONFIG_ENABLED_IDX] = idx
+    write_config(meta_config, meta_config_file)
 
 def load_config(meta_config_path=None):
     """Takes a 'meta' config file that specifies the location of other config
@@ -109,24 +155,27 @@ def load_config(meta_config_path=None):
         meta_config_path = CLIENT_META_CONFIG_PATH
     # load the meta config
     meta_config = load_raw_config(meta_config_path)
+    enabled_idx = meta_config_enabled_idx(meta_config_path)
     # get the config file paths
     config_files = meta_config[META_CONFIG_FILES_ENTRY]
-    config_dict = {}
-    # iterate through the config file paths, load their dictionaries, and add
-    # them to the combined dictionary
-    meta_config_dir = meta_config_path.parent
-    for c in config_files:
-        cfg_path = Path(c)
-        if not cfg_path.is_absolute():
-            cfg_path = meta_config_path.parent / cfg_path
-        config_dict[str(cfg_path)] = load_raw_config(cfg_path)
-    return config_dict
+    if not config_files:
+        raise ConfigError(None, 'no configuration files exist - '
+                    'use nspyre-config --add-config to add files') from None
+    cfg_path = Path(config_files[enabled_idx])
+    if not cfg_path.is_absolute():
+        cfg_path = meta_config_path.parent / cfg_path
+    try:
+        cfg_dict = {str(cfg_path): load_raw_config(cfg_path)}
+    except FileNotFoundError as exc:
+        raise ConfigError(exc, 'configuration file [{}] doesn\'t exist'.\
+                            format(cfg_path)) from None
+    return cfg_dict
 
 def write_config(config_dict, filepath):
     """Write a dictionary to a YAML file"""
     # open the file and write it's config dictionary
     with open(filepath, 'w') as file:
-        yaml.dump(config_dict, file)
+        yaml.dump(config_dict, file, default_flow_style=False)
 
 def get_config_param(config_dict, path):
     """Navigate a YAML-loaded config file and return a particular parameter 

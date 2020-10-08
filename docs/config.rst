@@ -16,14 +16,14 @@ To add a new client config file, use the command:
 
 .. code-block:: console
    
-   > nspyre-config client -c path/to/client_config.yaml
+   > nspyre-config client -a path/to/client_config.yaml
    >
 
 And a server config:
 
 .. code-block:: console
    
-   > nspyre-config server -c path/to/server_config.yaml
+   > nspyre-config server -a path/to/server_config.yaml
    >
 
 The paths are allowed to be relative to the current working directory.
@@ -34,7 +34,7 @@ The console command below lists the set of config files that the client collects
 
 .. code-block:: console
 
-   > nspyre-config client -e
+   > nspyre-config client -l
    0: client_default_config.yaml
    1: /path/to/client_config.yaml
    >
@@ -45,11 +45,11 @@ To remove a config file, use the ``-d`` option, then the path of the config file
 
 .. code-block:: console
 
-   > nspyre-config client -e
+   > nspyre-config client -l
    0: client_default_config.yaml
    1: /path/to/client_config.yaml
    > nspyre-config client -d path/to/client_config.yaml
-   > nspyre-config client -e  
+   > nspyre-config client -l  
    0: client_default_config.yaml
    >
 
@@ -57,11 +57,11 @@ Or they can be deleted by entry number e.g.:
 
 .. code-block:: console
 
-   > nspyre-config client -e
+   > nspyre-config client -l
    0: client_default_config.yaml
    1: /path/to/client_config.yaml
    > nspyre-config -d 1
-   > nspyre-config client -e  
+   > nspyre-config client -l  
    0: client_default_config.yaml
    >
 

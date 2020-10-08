@@ -12,9 +12,6 @@ Modified: Jacob Feder 7/25/2020
 # imports
 ###########################
 
-# std
-import logging
-
 # 3rd party
 from PyQt5 import QtWidgets, QtCore
 import sip
@@ -39,9 +36,10 @@ class InstrumentManagerWidgetError(Exception):
 ###########################
 
 class Instrument_Manager_Widget(QtWidgets.QWidget):
-    """ """
-    def __init__(self, manager, parent=None):
-        super().__init__(parent=parent)
+    """This is progress, I promise."""
+    def __init__(self, manager, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setWindowTitle('NSpyre - Instrument Manager')
         self.manager = manager
 
         self.tree = QtWidgets.QTreeWidget()
@@ -74,6 +72,7 @@ class Instrument_Manager_Widget(QtWidgets.QWidget):
                                             self.manager.mongo_addr)
             self.synched_dbs[s_name].updated_row.connect(self._update_feat_value)
             self.synched_dbs[s_name].col_dropped.connect(self.remove_instr)
+        self.show()
 
     def _update_feat_value(self, dev_name, row):
         fname = row['name']
@@ -233,14 +232,26 @@ class ActionTreeWidgetItem(QtCore.QObject):
         getattr(self.dev, self.action['name'])()
 
 if __name__ ==  '__main__':
+    import logging
+    import sys
+    from PyQt5.QtCore import Qt
+    from PyQt5.QtWidgets import QApplication
     from nspyre.gui.app import NSpyreApp
 
     # configure server logging behavior
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s -- %(levelname)s -- %(message)s',
                         handlers=[logging.StreamHandler()])
-    app = NSpyreApp([])
-    with InservGateway() as im:
-        w = Instrument_Manager_Widget(im)
-        w.show()
-        app.exec_()
+
+    logging.info('starting Instrument Manager...')
+    if hasattr(Qt, 'AA_EnableHighDpiScaling'):
+        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+
+    if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
+        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+    app = NSpyreApp([sys.argv])
+    with InservGateway() as isg:
+        print('I made it!')
+        inserv_window = Instrument_Manager_Widget(isg)
+        print('this is odd')
+        sys.exit(app.exec())

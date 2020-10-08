@@ -18,6 +18,7 @@ import logging
 # 3rd party
 import parse
 import pymongo
+from pymongo.errors import PyMongoError
 import rpyc
 
 # nspyre
@@ -94,7 +95,7 @@ class InservGateway():
         # retrieve all of the instrument server settings from mongo
         try:
             all_db_names = self.mongo_client.list_database_names()
-        except:
+        except PyMongoError:
             raise InservGatewayError('Failed connecting to mongodb [{}]'.\
                                         format(self.mongo_addr)) from None
         logging.info('connected to mongodb server [{}]'.format(self.mongo_addr))
@@ -127,7 +128,7 @@ class InservGateway():
             # this allows the instrument server to have full access to this
             # client's object dictionaries - appears necessary for lantz
             self.servers[s_id]._config['allow_all_attrs'] = True
-        except:
+        except BaseException:
             raise InservGatewayError('Failed to connect to '
                             'instrument server [{}] at address [{}]'.\
                             format(s_id, s_addr)) from None
@@ -140,7 +141,7 @@ class InservGateway():
         try:
             self.servers[s_id].close()
             del self.servers[s_id]
-        except:
+        except BaseException:
             raise InservGatewayError('Failed to disconnect from '
                             'instrument server [{}]'.format(s_id)) from None
         logging.info('instrument server gateway disconnected '

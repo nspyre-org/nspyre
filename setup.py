@@ -1,6 +1,5 @@
 from setuptools import setup, find_packages
 import codecs
-import os.path
 import pathlib
 import re
 
@@ -13,7 +12,7 @@ def read(*parts):
     Build an absolute path from *parts* and and return the contents of the
     resulting file.  Assume UTF-8 encoding.
     """
-    with codecs.open(os.path.join(here, *parts), "rb", "utf-8") as f:
+    with codecs.open(pathlib.PurePath(here, *parts), "rb", "utf-8") as f:
         return f.read()
 
 
@@ -31,7 +30,7 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 
-meta_path = os.path.join('src', 'nspyre', '__init__.py')
+meta_path = pathlib.PurePath('src', 'nspyre', '__init__.py')
 version = find_version(meta_path)
 
 long_description = (here / 'README.md').read_text(encoding='utf-8')

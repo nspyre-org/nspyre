@@ -9,85 +9,19 @@
     Modified: Jacob Feder 7/25/2020, Michael Solomon 9/12/2020
 """
 
-###########################
-# imports
-###########################
-
-# std
-import logging
-import os
-import time
-from subprocess import Popen
 import argparse
+import logging
 from pathlib import Path
+import sys
 
-# 3rd party
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication
 
-# nspyre
-from nspyre.gui.image import ImageWidget
-from nspyre.definitions import join_nspyre_path, LOGO_PATH
-
-###########################
-# globals
-###########################
+from .app import NSpyreApp
+from .main_window import NSpyreMainWindow
 
 THIS_DIR = Path(__file__).parent
 DEFAULT_LOG = THIS_DIR / 'nspyre.log'
-
-###########################
-# exceptions
-###########################
-
-###########################
-# classes
-###########################
-
-class NSpyre_Launcher(QtWidgets.QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
-        self.setWindowTitle('nspyre')
-        self.setWindowIcon(QtGui.QIcon('images/favicon.ico'))
-        
-        main_layout = QtWidgets.QVBoxLayout()
-        im = ImageWidget(LOGO_PATH)
-        main_layout.addWidget(im)
-
-        # btn_widget = QtWidgets.QWidget()
-        # btn_layout = QtWidgets.QHBoxLayout()
-
-        #self.inst_server_btn = QtWidgets.QPushButton('Start Instrument Server')
-        self.inst_manager_btn = QtWidgets.QPushButton('Start Instrument Manager')
-        self.view_manager_btn = QtWidgets.QPushButton('Start View Manager')
-        self.spyrelet_launcher_btn = QtWidgets.QPushButton('Start Spyrelet Launcher')
-        self.data_explorer_btn = QtWidgets.QPushButton('Data Explorer')
-
-        #main_layout.addWidget(self.inst_server_btn)
-        main_layout.addWidget(self.inst_manager_btn)
-        main_layout.addWidget(self.view_manager_btn)
-        main_layout.addWidget(self.spyrelet_launcher_btn)
-        main_layout.addWidget(self.data_explorer_btn)
-
-        #self.inst_server_btn.clicked.connect(lambda: self.launch('instrument_server.py', new_console=True))
-        self.inst_manager_btn.clicked.connect(lambda: \
-            self.launch(join_nspyre_path('gui/instrument_manager.py')))
-        self.view_manager_btn.clicked.connect(lambda: self.launch('gui/view_manager.py'))
-        self.spyrelet_launcher_btn.clicked.connect(lambda: self.launch('gui/launcher.py'))
-        self.data_explorer_btn.clicked.connect(lambda: self.launch('gui/data_explorer.py'))
-
-        self.setLayout(main_layout)
-    
-    def launch(self, nspyre_py_file, new_console=False):
-        if new_console:
-            pass
-            # TODO cross-platform
-            # filename = os.path.normpath(join_nspyre_path(nspyre_py_file))
-            # filename = filename.replace('\\', '/')
-            # cmd = 'bash -c "activate {}; python {}"'.format(get_configs()['conda_env'], filename)
-            # Popen(cmd, shell=True)
-        else:
-            Popen(['python', join_nspyre_path(nspyre_py_file)])
-
 
 ###########################
 # standalone main
@@ -95,7 +29,6 @@ class NSpyre_Launcher(QtWidgets.QWidget):
 
 def main(args=None):
     """Entry point for the application script"""
-    from nspyre.gui.app import NSpyreApp
     # parse command-line arguments
     arg_parser = argparse.ArgumentParser(prog='nspyre',
                             usage='%(prog)s [options]',
@@ -148,8 +81,12 @@ def main(args=None):
                         handlers=[logging.FileHandler(cmd_args.log, 'w+'),
                                 logging.StreamHandler()])
 
-    logging.info('starting nspyre...')
-    app = NSpyreApp([])
-    w = NSpyre_Launcher()
-    w.show()
-    app.exec_()
+    logging.info('starting NSpyre...')
+    if hasattr(Qt, 'AA_EnableHighDpiScaling'):
+        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+
+    if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
+        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+    app = NSpyreApp([sys.argv])
+    main_window = NSpyreMainWindow()
+    sys.exit(app.exec())

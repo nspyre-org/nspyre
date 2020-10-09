@@ -56,13 +56,6 @@ CONFIG_SERVER_DEVICE_CLASS_NAME = 'class'
 
 RPYC_SERVER_STOP_EVENT = threading.Event()
 
-def test(key, value, old_value):
-    print('{}: {} -> {}'.format(key, old_value, value))
-    # print('{}[{}]: {} -> {}'.format(attr, key, old_value, value))
-    # if isinstance(value, Quantity):
-    #     value = value.to(self.devs[dev_name].\
-    #                         _lantz_feats[attr]._kwargs['units']).m
-
 ###########################
 # exceptions
 ###########################
@@ -83,6 +76,8 @@ class InstrumentServer(rpyc.Service):
     client"""
     def __init__(self, config_file, mongo_addr=None):
         super().__init__()
+        # lantz devices
+        self._devs = {}
         # configuration
         self.config = {}
         self.config_file = None
@@ -97,8 +92,6 @@ class InstrumentServer(rpyc.Service):
         self.mongo_addr = None
         self.mongo_client = None
         self.db = None
-        # lantz devices
-        self.devs = {}
 
         # storage container for hook methods that update mongodb feats when
         # lantz feats are changed - this is required because pysignal uses
@@ -230,7 +223,7 @@ class InstrumentServer(rpyc.Service):
 
         # get an instance of the device
         try:
-            self.devs[dev_name] = dev_class(*dev_args, **dev_kwargs)
+            self._devs[dev_name] = dev_class(*dev_args, **dev_kwargs)
         except Exception as exc:
             raise InstrumentServerError(exc, 'Failed to get instance of device '
                                         '{} of class {}'.\
@@ -283,26 +276,26 @@ class InstrumentServer(rpyc.Service):
             # add a custom hook for updating mongodb whenever the feat/dictfeat is written
             if isinstance(feat, DictFeat):
                 def update_mongo_dictfeat(value, old_value, key, attr=feat_name, keys=keys):
-                    print('{}[{}]: {} -> {}'.format(attr, key, old_value, value))
+                    logging.debug('{}[{}]: {} -> {}'.format(attr, key, old_value, value))
                     if isinstance(value, Quantity):
-                        value = value.to(self.devs[dev_name]._lantz_dictfeats[attr]._kwargs['units']).m
+                        value = value.to(self._devs[dev_name]._lantz_dictfeats[attr]._kwargs['units']).m
                     self.db[dev_name].update_one({'name': attr},
                                                  {'$set': {'value.{}'.format(keys.index(key)): value}},
                                                  upsert=True)
 
                 self.dictfeat_hook_functions[feat_name] = update_mongo_dictfeat
-                getattr(self.devs[dev_name], feat_name + '_changed').connect(self.dictfeat_hook_functions[feat_name])
+                getattr(self._devs[dev_name], feat_name + '_changed').connect(self.dictfeat_hook_functions[feat_name])
             else:
                 def update_mongo_feat(value, old_value, attr=feat_name):
-                    print('{}: {} -> {}'.format(attr, old_value, value))
+                    logging.debug('{}: {} -> {}'.format(attr, old_value, value))
                     if isinstance(value, Quantity):
-                        value = value.to(self.devs[dev_name]._lantz_feats[attr]._kwargs['units']).m
+                        value = value.to(self._devs[dev_name]._lantz_feats[attr]._kwargs['units']).m
                     self.db[dev_name].update_one({'name': attr},
                                                  {'$set': {'value': value}},
                                                  upsert=True)
 
                 self.feat_hook_functions[feat_name] = update_mongo_feat
-                getattr(self.devs[dev_name], feat_name + '_changed').connect(self.feat_hook_functions[feat_name])
+                getattr(self._devs[dev_name], feat_name + '_changed').connect(self.feat_hook_functions[feat_name])
 
         for action_name, action in dev_class._lantz_actions.items():
             feat_attr_list.append({'name' : action_name, 'type' : 'action'})
@@ -313,10 +306,10 @@ class InstrumentServer(rpyc.Service):
 
         # initialize the device
         try:
-            self.devs[dev_name].initialize()
+            self._devs[dev_name].initialize()
         except Exception as exc:
             logging.error(exc)
-            self.devs.pop(dev_name)
+            self._devs.pop(dev_name)
             logging.error('device [{}] initialization sequence failed'.\
                             format(dev_name))
             return
@@ -327,7 +320,7 @@ class InstrumentServer(rpyc.Service):
     def del_device(self, dev_name):
         """Remove and finalize a device"""
         try:
-            self.devs.pop(dev_name).finalize()
+            self._devs.pop(dev_name).finalize()
         except Exception as exc:
             raise InstrumentServerError(exc, 'Failed deleting device [{}]'.\
                                         format(dev_name)) from None
@@ -335,7 +328,7 @@ class InstrumentServer(rpyc.Service):
 
     def reload_device(self, dev_name):
         """Remove a device, then reload it from the stored config"""
-        if dev_name in self.devs:
+        if dev_name in self._devs:
             self.del_device(dev_name)
         self.add_device(dev_name)
 
@@ -345,6 +338,15 @@ class InstrumentServer(rpyc.Service):
         for dev_name in devs:
             self.reload_device(dev_name)
         logging.info('reloaded all devices')
+
+    def __getattr__(self, attr):
+        """Allow the user to access the driver objects directly using
+        e.g. inserv.sig_gen.frequency notation"""
+        if attr in self._devs:
+            return self._devs[attr]
+        else:
+            raise AttributeError('\'{}\' object has no attribute \'{}\''.\
+                        format(self.__class__.__name__, attr))
 
     def update_config(self, config_file=None):
         """Reload the config files"""

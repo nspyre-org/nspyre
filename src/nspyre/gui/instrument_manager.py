@@ -37,16 +37,29 @@ class InstrumentManagerWidgetError(Exception):
 
 class Instrument_Manager_Widget(QtWidgets.QWidget):
     """This is progress, I promise."""
-    def __init__(self, manager, *args, **kwargs):
+    def __init__(self, gateway, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setWindowTitle('NSpyre - Instrument Manager')
-        self.manager = manager
+        # connection to the instrument servers
+        self.gateway = gateway
+        # tree of dictionaries that contains all of the instrument
+        # manager GUI elements
+        # the top level of the dictionary is the instrument servers
+        # the next level is the devices
+        # the bottom level is attributes of the devices
+        # e.g.              -------self.gui-------
+        #                  /                      \
+        #              server1                   server2
+        #              /     \                   /     \
+        #      sig-gen1      scope1      sig-gen2     laser
+        #      /      \     /      \     /    \      /     \
+        #   freq     ampl trig  din[]  freq  ampl lambda  power
+        # self.gui = {}
 
+        # set main GUI layout
+        self.setWindowTitle('NSpyre Instrument Manager')
         self.tree = QtWidgets.QTreeWidget()
         self.tree.setColumnCount(2)
         self.tree.setHeaderLabels(['Feat', 'value'])
-        self.feat_items = dict()
-
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.tree)
@@ -61,18 +74,145 @@ class Instrument_Manager_Widget(QtWidgets.QWidget):
         self.tree.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         self.tree.header().setSectionResizeMode(1, QtWidgets.QHeaderView.Interactive)
         self.tree.setColumnWidth(1, 1*s.width()//10)
+        self.generate_gui()
 
-        self.reset_all()
-        self.synched_dbs = {}
-        for s_name in self.manager.servers:
-            # TODO dropdown for each server
-            s_db_name = MONGO_SERVERS_KEY.format(s_name)
-            self.synched_dbs[s_name] = Synched_Mongo_Database(
-                                            MONGO_SERVERS_KEY.format(s_name),
-                                            self.manager.mongo_addr)
-            self.synched_dbs[s_name].updated_row.connect(self._update_feat_value)
-            self.synched_dbs[s_name].col_dropped.connect(self.remove_instr)
-        self.show()
+    def generate_gui(self):
+        """Iterate over the available servers and devices, and collect their 
+        attributes that can be modified by the instrument manager GUI, then
+        populate the self.gui and update the GUI"""
+        import pdb; pdb.set_trace()
+        for server_name, server in self.gateway.servers.items():
+            server_tree = QtWidgets.QTreeWidgetItem(self.tree, [server_name, 'asdf'])
+            for device_name, device in server.root._devs.items():
+                device_tree = QtWidgets.QTreeWidgetItem(server_tree, [device_name, 'asdf2'])
+                for feat_name, feat in device._lantz_feats.items():
+                    self.generate_feat_gui(feat, feat_name, device, device_tree)
+
+        # for feat_name, feat in list(dev_class._lantz_feats.items()) + \
+        #                     list(dev_class._lantz_dictfeats.items()):
+        # for action_name, action in dev_class._lantz_actions.items():
+        #     feat_attr_list.append({'name' : action_name, 'type' : 'action'})
+
+    def generate_feat_widget(self, feat, feat_name, device, parent):
+        """Generate a Qt gui element for a lantz feat"""
+        if feat._config['values']:
+            # the lantz feat has only a specific set of allowed values
+            # so we make a dropdown box
+            widget = QtWidgets.QComboBox(parent)
+            widget.addItems(feat._config['values'])
+            widget.activated.connect(lambda idx: print('feat={}'.format(widget.currentText())))
+            get_fun = lambda value, old_value: widget.setCurrentText(value)
+        elif isinstance(feat['value'], (int, float, Q_)) or not feat['units'] is None:
+                opts = dict()
+                if feat['units'] is not None:
+                    opts['unit'] = feat['units']
+                if feat['limits'] is not None:
+                    opts['bounds'] = feat['limits']
+                opts['dec'] = True
+                opts['minStep'] = 1e-3
+                opts['decimals'] = 10
+                if isinstance(feat['value'], int):
+                    opts['int'] = True
+                    opts['minStep'] = 1
+                    opts['decimals'] = 10
+                w = SpinBoxFeatWidget(opts)
+        elif feat['value'] is None:
+            w = LineEditFeatWidget(text = 'Unknown type')
+            w.set_readonly(True)
+            return w
+        else:
+            w = LineEditFeatWidget(text = feat['value']) 
+
+        w.set_readonly(feat['readonly'])
+        if (not feat['value'] is None) and (not feat['units'] is None):
+            w.setter(Q_(feat['value'], feat['units']))
+        else:
+            w.setter(feat['value'])
+        return w
+
+        getattr(device, feat_name + '_changed').connect(get_fun)
+
+
+
+
+
+
+        # device = self.manager.devs[dev_specifier]
+        # server_name, dev_name = dev_specifier.split('/')
+        # instr_item = QtWidgets.QTreeWidgetItem(self.tree, [dev_name, ''])
+        # # mongodb collection containing the device attributes
+        # dev_collection = self.manager.mongo_client[MONGO_SERVERS_KEY.format(server_name)][dev_name]
+        # self.feat_items[dev_name] = {}
+        # for attribute in dev_collection.find():
+        #     if attribute['type'] == 'dictfeat':
+        #         feat_item = DictFeatTreeWidgetItem(attribute, self.tree, device)
+        #         instr_item.addChild(feat_item.item)
+        #     elif attribute['type'] == 'feat':
+        #         feat_item = FeatTreeWidgetItem(attribute, self.tree, device)
+        #         instr_item.addChild(feat_item.item)
+        #         self.tree.setItemWidget(feat_item.item, 1, feat_item.w)
+        #     elif attribute['type'] == 'action':
+        #         feat_item = ActionTreeWidgetItem(attribute, self.tree, device)
+        #         instr_item.addChild(feat_item.item)
+        #         self.tree.setItemWidget(feat_item.item, 1, feat_item.w)
+        #     self.feat_items[dev_name][attribute['name']] = feat_item
+        #     self.tree.setItemWidget(feat_item.item, 0, QtWidgets.QLabel(attribute['name']))
+        # self.tree.setSortingEnabled(True)
+        # self.tree.sortByColumn(0, QtCore.Qt.AscendingOrder)
+
+
+        # parent_tree.setItemWidget(item, 0, QtWidgets.QLabel(str(key)))
+        # parent_tree.setItemWidget(item, 1, w)
+
+
+        # self.reset_all()
+        # self.synched_dbs = {}
+        # for s_name in self.manager.servers:
+        #     # TODO dropdown for each server
+        #     s_db_name = MONGO_SERVERS_KEY.format(s_name)
+        #     self.synched_dbs[s_name] = Synched_Mongo_Database(
+        #                                     MONGO_SERVERS_KEY.format(s_name),
+        #                                     self.manager.mongo_addr)
+        #     self.synched_dbs[s_name].updated_row.connect(self._update_feat_value)
+        #     self.synched_dbs[s_name].col_dropped.connect(self.remove_instr)
+        # self.show()
+
+
+class FeatTreeWidgetItem(QtCore.QObject):
+    # This signal will be triggered externally when the display value needs
+    # to be changed (argument is value)
+    set_requested = QtCore.pyqtSignal(object)
+    # This signal will be triggered when the "go button" is clicked
+    go_clicked = QtCore.pyqtSignal()
+    # This signal will be triggered when the "read button" is clicked
+    read_clicked = QtCore.pyqtSignal()
+    def __init__(self, feat, parent_tree, dev):
+        super().__init__()
+        self.dev = dev
+        self.feat = feat
+        self.item = QtWidgets.QTreeWidgetItem(1)
+        self.w = get_feat_widget(feat)
+
+        self.set_requested.connect(self.w.set_requested)
+        self.w.go_clicked.connect(self.set_dev)
+        self.w.read_clicked.connect(self.get_dev)
+
+    def set_dev(self):
+        setattr(self.dev, self.feat['name'], self.w.getter())
+
+    def get_dev(self):
+        val = getattr(self.dev, self.feat['name'])
+        self.set_requested.emit(val)
+
+
+
+
+
+
+
+
+
+
 
     def _update_feat_value(self, dev_name, row):
         fname = row['name']

@@ -70,11 +70,6 @@ class InservGateway():
         self.update_config(config_file)
         self.config_mongo(mongo_addr)
         self.connect_servers()
-        # a dictionary containing all available devices on the
-        # instrument servers
-        # the syntax for keys in the devs dictionary is
-        # '<inserv name>/<inserv device name>' e.g. 'server1/dev1'
-        self.devs = self.load_devices()
 
     def config_mongo(self, mongo_addr=None):
         """Set up the mongodb database (but connection won't take place until
@@ -147,19 +142,14 @@ class InservGateway():
         logging.info('instrument server gateway disconnected '
                         'from server [{}]'.format(s_id))
 
-    def load_devices(self):
-        """Iterate through the devices in the instrument servers, and return a
-        monkey-wrapped version of them (to solve pint unit registry issues)"""
-        devs = {}
-        for server_name in self.servers:
-            # see inserv.py and RPyC documentation for how
-            # the device is retrieved from the instrument server
-            for dev_name in self.servers[server_name].root.devs:
-                devs[INSERV_DEV_ACCESSOR.format(server_name, dev_name)] = \
-                                self.servers[server_name].root.devs[dev_name]
-                logging.info('instrument server gateway loaded device [{}] '
-                            'from server [{}]'.format(dev_name, server_name))
-        return devs
+    def __getattr__(self, attr):
+        """Allow the user to access the server objects directly using
+        e.g. gateway.server1.sig_gen.frequency notation"""
+        if attr in self.servers:
+            return self.servers[attr].root
+        else:
+            raise AttributeError('\'{}\' object has no attribute \'{}\''.\
+                        format(self.__class__.__name__, attr))
 
     def update_config(self, filename):
         """Reload the config file"""

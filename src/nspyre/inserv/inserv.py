@@ -339,14 +339,15 @@ class InstrumentServer(rpyc.Service):
             self.reload_device(dev_name)
         logging.info('reloaded all devices')
 
-    def __getattr__(self, attr):
+    def __getattr__(self, name):
         """Allow the user to access the driver objects directly using
         e.g. inserv.sig_gen.frequency notation"""
-        if attr in self._devs:
-            return self._devs[attr]
+        if name in self._devs:
+            return self._devs[name]
         else:
-            raise AttributeError('\'{}\' object has no attribute \'{}\''.\
-                        format(self.__class__.__name__, attr))
+            return self.__getattribute__(name)
+            #raise AttributeError('\'{}\' object has no attribute \'{}\''.\
+            #            format(self.__class__.__name__, name))
 
     def update_config(self, config_file=None):
         """Reload the config files"""

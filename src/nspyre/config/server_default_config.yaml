@@ -16,7 +16,7 @@ mongodb_addr: 'mongodb://localhost:27017/'
 devices_doc: # 'devices' for the real one
   device_name1:
     # lantz class specified as a path in the style of a python import starting
-    # from the lantz drivers folder,
+    # from the lantz-drivers folder,
     # e.g. 'examples.LantzSignalGenerator' or 'examples.dummydrivers.DummyOsci'
     lantz_class: 'lantz driver'
     # instead of 'lantz_class', can also be specified by 'class' / 'class_file'

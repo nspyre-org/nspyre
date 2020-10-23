@@ -51,7 +51,7 @@ class InservCmdPrompt(Cmd):
         if arg_string:
             print('Expected 0 args')
             return
-        for d in self.inserv.devs.keys():
+        for d in self.inserv._devs.keys():
             print(d)
 
     def do_config(self, arg_string):

@@ -12,9 +12,12 @@ Modified: Jacob Feder 7/25/2020
 # imports
 ###########################
 
-# 3rd party
-from PyQt5 import QtWidgets, QtCore
-import sip
+import functools
+from pathlib import Path
+
+from PyQt5.QtCore import QProcess
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QComboBox, QMainWindow, QPushButton, QSpinBox, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
 
 # nspyre
 from nspyre.inserv.gateway import InservGateway
@@ -26,7 +29,7 @@ from nspyre.mongodb.mongo_listener import Synched_Mongo_Database
 # exceptions
 ###########################
 
-class InstrumentManagerWidgetError(Exception):
+class InstrumentManagerError(Exception):
     """General InstrumentManagerWidget exception"""
     def __init__(self, msg):
         super().__init__(msg)
@@ -35,10 +38,16 @@ class InstrumentManagerWidgetError(Exception):
 # classes
 ###########################
 
-class Instrument_Manager_Widget(QtWidgets.QWidget):
+class InstrumentManagerWindow(QMainWindow):
     """This is progress, I promise."""
     def __init__(self, gateway, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setWindowTitle('NSpyre Instrument Manager')
+
+        # Set the main window layout to consist of vertical boxes.
+        # The QVBoxLayout class lines up widgets vertically.
+        layout = QVBoxLayout()
+
         # connection to the instrument servers
         self.gateway = gateway
         # tree of dictionaries that contains all of the instrument
@@ -46,21 +55,19 @@ class Instrument_Manager_Widget(QtWidgets.QWidget):
         # the top level of the dictionary is the instrument servers
         # the next level is the devices
         # the bottom level is attributes of the devices
-        # e.g.              -------self.gui-------
-        #                  /                      \
-        #              server1                   server2
-        #              /     \                   /     \
-        #      sig-gen1      scope1      sig-gen2     laser
-        #      /      \     /      \     /    \      /     \
-        #   freq     ampl trig  din[]  freq  ampl lambda  power
+        # e.g.               ----------self.gui----------
+        #                   /                            \
+        #               server1                        server2
+        #              /       \                      /       \
+        #      sig-gen1         scope1        sig-gen2         laser
+        #      /      \        /      \      /        \       /     \
+        #   freq     ampl    trig    din[] freq      ampl  lambda  power
         # self.gui = {}
 
         # set main GUI layout
-        self.setWindowTitle('NSpyre Instrument Manager')
-        self.tree = QtWidgets.QTreeWidget()
+        self.tree = QTreeWidget()
         self.tree.setColumnCount(2)
-        self.tree.setHeaderLabels(['Feat', 'value'])
-        layout = QtWidgets.QVBoxLayout()
+        self.tree.setHeaderLabels(['Lantz Feat', 'value'])
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.tree)
         self.setLayout(layout)
@@ -68,54 +75,64 @@ class Instrument_Manager_Widget(QtWidgets.QWidget):
         # set some reasonable sizes
         s = QtWidgets.QApplication.desktop().screenGeometry()
         self.resize(s.width()//3,9*s.height()//10)
-        # self.tree.resizeColumnToContents(0)
-        # self.tree.resizeColumnToContents(1)
+
         self.tree.header().setStretchLastSection(False)
         self.tree.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         self.tree.header().setSectionResizeMode(1, QtWidgets.QHeaderView.Interactive)
         self.tree.setColumnWidth(1, 1*s.width()//10)
-        self.generate_gui()
+        self._create_widgets()
+        self.show()
 
-    def generate_gui(self):
+    def _create_widgets(self):
         """Iterate over the available servers and devices, and collect their 
         attributes that can be modified by the instrument manager GUI, then
         populate the self.gui and update the GUI"""
         import pdb; pdb.set_trace()
         for server_name, server in self.gateway.servers.items():
-            server_tree = QtWidgets.QTreeWidgetItem(self.tree, [server_name, 'asdf'])
+            server_tree = QTreeWidgetItem(self.tree, [server_name, 'asdf'])
+
             for device_name, device in server.root._devs.items():
-                device_tree = QtWidgets.QTreeWidgetItem(server_tree, [device_name, 'asdf2'])
+                device_tree = QTreeWidgetItem(server_tree, [device_name, 'asdf2'])
+
                 for feat_name, feat in device._lantz_feats.items():
-                    self.generate_feat_gui(feat, feat_name, device, device_tree)
+                    self._generate_feat_widget(feat, feat_name, device, device_tree)
 
-        # for feat_name, feat in list(dev_class._lantz_feats.items()) + \
-        #                     list(dev_class._lantz_dictfeats.items()):
-        # for action_name, action in dev_class._lantz_actions.items():
-        #     feat_attr_list.append({'name' : action_name, 'type' : 'action'})
+                for dictfeat_name, dictfeat in device._lantz_dictfeats.items():
+                    self.generate_dictfeat_widget(dictfeat, dictfeat_name, device, device_tree)
 
-    def generate_feat_widget(self, feat, feat_name, device, parent):
+                for action_name, action in device._lantz_actions.items():
+                    self.generate_action_widget(action, action_name, device, device_tree)
+
+    def _generate_feat_widget(self, feat, feat_name, device, parent_tree):
         """Generate a Qt gui element for a lantz feat"""
-        if feat._config['values']:
+        if feat._kwargs['values']:
             # the lantz feat has only a specific set of allowed values
             # so we make a dropdown box
-            widget = QtWidgets.QComboBox(parent)
-            widget.addItems(feat._config['values'])
-            widget.activated.connect(lambda idx: print('feat={}'.format(widget.currentText())))
-            get_fun = lambda value, old_value: widget.setCurrentText(value)
-        elif isinstance(feat['value'], (int, float, Q_)) or not feat['units'] is None:
-                opts = dict()
+            widget = QComboBox(parent_tree)
+            widget.addItems(feat._kwargs['values'])
+            widget.setCurrentIndex()
+
+            setattr_func = lambda value, feat=feat: setattr(feat, widget.currentText())
+            widget.activated.connect(setattr_func)
+
+            getattr_func = lambda value, old_value: widget.setCurrentText(value)
+
+        elif isinstance(feat._config['value'], (int, float, Q_)) or not feat._config['units'] is None:
+                optional_args = {}
                 if feat['units'] is not None:
-                    opts['unit'] = feat['units']
-                if feat['limits'] is not None:
-                    opts['bounds'] = feat['limits']
-                opts['dec'] = True
-                opts['minStep'] = 1e-3
-                opts['decimals'] = 10
-                if isinstance(feat['value'], int):
-                    opts['int'] = True
-                    opts['minStep'] = 1
-                    opts['decimals'] = 10
-                w = SpinBoxFeatWidget(opts)
+                    optional_args['unit'] = feat['units']
+                if feat._config['limits'] is not None:
+                    optional_args['bounds'] = feat._config['limits']
+                optional_args['dec'] = True
+                optional_args['minStep'] = 1e-3
+                optional_args['decimals'] = 10
+                if isinstance(feat._config['value'], int):
+                    optional_args['int'] = True
+                    optional_args['minStep'] = 1
+                    optional_args['decimals'] = 10
+                widget = QSpinBox(parent_tree)
+                widget.valueChanged.connect(lambda idx: feat = widget.setValue())
+                widget.sp.valueChanged.connect(self.valuechange)
         elif feat['value'] is None:
             w = LineEditFeatWidget(text = 'Unknown type')
             w.set_readonly(True)
@@ -123,14 +140,16 @@ class Instrument_Manager_Widget(QtWidgets.QWidget):
         else:
             w = LineEditFeatWidget(text = feat['value']) 
 
-        w.set_readonly(feat['readonly'])
+        w.set_readonly(feat._config['read_once'])
         if (not feat['value'] is None) and (not feat['units'] is None):
             w.setter(Q_(feat['value'], feat['units']))
         else:
             w.setter(feat['value'])
+
+        getattr(device, feat_name + '_changed').connect(getattr_func)
         return w
 
-        getattr(device, feat_name + '_changed').connect(get_fun)
+
 
 
 
@@ -395,3 +414,23 @@ if __name__ ==  '__main__':
         inserv_window = Instrument_Manager_Widget(isg)
         print('this is odd')
         sys.exit(app.exec())
+
+
+{'_MessageBasedDriver__resource_manager': <ResourceManager(<VisaLibrary('unset')>)>,
+ '_Base__name': 'LantzSignalGenerator0',
+ 'logger_name': 'lantz.driver.LantzSignalGenerator0',
+ '_Base__keep_alive': [],
+ '_StorageMixin__storage': {'iconfig': defaultdict(<class 'dict'>, {'idn': {}, 'amplitude': {}, 'offset': {}, 'frequency': {}, 'output_enabled': {}, 'waveform': {}, 'dout': {}, DictPropertyNameKey(name='dout', key=1): {}}),
+                            'iconfigm': defaultdict(<class 'dict'>, {'initialize': {}}),
+                            'statsm': defaultdict(<class 'pimpmyclass.stats.RunningStats'>, {'initialize': {'call': <pimpmyclass.stats.RunningState object at 0x7f9b2b382250>}}),
+                            'stats': defaultdict(<class 'pimpmyclass.stats.RunningStats'>, {'amplitude': {'get': <pimpmyclass.stats.RunningState object at 0x7f9b2b4d0a90>}, 'frequency': {'get': <pimpmyclass.stats.RunningState object at 0x7f9b2b4d0e50>}, DictPropertyNameKey(name='dout', key=1): {'get': <pimpmyclass.stats.RunningState object at 0x7f9b2b4e4280>}}),
+                            'cache': {'amplitude': <Quantity(0.0, 'volt')>, 'frequency': <Quantity(1000.0, 'hertz')>, DictPropertyNameKey(name='dout', key=1): False}
+                            },
+ '_lantz_anyfeat': ChainMap({'idn': <lantz.core.feat.Feat object at 0x7f9b2b382bb0>, 'amplitude': <lantz.core.feat.Feat object at 0x7f9b2b382af0>, 'offset': <lantz.core.feat.Feat object at 0x7f9b2b382b80>, 'frequency': <lantz.core.feat.Feat object at 0x7f9b2b382fd0>, 'output_enabled': <lantz.core.feat.Feat object at 0x7f9b2b2527f0>, 'waveform': <lantz.core.feat.Feat object at 0x7f9b2b382c10>, DictPropertyNameKey(name='dout', key=1): <lantz.core.feat.Feat object at 0x7f9b2b4d0580>}, {'dout': <lantz.core.feat.DictFeat object at 0x7f9b2b382e80>, 'din': <lantz.core.feat.DictFeat object at 0x7f9b2b382cd0>}),
+ '_LogMixin__logger': <Logger lantz.driver.LantzSignalGenerator0 (DEBUG)>,
+ 'DEFAULTS': mappingproxy({'COMMON': {'write_termination': '\n', 'read_termination': '\n'}}),
+ 'resource_name': 'TCPIP::localhost::5678::SOCKET',
+ 'resource_kwargs': {'write_termination': '\n', 'read_termination': '\n'},
+ 'resource': <'TCPIPSocket'('TCPIP::localhost::5678::SOCKET')>,
+ '_LockMixin__async_lock': <unlocked _thread.RLock object owner=0 count=0 at 0x7f9b2b492e10>}
+

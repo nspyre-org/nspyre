@@ -115,7 +115,7 @@ class Spyrelet():
     # time. This can store anything the users want
     CONSTS = dict()
 
-    def __init__(self, unique_name, manager, device_aliases={}, spyrelets={},
+    def __init__(self, unique_name, gateway, device_aliases={}, spyrelets={},
                     mongodb_addr=None, **consts):
         self.name = unique_name
         self.progress = tqdm
@@ -141,20 +141,37 @@ class Spyrelet():
         # instance variables
         for dev_alias in self.REQUIRED_DEVICES:
             try:
+                # e.g. "local1/dev1"
                 dev_accessor = device_aliases[dev_alias]
             except Exception as exc:
                 raise SpyreletLoadError(exc, 'Spyrelet [{}] requires the '
                         'device [{}] but it wasn\'t defined in the [{}] '
                         'section of the config file'.format(unique_name, \
                             dev_alias, CONFIG_DEVS_KEY)) from None
-            if dev_accessor in manager.devs:
-                setattr(self, dev_alias, manager.devs[dev_accessor])
-            else:
+            try:
+                server_name, device_name = device_aliases[dev_alias].split('/')
+            except:
+                import pdb; pdb.set_trace()
+                raise SpyreletLoadError(None, 'Spyrelet [{}] with the '
+                    'device alias [{}] has an invalid device accessor [{}].'
+                    'The accessor should be in the form '
+                    '"server_name/device_name"'.\
+                    format(unique_name, dev_accessor, dev_alias))
+            try:
+                server = getattr(gateway, server_name)
+            except:
                 raise SpyreletLoadError(None, 'Spyrelet [{}] requires the '
-                        'device [{}] (alias [{}]) but either the instrument '
-                        'server is unreachable, or the device isn\'t available '
-                        'on the server'.\
+                        'device [{}] (alias [{}]) but the instrument '
+                        'server is unreachable'.\
                         format(unique_name, dev_accessor, dev_alias))
+            try:
+                device = getattr(server, device_name)
+            except:
+                raise SpyreletLoadError(None, 'Spyrelet [{}] requires the '
+                        'device [{}] (alias [{}]) but the instrument '
+                        'server doesn\'t contain the device'.\
+                        format(unique_name, dev_accessor, dev_alias))
+            setattr(self, dev_alias, device)
 
         # check that the sub spyrelets are loaded and add them as
         # instance variables
@@ -403,7 +420,7 @@ def load_spyrelet_class(spyrelet_name, cfg):
                                 spyrelet_path).resolve()
     return load_class_from_file(spyrelet_path, spyrelet_class_name)
 
-def load_spyrelet(spyrelet_name, manager, sub_spyrelet=False, cfg=None, filepath=None):
+def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False, cfg=None, filepath=None):
     """
     recursive function that loads a spyrelet from the config
     and also loads all sub-spyrelets
@@ -462,7 +479,7 @@ def load_spyrelet(spyrelet_name, manager, sub_spyrelet=False, cfg=None, filepath
     args = custom_decode(args)
 
     # create the spyrelet
-    spyrelet = spyrelet_class(spyrelet_name, manager, \
+    spyrelet = spyrelet_class(spyrelet_name, gateway, \
                               device_aliases=dev_aliases, \
                               spyrelets=sub_spyrelets, **args)
     _LOADED_SPYRELETS[spyrelet_name] = spyrelet
@@ -470,7 +487,7 @@ def load_spyrelet(spyrelet_name, manager, sub_spyrelet=False, cfg=None, filepath
 
     return spyrelet
 
-def load_all_spyrelets(manager, filepath=None):
+def load_all_spyrelets(gateway, filepath=None):
     """Load all of the spyrelets from the config file"""
     cfg = load_config(filepath)
     # spyrelet parameters to parse
@@ -485,7 +502,7 @@ def load_all_spyrelets(manager, filepath=None):
     # are none left
     while bool(spyrelet_configs):
         spyrelet_name = next(iter(spyrelet_configs))
-        load_spyrelet(spyrelet_name, manager, cfg)
+        load_spyrelet(spyrelet_name, gateway, cfg)
         # remove this spyrelet from the list of spyrelets to be loaded
         del spyrelet_configs[spyrelet_name]
     return _LOADED_SPYRELETS
@@ -512,7 +529,7 @@ def unload_all_spyrelets(except_list=[], client=None):
         if not name in except_list:
             unload_spyrelet(name, client=client)
 
-def reload_spyrelet(spyrelet_names, manager, client=None):
+def reload_spyrelet(spyrelet_names, gateway, client=None):
     """function to reload current spyrelet(s)"""
     # if only one name is passed, convert it to list for handling
     if type(spyrelet_names) is not list: spyrelet_names = [ spyrelet_names ]
@@ -521,9 +538,9 @@ def reload_spyrelet(spyrelet_names, manager, client=None):
 
     for name in spyrelet_names:
         unload_spyrelet(name, client=client)
-        load_spyrelet(name, manager)
+        load_spyrelet(name, gateway)
 
-def reload_all_spyrelets(manager, except_list=[], client=None):
+def reload_all_spyrelets(gateway, except_list=[], client=None):
     """function to reload all current spyrelet(s)"""
     if client is None: client = get_mongo_client()
 
@@ -533,9 +550,9 @@ def reload_all_spyrelets(manager, except_list=[], client=None):
     unload_all_spyrelets(except_list, client)
     if except_list:
         for name in spyrelets:
-            load_spyrelet(name, manager)
+            load_spyrelet(name, gateway)
     else:
-        load_all_spyrelets(manager)
+        load_all_spyrelets(gateway)
 
 @property
 def LOADED_SPYRELETS():

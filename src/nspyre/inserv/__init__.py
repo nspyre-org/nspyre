@@ -157,7 +157,7 @@ class InservCmdPrompt(Cmd):
         logging.info('exiting...')
         # close all open resources
         self.inserv.stop_server()
-        for dev_name in list(self.inserv.devs):
+        for dev_name in list(self.inserv._devs):
             self.inserv.del_device(dev_name)
         pyvisa.ResourceManager().close()
         raise SystemExit

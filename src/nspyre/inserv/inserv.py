@@ -24,7 +24,7 @@ from collections import OrderedDict
 
 # 3rd party
 import rpyc
-from rpyc.utils.server import ThreadedServer 
+from rpyc.utils.server import ThreadedServer
 import pymongo
 from lantz import Q_, DictFeat
 from pint import Quantity

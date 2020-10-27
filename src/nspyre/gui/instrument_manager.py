@@ -34,6 +34,11 @@ class InstrumentManagerWindow(QMainWindow):
     def __init__(self, gateway, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setWindowTitle('NSpyre Instrument Manager')
+        #self.setFont(QFont('Helvetica [Cronyx]', 20))
+        #self.setStyleSheet('QLabel {font: Helvetica [Cronyx]}')
+        #self.setStyleSheet('QTreeWidget {font: 12pt Helvetica [Cronyx]}')
+        #self.setStyleSheet('QPushButton {font: Helvetica [Cronyx]}')
+        #self.setStyleSheet('QPushButton {font-size: 16pt}')
 
         # Set the main window layout to consist of vertical boxes.
         # The QVBoxLayout class lines up widgets vertically.
@@ -57,10 +62,24 @@ class InstrumentManagerWindow(QMainWindow):
 
         # set main GUI layout
         self.tree = QTreeWidget()
+        self.tree.setFont(QFont('Helvetica [Cronyx]', 14))
         self.tree.setColumnCount(2)
-        self.tree.setHeaderLabels(['Lantz Feat', 'value'])
-        self.tree.setSortingEnabled(True)
-        self.tree.sortByColumn(0, Qt.AscendingOrder)
+        self.tree.setMinimumHeight(self.tree.height()) #self.tree.setMinimumWidth(self.tree.width())
+        #self.tree.setUniformRowHeights(True)
+        #self.tree.setHeaderLabels(['Lantz Feat', 'value'])
+        #self.tree.setDragEnabled(True)
+
+        row_height = QComboBox().sizeHint().height()
+
+        header = self.tree.header()
+        header.setHidden(True)
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        #header.setSectionResizeMode(1, QHeaderView.Stretch)
+        header.setStretchLastSection(False)
+
+
+        #self.tree.setSortingEnabled(True)
+        #self.tree.sortByColumn(0, Qt.AscendingOrder)
         #layout.setContentsMargins(0, 0, 0, 0)
         #layout.addWidget(self.tree)
         #self.setLayout(layout)
@@ -71,9 +90,9 @@ class InstrumentManagerWindow(QMainWindow):
         # self.tree.setColumnWidth(1, 1*s.width()//10)
 
         # layout.addWidget(self.tree)
-        # self.tree.setUniformRowHeights(True)
         self._create_widgets()
         self.setCentralWidget(self.tree)
+        #self.tree.sizeHintForIndex(1).
         self.show()
 
 
@@ -84,23 +103,41 @@ class InstrumentManagerWindow(QMainWindow):
         for server_name, server in self.gateway.servers.items():
             server_tree = QTreeWidgetItem(self.tree, [server_name, ''])
             server_tree.setExpanded(True)
+            #server_tree.setSizeHint(1, QSize(20, 30))
 
             for device_name, device in server.root._devs.items():
                 device_tree = QTreeWidgetItem(server_tree, [device_name, ''])
+                device_tree.setExpanded(True)
 
                 for feat_name, feat in device._lantz_feats.items():
+                    print(feat_name)
                     feat_widget = self._generate_feat_widget(feat, feat_name, device)
+                    feat_widget.setFont(QFont('Helvetica [Cronyx]', 14))
                     feat_item = QTreeWidgetItem(device_tree, [feat_name, ''])
+                    feat_item.setSizeHint(1, QSize(79,24))
                     # feat_tree.setSizeHint(1, QSize(-1, 15))
                     self.tree.setItemWidget(feat_item, 1, feat_widget)
 
                 for dictfeat_name, dictfeat in device._lantz_dictfeats.items():
-                    self._generate_dictfeat_widget(dictfeat, dictfeat_name, device, device_tree)
+                    """Generate a Qt gui element for a lantz dictfeat"""
+                    dictfeat_tree = QTreeWidgetItem(device_tree, [dictfeat_name, ''])
+                    for i in dictfeat.keys:
+                        # getattr(device, dictfeat_name)[i]
+                        feat_widget = self._generate_feat_widget(dictfeat, dictfeat_name, device)
+                        feat_item = QTreeWidgetItem(dictfeat_tree, ['{} {}'.format(dictfeat_name, i), ''])
+                        self.tree.setItemWidget(feat_item, 1, feat_widget)
 
+                    #self._generate_dictfeat_widget(dictfeat, dictfeat_name, device, device_tree)
+
+                action_tree = QTreeWidgetItem(device_tree, ['Actions', ''])
                 for action_name, action in device._lantz_actions.items():
                     action_widget = self._generate_action_widget(action, action_name)
-                    action_item = QTreeWidgetItem(device_tree, [action_name, ''])
+                    action_widget.setFont(QFont('Helvetica [Cronyx]', 14))
+                    action_item = QTreeWidgetItem(action_tree, [action_name, ''])
                     self.tree.setItemWidget(action_item, 1, action_widget)
+
+        #for i in range(self.tree.columnCount()):
+        #    self.tree.resizeColumnToContents(i)
 
 
     def _generate_feat_widget(self, feat, feat_name, device):
@@ -110,26 +147,43 @@ class InstrumentManagerWindow(QMainWindow):
             # the lantz feat has only a specific set of allowed values
             # so we make a dropdown box
             widget = QComboBox()
+            print('combo box' + str(widget.sizeHint()))
             str_vals = [str(s) for s in list(feat._config['values'].keys())]
             widget.addItems(str_vals)
             widget.setCurrentIndex(0)
-            setattr_func = lambda value, feat=feat: setattr(feat, widget.currentText())
+            setattr_func = lambda value: setattr(device, feat_name, widget.currentText())
             widget.activated.connect(setattr_func)
             getattr_func = lambda value, old_value: widget.setCurrentText(value)
         elif isinstance(val, (int, float, Q_)) or feat._config['units']:
             optional_args = {}
             if feat._config['units'] is not None:
-                optional_args['unit'] = feat._config['units']
+                optional_args['suffix'] = feat._config['units']
             if feat._config['limits'] is not None:
-                optional_args['bounds'] = feat._config['limits']
+                if len(feat._config['limits']) == 1:
+                    try:
+                        optional_args['min'] = feat._config['limits'][0]
+                    except IndexError:
+                        optional_args['max'] = feat._config['limits'][1]
+                else:
+                    optional_args['bounds'] = feat._config['limits']
             optional_args['dec'] = True
             optional_args['minStep'] = 1e-3
             optional_args['decimals'] = 10
+            optional_args['compactHeight'] = False
             if isinstance(val, int):
                 optional_args['int'] = True
                 optional_args['minStep'] = 1
                 optional_args['decimals'] = 10
-            widget = SpinBox()
+            widget = SpinBox(**optional_args)
+            widget.resize(79, 24)
+            print(widget.sizeHint())
+            def sizeHint(self):
+                return QSize(79, 24)
+            widget.sizeHint = sizeHint.__get__(widget, SpinBox)
+            print(widget.sizeHint())
+
+            #widget.setSizeHint(QSize(120, 20))
+            #print(widget.sizeHint())
             setattr_func = lambda value: print(value)
             # TODO
             getattr_func = lambda value, old_value: print(value)
@@ -151,16 +205,6 @@ class InstrumentManagerWindow(QMainWindow):
 
         getattr(device, feat_name + '_changed').connect(getattr_func)
         return widget
-
-
-    def _generate_dictfeat_widget(self, dictfeat, dictfeat_name, device, device_tree):
-        """Generate a Qt gui element for a lantz dictfeat"""
-        dictfeat_tree = QTreeWidgetItem(device_tree, [dictfeat_name, ''])
-        for i in dictfeat.keys:
-            #getattr(device, dictfeat_name)[i]
-            feat_widget = self._generate_feat_widget(dictfeat, dictfeat_name, device)
-            feat_item = QTreeWidgetItem(dictfeat_tree, ['{} {}'.format(dictfeat_name, i), ''])
-            self.tree.setItemWidget(feat_item, 1, feat_widget)
 
 
     def _generate_action_widget(self, action, action_name):
@@ -192,7 +236,6 @@ if __name__ ==  '__main__':
         QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = NSpyreApp([sys.argv])
     with InservGateway() as isg:
-        print('I made it!')
         inserv_window = InstrumentManagerWindow(isg)
         print('this is odd')
         sys.exit(app.exec())

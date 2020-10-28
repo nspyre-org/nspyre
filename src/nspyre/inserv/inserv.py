@@ -97,6 +97,7 @@ class InstrumentServer(rpyc.Service):
         # lantz feats are changed - this is required because pysignal uses
         # weakrefs, so any local functions you pass to it will fail when they
         # go out of scope
+        # TODO replace with partials
         self.feat_hook_functions = {}
         self.dictfeat_hook_functions = {}
 

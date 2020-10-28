@@ -7,6 +7,10 @@ Author: Michael Solomon, Jacob Feder
 Date: 10/26/2020
 """
 
+# std
+import functools
+
+# 3rd party
 from PyQt5.QtCore import Qt, QProcess, QSize
 from PyQt5.QtGui import QFont
 from pyqtgraph import SpinBox
@@ -94,7 +98,7 @@ class InstrumentManagerWindow(QMainWindow):
         self.setCentralWidget(self.tree)
         #self.tree.sizeHintForIndex(1).
         self.show()
-
+        import pdb; pdb.set_trace()
 
     def _create_widgets(self):
         """Iterate over the available servers and devices, and collect their
@@ -118,20 +122,23 @@ class InstrumentManagerWindow(QMainWindow):
                     # feat_tree.setSizeHint(1, QSize(-1, 15))
                     self.tree.setItemWidget(feat_item, 1, feat_widget)
 
-                for dictfeat_name, dictfeat in device._lantz_dictfeats.items():
-                    """Generate a Qt gui element for a lantz dictfeat"""
-                    dictfeat_tree = QTreeWidgetItem(device_tree, [dictfeat_name, ''])
-                    for i in dictfeat.keys:
-                        # getattr(device, dictfeat_name)[i]
-                        feat_widget = self._generate_feat_widget(dictfeat, dictfeat_name, device)
-                        feat_item = QTreeWidgetItem(dictfeat_tree, ['{} {}'.format(dictfeat_name, i), ''])
-                        self.tree.setItemWidget(feat_item, 1, feat_widget)
+                # for dictfeat_name, dictfeat in device._lantz_dictfeats.items():
+                #     """Generate a Qt gui element for a lantz dictfeat"""
+                #     dictfeat_tree = QTreeWidgetItem(device_tree, [dictfeat_name, ''])
+                #     for i in dictfeat.keys:
+                #         # getattr(device, dictfeat_name)[i]
+                #         feat_widget = self._generate_feat_widget(dictfeat, dictfeat_name, device)
+                #         feat_item = QTreeWidgetItem(dictfeat_tree, ['{} {}'.format(dictfeat_name, i), ''])
+                #         self.tree.setItemWidget(feat_item, 1, feat_widget)
 
                     #self._generate_dictfeat_widget(dictfeat, dictfeat_name, device, device_tree)
 
                 action_tree = QTreeWidgetItem(device_tree, ['Actions', ''])
                 for action_name, action in device._lantz_actions.items():
-                    action_widget = self._generate_action_widget(action, action_name)
+                    ignore_actions = ['initialize', 'finalize', 'update', 'refresh']
+                    if action_name in ignore_actions or '_async' in action_name:
+                        continue
+                    action_widget = self._generate_action_widget(device, action, action_name)
                     action_widget.setFont(QFont('Helvetica [Cronyx]', 14))
                     action_item = QTreeWidgetItem(action_tree, [action_name, ''])
                     self.tree.setItemWidget(action_item, 1, action_widget)
@@ -147,34 +154,51 @@ class InstrumentManagerWindow(QMainWindow):
             # the lantz feat has only a specific set of allowed values
             # so we make a dropdown box
             widget = QComboBox()
-            print('combo box' + str(widget.sizeHint()))
-            str_vals = [str(s) for s in list(feat._config['values'].keys())]
-            widget.addItems(str_vals)
-            widget.setCurrentIndex(0)
-            setattr_func = lambda value: setattr(device, feat_name, widget.currentText())
+            # print('combo box' + str(widget.sizeHint()))
+            # dictionary mapping the possible lantz values to str(values)
+            # e.g. {'True' : True, 'False' : False}
+            keymapping_dict = {}
+            for k in feat._config['values'].keys():
+                keymapping_dict[str(k)] = k
+            # add the possible values to the dropdown list
+            widget.addItems(keymapping_dict.keys())
+            widget.setCurrentIndex(list(keymapping_dict.values()).index(val))
+            # callback function to modify the GUI when the the feat is changed
+            # externally
+            # we have to use a partial here because PySignal and RPyC don't
+            # place nicely if you .connect() a lambda or other function/method
+            # to PySignal
+            getattr_func = lambda value, old_value: widget.setCurrentIndex(list(keymapping_dict.values()).index(value))
+            # callback function for when the user changes the dropdown selection
+            setattr_func = lambda value: setattr(device, feat_name, keymapping_dict[widget.currentText()])
             widget.activated.connect(setattr_func)
-            getattr_func = lambda value, old_value: widget.setCurrentText(value)
-        elif isinstance(val, (int, float, Q_)) or feat._config['units']:
+        elif isinstance(val, (int, float, Q_)):
             optional_args = {}
-            if feat._config['units'] is not None:
+            if feat._config['units']:
                 optional_args['suffix'] = feat._config['units']
-            if feat._config['limits'] is not None:
+            if feat._config['limits']:
                 if len(feat._config['limits']) == 1:
+                    # only min or only max was specified e.g.
+                    # (,max) or (min,)
                     try:
                         optional_args['min'] = feat._config['limits'][0]
                     except IndexError:
                         optional_args['max'] = feat._config['limits'][1]
                 else:
+                    # (min, max) was specified
                     optional_args['bounds'] = feat._config['limits']
-            optional_args['dec'] = True
-            optional_args['minStep'] = 1e-3
-            optional_args['decimals'] = 10
+            # stepping strategy
+            optional_args['dec'] = False
+            optional_args['minStep'] = 1e-6
+            # number of decimal places to display
+            optional_args['decimals'] = 6
             optional_args['compactHeight'] = False
             if isinstance(val, int):
                 optional_args['int'] = True
                 optional_args['minStep'] = 1
-                optional_args['decimals'] = 10
+                # optional_args['decimals'] = 10
             widget = SpinBox(**optional_args)
+
             widget.resize(79, 24)
             print(widget.sizeHint())
             def sizeHint(self):
@@ -184,16 +208,35 @@ class InstrumentManagerWindow(QMainWindow):
 
             #widget.setSizeHint(QSize(120, 20))
             #print(widget.sizeHint())
-            setattr_func = lambda value: print(value)
-            # TODO
-            getattr_func = lambda value, old_value: print(value)
+            if isinstance(val, Q_):
+                widget.setValue(val.to(feat._config['units']).m)
+            else:
+                widget.setValue(val)
+            # callback function for when the user changes the feat value
+            # from the GUI
+            if feat._config['units']:
+                setattr_func = lambda value: setattr(device, feat_name, Q_(widget.value(), feat._config['units']))
+                def getattr_func(value, old_value):
+                    if isinstance(value, Q_):
+                        widget.setValue(value.to(feat._config['units']).m)
+                    else:
+                        widget.setValue(value)
+            else:
+                setattr_func = lambda value: setattr(device, feat_name, widget.value())
+                getattr_func = lambda value, old_value: widget.setValue(value)
             widget.sigValueChanged.connect(setattr_func)
             #widget.valueChanged.connect(functools.partial(lambda idx: feat = widget.setValue()))
             #widget.sp.valueChanged.connect(self.valuechange)
+        elif isinstance(val, str):
+            widget = QLineEdit()
+            widget.setText(val)
+            setattr_func = lambda value: setattr(device, feat_name, widget.text())
+            widget.textChanged.connect(setattr_func)
+            getattr_func = lambda value, old_value: widget.setText(value)
+            widget.setReadOnly(feat._config['read_once'])
         else:
             widget = QLineEdit()
-            getattr_func = lambda value, old_value: print(value)
-            widget.setText('test')
+            widget.setText(str(feat))
             widget.setReadOnly(feat._config['read_once'])
         # elif getattr(device, feat_name) is None:
         #     w = LineEditFeatWidget(text = 'Unknown type')
@@ -203,16 +246,16 @@ class InstrumentManagerWindow(QMainWindow):
         #     w = LineEditFeatWidget(text = getattr(device, feat_name))
         # widget.set_readonly(feat._config['read_once'])
 
-        getattr(device, feat_name + '_changed').connect(getattr_func)
+        getattr(device, feat_name + '_changed').connect(functools.partial(getattr_func))
         return widget
 
 
-    def _generate_action_widget(self, action, action_name):
+    def _generate_action_widget(self, device, action, action_name):
         """Generate a Qt gui element for a lantz action"""
         action_button = QPushButton(action_name, self.tree)
         action_button.setFont(QFont('Helvetica [Cronyx]', 12))
 
-        action_func = lambda: action
+        action_func = lambda: getattr(device, action_name)()
         action_button.clicked.connect(action_func)
         return action_button
 

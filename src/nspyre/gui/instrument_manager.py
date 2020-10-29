@@ -15,6 +15,7 @@ from PyQt5.QtCore import Qt, QProcess, QSize
 from PyQt5.QtGui import QFont
 from pyqtgraph import SpinBox
 from PyQt5.QtWidgets import QApplication, QComboBox, QLineEdit, QMainWindow, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QHeaderView
+from lantz import DictFeat
 
 # nspyre
 from nspyre.inserv.gateway import InservGateway
@@ -127,16 +128,18 @@ class InstrumentManagerWindow(QMainWindow):
                     feat_item.setSizeHint(1, QSize(79,24))
                     self.tree.setItemWidget(feat_item, 1, feat_widget)
 
-                # for dictfeat_name, dictfeat in device._lantz_dictfeats.items():
-                #     """Generate a Qt gui element for a lantz dictfeat"""
-                #     dictfeat_tree = QTreeWidgetItem(device_tree, [dictfeat_name, ''])
-                #     for i in dictfeat.keys:
-                #         # getattr(device, dictfeat_name)[i]
-                #         feat_widget = self._generate_feat_widget(dictfeat, dictfeat_name, device)
-                #         feat_item = QTreeWidgetItem(dictfeat_tree, ['{} {}'.format(dictfeat_name, i), ''])
-                #         self.tree.setItemWidget(feat_item, 1, feat_widget)
-
-                    #self._generate_dictfeat_widget(dictfeat, dictfeat_name, device, device_tree)
+                for dictfeat_name, dictfeat in device._lantz_dictfeats.items():
+                     """Generate a Qt gui element for a lantz dictfeat"""
+                     dictfeat_tree = QTreeWidgetItem(device_tree, [dictfeat_name, ''])
+                     # dummy 'get' of dict feat value in order to force lantz to populate
+                     # its 'subproperties' TODO this is pretty hacky
+                     [getattr(device, dictfeat_name)[f] for f in dictfeat.keys]
+                     import pdb; pdb.set_trace()
+                     for feat in dictfeat._subproperties:
+                         # getattr(device, dictfeat_name)[i]
+                         feat_widget = self._generate_feat_widget(feat, dictfeat_name, device, i)
+                         feat_item = QTreeWidgetItem(dictfeat_tree, ['{} {}'.format(dictfeat_name, i), ''])
+                         self.tree.setItemWidget(feat_item, 1, feat_widget)
 
                 action_tree = QTreeWidgetItem(device_tree, ['Actions', ''])
                 for action_name, action in device._lantz_actions.items():
@@ -152,9 +155,12 @@ class InstrumentManagerWindow(QMainWindow):
         #    self.tree.resizeColumnToContents(i)
 
 
-    def _generate_feat_widget(self, feat, feat_name, device):
+    def _generate_feat_widget(self, feat, feat_name, device, dictfeat_key=None):
         """Generate a Qt gui element for a lantz feat"""
-        val = getattr(device, feat_name)
+        if isinstance(feat, DictFeat):
+            val = getattr(device, feat_name)[dictfeat_key]
+        else:
+            val = getattr(device, feat_name)
         if feat._config['values']:
             # the lantz feat has only a specific set of allowed values
             # so we make a dropdown box
@@ -168,14 +174,19 @@ class InstrumentManagerWindow(QMainWindow):
             # add the possible values to the dropdown list
             widget.addItems(keymapping_dict.keys())
             widget.setCurrentIndex(list(keymapping_dict.values()).index(val))
-            # callback function to modify the GUI when the the feat is changed
-            # externally
-            # we have to use a partial here because PySignal and RPyC don't
-            # place nicely if you .connect() a lambda or other function/method
-            # to PySignal
-            getattr_func = lambda value, old_value: widget.setCurrentIndex(list(keymapping_dict.values()).index(value))
-            # callback function for when the user changes the dropdown selection
-            setattr_func = lambda value: setattr(device, feat_name, keymapping_dict[widget.currentText()])
+            if isinstance(feat, DictFeat):
+                # callback function to modify the GUI when the the feat is changed
+                # externally
+                # we have to use a partial here because PySignal and RPyC don't
+                # place nicely if you .connect() a lambda or other function/method
+                # to PySignal
+                getattr_func = lambda value, old_value, dictfeat_key: widget.setCurrentIndex(list(keymapping_dict.values()).index(value))
+                # callback function for when the user changes the dropdown selection
+                def setattr_func(value):
+                    getattr(device, feat_name)[dictfeat_key] = keymapping_dict[widget.currentText()]
+            else:
+                getattr_func = lambda value, old_value: widget.setCurrentIndex(list(keymapping_dict.values()).index(value))
+                setattr_func = lambda value: setattr(device, feat_name, keymapping_dict[widget.currentText()])
             widget.activated.connect(setattr_func)
         elif isinstance(val, (int, float, Q_)):
             optional_args = {}

@@ -68,7 +68,7 @@ class InstrumentManagerWindow(QMainWindow):
         self.tree = QTreeWidget()
         self.tree.setFont(QFont('Helvetica [Cronyx]', 14))
         self.tree.setColumnCount(2)
-        self.tree.setMinimumHeight(self.tree.height()) #self.tree.setMinimumWidth(self.tree.width())
+        self.tree.setMinimumHeight(self.tree.height())
         #self.tree.setUniformRowHeights(True)
         #self.tree.setHeaderLabels(['Lantz Feat', 'value'])
         #self.tree.setDragEnabled(True)
@@ -78,7 +78,9 @@ class InstrumentManagerWindow(QMainWindow):
         header = self.tree.header()
         header.setHidden(True)
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        #header.setSectionResizeMode(0, QHeaderView.Fixed)
         #header.setSectionResizeMode(1, QHeaderView.Stretch)
+        header.setSectionsMovable(True)
         header.setStretchLastSection(False)
 
 
@@ -96,6 +98,9 @@ class InstrumentManagerWindow(QMainWindow):
         # layout.addWidget(self.tree)
         self._create_widgets()
         self.setCentralWidget(self.tree)
+        # Adding 2pt of padding to the margin to remove horizontal scroll bar and 14pt of padding for the vertical scroll bar
+        self.tree.setMinimumWidth(self.tree.columnWidth(0) + self.tree.columnWidth(1) + 2 + 14)
+        self._col_one_min_width = self.tree.columnWidth(0)
         #self.tree.sizeHintForIndex(1).
         self.show()
         import pdb; pdb.set_trace()
@@ -118,8 +123,8 @@ class InstrumentManagerWindow(QMainWindow):
                     feat_widget = self._generate_feat_widget(feat, feat_name, device)
                     feat_widget.setFont(QFont('Helvetica [Cronyx]', 14))
                     feat_item = QTreeWidgetItem(device_tree, [feat_name, ''])
+                    feat_item.sizeHint(0)
                     feat_item.setSizeHint(1, QSize(79,24))
-                    # feat_tree.setSizeHint(1, QSize(-1, 15))
                     self.tree.setItemWidget(feat_item, 1, feat_widget)
 
                 # for dictfeat_name, dictfeat in device._lantz_dictfeats.items():

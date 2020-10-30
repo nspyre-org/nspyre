@@ -15,7 +15,6 @@ from PyQt5.QtCore import Qt, QProcess, QSize
 from PyQt5.QtGui import QFont
 from pyqtgraph import SpinBox
 from PyQt5.QtWidgets import QApplication, QComboBox, QLineEdit, QMainWindow, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QHeaderView
-from lantz import DictFeat
 
 # nspyre
 from nspyre.inserv.gateway import InservGateway
@@ -104,7 +103,17 @@ class InstrumentManagerWindow(QMainWindow):
         self._col_one_min_width = self.tree.columnWidth(0)
         #self.tree.sizeHintForIndex(1).
         self.show()
-        import pdb; pdb.set_trace()
+
+    # def close_connections(self):
+    #     tree_root = self.tree.invisibleRootItem()
+    #     self.tree.invisibleRootItem().child(0).child(0).child(0).treeWidget().disconnect()
+    #     def recursive_func(widget_item):
+    #         if widget_item.childCount == 0
+    #         for i in range(widget_item.childCount):
+    #
+    #     tree_root.childCount()
+    #     import pdb; pdb.set_trace()
+    #     self.tree.children()
 
     def _create_widgets(self):
         """Iterate over the available servers and devices, and collect their
@@ -113,14 +122,12 @@ class InstrumentManagerWindow(QMainWindow):
         for server_name, server in self.gateway.servers.items():
             server_tree = QTreeWidgetItem(self.tree, [server_name, ''])
             server_tree.setExpanded(True)
-            #server_tree.setSizeHint(1, QSize(20, 30))
 
             for device_name, device in server.root._devs.items():
                 device_tree = QTreeWidgetItem(server_tree, [device_name, ''])
                 device_tree.setExpanded(True)
 
                 for feat_name, feat in device._lantz_feats.items():
-                    print(feat_name)
                     feat_widget = self._generate_feat_widget(feat, feat_name, device)
                     feat_widget.setFont(QFont('Helvetica [Cronyx]', 14))
                     feat_item = QTreeWidgetItem(device_tree, [feat_name, ''])
@@ -129,17 +136,16 @@ class InstrumentManagerWindow(QMainWindow):
                     self.tree.setItemWidget(feat_item, 1, feat_widget)
 
                 for dictfeat_name, dictfeat in device._lantz_dictfeats.items():
-                     """Generate a Qt gui element for a lantz dictfeat"""
-                     dictfeat_tree = QTreeWidgetItem(device_tree, [dictfeat_name, ''])
-                     # dummy 'get' of dict feat value in order to force lantz to populate
-                     # its 'subproperties' TODO this is pretty hacky
-                     [getattr(device, dictfeat_name)[f] for f in dictfeat.keys]
-                     import pdb; pdb.set_trace()
-                     for feat in dictfeat._subproperties:
-                         # getattr(device, dictfeat_name)[i]
-                         feat_widget = self._generate_feat_widget(feat, dictfeat_name, device, i)
-                         feat_item = QTreeWidgetItem(dictfeat_tree, ['{} {}'.format(dictfeat_name, i), ''])
-                         self.tree.setItemWidget(feat_item, 1, feat_widget)
+                    """Generate a Qt gui element for a lantz dictfeat"""
+                    dictfeat_tree = QTreeWidgetItem(device_tree, [dictfeat_name, ''])
+                    # dummy 'get' of dict feat value in order to force lantz to populate
+                    # its 'subproperties' TODO this is pretty hacky
+                    print(dictfeat_name)
+                    for feat_key in dictfeat.keys:
+                        feat = dictfeat.subproperty(getattr(device, dictfeat_name).instance, feat_key)
+                        feat_widget = self._generate_feat_widget(feat, dictfeat_name, device, dictfeat_key=feat_key)
+                        feat_item = QTreeWidgetItem(dictfeat_tree, ['{} {}'.format(dictfeat_name, feat_key), ''])
+                        self.tree.setItemWidget(feat_item, 1, feat_widget)
 
                 action_tree = QTreeWidgetItem(device_tree, ['Actions', ''])
                 for action_name, action in device._lantz_actions.items():
@@ -157,8 +163,9 @@ class InstrumentManagerWindow(QMainWindow):
 
     def _generate_feat_widget(self, feat, feat_name, device, dictfeat_key=None):
         """Generate a Qt gui element for a lantz feat"""
-        if isinstance(feat, DictFeat):
-            val = getattr(device, feat_name)[dictfeat_key]
+        if dictfeat_key:
+            #val = dictfeat.subproperty(getattr(device, feat_name).instance, dictfeat_key)
+            val = getattr(device, feat_name)[dictfeat_key] # .__getitem__(dictfeat_key)
         else:
             val = getattr(device, feat_name)
         if feat._config['values']:
@@ -174,19 +181,14 @@ class InstrumentManagerWindow(QMainWindow):
             # add the possible values to the dropdown list
             widget.addItems(keymapping_dict.keys())
             widget.setCurrentIndex(list(keymapping_dict.values()).index(val))
-            if isinstance(feat, DictFeat):
-                # callback function to modify the GUI when the the feat is changed
-                # externally
-                # we have to use a partial here because PySignal and RPyC don't
-                # place nicely if you .connect() a lambda or other function/method
-                # to PySignal
-                getattr_func = lambda value, old_value, dictfeat_key: widget.setCurrentIndex(list(keymapping_dict.values()).index(value))
-                # callback function for when the user changes the dropdown selection
-                def setattr_func(value):
-                    getattr(device, feat_name)[dictfeat_key] = keymapping_dict[widget.currentText()]
-            else:
-                getattr_func = lambda value, old_value: widget.setCurrentIndex(list(keymapping_dict.values()).index(value))
-                setattr_func = lambda value: setattr(device, feat_name, keymapping_dict[widget.currentText()])
+            # callback function to modify the GUI when the the feat is changed
+            # externally
+            # we have to use a partial here because PySignal and RPyC don't
+            # place nicely if you .connect() a lambda or other function/method
+            # to PySignal
+            getattr_func = lambda value, old_value: widget.setCurrentIndex(list(keymapping_dict.values()).index(value))
+            # callback function for when the user changes the dropdown selection
+            setattr_func = lambda value: setattr(device, feat_name, keymapping_dict[widget.currentText()])
             widget.activated.connect(setattr_func)
         elif isinstance(val, (int, float, Q_)):
             optional_args = {}
@@ -241,8 +243,6 @@ class InstrumentManagerWindow(QMainWindow):
                 setattr_func = lambda value: setattr(device, feat_name, widget.value())
                 getattr_func = lambda value, old_value: widget.setValue(value)
             widget.sigValueChanged.connect(setattr_func)
-            #widget.valueChanged.connect(functools.partial(lambda idx: feat = widget.setValue()))
-            #widget.sp.valueChanged.connect(self.valuechange)
         elif isinstance(val, str):
             widget = QLineEdit()
             widget.setText(val)
@@ -296,27 +296,7 @@ if __name__ ==  '__main__':
     app = NSpyreApp([sys.argv])
     with InservGateway() as isg:
         inserv_window = InstrumentManagerWindow(isg)
-        print('this is odd')
         sys.exit(app.exec())
-
-
-# {'_MessageBasedDriver__resource_manager': <ResourceManager(<VisaLibrary('unset')>)>,
-#  '_Base__name': 'LantzSignalGenerator0',
-#  'logger_name': 'lantz.driver.LantzSignalGenerator0',
-#  '_Base__keep_alive': [],
-#  '_StorageMixin__storage': {'iconfig': defaultdict(<class 'dict'>, {'idn': {}, 'amplitude': {}, 'offset': {}, 'frequency': {}, 'output_enabled': {}, 'waveform': {}, 'dout': {}, DictPropertyNameKey(name='dout', key=1): {}}),
-#                             'iconfigm': defaultdict(<class 'dict'>, {'initialize': {}}),
-#                             'statsm': defaultdict(<class 'pimpmyclass.stats.RunningStats'>, {'initialize': {'call': <pimpmyclass.stats.RunningState object at 0x7f9b2b382250>}}),
-#                             'stats': defaultdict(<class 'pimpmyclass.stats.RunningStats'>, {'amplitude': {'get': <pimpmyclass.stats.RunningState object at 0x7f9b2b4d0a90>}, 'frequency': {'get': <pimpmyclass.stats.RunningState object at 0x7f9b2b4d0e50>}, DictPropertyNameKey(name='dout', key=1): {'get': <pimpmyclass.stats.RunningState object at 0x7f9b2b4e4280>}}),
-#                             'cache': {'amplitude': <Quantity(0.0, 'volt')>, 'frequency': <Quantity(1000.0, 'hertz')>, DictPropertyNameKey(name='dout', key=1): False}
-#                             },
-#  '_lantz_anyfeat': ChainMap({'idn': <lantz.core.feat.Feat object at 0x7f9b2b382bb0>, 'amplitude': <lantz.core.feat.Feat object at 0x7f9b2b382af0>, 'offset': <lantz.core.feat.Feat object at 0x7f9b2b382b80>, 'frequency': <lantz.core.feat.Feat object at 0x7f9b2b382fd0>, 'output_enabled': <lantz.core.feat.Feat object at 0x7f9b2b2527f0>, 'waveform': <lantz.core.feat.Feat object at 0x7f9b2b382c10>, DictPropertyNameKey(name='dout', key=1): <lantz.core.feat.Feat object at 0x7f9b2b4d0580>}, {'dout': <lantz.core.feat.DictFeat object at 0x7f9b2b382e80>, 'din': <lantz.core.feat.DictFeat object at 0x7f9b2b382cd0>}),
-#  '_LogMixin__logger': <Logger lantz.driver.LantzSignalGenerator0 (DEBUG)>,
-#  'DEFAULTS': mappingproxy({'COMMON': {'write_termination': '\n', 'read_termination': '\n'}}),
-#  'resource_name': 'TCPIP::localhost::5678::SOCKET',
-#  'resource_kwargs': {'write_termination': '\n', 'read_termination': '\n'},
-#  'resource': <'TCPIPSocket'('TCPIP::localhost::5678::SOCKET')>,
-#  '_LockMixin__async_lock': <unlocked _thread.RLock object owner=0 count=0 at 0x7f9b2b492e10>}
 
 
 # {'_MessageBasedDriver__resource_manager': <ResourceManager(<VisaLibrary('unset')>)>,

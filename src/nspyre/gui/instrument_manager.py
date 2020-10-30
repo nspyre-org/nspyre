@@ -44,10 +44,6 @@ class InstrumentManagerWindow(QMainWindow):
         #self.setStyleSheet('QPushButton {font: Helvetica [Cronyx]}')
         #self.setStyleSheet('QPushButton {font-size: 16pt}')
 
-        # Set the main window layout to consist of vertical boxes.
-        # The QVBoxLayout class lines up widgets vertically.
-        layout = QVBoxLayout()
-
         # connection to the instrument servers
         self.gateway = gateway
         # tree of dictionaries that contains all of the instrument
@@ -62,7 +58,6 @@ class InstrumentManagerWindow(QMainWindow):
         #      sig-gen1         scope1        sig-gen2         laser
         #      /      \        /      \      /        \       /     \
         #   freq     ampl    trig    din[] freq      ampl  lambda  power
-        # self.gui = {}
 
         # set main GUI layout
         self.tree = QTreeWidget()
@@ -72,35 +67,28 @@ class InstrumentManagerWindow(QMainWindow):
         #self.tree.setUniformRowHeights(True)
         #self.tree.setHeaderLabels(['Lantz Feat', 'value'])
         #self.tree.setDragEnabled(True)
+        # self.tree.setSortingEnabled(True)
+        # self.tree.sortByColumn(0, Qt.AscendingOrder)
 
-        row_height = QComboBox().sizeHint().height()
-
+        # configure the QTreeWidget Header
         header = self.tree.header()
         header.setHidden(True)
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
         #header.setSectionResizeMode(0, QHeaderView.Fixed)
         #header.setSectionResizeMode(1, QHeaderView.Stretch)
+        #header.setSectionResizeMode(0, QHeaderView.Stretch)
+        #header.setSectionResizeMode(1, QHeaderView.Interactive)
         header.setSectionsMovable(True)
         header.setStretchLastSection(False)
 
-
-        #self.tree.setSortingEnabled(True)
-        #self.tree.sortByColumn(0, Qt.AscendingOrder)
-        #layout.setContentsMargins(0, 0, 0, 0)
-        #layout.addWidget(self.tree)
-        #self.setLayout(layout)
-
-        # self.tree.header().setStretchLastSection(False)
-        # self.tree.header().setSectionResizeMode(0, QHeaderView.Stretch)
-        # self.tree.header().setSectionResizeMode(1, QHeaderView.Interactive)
-        # self.tree.setColumnWidth(1, 1*s.width()//10)
-
-        # layout.addWidget(self.tree)
+        # load gui elements and set minimum window dimentions
         self._create_widgets()
         self.setCentralWidget(self.tree)
+        self.tree.expandAll()
         # Adding 2pt of padding to the margin to remove horizontal scroll bar and 14pt of padding for the vertical scroll bar
         self.tree.setMinimumWidth(self.tree.columnWidth(0) + self.tree.columnWidth(1) + 2 + 14)
-        self._col_one_min_width = self.tree.columnWidth(0)
+        self.tree.collapseAll()
+        #self._col_one_min_width = self.tree.columnWidth(0)
         #self.tree.sizeHintForIndex(1).
         self.show()
 
@@ -156,9 +144,6 @@ class InstrumentManagerWindow(QMainWindow):
                     action_widget.setFont(QFont('Helvetica [Cronyx]', 14))
                     action_item = QTreeWidgetItem(action_tree, [action_name, ''])
                     self.tree.setItemWidget(action_item, 1, action_widget)
-
-        #for i in range(self.tree.columnCount()):
-        #    self.tree.resizeColumnToContents(i)
 
 
     def _generate_feat_widget(self, feat, feat_name, device, dictfeat_key=None):

@@ -335,7 +335,7 @@ class InstrumentServer(rpyc.Service):
 
     def reload_devices(self):
         """Reload all devices"""
-        devs,_ = get_config_param(self.config, ['devices'])
+        devs, _ = get_config_param(self.config, ['devices'])
         for dev_name in devs:
             self.reload_device(dev_name)
         logging.info('reloaded all devices')
@@ -367,6 +367,18 @@ class InstrumentServer(rpyc.Service):
     def on_disconnect(self, conn):
         """Called when a client discconnects from the RPyC server"""
         logging.info('client [{}] disconnected'.format(conn))
+        for device_name, device in self._devs.items():
+            for attr_name, attr in zip(device._lantz_feats.items(), device._lantz_dictfeats.items(), device._lantz_actions.items()):
+                attr_slots = getattr(device, attr_name + '_changed')._slots
+                for slot in attr_slots:
+                    if slot.__name__ == 'InstrumentManager_get_attr_func':
+                        getattr(device, attr_name + '_changed').disconnect(slot)
+
+            # for dictfeat_name, dictfeat in device._lantz_dictfeats.items():
+            #     pass
+            # for action_name, action in device._lantz_actions.items():
+            #     pass
+
 
     def reload_server(self):
         """Restart the RPyC server"""

@@ -254,14 +254,9 @@ class InstrumentManagerWindow(QMainWindow):
             widget = QLineEdit()
             widget.setText(str(feat))
             widget.setReadOnly(feat._config['read_once'])
-        # elif getattr(device, feat_name) is None:
-        #     w = LineEditFeatWidget(text = 'Unknown type')
-        #     w.set_readonly(True)
-        #     return w
-        # else:
-        #     w = LineEditFeatWidget(text = getattr(device, feat_name))
-        # widget.set_readonly(feat._config['read_once'])
+            getattr_func = lambda value, old_value: widget.setText(value)
 
+        getattr_func.__name__ = 'InstrumentManager_get_attr_func'
         getattr(device, feat_name + '_changed').connect(functools.partial(getattr_func))
         return widget
 

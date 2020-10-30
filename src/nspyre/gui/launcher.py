@@ -17,6 +17,7 @@ import logging
 
 # 3rd party
 from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtWidgets import QApplication, QMainWindow
 
 # nspyre
 from nspyre.spyrelet.spyrelet import Spyrelet_Launcher
@@ -186,17 +187,16 @@ class Spyrelet_Run_Thread(QtCore.QThread):
         self.spyrelet.stop()
 
 
-class Combined_Launcher(QtWidgets.QWidget):
-    def __init__(self, manager, parent=None, spyrelets=None):
-        super().__init__(parent=parent)
+class CombinedSpyreletWindow(QMainWindow):
+    def __init__(self, manager, spyrelets=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setWindowTitle('NSpyre Instrument Manager')
         layout = QtWidgets.QVBoxLayout()
         self.selector = QtWidgets.QComboBox()
         container = QtWidgets.QWidget()
         layout.addWidget(self.selector)
         layout.addWidget(container)
-
         self.setLayout(layout)
-
 
         #Create the launchers
         spyrelets = load_all_spyrelets(manager) if spyrelets is None else spyrelets
@@ -231,22 +231,31 @@ class Combined_Launcher(QtWidgets.QWidget):
 
         self.selector.addItems(names)
         self.container_layout = layout
-        
         self.selector.currentTextChanged.connect(self.change_widget)
         self.show()
 
     def change_widget(self, name):
         self.container_layout.setCurrentWidget(self.launchers[name])
-        # self.container_layout.
 
-if __name__=='__main__':
+
+if __name__ ==  '__main__':
+    import logging
+    import sys
+    from PyQt5.QtCore import Qt
+    from nspyre.gui.app import NSpyreApp
+
     # configure server logging behavior
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s -- %(levelname)s -- %(message)s',
                         handlers=[logging.StreamHandler()])
-    from nspyre.gui.app import NSpyreApp
-    app = NSpyreApp([])
-    with InservGateway() as im:
-        w = Combined_Launcher(im)
-        w.show()
-        app.exec_()
+
+    logging.info('starting Instrument Manager...')
+    if hasattr(Qt, 'AA_EnableHighDpiScaling'):
+        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+
+    if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
+        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+    app = NSpyreApp([sys.argv])
+    with InservGateway() as isg:
+        combined_spyrelet_window = CombinedSpyreletWindow(isg)
+        sys.exit(app.exec())

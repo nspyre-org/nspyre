@@ -28,7 +28,7 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 from pathlib import Path
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor, QIcon, QPalette
+from PyQt5.QtGui import QColor, QFont, QIcon, QPalette
 from PyQt5.QtWidgets import QApplication, QStyleFactory
 
 
@@ -67,3 +67,4 @@ class NSpyreApp(QApplication):
         palette.setColor(QPalette.HighlightedText, Qt.black)
         self.setPalette(palette)
         self.setStyleSheet('QToolTip { color: #ffffff; background-color: #353535; border: 1px solid white; }')
+        self.setFont(QFont('Helvetica [Cronyx]'))

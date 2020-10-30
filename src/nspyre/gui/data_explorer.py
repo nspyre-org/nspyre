@@ -14,10 +14,11 @@ import os
 
 # 3rd party
 from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtWidgets import QApplication
 import pandas as pd
 
 # nspyre
-from nspyre.gui.view_manager import View_Manager
+from nspyre.gui.view_manager import ViewManagerWindow
 from nspyre.gui.widgets.splitter_widget import Splitter, SplitterOrientation
 from nspyre.gui.data_handling import load_data
 
@@ -86,7 +87,7 @@ class Data_Explorer(QtWidgets.QWidget):
         super().__init__(parent=parent)
         self.db = Local_json_DB()
         layout = QtWidgets.QVBoxLayout()
-        self.view_manager = View_Manager(db=self.db, react_to_drop=True)
+        self.view_manager = ViewManagerWindow(db=self.db, react_to_drop=True)
         self.file_browser = Permanent_QFileDialog(filter = '*.json')
         
         hsplitter = Splitter(main_w=self.file_browser, side_w=self.view_manager, orientation=SplitterOrientation.vertical_right_button)
@@ -98,6 +99,7 @@ class Data_Explorer(QtWidgets.QWidget):
         self.file_browser.setFileMode(QtWidgets.QFileDialog.ExistingFile)
         self.file_browser.fileSelected.connect(self.load_file)
         self.file_browser.currentChanged.connect(self.load_file)
+        self.show()
 
     def load_file(self, filename):
         if not os.path.isfile(filename):
@@ -119,9 +121,24 @@ class Data_Explorer(QtWidgets.QWidget):
             item = self.view_manager.items[sname][view_names[1]] # Element 0 should be __top
         self.view_manager.tree.setCurrentItem(item)
 
-if __name__ == '__main__':
+
+if __name__ ==  '__main__':
+    import logging
+    import sys
+    from PyQt5.QtCore import Qt
     from nspyre.gui.app import NSpyreApp
-    app = NSpyreApp([])
-    w = Data_Explorer()
-    w.show()
-    app.exec_()
+
+    # configure server logging behavior
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s -- %(levelname)s -- %(message)s',
+                        handlers=[logging.StreamHandler()])
+
+    logging.info('starting Data Explorer...')
+    if hasattr(Qt, 'AA_EnableHighDpiScaling'):
+        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+
+    if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
+        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+    app = NSpyreApp([sys.argv])
+    data_explorer = Data_Explorer()
+    sys.exit(app.exec())

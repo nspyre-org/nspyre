@@ -17,10 +17,9 @@ import textwrap
 
 # 3rd party
 from PyQt5 import QtWidgets, QtCore, QtGui
-import pyqtgraph as pg
-import pymongo
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QApplication, QMainWindow
 import numpy as np
-import pandas as pd
 
 # nspyre
 from nspyre.gui.widgets.plotting import LinePlotWidget, HeatmapPlotWidget
@@ -139,6 +138,7 @@ class LinePlotView(BaseView):
             raise "This class is for 1D plot only"
         if w is None:
             self.w = LinePlotWidget()
+            self.w.setFont(QFont('Helvetica [Cronyx]', 12))
         else:
             self.w = w
         super().__init__(view, self.w)
@@ -157,6 +157,7 @@ class HeatmapPlotView(BaseView):
             raise "This class is for 2D plot only"
         if w is None:
             self.w = HeatmapPlotWidget()
+            self.w.setFont(QFont('Helvetica [Cronyx]', 12))
         else:
             self.w = w
         super().__init__(view, self.w)
@@ -168,13 +169,12 @@ class HeatmapPlotView(BaseView):
             if not self.update_formatter is None:
                 self.update_formatter(self.w, df, cache)
 
-# class CustomView(QtWidgets.QWidget):
-#     def __init__(self, )
 
-
-class View_Manager(QtWidgets.QWidget):
-    def __init__(self, mongodb_addr=None, parent=None, db_name='Spyre_Live_Data', react_to_drop=False, db=None):
-        super().__init__(parent=parent)
+class ViewManagerWindow(QMainWindow):
+    def __init__(self, mongodb_addr=None, db_name='Spyre_Live_Data', react_to_drop=False, db=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setWindowTitle('NSpyre View Manager')
+        self.setFont(QFont('Helvetica [Cronyx]'))
         if db is None:
             self.db = Synched_Mongo_Database(db_name, mongodb_addr=mongodb_addr)
         else:
@@ -252,6 +252,7 @@ class View_Manager(QtWidgets.QWidget):
         self.db.updated_row.connect(self._update_plot)
         if react_to_drop:
             self.db.col_dropped.connect(self.del_col)
+        self.show()
 
     def _update_plot(self, col_name, row):
         if col_name != 'Register':
@@ -388,9 +389,24 @@ class View_Manager(QtWidgets.QWidget):
                     # df.to_csv(path_or_buf=filename, sep=',')
                 ev.accept()
 
-if __name__ == '__main__':
+
+if __name__ ==  '__main__':
+    import logging
+    import sys
+    from PyQt5.QtCore import Qt
     from nspyre.gui.app import NSpyreApp
-    app = NSpyreApp([])
-    w = View_Manager(react_to_drop=False)
-    w.show()
-    app.exec_()
+
+    # configure server logging behavior
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s -- %(levelname)s -- %(message)s',
+                        handlers=[logging.StreamHandler()])
+
+    logging.info('starting View Manager...')
+    if hasattr(Qt, 'AA_EnableHighDpiScaling'):
+        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+
+    if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
+        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+    app = NSpyreApp([sys.argv])
+    data_view_window = ViewManagerWindow(react_to_drop=False)
+    sys.exit(app.exec())

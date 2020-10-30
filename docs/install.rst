@@ -1,6 +1,6 @@
-*******
+#######
 Install
-*******
+#######
 
 The recommended way to install NSpyre is to **install the latest stable release**
 from `conda-forge <https://conda-forge.org/docs/>`_ (more info below). We
@@ -9,6 +9,10 @@ currently support **Python 3.8+**.
 .. code-block:: console
 
    $ conda install -c conda-forge nspyre
+
+.. attention::
+
+   Please see the below commands for correctly installing PyVISA and PyVISA-py.
 
 Conda
 =====
@@ -114,8 +118,8 @@ environment for running nspyre so you don't mess with your base environment:
    and remove this step once this hot-fix is no longer necessary.
 
 
-Pip
-===
+PyPI (aka using pip)
+====================
 
 NSpyre is also available from PyPI, however, MongoDB must be installed separately. The latest
 release of Miniconda for your platform can be obtained here:

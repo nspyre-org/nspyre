@@ -451,7 +451,7 @@ def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False, cfg=None, filepath
             sub_spyrelets[s] = _LOADED_SPYRELETS[s]
         else:
             try:
-                sub_spyrelets[s] = load_spyrelet(s, sub_spyrelet=True, cfg=cfg)
+                sub_spyrelets[s] = load_spyrelet(s, gateway, sub_spyrelet=True, cfg=cfg)
             except:
                 raise SpyreletLoadError(None, 'spyrelet [{}] '
                                               'sub-spyrelet [{}] failed to load'. \

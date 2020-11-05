@@ -100,7 +100,7 @@ class Spyrelet():
 
     # A dict with the names and associated class of the devices required to run
     # this spyrelet
-    REQUIRED_DEVICES = dict()
+    REQUIRED_DEVICES = list()
 
     # A dict with the name and associated class of the sub-spyrelet required to
     # run this spyrelet
@@ -151,7 +151,6 @@ class Spyrelet():
             try:
                 server_name, device_name = device_aliases[dev_alias].split('/')
             except:
-                import pdb; pdb.set_trace()
                 raise SpyreletLoadError(None, 'Spyrelet [{}] with the '
                     'device alias [{}] has an invalid device accessor [{}].'
                     'The accessor should be in the form '

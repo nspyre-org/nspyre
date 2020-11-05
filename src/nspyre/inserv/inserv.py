@@ -20,7 +20,8 @@ import threading
 import time
 from functools import partial
 import copy
-from collections import OrderedDict
+import functools
+import weakref
 
 # 3rd party
 import rpyc
@@ -367,17 +368,20 @@ class InstrumentServer(rpyc.Service):
     def on_disconnect(self, conn):
         """Called when a client discconnects from the RPyC server"""
         logging.info('client [{}] disconnected'.format(conn))
-        for device_name, device in self._devs.items():
-            for attr_name, attr in zip(device._lantz_feats.items(), device._lantz_dictfeats.items(), device._lantz_actions.items()):
-                attr_slots = getattr(device, attr_name + '_changed')._slots
-                for slot in attr_slots:
-                    if slot.__name__ == 'InstrumentManager_get_attr_func':
-                        getattr(device, attr_name + '_changed').disconnect(slot)
-
-            # for dictfeat_name, dictfeat in device._lantz_dictfeats.items():
-            #     pass
-            # for action_name, action in device._lantz_actions.items():
-            #     pass
+        # for device_name, device in self._devs.items():
+        #     for attr_name, attr in device._lantz_feats.items():#zip(device._lantz_feats.items(), device._lantz_dictfeats.items(), device._lantz_actions.items()):
+        #         attr_slots = getattr(device, attr_name + '_changed')._slots
+        #         for slot in attr_slots:
+        #             if isinstance(slot, weakref.ref):
+        #                 pass
+        #             elif isinstance(slot, functools.partial):
+        #                 # print(slot.__class__)
+        #                 # print(slot.__module__)
+        #                 # print(slot.__name__)
+        #                 # if slot.__name__ == 'InstrumentManager_getattr_func':
+        #                 #     import pdb;
+        #                 #     pdb.set_trace()
+        #                     getattr(device, attr_name + '_changed').disconnect(slot)
 
 
     def reload_server(self):

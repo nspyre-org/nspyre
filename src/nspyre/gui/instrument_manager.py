@@ -9,11 +9,14 @@ Date: 10/26/2020
 
 # std
 import functools
+import weakref
 
 # 3rd party
 from PyQt5.QtCore import Qt, QProcess, QSize
 from PyQt5.QtGui import QFont
 from pyqtgraph import SpinBox
+from pyqtgraph import exit as pyqtgraph_exit
+from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
 from PyQt5.QtWidgets import QApplication, QComboBox, QLineEdit, QMainWindow, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QHeaderView
 
 # nspyre
@@ -46,6 +49,7 @@ class InstrumentManagerWindow(QMainWindow):
 
         # connection to the instrument servers
         self.gateway = gateway
+        self._slots = []
         # tree of dictionaries that contains all of the instrument
         # manager GUI elements
         # the top level of the dictionary is the instrument servers
@@ -88,20 +92,33 @@ class InstrumentManagerWindow(QMainWindow):
         # Adding 2pt of padding to the margin to remove horizontal scroll bar and 14pt of padding for the vertical scroll bar
         self.tree.setMinimumWidth(self.tree.columnWidth(0) + self.tree.columnWidth(1) + 2 + 14)
         self.tree.collapseAll()
+        for i in range(self.tree.topLevelItemCount()):
+            self.tree.topLevelItem(i).setExpanded(True)
         #self._col_one_min_width = self.tree.columnWidth(0)
         #self.tree.sizeHintForIndex(1).
         self.show()
 
-    # def close_connections(self):
-    #     tree_root = self.tree.invisibleRootItem()
-    #     self.tree.invisibleRootItem().child(0).child(0).child(0).treeWidget().disconnect()
-    #     def recursive_func(widget_item):
-    #         if widget_item.childCount == 0
-    #         for i in range(widget_item.childCount):
-    #
-    #     tree_root.childCount()
-    #     import pdb; pdb.set_trace()
-    #     self.tree.children()
+    def close_connections(self):
+        print('disconnecting...')
+        for (device, feat_name, getattr_partial) in self._slots:
+            getattr(device, feat_name + '_changed').connect(getattr_partial)
+        # def recursive_func(widget_item):
+        #     count = widget_item.childCount()
+        #     if count == 0:
+        #         #print(widget_item.treeWidget().__repr__())
+        #         #import pdb; pdb.set_trace()
+        #         print(self.tree.itemWidget(widget_item, 1).__repr__())
+        #         self.tree.itemWidget(widget_item, 1).disconnect()
+        #         # try:
+        #         #     widget_item.treeWidget().disconnect()
+        #         # except TypeError:
+        #         #     pass
+        #     else:
+        #         for i in range(count):
+        #             recursive_func(widget_item.child(i))
+        #
+        # tree_root = self.tree.invisibleRootItem()
+        # recursive_func(tree_root)
 
     def _create_widgets(self):
         """Iterate over the available servers and devices, and collect their
@@ -123,17 +140,17 @@ class InstrumentManagerWindow(QMainWindow):
                     feat_item.setSizeHint(1, QSize(79,24))
                     self.tree.setItemWidget(feat_item, 1, feat_widget)
 
-                for dictfeat_name, dictfeat in device._lantz_dictfeats.items():
-                    """Generate a Qt gui element for a lantz dictfeat"""
-                    dictfeat_tree = QTreeWidgetItem(device_tree, [dictfeat_name, ''])
-                    # dummy 'get' of dict feat value in order to force lantz to populate
-                    # its 'subproperties' TODO this is pretty hacky
-                    print(dictfeat_name)
-                    for feat_key in dictfeat.keys:
-                        feat = dictfeat.subproperty(getattr(device, dictfeat_name).instance, feat_key)
-                        feat_widget = self._generate_feat_widget(feat, dictfeat_name, device, dictfeat_key=feat_key)
-                        feat_item = QTreeWidgetItem(dictfeat_tree, ['{} {}'.format(dictfeat_name, feat_key), ''])
-                        self.tree.setItemWidget(feat_item, 1, feat_widget)
+                # for dictfeat_name, dictfeat in device._lantz_dictfeats.items():
+                #     """Generate a Qt gui element for a lantz dictfeat"""
+                #     dictfeat_tree = QTreeWidgetItem(device_tree, [dictfeat_name, ''])
+                #     # dummy 'get' of dict feat value in order to force lantz to populate
+                #     # its 'subproperties' TODO this is pretty hacky
+                #     print(dictfeat_name)
+                #     for feat_key in dictfeat.keys:
+                #         feat = dictfeat.subproperty(getattr(device, dictfeat_name).instance, feat_key)
+                #         feat_widget = self._generate_feat_widget(feat, dictfeat_name, device, dictfeat_key=feat_key)
+                #         feat_item = QTreeWidgetItem(dictfeat_tree, ['{} {}'.format(dictfeat_name, feat_key), ''])
+                #         self.tree.setItemWidget(feat_item, 1, feat_widget)
 
                 action_tree = QTreeWidgetItem(device_tree, ['Actions', ''])
                 for action_name, action in device._lantz_actions.items():
@@ -241,8 +258,13 @@ class InstrumentManagerWindow(QMainWindow):
             widget.setReadOnly(feat._config['read_once'])
             getattr_func = lambda value, old_value: widget.setText(value)
 
-        getattr_func.__name__ = 'InstrumentManager_get_attr_func'
-        getattr(device, feat_name + '_changed').connect(functools.partial(getattr_func))
+        getattr_func.__name__ = 'InstrumentManager_getattr_partial'
+        getattr_partial = functools.partial(getattr_func)
+        functools.update_wrapper(getattr_partial, getattr_func)
+        getattr_partial.__name__ = 'InstrumentManager_getattr_partial'
+        getattr(device, feat_name + '_changed').connect(getattr_partial)
+        self._slots.append(tuple([device, feat_name, getattr_partial]))
+        print(widget.__repr__())
         return widget
 
 
@@ -258,6 +280,7 @@ class InstrumentManagerWindow(QMainWindow):
 
 if __name__ ==  '__main__':
     import logging
+    import time
     import sys
     from PyQt5.QtCore import Qt
     from nspyre.gui.app import NSpyreApp
@@ -274,25 +297,16 @@ if __name__ ==  '__main__':
     if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
         QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = NSpyreApp([sys.argv])
+    pyqtgraph_connectCleanup()
     with InservGateway() as isg:
         inserv_window = InstrumentManagerWindow(isg)
-        sys.exit(app.exec())
-
-
-# {'_MessageBasedDriver__resource_manager': <ResourceManager(<VisaLibrary('unset')>)>,
-#  '_Base__name': 'LantzSignalGenerator0',
-#  'logger_name': 'lantz.driver.LantzSignalGenerator0',
-#  '_Base__keep_alive': [],
-#  '_StorageMixin__storage': {'iconfig': defaultdict(<class 'dict'>, {'idn': {}, 'amplitude': {}, 'offset': {}, 'frequency': {}, 'output_enabled': {}, 'waveform': {}, 'din': {}, DictPropertyNameKey(name='din', key=1): {}, DictPropertyNameKey(name='din', key=2): {}}),
-#                             'iconfigm': defaultdict(<class 'dict'>, {'initialize': {}}),
-#                             'statsm': defaultdict(<class 'pimpmyclass.stats.RunningStats'>, {'initialize': {'call': <pimpmyclass.stats.RunningState object at 0x7fba66b80940>}}),
-#                             'cache': {'idn': 'FunctionGenerator Serial #12345', 'amplitude': <Quantity(0.0, 'volt')>, 'offset': <Quantity(0.0, 'volt')>, 'frequency': <Quantity(1000.0, 'hertz')>, 'output_enabled': False, 'waveform': 'sine', DictPropertyNameKey(name='din', key=1): False, DictPropertyNameKey(name='din', key=2): False},
-#                             'stats': defaultdict(<class 'pimpmyclass.stats.RunningStats'>, {'idn': {'get': <pimpmyclass.stats.RunningState object at 0x7fba66b9c1c0>}, 'amplitude': {'get': <pimpmyclass.stats.RunningState object at 0x7fba66ba4a60>}, 'offset': {'get': <pimpmyclass.stats.RunningState object at 0x7fba66ba4940>}, 'frequency': {'get': <pimpmyclass.stats.RunningState object at 0x7fba66ba4ee0>}, 'output_enabled': {'get': <pimpmyclass.stats.RunningState object at 0x7fba66ba4f40>}, 'waveform': {'get': <pimpmyclass.stats.RunningState object at 0x7fba66ba8460>}, DictPropertyNameKey(name='din', key=1): {'get': <pimpmyclass.stats.RunningState object at 0x7fba66ba82e0>}, DictPropertyNameKey(name='din', key=2): {'get': <pimpmyclass.stats.RunningState object at 0x7fba66ba8ac0>}})
-#                            },
-#  '_lantz_anyfeat': ChainMap({'idn': <lantz.core.feat.Feat object at 0x7fba66a545b0>, 'amplitude': <lantz.core.feat.Feat object at 0x7fba66a544f0>, 'offset': <lantz.core.feat.Feat object at 0x7fba66a54580>, 'frequency': <lantz.core.feat.Feat object at 0x7fba66a54e50>, 'output_enabled': <lantz.core.feat.Feat object at 0x7fba669154c0>, 'waveform': <lantz.core.feat.Feat object at 0x7fba66a54b80>, DictPropertyNameKey(name='din', key=1): <lantz.core.feat.Feat object at 0x7fba66ba8550>, DictPropertyNameKey(name='din', key=2): <lantz.core.feat.Feat object at 0x7fba66ba8a60>}, {'dout': <lantz.core.feat.DictFeat object at 0x7fba66a54a30>, 'din': <lantz.core.feat.DictFeat object at 0x7fba66a549d0>}),
-#  '_LogMixin__logger': <Logger lantz.driver.LantzSignalGenerator0 (DEBUG)>,
-#  'DEFAULTS': mappingproxy({'COMMON': {'write_termination': '\n', 'read_termination': '\n'}}),
-#  'resource_name': 'TCPIP::localhost::5678::SOCKET',
-#  'resource_kwargs': {'write_termination': '\n', 'read_termination': '\n'},
-#  'resource': <'TCPIPSocket'('TCPIP::localhost::5678::SOCKET')>,
-#  '_LockMixin__async_lock': <unlocked _thread.RLock object owner=0 count=0 at 0x7fba66b4da80>}
+        app.exec()
+        inserv_window.close_connections()
+        print('second thing')
+        time.sleep(5)
+        isg.disconnect_servers()
+        time.sleep(5)
+    print('exiting')
+    #app.disconnect()
+    time.sleep(3)
+    sys.exit()

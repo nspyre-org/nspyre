@@ -51,20 +51,16 @@ class InservGatewayError(Exception):
 # classes / functions
 ###########################
 
-class InservWrapper():
-    """This class is a representation of the instrument server from the 
-    client's perspective. It contains server connection information, and an 
-    instance variable object for each device connected to the remote instrument 
-    server"""
-
 class InservGateway():
     """Loads a configuration file, then attempts to connect to all 
     instrument servers"""
     def __init__(self, config_file=CLIENT_META_CONFIG_PATH, mongo_addr=None):
         # config dictionary
         self.config = {}
-        # list of available instrument servers fetched from mongo
-        self.servers = {}
+        # dictionary of available rpyc instrument servers
+        # key is the server string id, value is a tuple (rpyc conn, bg thread)
+        # e.g. {'local1': (rpyc.core.protocol.Connection, ), 'remote1': }
+        self._servers = {}
         self.mongo_addr = None
         self.mongo_client = None
         self.update_config(config_file)
@@ -110,19 +106,27 @@ class InservGateway():
 
     def disconnect_servers(self):
         """Attempt disconnection from all of the instrument servers"""
-        for s in list(self.servers):
+        for s in list(self._servers):
             self.disconnect_server(s)
 
     def connect_server(self, s_id, s_addr, s_port):
         """Attempt connection to an instrument server"""
         try:
-            self.servers[s_id] = rpyc.connect(s_addr, s_port,
+            # connect to the rpyc server running on the instrument server
+            # and start up a background thread to fullfill requests on the
+            # client side
+            conn = rpyc.connect(s_addr, s_port,
                             config={'allow_pickle' : True,
                                     'timeout' : RPYC_CONN_TIMEOUT,
                                     'sync_request_timeout': RPYC_SYNC_TIMEOUT})
+            # TODO
+            bg_serving_thread = rpyc.BgServingThread(conn)
+            
             # this allows the instrument server to have full access to this
             # client's object dictionaries - appears necessary for lantz
-            self.servers[s_id]._config['allow_all_attrs'] = True
+            conn._config['allow_all_attrs'] = True
+
+            self._servers[s_id] = (conn, bg_serving_thread)
         except BaseException:
             raise InservGatewayError('Failed to connect to '
                             'instrument server [{}] at address [{}]'.\
@@ -134,19 +138,31 @@ class InservGateway():
         """Disconnect from an instrument server and remove it's associated 
         devices"""
         try:
-            self.servers[s_id].close()
-            del self.servers[s_id]
+            conn = self._servers[s_id][0]
+            bg_serving_thread = self._servers[s_id][1]
+            bg_serving_thread.stop()
+            conn.close()
+            del self._servers[s_id]
         except BaseException:
             raise InservGatewayError('Failed to disconnect from '
                             'instrument server [{}]'.format(s_id)) from None
         logging.info('instrument server gateway disconnected '
                         'from server [{}]'.format(s_id))
 
+    def servers(self):
+        """Return a dictionary containing 'server name' mapped to
+        an rpyc conn object"""
+        servers_dict = {}
+        for s in self._servers:
+            servers_dict[s] = self._servers[s][0]
+
+        return servers_dict
+
     def __getattr__(self, attr):
         """Allow the user to access the server objects directly using
         e.g. gateway.server1.sig_gen.frequency notation"""
-        if attr in self.servers:
-            return self.servers[attr].root
+        if attr in self._servers:
+            return self._servers[attr][0].root
         else:
             raise AttributeError('\'{}\' object has no attribute \'{}\''.\
                         format(self.__class__.__name__, attr))

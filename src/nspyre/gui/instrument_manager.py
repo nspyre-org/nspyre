@@ -93,7 +93,15 @@ class InstrumentManagerWindow(QMainWindow):
 
                 # handle feats
                 for feat_name, feat in device._lantz_feats.items():
-                    feat_widget = self._generate_feat_widget(feat, feat_name, device)
+                    feat_widget, feat_getattr = self._generate_feat_widget(feat, feat_name, device)        
+                    # we have to use a partial here because PySignal and RPyC don't
+                    # play nicely if you .connect() a lambda or other function / method
+                    # to PySignal
+                    getattr_partial = functools.partial(feat_getattr)
+                    # register the feat_getattr() to be called when the feat changes using
+                    # pimpmyclass "ObservableProperty" mixin
+                    getattr(device, feat_name + '_changed').connect(getattr_partial)
+                    
                     feat_widget.setFont(QFont('Helvetica [Cronyx]', 14))
                     feat_item = QTreeWidgetItem(device_tree, [feat_name, ''])
                     feat_item.sizeHint(0)
@@ -106,9 +114,23 @@ class InstrumentManagerWindow(QMainWindow):
 
                     for feat_key in dictfeat.keys:
                         feat = dictfeat.subproperty(getattr(device, dictfeat_name).instance, feat_key)
-                        feat_widget = self._generate_feat_widget(feat, dictfeat_name, device, dictfeat_key=feat_key)
+                        feat_widget, feat_getattr = self._generate_feat_widget(feat, dictfeat_name, device, dictfeat_key=feat_key)
                         feat_item = QTreeWidgetItem(dictfeat_tree, ['{} {}'.format(dictfeat_name, feat_key), ''])
                         self.tree.setItemWidget(feat_item, 1, feat_widget)
+                        if feat_key == dictfeat.keys[-1]:
+                            # connect the feat_getattr() to be called when the feat changes using
+                            # pimpmyclass "ObservableProperty" mixin
+                            def dictfeat_getattr(df_tree, getattr_func, df_keys, value, old_value, key):
+                                w = self.tree.itemWidget(df_tree.child(df_keys.index(key)), 1)
+                                getattr_func(value, old_value, widget=w)
+                            # we have to use a partial here because PySignal and RPyC don't
+                            # play nicely if you .connect() a lambda or other function / method
+                            # to PySignal
+                            # TODO
+                            #from PyQt5.QtCore import pyqtRemoveInputHook; pyqtRemoveInputHook()
+                            #import pdb; pdb.set_trace()
+                            getattr_partial = functools.partial(dictfeat_getattr, dictfeat_tree, feat_getattr, dictfeat.keys)
+                            getattr(device, dictfeat_name + '_changed').connect(getattr_partial)
 
                 # handle actions
                 action_tree = QTreeWidgetItem(device_tree, ['Actions', ''])
@@ -142,9 +164,8 @@ class InstrumentManagerWindow(QMainWindow):
                 widget = QLineEdit()
                 widget.setText(str(feat_value))
                 widget.setReadOnly(True)
-                def getattr_func_lineedit(value, old_value, key=None):
-                    if key == dictfeat_key:
-                        widget.setText(value)
+                def getattr_func_lineedit(value, old_value, widget=widget):
+                    widget.setText(value)
                 getattr_func = getattr_func_lineedit
             else:
                 widget = QComboBox()
@@ -169,11 +190,10 @@ class InstrumentManagerWindow(QMainWindow):
                 widget.activated.connect(setattr_partial_combobox)
 
                 # callback function to modify the GUI when the the feat is changed externally
-                def getattr_func_combobox(value, old_value, key=None):
+                def getattr_func_combobox(value, old_value, widget=widget):
                     # because the _changed is shared for all keys of the same dictfeat,
                     # we have to check to see if this was the key that was actually changed
-                    if key == dictfeat_key:
-                        widget.setCurrentIndex(list(keymapping_dict.values()).index(value))
+                    widget.setCurrentIndex(list(keymapping_dict.values()).index(value))
                 getattr_func = getattr_func_combobox
 
         # the lantz feat is some sort of numerical value, so we will
@@ -225,18 +245,16 @@ class InstrumentManagerWindow(QMainWindow):
                 def setattr_func_spinbox(value):
                     setattr(device, feat_name, Q_(widget.value(), feat._config['units']))
                 # callback function to modify the GUI when the the feat is changed externally
-                def getattr_func_spinbox(value, old_value, key=None):
-                    if key == dictfeat_key:
-                        if isinstance(value, Q_):
-                            widget.setValue(value.to(feat._config['units']).m)
-                        else:
-                            widget.setValue(value)
+                def getattr_func_spinbox(value, old_value, widget=widget):
+                    if isinstance(value, Q_):
+                        widget.setValue(value.to(feat._config['units']).m)
+                    else:
+                        widget.setValue(value)
             else:
                 def setattr_func_spinbox(value):
                     setattr(device, feat_name, widget.value())
-                def getattr_func_spinbox(value, old_value, key=None):
-                    if key == dictfeat_key:
-                        widget.setValue(value)
+                def getattr_func_spinbox(value, old_value, widget=widget):
+                    widget.setValue(value)
             getattr_func = getattr_func_spinbox
             
             if read_only:
@@ -256,9 +274,8 @@ class InstrumentManagerWindow(QMainWindow):
             else:
                 widget.textChanged.connect(setattr_func_lineedit)
 
-            def getattr_func_lineedit(value, old_value, key=None):
-                if key == dictfeat_key:
-                    widget.setText(value)
+            def getattr_func_lineedit(value, old_value, widget=widget):
+                widget.setText(value)
             getattr_func = getattr_func_lineedit
 
         # some unknown type - make a readonly text box containing str(feat)
@@ -266,20 +283,11 @@ class InstrumentManagerWindow(QMainWindow):
             widget = QLineEdit()
             widget.setText(str(feat))
             widget.setReadOnly(True)
-            def getattr_func_lineedit_ro(value, old_value, key=None):
-                if key == dictfeat_key:
-                    widget.setText(value)
+            def getattr_func_lineedit_ro(value, old_value, widget=widget):
+                widget.setText(value)
             getattr_func = getattr_func_lineedit_ro
 
-        # we have to use a partial here because PySignal and RPyC don't
-        # play nicely if you .connect() a lambda or other function / method
-        # to PySignal
-        getattr_partial = functools.partial(getattr_func)
-        # connect the getattr_func() to be called when the feat changes using
-        # pimpmyclass "ObservableProperty" mixin
-        getattr(device, feat_name + '_changed').connect(getattr_partial)
-
-        return widget
+        return (widget, getattr_func)
 
     def _generate_action_widget(self, device, action, action_name):
         """Generate a Qt gui element for a lantz action"""

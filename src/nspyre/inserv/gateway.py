@@ -35,10 +35,6 @@ from nspyre.definitions import Q_
 register_quantity_brining(Q_)
 
 ###########################
-# globals
-###########################
-
-###########################
 # exceptions
 ###########################
 
@@ -53,7 +49,13 @@ class InservGatewayError(Exception):
 
 class InservGateway():
     """Loads a configuration file, then attempts to connect to all 
-    instrument servers"""
+    instrument servers
+
+    This class is a representation of the instrument server from the
+    client's perspective. It contains server connection information, and an
+    instance variable object for each device connected to the remote instrument
+    server
+    """
     def __init__(self, config_file=CLIENT_META_CONFIG_PATH, mongo_addr=None):
         # config dictionary
         self.config = {}

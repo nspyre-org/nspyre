@@ -15,9 +15,9 @@ more windows at any time.
 
   Typical usage example:
 
-  app = NSpyreApp([])
+  app = NSpyreApp([sys.argv])
   window = main_window.NSpyreMainWindow()
-  app.exec()
+  sys.exit(app.exec())
 
 Copyright (c) 2020, Alexandre Bourassa, Michael Solomon, Jacob Feder
 All rights reserved.

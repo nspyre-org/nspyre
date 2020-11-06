@@ -16,9 +16,9 @@ create the slots that are called when the user clicks menu items or toolbar butt
 
   Typical usage example:
 
-  app = app.NSpyreApp([])
+  app = app.NSpyreApp([sys.argv])
   window = NSpyreMainWindow()
-  app.exec()
+  sys.exit(app.exec())
 
 Copyright (c) 2020, Alexandre Bourassa, Michael Solomon, Jacob Feder
 All rights reserved.
@@ -37,6 +37,7 @@ from ..definitions import LOGO_PATH
 from .image import ImageWidget
 
 HERE = Path(__file__).parent
+
 
 class NSpyreMainWindow(QMainWindow):
     """The Qt QtWidgets.QMainWindow object for launching NSpyre.

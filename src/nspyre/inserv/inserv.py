@@ -28,6 +28,7 @@ import rpyc
 from rpyc.utils.server import ThreadedServer
 import pymongo
 from lantz import Q_, DictFeat
+from pimpmyclass.helpers import DictPropertyNameKey 
 from pint import Quantity
 
 # nspyre
@@ -366,23 +367,32 @@ class InstrumentServer(rpyc.Service):
         logging.info('client [{}] connected'.format(conn))
 
     def on_disconnect(self, conn):
-        """Called when a client discconnects from the RPyC server"""
+        """Called when a client disconnects from the RPyC server"""
         logging.info('client [{}] disconnected'.format(conn))
-        # for device_name, device in self._devs.items():
-        #     for attr_name, attr in device._lantz_feats.items():#zip(device._lantz_feats.items(), device._lantz_dictfeats.items(), device._lantz_actions.items()):
-        #         attr_slots = getattr(device, attr_name + '_changed')._slots
-        #         for slot in attr_slots:
-        #             if isinstance(slot, weakref.ref):
-        #                 pass
-        #             elif isinstance(slot, functools.partial):
-        #                 # print(slot.__class__)
-        #                 # print(slot.__module__)
-        #                 # print(slot.__name__)
-        #                 # if slot.__name__ == 'InstrumentManager_getattr_func':
-        #                 #     import pdb;
-        #                 #     pdb.set_trace()
-        #                     getattr(device, attr_name + '_changed').disconnect(slot)
 
+        # when an RPyC client disconnects, there are dangling netrefs
+        # left over in PySignal _slots that point to objects on the client
+        # side which are now inaccessible
+        # this block detects and removes the references by attempting to
+        # access them with a try/except
+        # TODO this logic should really be implemented in PySignal during emit()
+        for device_name, device in self._devs.items():
+            # iterate over all feats and dictfeats
+            for attr_name, attr in list(device._lantz_feats.items()) + \
+                                    list(device._lantz_dictfeats.items()):
+                if isinstance(attr_name, DictPropertyNameKey):
+                    # filter out weird dictfeat feats
+                    continue
+                # access the PySignal slots
+                attr_slots = getattr(device, attr_name + '_changed')._slots
+                for index, slot in enumerate(attr_slots):
+                    try:
+                        # trying to compare slot to something will force RPyC
+                        # to attempt to retrieve it
+                        if slot == None:
+                            pass
+                    except EOFError:
+                        del attr_slots[index]
 
     def reload_server(self):
         """Restart the RPyC server"""

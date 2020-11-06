@@ -17,6 +17,7 @@ from pyqtgraph import SpinBox
 from pyqtgraph import exit as pyqtgraph_exit
 from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
 from PyQt5.QtWidgets import QApplication, QComboBox, QLineEdit, QMainWindow, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QHeaderView
+from pimpmyclass.helpers import DictPropertyNameKey 
 
 # nspyre
 from nspyre.inserv.gateway import InservGateway
@@ -92,7 +93,11 @@ class InstrumentManagerWindow(QMainWindow):
                 device_tree.setExpanded(True)
 
                 # handle feats
+                # TODO this also returns dictfeats!
                 for feat_name, feat in device._lantz_feats.items():
+                    # filter out any dictfeats
+                    if isinstance(feat_name, DictPropertyNameKey):
+                        continue
                     feat_widget, feat_getattr = self._generate_feat_widget(feat, feat_name, device)        
                     # we have to use a partial here because PySignal and RPyC don't
                     # play nicely if you .connect() a lambda or other function / method
@@ -320,8 +325,8 @@ if __name__ ==  '__main__':
 
     app = NSpyreApp([sys.argv])
 
-    # TODO
-    #pyqtgraph_connectCleanup()
+    # set up pyqtgraph to properly exit
+    pyqtgraph_connectCleanup()
 
     with InservGateway() as isg:
         inserv_window = InstrumentManagerWindow(isg)

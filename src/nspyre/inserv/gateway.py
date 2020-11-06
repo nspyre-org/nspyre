@@ -119,7 +119,6 @@ class InservGateway():
                             config={'allow_pickle' : True,
                                     'timeout' : RPYC_CONN_TIMEOUT,
                                     'sync_request_timeout': RPYC_SYNC_TIMEOUT})
-            # TODO
             bg_serving_thread = rpyc.BgServingThread(conn)
             
             # this allows the instrument server to have full access to this

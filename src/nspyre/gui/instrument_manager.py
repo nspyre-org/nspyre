@@ -104,11 +104,6 @@ class InstrumentManagerWindow(QMainWindow):
                 for dictfeat_name, dictfeat in device._lantz_dictfeats.items():
                     dictfeat_tree = QTreeWidgetItem(device_tree, [dictfeat_name, ''])
 
-                    # TODO
-                    # dummy 'get' of dict feat value in order to force lantz to populate
-                    # its 'subproperties' TODO this is pretty hacky
-                    # print(dictfeat_name)
-
                     for feat_key in dictfeat.keys:
                         feat = dictfeat.subproperty(getattr(device, dictfeat_name).instance, feat_key)
                         feat_widget = self._generate_feat_widget(feat, dictfeat_name, device, dictfeat_key=feat_key)
@@ -118,9 +113,11 @@ class InstrumentManagerWindow(QMainWindow):
                 # handle actions
                 action_tree = QTreeWidgetItem(device_tree, ['Actions', ''])
                 for action_name, action in device._lantz_actions.items():
+                    # actions that shouldn't be added to the GUI
                     ignore_actions = ['initialize', 'finalize', 'update', 'refresh']
                     if action_name in ignore_actions or '_async' in action_name:
                         continue
+
                     action_widget = self._generate_action_widget(device, action, action_name)
                     action_widget.setFont(QFont('Helvetica [Cronyx]', 14))
                     action_item = QTreeWidgetItem(action_tree, [action_name, ''])
@@ -131,35 +128,53 @@ class InstrumentManagerWindow(QMainWindow):
 
         if dictfeat_key:
             feat_value = getattr(device, feat_name)[dictfeat_key]
+            # if lantz has a function pointer in df.fset, then it is writeable
+            read_only = False if getattr(device, feat_name).df.fset else True
         else:
             feat_value = getattr(device, feat_name)
+            read_only = False if feat.fset else True
         
         # the lantz feat has only a specific set of allowed values
         # so we make a dropdown box
         if feat._config['values']:
-            widget = QComboBox()
-            
-            # dictionary mapping the possible lantz values to str(values)
-            # e.g. {'True' : True, 'False' : False}
-            keymapping_dict = {}
-            for k in feat._config['values'].keys():
-                keymapping_dict[str(k)] = k
-            
-            # add the possible values to the dropdown list
-            widget.addItems(keymapping_dict.keys())
-            widget.setCurrentIndex(list(keymapping_dict.values()).index(feat_value))
-            
-            # callback function for when the user changes the dropdown selection
-            def setattr_func_combobox(value):
-                setattr(device, feat_name, keymapping_dict[widget.currentText()])
+            if read_only:
+                # use a lineedit instead of a combo box if it's read only
+                widget = QLineEdit()
+                widget.setText(str(feat_value))
+                widget.setReadOnly(True)
+                def getattr_func_lineedit(value, old_value, key=None):
+                    if key == dictfeat_key:
+                        widget.setText(value)
+                getattr_func = getattr_func_lineedit
+            else:
+                widget = QComboBox()
+                # dictionary mapping the possible lantz values to str(values)
+                # e.g. {'True' : True, 'False' : False}
+                keymapping_dict = {}
+                for k in feat._config['values'].keys():
+                    keymapping_dict[str(k)] = k
+                
+                # add the possible values to the dropdown list
+                widget.addItems(keymapping_dict.keys())
+                widget.setCurrentIndex(list(keymapping_dict.values()).index(feat_value))
+                
+                # callback function for when the user changes the dropdown selection
+                def setattr_func_combobox(value, key=None):
+                    if key:
+                        getattr(device, feat_name)[key] = keymapping_dict[widget.currentText()]
+                    else:
+                        setattr(device, feat_name, keymapping_dict[widget.currentText()])
+                setattr_partial_combobox = functools.partial(setattr_func_combobox, key=dictfeat_key)
+                # call setattr_func() when the combo box value is set from the GUI
+                widget.activated.connect(setattr_partial_combobox)
 
-            # callback function to modify the GUI when the the feat is changed externally
-            def getattr_func_combobox(value, old_value, dict_key=None):
-                return widget.setCurrentIndex(list(keymapping_dict.values()).index(value))
-            getattr_func = getattr_func_combobox
-
-            # call setattr_func() when the combo box value is set from the GUI
-            widget.activated.connect(setattr_func_combobox)
+                # callback function to modify the GUI when the the feat is changed externally
+                def getattr_func_combobox(value, old_value, key=None):
+                    # because the _changed is shared for all keys of the same dictfeat,
+                    # we have to check to see if this was the key that was actually changed
+                    if key == dictfeat_key:
+                        widget.setCurrentIndex(list(keymapping_dict.values()).index(value))
+                getattr_func = getattr_func_combobox
 
         # the lantz feat is some sort of numerical value, so we will
         # generate a SpinBox (number entry with increment / decrement arrow keys)
@@ -210,18 +225,24 @@ class InstrumentManagerWindow(QMainWindow):
                 def setattr_func_spinbox(value):
                     setattr(device, feat_name, Q_(widget.value(), feat._config['units']))
                 # callback function to modify the GUI when the the feat is changed externally
-                def getattr_func_spinbox(value, old_value, dict_key=None):
-                    if isinstance(value, Q_):
-                        widget.setValue(value.to(feat._config['units']).m)
-                    else:
-                        widget.setValue(value)
+                def getattr_func_spinbox(value, old_value, key=None):
+                    if key == dictfeat_key:
+                        if isinstance(value, Q_):
+                            widget.setValue(value.to(feat._config['units']).m)
+                        else:
+                            widget.setValue(value)
             else:
                 def setattr_func_spinbox(value):
                     setattr(device, feat_name, widget.value())
-                def getattr_func_spinbox(value, old_value, dict_key=None):
-                    widget.setValue(value)
+                def getattr_func_spinbox(value, old_value, key=None):
+                    if key == dictfeat_key:
+                        widget.setValue(value)
             getattr_func = getattr_func_spinbox
-            widget.sigValueChanged.connect(setattr_func_spinbox)
+            
+            if read_only:
+                widget.lineEdit().setReadOnly(True)
+            else:
+                widget.sigValueChanged.connect(setattr_func_spinbox)
 
         # the lantz feat is a string, so we will just make a text box
         elif isinstance(feat_value, str):
@@ -229,19 +250,25 @@ class InstrumentManagerWindow(QMainWindow):
             widget.setText(feat_value)
             def setattr_func_lineedit(value):
                 setattr(device, feat_name, widget.text())
-            def getattr_func_lineedit(value, old_value, dict_key=None):
-                widget.setText(value)
+
+            if read_only:
+                widget.setReadOnly(True)
+            else:
+                widget.textChanged.connect(setattr_func_lineedit)
+
+            def getattr_func_lineedit(value, old_value, key=None):
+                if key == dictfeat_key:
+                    widget.setText(value)
             getattr_func = getattr_func_lineedit
-            widget.textChanged.connect(setattr_func_lineedit)
-            widget.setReadOnly(feat._config['read_once'])
 
         # some unknown type - make a readonly text box containing str(feat)
         else:
             widget = QLineEdit()
             widget.setText(str(feat))
-            widget.setReadOnly(feat._config['read_once'])
-            def getattr_func_lineedit_ro(value, old_value, dict_key=None):
-                widget.setText(value)
+            widget.setReadOnly(True)
+            def getattr_func_lineedit_ro(value, old_value, key=None):
+                if key == dictfeat_key:
+                    widget.setText(value)
             getattr_func = getattr_func_lineedit_ro
 
         # we have to use a partial here because PySignal and RPyC don't

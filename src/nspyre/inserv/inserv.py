@@ -73,6 +73,40 @@ class InstrumentServerError(Exception):
 # classes
 ###########################
 
+# class InstrumentConnection(rpyc.Connection):
+#     def __init__(self, *args, **kwargs):
+#         print('inserv Connection init')
+#         super().__init__(*args, **kwargs)
+#
+#     def close(self, *args, **kwargs):
+#         print('inserv Connection close')
+#         if self._closed:
+#             return
+#         self._local_root.on_about_to_disconnect(self)
+#         super().__init__(*args, **kwargs)
+#
+# class InstrumentService(rpyc.Service):
+#
+#     _protocol = InstrumentConnection
+#
+#     def __init__(self, *args, **kwargs):
+#         import pdb; pdb.set_trace()
+#         print('well hello there darling')
+#         super().__init__(*args, **kwargs)
+#
+#     def on_about_to_disconnect(self, conn):
+#         """called when the connection had already terminated for cleanup
+#         (must not perform any IO on the connection)"""
+#         pass
+#
+# class VoidInstrumentService(InstrumentService):
+#     """void service - an do-nothing service"""
+#     __slots__ = ()
+#
+# rpyc.Connection = InstrumentConnection
+# rpyc.Service = InstrumentService
+# rpyc.VoidService = VoidInstrumentService
+
 class InstrumentServer(rpyc.Service):
     """RPyC provider that loads lantz devices and exposes them to the remote
     client"""
@@ -362,37 +396,6 @@ class InstrumentServer(rpyc.Service):
         logging.info('loaded config files {}'.\
                         format(list(self.config.keys())))
 
-    def on_connect(self, conn):
-        """Called when a client connects to the RPyC server"""
-        logging.info('client [{}] connected'.format(conn))
-
-    def on_disconnect(self, conn):
-        """Called when a client disconnects from the RPyC server"""
-        logging.info('client [{}] disconnected'.format(conn))
-
-        # when an RPyC client disconnects, there are dangling netrefs
-        # left over in PySignal _slots that point to objects on the client
-        # side which are now inaccessible
-        # this block detects and removes the references by attempting to
-        # access them with a try/except
-        # TODO this logic should really be implemented in PySignal during emit()
-        for device_name, device in self._devs.items():
-            # iterate over all feats and dictfeats
-            for attr_name, attr in list(device._lantz_feats.items()) + \
-                                    list(device._lantz_dictfeats.items()):
-                if isinstance(attr_name, DictPropertyNameKey):
-                    # filter out weird dictfeat feats
-                    continue
-                # access the PySignal slots
-                attr_slots = getattr(device, attr_name + '_changed')._slots
-                for index, slot in enumerate(attr_slots):
-                    try:
-                        # trying to compare slot to something will force RPyC
-                        # to attempt to retrieve it
-                        if slot == None:
-                            pass
-                    except EOFError:
-                        del attr_slots[index]
 
     def reload_server(self):
         """Restart the RPyC server"""

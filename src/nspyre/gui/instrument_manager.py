@@ -1,27 +1,48 @@
-#!/usr/bin/env python
-"""
-This instrument manager is a GUI which can connect to a set of
-instrument servers and control the associated devices
+"""The class defining the NSpyre Instrument Manager MainWindow.
 
-Author: Michael Solomon, Jacob Feder
-Date: 10/26/2020
-"""
+The InstrumentManagerWindow class is the main GUI window for viewing the live
+state and settings of the hardware devices connected to an NSpyre InstrumentServer.
+It is defined by the QtWidgets.QMainWindow subclass from Qt and consists of a
+QTreeWidget and subsequent QTreeWidgetItem(s) for displaying the attributes of
+each device located on each connected Instrument Server. It is also responsible
+for creating and connecting all the callback functions to the device drivers'
+PySignal.Signal(s) for updating it's own GUI QtWidgets.QtWidget(s) in real-time.
+i.e. QComboBox, QLineEdit, SpinBox, etc.
 
-# std
+From the Qt documentation:
+The QMainWindow class provides a main application window, with a menu bar, dock
+windows (e.g. for toolbars), and a status bar. Main windows are most often used to
+provide menus, toolbars and a status bar around a large central widget, such as a
+text edit, drawing canvas or QWorkspace (for MDI applications). QMainWindow is
+usually subclassed since this makes it easier to encapsulate the central widget,
+menus and toolbars as well as the window's state. Subclassing makes it possible to
+create the slots that are called when the user clicks menu items or toolbar buttons.
+
+  Typical usage example:
+
+  app = app.NSpyreApp([sys.argv])
+  pyqtgraph._connectCleanup()
+  with ..inserv.gateway.InservGateway() as isg:
+      window = main_window.InstrumentManagerWindow(isg)
+      sys.exit(app.exec())
+
+Copyright (c) 2020, Alexandre Bourassa, Michael Solomon, Jacob Feder
+All rights reserved.
+
+This work is licensed under the terms of the 3-Clause BSD license.
+For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
+"""
 import functools
 
-# 3rd party
-from PyQt5.QtCore import Qt, QProcess, QSize
+from pimpmyclass.helpers import DictPropertyNameKey
+from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QFont
-from pyqtgraph import SpinBox
-from pyqtgraph import exit as pyqtgraph_exit
+from PyQt5.QtWidgets import QApplication, QComboBox, QHeaderView, QLineEdit, QMainWindow, QPushButton, QTreeWidget, QTreeWidgetItem
+from pyqtgraph import SpinBox as pyqtgraph_SpinBox
 from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
-from PyQt5.QtWidgets import QApplication, QComboBox, QLineEdit, QMainWindow, QPushButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QHeaderView
-from pimpmyclass.helpers import DictPropertyNameKey 
 
-# nspyre
-from nspyre.inserv.gateway import InservGateway
 from nspyre.definitions import Q_
+from nspyre.inserv.gateway import InservGateway
 
 ###########################
 # exceptions
@@ -41,32 +62,53 @@ class InstrumentManagerWindow(QMainWindow):
     based on a dropdown / tree structure
     the top level is the instrument servers
     the next level is the devices
-    the bottom level is attributes of the devices"""
+    the bottom level is attributes of the devices
+
+    # tree of dictionaries that contains all of the instrument
+    # manager GUI elements
+    # the top level of the dictionary is the instrument servers
+    # the next level is the devices
+    # the bottom level is attributes of the devices
+
+    e.g.               ----------self.gui----------
+                      /                            \
+                  server1                        server2
+                 /       \                      /       \
+         sig-gen1         scope1        sig-gen2         laser
+         /      \        /      \      /        \       /     \
+      freq     ampl    trig    din[] freq      ampl  lambda  power
+    """
 
     def __init__(self, gateway, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setWindowTitle('NSpyre Instrument Manager')
-
         # connection to the instrument servers
         self.gateway = gateway
-        self._slots = []
 
         # set main GUI layout
         self.tree = QTreeWidget()
         self.tree.setFont(QFont('Helvetica [Cronyx]', 14))
         self.tree.setColumnCount(2)
         self.tree.setMinimumHeight(self.tree.height())
+        # self.tree.setUniformRowHeights(True)
+        # self.tree.setHeaderLabels(['Lantz Feat', 'value'])
+        # self.tree.setDragEnabled(True)
+        # self.tree.setSortingEnabled(True)
+        # self.tree.sortByColumn(0, Qt.AscendingOrder)
 
         # configure the QTreeWidget Header
         header = self.tree.header()
         header.setHidden(True)
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        # header.setSectionResizeMode(0, QHeaderView.Fixed)
+        # header.setSectionResizeMode(1, QHeaderView.Stretch)
+        # header.setSectionResizeMode(0, QHeaderView.Stretch)
+        # header.setSectionResizeMode(1, QHeaderView.Interactive)
         header.setSectionsMovable(True)
         header.setStretchLastSection(False)
 
-        # generate GUI elements
+        # generate gui elements and set minimum window dimensions before displaying
         self._create_widgets()
-
         self.setCentralWidget(self.tree)
         self.tree.expandAll()
         # Adding 2pt of padding to the margin to remove horizontal scroll bar and 14pt of padding for the vertical scroll bar
@@ -76,6 +118,7 @@ class InstrumentManagerWindow(QMainWindow):
         for i in range(self.tree.topLevelItemCount()):
             self.tree.topLevelItem(i).setExpanded(True)
         self.show()
+
 
     def _create_widgets(self):
         """Iterate over the available servers and devices, collect their
@@ -98,11 +141,13 @@ class InstrumentManagerWindow(QMainWindow):
                     # filter out any dictfeats
                     if isinstance(feat_name, DictPropertyNameKey):
                         continue
-                    feat_widget, feat_getattr = self._generate_feat_widget(feat, feat_name, device)        
+                    feat_widget, feat_getattr_func = self._generate_feat_widget(feat, feat_name, device)
                     # we have to use a partial here because PySignal and RPyC don't
                     # play nicely if you .connect() a lambda or other function / method
                     # to PySignal
-                    getattr_partial = functools.partial(feat_getattr)
+                    feat_getattr_func.__name__ = 'InstrumentManager_getattr_func'
+                    getattr_partial = functools.partial(feat_getattr_func)
+                    getattr_partial = functools.update_wrapper(getattr_partial, feat_getattr_func)
                     # register the feat_getattr() to be called when the feat changes using
                     # pimpmyclass "ObservableProperty" mixin
                     getattr(device, feat_name + '_changed').connect(getattr_partial)
@@ -115,26 +160,30 @@ class InstrumentManagerWindow(QMainWindow):
 
                 # handle dictfeats
                 for dictfeat_name, dictfeat in device._lantz_dictfeats.items():
+                    """Generate a Qt gui element for a lantz dictfeat"""
                     dictfeat_tree = QTreeWidgetItem(device_tree, [dictfeat_name, ''])
 
+                    # TODO
+                    # dummy 'get' of dict feat value in order to force lantz to populate
+                    # its 'subproperties' TODO this is pretty hacky
+                    # print(dictfeat_name)
                     for feat_key in dictfeat.keys:
                         feat = dictfeat.subproperty(getattr(device, dictfeat_name).instance, feat_key)
-                        feat_widget, feat_getattr = self._generate_feat_widget(feat, dictfeat_name, device, dictfeat_key=feat_key)
+                        feat_widget, feat_getattr_func = self._generate_feat_widget(feat, dictfeat_name, device, dictfeat_key=feat_key)
                         feat_item = QTreeWidgetItem(dictfeat_tree, ['{} {}'.format(dictfeat_name, feat_key), ''])
                         self.tree.setItemWidget(feat_item, 1, feat_widget)
                         if feat_key == dictfeat.keys[-1]:
                             # connect the feat_getattr() to be called when the feat changes using
                             # pimpmyclass "ObservableProperty" mixin
-                            def dictfeat_getattr(df_tree, getattr_func, df_keys, value, old_value, key):
+                            def dictfeat_getattr_func(df_tree, df_keys, getattr_func, value, old_value, key):
                                 w = self.tree.itemWidget(df_tree.child(df_keys.index(key)), 1)
                                 getattr_func(value, old_value, widget=w)
                             # we have to use a partial here because PySignal and RPyC don't
                             # play nicely if you .connect() a lambda or other function / method
                             # to PySignal
-                            # TODO
-                            #from PyQt5.QtCore import pyqtRemoveInputHook; pyqtRemoveInputHook()
-                            #import pdb; pdb.set_trace()
-                            getattr_partial = functools.partial(dictfeat_getattr, dictfeat_tree, feat_getattr, dictfeat.keys)
+                            feat_getattr_func.__name__ = 'InstrumentManager_getattr_func'
+                            getattr_partial = functools.partial(dictfeat_getattr_func, dictfeat_tree, dictfeat.keys, feat_getattr_func)
+                            getattr_partial = functools.update_wrapper(getattr_partial, feat_getattr_func)
                             getattr(device, dictfeat_name + '_changed').connect(getattr_partial)
 
                 # handle actions
@@ -150,10 +199,13 @@ class InstrumentManagerWindow(QMainWindow):
                     action_item = QTreeWidgetItem(action_tree, [action_name, ''])
                     self.tree.setItemWidget(action_item, 1, action_widget)
 
+
     def _generate_feat_widget(self, feat, feat_name, device, dictfeat_key=None):
         """Generate a Qt gui element for a lantz feat"""
 
         if dictfeat_key:
+            ## val = dictfeat.subproperty(getattr(device, feat_name).instance, dictfeat_key)
+            #val = getattr(device, feat_name)[dictfeat_key]  # .__getitem__(dictfeat_key)
             feat_value = getattr(device, feat_name)[dictfeat_key]
             # if lantz has a function pointer in df.fset, then it is writeable
             read_only = False if getattr(device, feat_name).df.fset else True
@@ -169,11 +221,11 @@ class InstrumentManagerWindow(QMainWindow):
                 widget = QLineEdit()
                 widget.setText(str(feat_value))
                 widget.setReadOnly(True)
-                def getattr_func_lineedit(value, old_value, widget=widget):
+                def getattr_func(value, old_value, widget=widget):
                     widget.setText(value)
-                getattr_func = getattr_func_lineedit
             else:
                 widget = QComboBox()
+                # print('combo box' + str(widget.sizeHint()))
                 # dictionary mapping the possible lantz values to str(values)
                 # e.g. {'True' : True, 'False' : False}
                 keymapping_dict = {}
@@ -183,23 +235,27 @@ class InstrumentManagerWindow(QMainWindow):
                 # add the possible values to the dropdown list
                 widget.addItems(keymapping_dict.keys())
                 widget.setCurrentIndex(list(keymapping_dict.values()).index(feat_value))
+
+                # callback function to modify the GUI when the the feat is changed
+                # externally
+                # we have to use a partial here because PySignal and RPyC don't
+                # place nicely if you .connect() a lambda or other function/method
+                # to PySignal
                 
                 # callback function for when the user changes the dropdown selection
-                def setattr_func_combobox(value, key=None):
+                def setattr_func(value, key=None):
                     if key:
                         getattr(device, feat_name)[key] = keymapping_dict[widget.currentText()]
                     else:
                         setattr(device, feat_name, keymapping_dict[widget.currentText()])
-                setattr_partial_combobox = functools.partial(setattr_func_combobox, key=dictfeat_key)
                 # call setattr_func() when the combo box value is set from the GUI
-                widget.activated.connect(setattr_partial_combobox)
+                widget.activated.connect(functools.partial(setattr_func, key=dictfeat_key))
 
                 # callback function to modify the GUI when the the feat is changed externally
-                def getattr_func_combobox(value, old_value, widget=widget):
+                def getattr_func(value, old_value, widget=widget):
                     # because the _changed is shared for all keys of the same dictfeat,
                     # we have to check to see if this was the key that was actually changed
                     widget.setCurrentIndex(list(keymapping_dict.values()).index(value))
-                getattr_func = getattr_func_combobox
 
         # the lantz feat is some sort of numerical value, so we will
         # generate a SpinBox (number entry with increment / decrement arrow keys)
@@ -233,13 +289,17 @@ class InstrumentManagerWindow(QMainWindow):
                 optional_args['minStep'] = 1
                 # optional_args['decimals'] = 10
             
-            widget = SpinBox(**optional_args)
+            widget = pyqtgraph_SpinBox(**optional_args)
 
             widget.resize(79, 24)
+            print(widget.sizeHint())
             def sizeHint(self):
                 return QSize(79, 24)
-            widget.sizeHint = sizeHint.__get__(widget, SpinBox)
+            widget.sizeHint = sizeHint.__get__(widget, pyqtgraph_SpinBox)
+            print(widget.sizeHint())
 
+            # widget.setSizeHint(QSize(120, 20))
+            # print(widget.sizeHint())
             if isinstance(feat_value, Q_):
                 widget.setValue(feat_value.to(feat._config['units']).m)
             else:
@@ -247,52 +307,49 @@ class InstrumentManagerWindow(QMainWindow):
             
             if feat._config['units']:
                 # callback function for when the user changes the value from the GUI
-                def setattr_func_spinbox(value):
+                def setattr_func(value):
                     setattr(device, feat_name, Q_(widget.value(), feat._config['units']))
                 # callback function to modify the GUI when the the feat is changed externally
-                def getattr_func_spinbox(value, old_value, widget=widget):
+                def getattr_func(value, old_value, widget=widget):
                     if isinstance(value, Q_):
                         widget.setValue(value.to(feat._config['units']).m)
                     else:
                         widget.setValue(value)
             else:
-                def setattr_func_spinbox(value):
+                def setattr_func(value):
                     setattr(device, feat_name, widget.value())
-                def getattr_func_spinbox(value, old_value, widget=widget):
+                def getattr_func(value, old_value, widget=widget):
                     widget.setValue(value)
-            getattr_func = getattr_func_spinbox
             
             if read_only:
                 widget.lineEdit().setReadOnly(True)
             else:
-                widget.sigValueChanged.connect(setattr_func_spinbox)
+                widget.sigValueChanged.connect(setattr_func)
 
         # the lantz feat is a string, so we will just make a text box
         elif isinstance(feat_value, str):
             widget = QLineEdit()
             widget.setText(feat_value)
-            def setattr_func_lineedit(value):
+            def setattr_func(value):
                 setattr(device, feat_name, widget.text())
 
             if read_only:
                 widget.setReadOnly(True)
             else:
-                widget.textChanged.connect(setattr_func_lineedit)
+                widget.textChanged.connect(setattr_func)
 
-            def getattr_func_lineedit(value, old_value, widget=widget):
+            def getattr_func(value, old_value, widget=widget):
                 widget.setText(value)
-            getattr_func = getattr_func_lineedit
 
         # some unknown type - make a readonly text box containing str(feat)
         else:
             widget = QLineEdit()
             widget.setText(str(feat))
             widget.setReadOnly(True)
-            def getattr_func_lineedit_ro(value, old_value, widget=widget):
+            def getattr_func(value, old_value, widget=widget):
                 widget.setText(value)
-            getattr_func = getattr_func_lineedit_ro
 
-        return (widget, getattr_func)
+        return widget, getattr_func
 
     def _generate_action_widget(self, device, action, action_name):
         """Generate a Qt gui element for a lantz action"""
@@ -317,17 +374,14 @@ if __name__ ==  '__main__':
                         handlers=[logging.StreamHandler()])
 
     logging.info('starting Instrument Manager...')
-
     if hasattr(Qt, 'AA_EnableHighDpiScaling'):
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
     if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
         QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-
     app = NSpyreApp([sys.argv])
-
-    # set up pyqtgraph to properly exit
     pyqtgraph_connectCleanup()
-
     with InservGateway() as isg:
         inserv_window = InstrumentManagerWindow(isg)
         app.exec()
+        #inserv_window.close_connections()
+    sys.exit()

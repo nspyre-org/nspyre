@@ -100,10 +100,7 @@ class InstrumentManagerWindow(QMainWindow):
         header = self.tree.header()
         header.setHidden(True)
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        # header.setSectionResizeMode(0, QHeaderView.Fixed)
-        # header.setSectionResizeMode(1, QHeaderView.Stretch)
-        # header.setSectionResizeMode(0, QHeaderView.Stretch)
-        # header.setSectionResizeMode(1, QHeaderView.Interactive)
+        # header.setSectionResizeMode(0, QHeaderView.Fixed) QHeaderView.Stretch, QHeaderView.Stretch, QHeaderView.Interactive
         header.setSectionsMovable(True)
         header.setStretchLastSection(False)
 
@@ -166,7 +163,6 @@ class InstrumentManagerWindow(QMainWindow):
                     # TODO
                     # dummy 'get' of dict feat value in order to force lantz to populate
                     # its 'subproperties' TODO this is pretty hacky
-                    # print(dictfeat_name)
                     for feat_key in dictfeat.keys:
                         feat = dictfeat.subproperty(getattr(device, dictfeat_name).instance, feat_key)
                         feat_widget, feat_getattr_func = self._generate_feat_widget(feat, dictfeat_name, device, dictfeat_key=feat_key)
@@ -292,11 +288,11 @@ class InstrumentManagerWindow(QMainWindow):
             widget = pyqtgraph_SpinBox(**optional_args)
 
             widget.resize(79, 24)
-            print(widget.sizeHint())
+            #print(widget.sizeHint())
             def sizeHint(self):
                 return QSize(79, 24)
             widget.sizeHint = sizeHint.__get__(widget, pyqtgraph_SpinBox)
-            print(widget.sizeHint())
+            #print(widget.sizeHint())
 
             # widget.setSizeHint(QSize(120, 20))
             # print(widget.sizeHint())

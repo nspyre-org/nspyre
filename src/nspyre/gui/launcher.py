@@ -18,6 +18,7 @@ import logging
 # 3rd party
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
+from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
 
 # nspyre
 from nspyre.spyrelet.spyrelet import Spyrelet_Launcher
@@ -188,18 +189,22 @@ class Spyrelet_Run_Thread(QtCore.QThread):
 
 
 class CombinedSpyreletWindow(QMainWindow):
-    def __init__(self, manager, spyrelets=None, *args, **kwargs):
+    def __init__(self, gateway, spyrelets=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setWindowTitle('NSpyre Instrument Manager')
+
+        # Set the main window layout to consist of vertical boxes.
+        # The QVBoxLayout class lines up widgets vertically.
         layout = QtWidgets.QVBoxLayout()
+
         self.selector = QtWidgets.QComboBox()
         container = QtWidgets.QWidget()
         layout.addWidget(self.selector)
         layout.addWidget(container)
-        self.setLayout(layout)
+        #self.setLayout(layout)
 
         #Create the launchers
-        spyrelets = load_all_spyrelets(manager) if spyrelets is None else spyrelets
+        spyrelets = load_all_spyrelets(gateway) if spyrelets is None else spyrelets
         self.launchers = {name: Spyrelet_Launcher_Widget(s) for name, s in spyrelets.items()}
         # cfg = get_configs()
         # names = list(cfg['experiment_list'].keys())
@@ -222,16 +227,19 @@ class CombinedSpyreletWindow(QMainWindow):
         #                 traceback.print_exc()
 
         #Add to layout
-        layout = QtWidgets.QStackedLayout()
-        container.setLayout(layout)
+        stacked_layout = QtWidgets.QStackedLayout()
         names = list(self.launchers.keys())
         names.sort()
         for n in names:
-            layout.addWidget(self.launchers[n])
+            stacked_layout.addWidget(self.launchers[n])
+        container.setLayout(stacked_layout)
 
         self.selector.addItems(names)
-        self.container_layout = layout
+        self.container_layout = stacked_layout
         self.selector.currentTextChanged.connect(self.change_widget)
+        w = QtWidgets.QWidget()
+        w.setLayout(layout)
+        self.setCentralWidget(w)
         self.show()
 
     def change_widget(self, name):
@@ -256,6 +264,7 @@ if __name__ ==  '__main__':
     if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
         QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = NSpyreApp([sys.argv])
+    pyqtgraph_connectCleanup()
     with InservGateway() as isg:
         combined_spyrelet_window = CombinedSpyreletWindow(isg)
         sys.exit(app.exec())

@@ -80,7 +80,6 @@ from rpyc.core.protocol import consts
 
 class InstrumentConnection(rpyc.Connection):
     def __init__(self, *args, **kwargs):
-        #print('inserv Connection init')
         super().__init__(*args, **kwargs)
 
     def _pre_cleanup(self):  # IO
@@ -88,8 +87,6 @@ class InstrumentConnection(rpyc.Connection):
 
     def close(self, _catchall=True):  # IO
         """closes the connection, releasing all held resources"""
-        print('inserv Connection close')
-        #import pdb; pdb.set_trace()
         if self._closed:
             return
         self._closed = True
@@ -212,8 +209,7 @@ class InstrumentServer(InstrumentService):
         logging.info('client [{}] connected'.format(conn))
 
     def on_about_to_disconnect(self, conn):
-        #import pdb; pdb.set_trace()
-        print('on_about_to_disconnect...')
+        logging.info('client [{}] about to disconnect'.format(conn))
         for device_name, device in self._devs.items():
             # iterate over all feats and dictfeats
             for attr_name, attr in list(device._lantz_feats.items()) + list(device._lantz_dictfeats.items()):

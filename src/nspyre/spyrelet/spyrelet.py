@@ -128,7 +128,7 @@ class Spyrelet():
         self.validate()
         
         reg_entry = {
-            '_id':unique_name,
+            '_id': unique_name,
             'class': 'unused' #"{}.{}".format(self.__class__.__module__, self.__class__.__name__),
         }
 
@@ -154,33 +154,30 @@ class Spyrelet():
                 raise SpyreletLoadError(None, 'Spyrelet [{}] with the '
                     'device alias [{}] has an invalid device accessor [{}].'
                     'The accessor should be in the form '
-                    '"server_name/device_name"'.\
-                    format(unique_name, dev_accessor, dev_alias))
+                    '"server_name/device_name"'.format(unique_name, dev_accessor, dev_alias))
             try:
                 server = getattr(gateway, server_name)
             except:
                 raise SpyreletLoadError(None, 'Spyrelet [{}] requires the '
                         'device [{}] (alias [{}]) but the instrument '
-                        'server is unreachable'.\
-                        format(unique_name, dev_accessor, dev_alias))
+                        'server is unreachable'.format(unique_name, dev_accessor, dev_alias))
             try:
                 device = getattr(server, device_name)
             except:
                 raise SpyreletLoadError(None, 'Spyrelet [{}] requires the '
                         'device [{}] (alias [{}]) but the instrument '
-                        'server doesn\'t contain the device'.\
-                        format(unique_name, dev_accessor, dev_alias))
+                        'server doesn\'t contain the device'.format(unique_name, dev_accessor, dev_alias))
             setattr(self, dev_alias, device)
 
         # check that the sub spyrelets are loaded and add them as
         # instance variables
         for sname, sclass in self.REQUIRED_SPYRELETS.items():
-            if sname in spyrelets and isinstance(spyrelets[sname], sclass):
+            #import pdb; pdb.set_trace()
+            if sname in spyrelets:# and isinstance(spyrelets[sname], sclass):
                 setattr(self, sname, spyrelets[sname])
             else:
                 raise SpyreletLoadError('Spyrelet [{}] requires the '
-                        'sub-spyrelet [{}] but it wasn\'t loaded'.\
-                        format(unique_name, sname))
+                        'sub-spyrelet [{}] but it wasn\'t loaded'.format(unique_name, sname))
 
     def set_defaults(self, **params_dict):
         d = {'defaults.{}'.format(key):val for key,val in custom_encode(params_dict).items()}
@@ -478,9 +475,8 @@ def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False, cfg=None, filepath
     args = custom_decode(args)
 
     # create the spyrelet
-    spyrelet = spyrelet_class(spyrelet_name, gateway, \
-                              device_aliases=dev_aliases, \
-                              spyrelets=sub_spyrelets, **args)
+    #import pdb; pdb.set_trace()
+    spyrelet = spyrelet_class(spyrelet_name, gateway, device_aliases=dev_aliases, spyrelets=sub_spyrelets, **args)
     _LOADED_SPYRELETS[spyrelet_name] = spyrelet
     logging.info('loaded spyrelet [{}]'.format(spyrelet_name))
 
@@ -501,7 +497,7 @@ def load_all_spyrelets(gateway, filepath=None):
     # are none left
     while bool(spyrelet_configs):
         spyrelet_name = next(iter(spyrelet_configs))
-        load_spyrelet(spyrelet_name, gateway, cfg)
+        load_spyrelet(spyrelet_name, gateway, cfg=cfg)
         # remove this spyrelet from the list of spyrelets to be loaded
         del spyrelet_configs[spyrelet_name]
     return _LOADED_SPYRELETS

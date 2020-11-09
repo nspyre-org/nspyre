@@ -47,42 +47,18 @@ class InservGatewayError(Exception):
 # classes / functions
 ###########################
 
-# class InstrumentConnection(rpyc.Connection):
-#     def __init__(self, *args, **kwargs):
-#         import pdb; pdb.set_trace()
-#         super().__init__(*args, **kwargs)
-#
-#     def close(self, *args, **kwargs):
-#         if self._closed:
-#             return
-#         self._local_root.on_about_to_disconnect(self)
-#         super().__init__(*args, **kwargs)
-#
-# class InstrumentService(rpyc.Service):
-#
-#     _protocol = InstrumentConnection
-#
-#     def __init__(self, *args, **kwargs):
-#         import pdb; pdb.set_trace()
-#         print('well hello there darling')
-#         super().__init__(*args, **kwargs)
-#
-#     def on_about_to_disconnect(self, conn):
-#         """called when the connection had already terminated for cleanup
-#         (must not perform any IO on the connection)"""
-#         pass
-#
-# class VoidInstrumentService(InstrumentService):
-#     """void service - an do-nothing service"""
-#     __slots__ = ()
-# #from rpyc.core.service import VoidService
-# #rpyc.Connection = InstrumentConnection
-#
-# from rpyc.core.service import Service
-# Service._protocol = InstrumentConnection
-# Service = InstrumentService
-# from rpyc.core.service import VoidService
-# VoidService = VoidInstrumentService
+# Temporary monkey patching of rpyc to implement synchronous about_to_disconnect feature
+# Need to define consts.HANDLE_ABOUT_TO_CLOSE before consts is import by protocol (this is done
+# in the load of nspyre.inser.inserv)
+import nspyre.inserv.inserv
+from rpyc.core.protocol import consts
+
+# Need to monkey patch VoidService for rpyc.utils.factory.connect_stream
+from rpyc.core.service import Service
+Service._protocol = nspyre.inserv.inserv.InstrumentConnection
+Service = nspyre.inserv.inserv.InstrumentService
+from rpyc.core.service import VoidService
+VoidService = nspyre.inserv.inserv.VoidInstrumentService
 
 
 class InservGateway():
@@ -155,13 +131,11 @@ class InservGateway():
             # connect to the rpyc server running on the instrument server
             # and start up a background thread to fullfill requests on the
             # client side
-            #import pdb; pdb.set_trace()
             conn = rpyc.connect(s_addr, s_port,
                             config={'allow_pickle' : True,
                                     'timeout' : RPYC_CONN_TIMEOUT,
                                     'sync_request_timeout': RPYC_SYNC_TIMEOUT})
 
-            #import pdb; pdb.set_trace()
             bg_serving_thread = rpyc.BgServingThread(conn)
             
             # this allows the instrument server to have full access to this

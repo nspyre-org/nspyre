@@ -73,41 +73,91 @@ class InstrumentServerError(Exception):
 # classes
 ###########################
 
-# class InstrumentConnection(rpyc.Connection):
-#     def __init__(self, *args, **kwargs):
-#         print('inserv Connection init')
-#         super().__init__(*args, **kwargs)
-#
-#     def close(self, *args, **kwargs):
-#         print('inserv Connection close')
-#         if self._closed:
-#             return
-#         self._local_root.on_about_to_disconnect(self)
-#         super().__init__(*args, **kwargs)
-#
-# class InstrumentService(rpyc.Service):
-#
-#     _protocol = InstrumentConnection
-#
-#     def __init__(self, *args, **kwargs):
-#         import pdb; pdb.set_trace()
-#         print('well hello there darling')
-#         super().__init__(*args, **kwargs)
-#
-#     def on_about_to_disconnect(self, conn):
-#         """called when the connection had already terminated for cleanup
-#         (must not perform any IO on the connection)"""
-#         pass
-#
-# class VoidInstrumentService(InstrumentService):
-#     """void service - an do-nothing service"""
-#     __slots__ = ()
-#
-# rpyc.Connection = InstrumentConnection
-# rpyc.Service = InstrumentService
-# rpyc.VoidService = VoidInstrumentService
 
-class InstrumentServer(rpyc.Service):
+rpyc.core.consts.HANDLE_ABOUT_TO_CLOSE = 21
+from rpyc.core.protocol import consts
+
+
+class InstrumentConnection(rpyc.Connection):
+    def __init__(self, *args, **kwargs):
+        #print('inserv Connection init')
+        super().__init__(*args, **kwargs)
+
+    def _pre_cleanup(self):  # IO
+        self._local_root.on_about_to_disconnect(self)
+
+    def close(self, _catchall=True):  # IO
+        """closes the connection, releasing all held resources"""
+        print('inserv Connection close')
+        #import pdb; pdb.set_trace()
+        if self._closed:
+            return
+        self._closed = True
+        try:
+            self.sync_request(consts.HANDLE_ABOUT_TO_CLOSE)
+            self._async_request(consts.HANDLE_CLOSE)
+        except EOFError:
+            pass
+        except Exception:
+            if not _catchall:
+                raise
+        finally:
+            self._cleanup(_anyway=True)
+
+    @classmethod
+    def _request_handlers(cls):  # request handlers
+        return {
+            consts.HANDLE_PING: cls._handle_ping,
+            consts.HANDLE_CLOSE: cls._handle_close,
+            consts.HANDLE_GETROOT: cls._handle_getroot,
+            consts.HANDLE_GETATTR: cls._handle_getattr,
+            consts.HANDLE_DELATTR: cls._handle_delattr,
+            consts.HANDLE_SETATTR: cls._handle_setattr,
+            consts.HANDLE_CALL: cls._handle_call,
+            consts.HANDLE_CALLATTR: cls._handle_callattr,
+            consts.HANDLE_REPR: cls._handle_repr,
+            consts.HANDLE_STR: cls._handle_str,
+            consts.HANDLE_CMP: cls._handle_cmp,
+            consts.HANDLE_HASH: cls._handle_hash,
+            consts.HANDLE_INSTANCECHECK: cls._handle_instancecheck,
+            consts.HANDLE_DIR: cls._handle_dir,
+            consts.HANDLE_PICKLE: cls._handle_pickle,
+            consts.HANDLE_DEL: cls._handle_del,
+            consts.HANDLE_INSPECT: cls._handle_inspect,
+            consts.HANDLE_BUFFITER: cls._handle_buffiter,
+            consts.HANDLE_OLDSLICING: cls._handle_oldslicing,
+            consts.HANDLE_CTXEXIT: cls._handle_ctxexit,
+            consts.HANDLE_ABOUT_TO_CLOSE: cls._handle_about_to_close,
+        }
+
+    def _handle_about_to_close(self):  # request handler
+        self._pre_cleanup()
+
+
+class InstrumentService(rpyc.Service):
+
+    _protocol = InstrumentConnection
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def on_about_to_disconnect(self, conn):
+        """called when the connection had already terminated for cleanup
+        (must not perform any IO on the connection)"""
+        pass
+
+
+class VoidInstrumentService(InstrumentService):
+    """void service - an do-nothing service"""
+    __slots__ = ()
+
+
+rpyc.Connection = InstrumentConnection
+rpyc.Service = InstrumentService
+rpyc.VoidService = VoidInstrumentService
+
+
+class InstrumentServer(InstrumentService):
     """RPyC provider that loads lantz devices and exposes them to the remote
     client
     """
@@ -277,7 +327,7 @@ class InstrumentServer(rpyc.Service):
         """Add and initialize a device"""
 
         # load the device parameters from the config file
-        
+
         # first try getting the driver's lantz class
         try:
             dev_lantz_class, dev_class_cfg_file = get_config_param(self.config,
@@ -296,17 +346,17 @@ class InstrumentServer(rpyc.Service):
             try:
                 dev_class_file_str, dev_class_file_cfg_file = \
                                     get_config_param(self.config,
-                                            [CONFIG_SERVER_DEVICES, dev_name, 
+                                            [CONFIG_SERVER_DEVICES, dev_name,
                                             CONFIG_SERVER_DEVICE_CLASS_FILE])
-                dev_class_name,_ = get_config_param(self.config,
-                                            [CONFIG_SERVER_DEVICES, dev_name, 
+                dev_class_name, _ = get_config_param(self.config,
+                                            [CONFIG_SERVER_DEVICES, dev_name,
                                             CONFIG_SERVER_DEVICE_CLASS_NAME])
             except ConfigEntryNotFoundError as exc:
                 raise InstrumentServerError(exc, 'The device [{}] didn\'t '
                     'contain an entry for either a lantz class "{}" or a file '
                     'path "{}" / class name "{}" to define it\'s driver type'.\
-                    format(dev_name, CONFIG_SERVER_DEVICE_LANTZ_CLASS, 
-                            CONFIG_SERVER_DEVICE_CLASS_FILE, 
+                    format(dev_name, CONFIG_SERVER_DEVICE_LANTZ_CLASS,
+                            CONFIG_SERVER_DEVICE_CLASS_FILE,
                             CONFIG_SERVER_DEVICE_CLASS_NAME))
             dev_class_path = Path(dev_class_file_str)
             # resolve relative paths
@@ -354,7 +404,7 @@ class InstrumentServer(rpyc.Service):
                 values = list(attrs['values'])
             else:
                 values = None
-            
+
             if 'keys' in attrs and attrs['keys']:
                 keys = list(attrs['keys'])
             else:

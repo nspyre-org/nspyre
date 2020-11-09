@@ -87,7 +87,10 @@ def load_class_from_file(file_path, class_name):
     file_name = file_name.split('.py')[0]
     # load the spyrelet class from its python file
     sys.path.append(str(file_dir))
-    loaded_module = importlib.import_module(file_name)
+    if file_name in sys.modules:
+        loaded_module = importlib.reload(sys.modules[file_name])
+    else:
+        loaded_module = importlib.import_module(file_name)
     loaded_class = getattr(loaded_module, class_name)
     return loaded_class
 

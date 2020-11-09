@@ -103,19 +103,24 @@ def meta_config_remove(meta_config_file, files):
         pop_list.append(idx)
 
     pop_list.sort(reverse=True)
+    new_enabled_idx = enabled_idx
     for idx in pop_list:
         try:
             config_list.pop(idx)
+            # if an item before the enabled one was deleted we have to decrement
+            # the enabled index
+            if idx < enabled_idx:
+                new_enabled_idx -= 1
         except IndexError as exc:
             raise ConfigError(exc, 'tried to remove config file index [{}] '
-                'that was out of range'.format(idx))# from None
+                'that was out of range'.format(idx))
 
     # if the user removed the currently enabled config
     if enabled_idx in pop_list:
-        enabled_idx = 0
+        new_enabled_idx = 0
 
     meta_config[META_CONFIG_FILES_ENTRY] = config_list
-    meta_config[META_CONFIG_ENABLED_IDX] = enabled_idx
+    meta_config[META_CONFIG_ENABLED_IDX] = new_enabled_idx
     write_config(meta_config, meta_config_file)
 
 def meta_config_files(meta_config_file):

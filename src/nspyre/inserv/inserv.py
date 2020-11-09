@@ -28,7 +28,7 @@ import rpyc
 from rpyc.utils.server import ThreadedServer
 import pymongo
 from lantz import Q_, DictFeat
-from pimpmyclass.helpers import DictPropertyNameKey 
+from pimpmyclass.helpers import DictPropertyNameKey
 from pint import Quantity
 
 # nspyre
@@ -109,7 +109,9 @@ class InstrumentServerError(Exception):
 
 class InstrumentServer(rpyc.Service):
     """RPyC provider that loads lantz devices and exposes them to the remote
-    client"""
+    client
+    """
+
     def __init__(self, config_file, mongo_addr=None):
         super().__init__()
         # lantz devices
@@ -142,6 +144,67 @@ class InstrumentServer(rpyc.Service):
         self.start_server()
         self.reload_devices()
 
+
+    def __getattr__(self, name):
+        """Allow the user to access the driver objects directly using
+        e.g. inserv.fake_tcpip_sg.amplitude notation
+        """
+        if name in self._devs:
+            return self._devs[name]
+        else:
+            return self.__getattribute__(name)
+            #raise AttributeError('\'{}\' object has no attribute \'{}\''.\
+            #            format(self.__class__.__name__, name))
+
+
+    def on_connect(self, conn):
+        """Called when a client connects to the RPyC server"""
+        logging.info('client [{}] connected'.format(conn))
+
+    def on_about_to_disconnect(self, conn):
+        #import pdb; pdb.set_trace()
+        print('on_about_to_disconnect...')
+        for device_name, device in self._devs.items():
+            # iterate over all feats and dictfeats
+            for attr_name, attr in list(device._lantz_feats.items()) + list(device._lantz_dictfeats.items()):
+                if isinstance(attr_name, DictPropertyNameKey):
+                    # filter out weird dictfeat feats
+                    continue
+                # access the PySignal slots
+                attr_slots = getattr(device, attr_name + '_changed')._slots
+                for slot in attr_slots:
+                    if isinstance(slot, functools.partial) and slot.__name__ == 'InstrumentManager_getattr_func':
+                        getattr(device, attr_name + '_changed').disconnect(slot)
+
+
+    def on_disconnect(self, conn):
+        """Called when a client disconnects from the RPyC server"""
+        logging.info('client [{}] disconnected'.format(conn))
+
+        # when an RPyC client disconnects, there are dangling netrefs
+        # left over in PySignal _slots that point to objects on the client
+        # side which are now inaccessible
+        # this block detects and removes the references by attempting to
+        # access them with a try/except
+        # TODO this logic should really be implemented in PySignal during emit()
+        for device_name, device in self._devs.items():
+            # iterate over all feats and dictfeats
+            for attr_name, attr in list(device._lantz_feats.items()) + list(device._lantz_dictfeats.items()):
+                if isinstance(attr_name, DictPropertyNameKey):
+                    # filter out weird dictfeat feats
+                    continue
+                # access the PySignal slots
+                attr_slots = getattr(device, attr_name + '_changed')._slots
+                for index, slot in enumerate(attr_slots):
+                    try:
+                        # trying to compare slot to something will force RPyC
+                        # to attempt to retrieve it
+                        if slot == None:
+                            pass
+                    except EOFError:
+                        del attr_slots[index]
+
+
     def restart(self, config_file=None, mongo_addr=None):
         """Restart the server AND reload the config file and all devices"""
         logging.info('restarting...')
@@ -150,14 +213,16 @@ class InstrumentServer(rpyc.Service):
         self.reload_devices()
         self.reload_server()
 
+
     def reload_server_config(self):
         """Reload RPyC server settings from the config"""
-        self.name,_ = get_config_param(self.config, \
+        self.name, _ = get_config_param(self.config, \
                         [CONFIG_SERVER_SETTINGS, 'name'])
-        self.ip,_ = get_config_param(self.config, \
+        self.ip, _ = get_config_param(self.config, \
                         [CONFIG_SERVER_SETTINGS, 'ip'])
-        self.port,_ = get_config_param(self.config, \
+        self.port, _ = get_config_param(self.config, \
                         [CONFIG_SERVER_SETTINGS, 'port'])
+
 
     def connect_mongo(self, mongo_addr=None):
         """Config and connect to the mongodb database"""
@@ -199,12 +264,14 @@ class InstrumentServer(rpyc.Service):
                                                     'port' : self.port})
         logging.info('connected to mongodb server [{}]'.format(self.mongo_addr))
 
+
     def disconnect_mongo(self):
         """Disconnect from the mongodb database"""
         # remove the database entry from mongo
         self.mongo_client.drop_database(self.db_name)
         # disconnect
         self.mongo_client.close()
+
 
     def add_device(self, dev_name):
         """Add and initialize a device"""
@@ -354,6 +421,7 @@ class InstrumentServer(rpyc.Service):
         logging.info('added device [{}] with args: {} kwargs: {}'.\
                         format(dev_name, dev_args, dev_kwargs))
 
+
     def del_device(self, dev_name):
         """Remove and finalize a device"""
         try:
@@ -363,11 +431,13 @@ class InstrumentServer(rpyc.Service):
                                         format(dev_name)) from None
         logging.info('deleted [{}]'.format(dev_name))
 
+
     def reload_device(self, dev_name):
         """Remove a device, then reload it from the stored config"""
         if dev_name in self._devs:
             self.del_device(dev_name)
         self.add_device(dev_name)
+
 
     def reload_devices(self):
         """Reload all devices"""
@@ -376,15 +446,6 @@ class InstrumentServer(rpyc.Service):
             self.reload_device(dev_name)
         logging.info('reloaded all devices')
 
-    def __getattr__(self, name):
-        """Allow the user to access the driver objects directly using
-        e.g. inserv.sig_gen.frequency notation"""
-        if name in self._devs:
-            return self._devs[name]
-        else:
-            return self.__getattribute__(name)
-            #raise AttributeError('\'{}\' object has no attribute \'{}\''.\
-            #            format(self.__class__.__name__, name))
 
     def update_config(self, config_file=None):
         """Reload the config files"""
@@ -402,6 +463,7 @@ class InstrumentServer(rpyc.Service):
         self.stop_server()
         self.start_server()
 
+
     def start_server(self):
         """Start the RPyC server"""
         if self._rpyc_server:
@@ -414,6 +476,7 @@ class InstrumentServer(rpyc.Service):
         # wait for the server to start
         while not (self._rpyc_server and self._rpyc_server.active):
             time.sleep(0.1)
+
 
     def stop_server(self):
         """Stop the RPyC server"""
@@ -430,6 +493,7 @@ class InstrumentServer(rpyc.Service):
         RPYC_SERVER_STOP_EVENT.wait()
         RPYC_SERVER_STOP_EVENT.clear()
         self._rpyc_server = None
+
 
     def _rpyc_server_thread(self):
         """Thread for running the RPyC server asynchronously"""

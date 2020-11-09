@@ -385,8 +385,10 @@ class InstrumentServer(InstrumentService):
 
         # collect all of the lantz feature attributes
         feat_attr_list = []
-        for feat_name, feat in list(dev_class._lantz_feats.items()) + \
-                            list(dev_class._lantz_dictfeats.items()):
+        for feat_name, feat in list(dev_class._lantz_feats.items()) + list(dev_class._lantz_dictfeats.items()):
+            if isinstance(feat_name, DictPropertyNameKey):
+                # filter out weird dictfeat feats
+                continue
 
             attrs = copy.deepcopy(feat.__dict__['_config'])
             if isinstance(feat, DictFeat) and 'keys' in feat.__dict__:

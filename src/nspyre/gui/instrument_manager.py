@@ -230,6 +230,7 @@ class InstrumentManagerWindow(QMainWindow):
             
             if feat._config['units']:
                 optional_args['suffix'] = feat._config['units']
+                optional_args['siPrefix'] = True
             
             if feat._config['limits']:
                 if len(feat._config['limits']) == 1:

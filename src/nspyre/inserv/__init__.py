@@ -23,6 +23,7 @@ import pyvisa
 
 # nspyre
 from nspyre.inserv.inserv import InstrumentServer
+from nspyre.config.config_files import load_meta_config
 from nspyre.definitions import SERVER_META_CONFIG_PATH
 
 ###########################
@@ -205,7 +206,8 @@ def main():
 
     # init and start RPyC server
     logging.info('starting instrument server...')
-    inserv = InstrumentServer(SERVER_META_CONFIG_PATH, cmd_args.mongo)
+    config_path = load_meta_config(SERVER_META_CONFIG_PATH)
+    inserv = InstrumentServer(config_path, cmd_args.mongo)
 
     # start the shell prompt event loop
     cmd_prompt = InservCmdPrompt(inserv)

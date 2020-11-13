@@ -24,7 +24,7 @@ import rpyc
 # nspyre
 from nspyre.utils.misc import register_quantity_brining
 from nspyre.config.config_files import get_config_param, load_config
-from nspyre.definitions import CLIENT_META_CONFIG_PATH, MONGO_CONNECT_TIMEOUT, \
+from nspyre.definitions import MONGO_CONNECT_TIMEOUT, \
                             MONGO_SERVERS_KEY, MONGO_SERVERS_SETTINGS_KEY, \
                             MONGO_RS, RPYC_CONN_TIMEOUT, RPYC_SYNC_TIMEOUT, \
                             INSERV_DEV_ACCESSOR
@@ -70,15 +70,18 @@ class InservGateway():
     instance variable object for each device connected to the remote instrument
     server
     """
-    def __init__(self, config_file=CLIENT_META_CONFIG_PATH, mongo_addr=None):
+    def __init__(self, config_file, mongo_addr=None):
         # config dictionary
         self.config = {}
         # dictionary of available rpyc instrument servers
         # key is the server string id, value is a tuple (rpyc conn, bg thread)
-        # e.g. {'local1': (rpyc.core.protocol.Connection, ), 'remote1': }
+        # e.g. {'local1': (rpyc.core.protocol.Connection, 
+        #                  rpyc.utils.helpers.BgServingThread),
+        #       'remote1': ...}
         self._servers = {}
         self.mongo_addr = None
         self.mongo_client = None
+        self.config = None
         self.update_config(config_file)
         self.config_mongo(mongo_addr)
         self.connect_servers()

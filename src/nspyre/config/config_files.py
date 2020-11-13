@@ -81,7 +81,7 @@ def meta_config_add(meta_config_file, files):
 def meta_config_remove(meta_config_file, files):
     """Remove config files from the meta-config"""
     meta_config = load_raw_config(meta_config_file)
-    enabled_idx = meta_config_enabled_idx(meta_config_file)
+    enabled_idx = meta_config[META_CONFIG_ENABLED_IDX]
     config_list = meta_config[META_CONFIG_FILES_ENTRY]
     # list of indicies to remove from config_list
     pop_list = []
@@ -152,23 +152,34 @@ def meta_config_set_enabled_idx(meta_config_file, idx_or_str):
     meta_config[META_CONFIG_ENABLED_IDX] = idx
     write_config(meta_config, meta_config_file)
 
-def load_config(meta_config_path=None):
-    """Takes a 'meta' config file that specifies the location of other config
-    files to load, then make a dictionary where the keys are the config file
-    names and the values are the config dictionaries of that file."""
+def load_meta_config(meta_config_path=None):
+    """Takes a 'meta' config file and returns the file path of the activated 
+    config file"""
+
+    # TODO this logic should be removed and meta_config_path always passed in
     if not meta_config_path:
         meta_config_path = CLIENT_META_CONFIG_PATH
+
     # load the meta config
     meta_config = load_raw_config(meta_config_path)
-    enabled_idx = meta_config_enabled_idx(meta_config_path)
-    # get the config file paths
+    # get the index of the enabled config file
+    enabled_idx = meta_config[META_CONFIG_ENABLED_IDX]
+
+    # get the config file path
     config_files = meta_config[META_CONFIG_FILES_ENTRY]
     if not config_files:
         raise ConfigError(None, 'no configuration files exist - '
                     'use nspyre-config --add-config to add files') from None
     cfg_path = Path(config_files[enabled_idx])
+
+    # resolve relative paths
     if not cfg_path.is_absolute():
         cfg_path = meta_config_path.parent / cfg_path
+
+    return cfg_path
+
+def load_config(cfg_path):
+    """Load a config file and return the configuration as a dictionary"""
     try:
         cfg_dict = {str(cfg_path): load_raw_config(cfg_path)}
     except FileNotFoundError as exc:

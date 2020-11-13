@@ -41,7 +41,8 @@ from PyQt5.QtWidgets import QApplication, QComboBox, QHeaderView, QLineEdit, QMa
 from pyqtgraph import SpinBox as pyqtgraph_SpinBox
 from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
 
-from nspyre.definitions import Q_
+from nspyre.config.config_files import load_meta_config
+from nspyre.definitions import Q_, CLIENT_META_CONFIG_PATH
 from nspyre.inserv.gateway import InservGateway
 
 ###########################
@@ -342,7 +343,8 @@ if __name__ ==  '__main__':
         QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = NSpyreApp([sys.argv])
     pyqtgraph_connectCleanup()
-    with InservGateway() as isg:
+    config_path = load_meta_config(CLIENT_META_CONFIG_PATH)
+    with InservGateway(config_path) as isg:
         inserv_window = InstrumentManagerWindow(isg)
         app.exec()
     sys.exit()

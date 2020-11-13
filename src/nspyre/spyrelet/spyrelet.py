@@ -172,7 +172,6 @@ class Spyrelet():
         # check that the sub spyrelets are loaded and add them as
         # instance variables
         for sname, sclass in self.REQUIRED_SPYRELETS.items():
-            #import pdb; pdb.set_trace()
             if sname in spyrelets:# and isinstance(spyrelets[sname], sclass):
                 setattr(self, sname, spyrelets[sname])
             else:
@@ -416,13 +415,12 @@ def load_spyrelet_class(spyrelet_name, cfg):
                                 spyrelet_path).resolve()
     return load_class_from_file(spyrelet_path, spyrelet_class_name)
 
-def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False, cfg=None, filepath=None):
+def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False):
     """
     recursive function that loads a spyrelet from the config
     and also loads all sub-spyrelets
     """
-    if cfg is None:
-        cfg = load_config(filepath)
+    cfg = gateway.config
     if spyrelet_name in _LOADED_SPYRELETS:
         if sub_spyrelet:
             return
@@ -447,7 +445,7 @@ def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False, cfg=None, filepath
             sub_spyrelets[s] = _LOADED_SPYRELETS[s]
         else:
             try:
-                sub_spyrelets[s] = load_spyrelet(s, gateway, sub_spyrelet=True, cfg=cfg)
+                sub_spyrelets[s] = load_spyrelet(s, gateway, sub_spyrelet=True)
             except:
                 raise SpyreletLoadError(None, 'spyrelet [{}] '
                                               'sub-spyrelet [{}] failed to load'. \
@@ -475,18 +473,17 @@ def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False, cfg=None, filepath
     args = custom_decode(args)
 
     # create the spyrelet
-    #import pdb; pdb.set_trace()
     spyrelet = spyrelet_class(spyrelet_name, gateway, device_aliases=dev_aliases, spyrelets=sub_spyrelets, **args)
     _LOADED_SPYRELETS[spyrelet_name] = spyrelet
     logging.info('loaded spyrelet [{}]'.format(spyrelet_name))
 
     return spyrelet
 
-def load_all_spyrelets(gateway, filepath=None):
+def load_all_spyrelets(gateway):
     """Load all of the spyrelets from the config file"""
-    cfg = load_config(filepath)
+
     # spyrelet parameters to parse
-    spyrelet_configs, _ = copy(get_config_param(cfg, [CONFIG_SPYRELETS_KEY]))
+    spyrelet_configs, _ = copy(get_config_param(gateway.config, [CONFIG_SPYRELETS_KEY]))
     # check to see if any spyrelets are loaded
     if _LOADED_SPYRELETS:
         raise SpyreletLoadError(None, 'the following spyrelets were already '
@@ -497,7 +494,7 @@ def load_all_spyrelets(gateway, filepath=None):
     # are none left
     while bool(spyrelet_configs):
         spyrelet_name = next(iter(spyrelet_configs))
-        load_spyrelet(spyrelet_name, gateway, cfg=cfg)
+        load_spyrelet(spyrelet_name, gateway)
         # remove this spyrelet from the list of spyrelets to be loaded
         del spyrelet_configs[spyrelet_name]
     return _LOADED_SPYRELETS

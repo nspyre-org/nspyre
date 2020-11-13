@@ -27,7 +27,7 @@ import rpyc
 
 # nspyre
 from nspyre.definitions import Q_, MONGO_RS, CONFIG_MONGO_ADDR_KEY
-from nspyre.config.config_files import load_config, get_config_param
+from nspyre.config.config_files import load_meta_config, load_config, get_config_param
 
 ###########################
 # classes / functions
@@ -181,6 +181,7 @@ class RangeDict(dict):
 
 def get_mongo_client(mongodb_addr=None):
     if mongodb_addr is None:
-        cfg = load_config()
+        cfg_path = load_meta_config()
+        cfg = load_config(cfg_path)
         mongodb_addr, _ = get_config_param(cfg, [CONFIG_MONGO_ADDR_KEY])
     return pymongo.MongoClient(mongodb_addr, replicaset=MONGO_RS)

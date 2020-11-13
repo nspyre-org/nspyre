@@ -22,7 +22,7 @@ from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
 
 # nspyre
 from nspyre.config.config_files import load_meta_config
-from nspyre.definitions import CLIENT_META_CONFIG_PATH
+from nspyre.definitions import CLIENT_META_CONFIG_PATH, NSPYRE_LOG_FMT
 from nspyre.spyrelet.spyrelet import Spyrelet_Launcher
 from nspyre.gui.widgets.param_widget import ParamWidget
 from nspyre.gui.widgets.save_widget import Save_Widget
@@ -256,7 +256,7 @@ if __name__ ==  '__main__':
 
     # configure server logging behavior
     logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s -- %(levelname)s -- %(message)s',
+                        format=NSPYRE_LOG_FMT,
                         handlers=[logging.StreamHandler()])
 
     logging.info('starting Instrument Manager...')

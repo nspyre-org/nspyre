@@ -20,6 +20,8 @@ from PyQt5.QtWidgets import QApplication
 from .app import NSpyreApp
 from .main_window import NSpyreMainWindow
 
+from nspyre.definitions import NSPYRE_LOG_FMT
+
 THIS_DIR = Path(__file__).parent
 DEFAULT_LOG = THIS_DIR / 'nspyre.log'
 
@@ -77,7 +79,7 @@ def main(args=None):
                                         % (cmd_args.verbosity)) from None
 
         logging.basicConfig(level=log_level,
-                        format='%(asctime)s -- %(levelname)s -- %(message)s',
+                        format=NSPYRE_LOG_FMT,
                         handlers=[logging.FileHandler(cmd_args.log, 'w+'),
                                 logging.StreamHandler()])
 

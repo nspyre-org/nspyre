@@ -18,6 +18,7 @@ from PyQt5.QtWidgets import QApplication
 import pandas as pd
 
 # nspyre
+from nspyre.definitions import NSPYRE_LOG_FMT
 from nspyre.gui.view_manager import ViewManagerWindow
 from nspyre.gui.widgets.splitter_widget import Splitter, SplitterOrientation
 from nspyre.gui.data_handling import load_data
@@ -130,7 +131,7 @@ if __name__ ==  '__main__':
 
     # configure server logging behavior
     logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s -- %(levelname)s -- %(message)s',
+                        format=NSPYRE_LOG_FMT,
                         handlers=[logging.StreamHandler()])
 
     logging.info('starting Data Explorer...')

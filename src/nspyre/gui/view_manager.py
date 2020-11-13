@@ -26,7 +26,7 @@ from nspyre.gui.widgets.plotting import LinePlotWidget, HeatmapPlotWidget
 from nspyre.gui.widgets.splitter_widget import Splitter, SplitterOrientation
 from nspyre.mongodb.mongo_listener import Synched_Mongo_Database
 from nspyre.gui.widgets.views import Spyrelet_Views
-from nspyre.definitions import join_nspyre_path
+from nspyre.definitions import join_nspyre_path, NSPYRE_LOG_FMT
 from nspyre.spyrelet.spyrelet import custom_decode
 from nspyre.utils.misc import cleanup_register
 from nspyre.gui.image import ImageWidget
@@ -398,7 +398,7 @@ if __name__ ==  '__main__':
 
     # configure server logging behavior
     logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s -- %(levelname)s -- %(message)s',
+                        format=NSPYRE_LOG_FMT,
                         handlers=[logging.StreamHandler()])
 
     logging.info('starting View Manager...')

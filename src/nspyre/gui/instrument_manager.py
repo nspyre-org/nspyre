@@ -42,7 +42,7 @@ from pyqtgraph import SpinBox as pyqtgraph_SpinBox
 from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
 
 from nspyre.config.config_files import load_meta_config
-from nspyre.definitions import Q_, CLIENT_META_CONFIG_PATH
+from nspyre.definitions import Q_, CLIENT_META_CONFIG_PATH, NSPYRE_LOG_FMT
 from nspyre.inserv.gateway import InservGateway
 
 ###########################
@@ -333,7 +333,7 @@ if __name__ ==  '__main__':
 
     # configure server logging behavior
     logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s -- %(levelname)s -- %(message)s',
+                        format=NSPYRE_LOG_FMT,
                         handlers=[logging.StreamHandler()])
 
     logging.info('starting Instrument Manager...')

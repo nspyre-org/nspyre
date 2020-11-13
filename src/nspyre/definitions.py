@@ -33,6 +33,8 @@ def join_nspyre_path(path):
     directory"""
     return NSPYRE_ROOT / path
 
+NSPYRE_LOG_FMT = '%(asctime)s [%(levelname)8s] (%(filename)s:%(lineno)s) %(message)s'
+
 ###########################
 # resources
 ###########################

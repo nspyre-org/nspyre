@@ -24,7 +24,7 @@ import pyvisa
 # nspyre
 from nspyre.inserv.inserv import InstrumentServer
 from nspyre.config.config_files import load_meta_config
-from nspyre.definitions import SERVER_META_CONFIG_PATH
+from nspyre.definitions import SERVER_META_CONFIG_PATH, NSPYRE_LOG_FMT
 
 ###########################
 # globals
@@ -200,7 +200,7 @@ def main():
                                         format(cmd_args.verbosity)) from None
 
         logging.basicConfig(level=log_level,
-                        format='%(asctime)s -- %(levelname)s -- %(message)s',
+                        format=NSPYRE_LOG_FMT,
                         handlers=[logging.FileHandler(cmd_args.log, 'w+'),
                                 logging.StreamHandler()])
 

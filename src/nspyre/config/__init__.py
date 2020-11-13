@@ -16,7 +16,7 @@ import logging
 from pathlib import Path
 
 # nspyre
-from nspyre.definitions import CLIENT_META_CONFIG_PATH, SERVER_META_CONFIG_PATH
+from nspyre.definitions import CLIENT_META_CONFIG_PATH, SERVER_META_CONFIG_PATH, NSPYRE_LOG_FMT
 from nspyre.config.config_files import meta_config_add, meta_config_remove, \
                                 meta_config_files, meta_config_enabled_idx, \
                                 meta_config_set_enabled_idx
@@ -87,7 +87,7 @@ def main():
                                         format(cmd_args.verbosity)) from None
 
         logging.basicConfig(level=log_level,
-                        format='%(asctime)s -- %(levelname)s -- %(message)s',
+                        format=NSPYRE_LOG_FMT,
                         handlers=[logging.StreamHandler()])
 
     if cmd_args.client_or_inserv == 'client':

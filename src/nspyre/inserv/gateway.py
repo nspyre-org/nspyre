@@ -27,7 +27,7 @@ from nspyre.config.config_files import get_config_param, load_config
 from nspyre.definitions import MONGO_CONNECT_TIMEOUT, \
                             MONGO_SERVERS_KEY, MONGO_SERVERS_SETTINGS_KEY, \
                             MONGO_RS, RPYC_CONN_TIMEOUT, RPYC_SYNC_TIMEOUT, \
-                            INSERV_DEV_ACCESSOR
+                            INSERV_DEV_ACCESSOR, CLIENT_META_CONFIG_PATH
 from nspyre.definitions import Q_
 
 # for properly serializing/deserializing quantity objects using the local
@@ -70,7 +70,7 @@ class InservGateway():
     instance variable object for each device connected to the remote instrument
     server
     """
-    def __init__(self, config_file, mongo_addr=None):
+    def __init__(self, config_file=CLIENT_META_CONFIG_PATH, mongo_addr=None):
         # config dictionary
         self.config = {}
         # dictionary of available rpyc instrument servers
@@ -197,21 +197,3 @@ class InservGateway():
     def __exit__(self, exc_type, exc_value, traceback):
         """Python context manager teardown"""
         self.disconnect_servers()
-
-if __name__ == '__main__':
-    # configure server logging behavior
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s -- %(levelname)s -- %(message)s',
-                        handlers=[logging.StreamHandler()])
-    # TODO unit testing module
-    with InservGateway() as im:
-        pass
-        # sg_loc = 'local1/fake_sg'
-        # im.devs[sg_loc].amplitude = Q_(2.0, 'volt')
-        # im.devs[sg_loc].amplitude = Q_(10.0, 'volt')
-        # im.devs[sg_loc].dout[1] = Q_(0.0, 'volt')
-        # im.devs[sg_loc].dout[2] = Q_(2.0, 'volt')
-        # im.devs[sg_loc].dout[3] = Q_(3.0, 'volt')
-        # im.devs[sg_loc].dout[1] = Q_(1.0, 'volt')
-        #print('found devices:\n{}'.format(im.devs))
-        #print(Q_(5, 'volt') + im.devs[sg_loc].amplitude)

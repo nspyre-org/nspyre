@@ -21,7 +21,6 @@ import time
 from functools import partial
 import copy
 import functools
-import weakref
 
 # 3rd party
 import rpyc
@@ -40,7 +39,7 @@ from nspyre.utils.misc import load_class_from_str, load_class_from_file
 from nspyre.definitions import MONGO_SERVERS_KEY, \
                 MONGO_SERVERS_SETTINGS_KEY, MONGO_CONNECT_TIMEOUT, \
                 MONGO_RS, RPYC_SYNC_TIMEOUT, CONFIG_MONGO_ADDR_KEY, \
-                join_nspyre_path
+                join_nspyre_path, SERVER_META_CONFIG_PATH
 
 # for properly serializing/deserializing quantity objects using the local
 # pint unit registry
@@ -50,7 +49,6 @@ register_quantity_brining(Q_)
 # globals
 ###########################
 
-CONFIG_SERVER_SETTINGS = 'server_settings'
 CONFIG_SERVER_DEVICES = 'devices'
 CONFIG_SERVER_DEVICE_LANTZ_CLASS = 'lantz_class'
 CONFIG_SERVER_DEVICE_CLASS_FILE = 'class_file'
@@ -159,16 +157,17 @@ class InstrumentServer(InstrumentService):
     client
     """
 
-    def __init__(self, config_file, mongo_addr=None):
+    def __init__(self, config_file=None, mongo_addr=None):
         super().__init__()
+        # if the config file isn't specified, get it from the meta-config
+        if not config_file:
+            config_file = load_meta_config(SERVER_META_CONFIG_PATH)
         # lantz devices
         self._devs = {}
         # configuration
         self.config = {}
         self.config_file = None
-        self.name = None
         # server settings
-        self.ip = None
         self.port = None
         # rpyc server object
         self._rpyc_server = None
@@ -186,7 +185,7 @@ class InstrumentServer(InstrumentService):
         self.feat_hook_functions = {}
         self.dictfeat_hook_functions = {}
 
-        self.update_config(config_file)
+        self.reload_config(config_file)
         self.reload_server_config()
         self.start_server()
         self.reload_devices()
@@ -202,7 +201,6 @@ class InstrumentServer(InstrumentService):
             return self.__getattribute__(name)
             #raise AttributeError('\'{}\' object has no attribute \'{}\''.\
             #            format(self.__class__.__name__, name))
-
 
     def on_connect(self, conn):
         """Called when a client connects to the RPyC server"""
@@ -254,7 +252,7 @@ class InstrumentServer(InstrumentService):
     def restart(self, config_file=None, mongo_addr=None):
         """Restart the server AND reload the config file and all devices"""
         logging.info('restarting...')
-        self.update_config(config_file)
+        self.reload_config(config_file)
         self.reload_server_config()
         self.reload_devices()
         self.reload_server()
@@ -262,17 +260,13 @@ class InstrumentServer(InstrumentService):
 
     def reload_server_config(self):
         """Reload RPyC server settings from the config"""
-        self.name, _ = get_config_param(self.config, \
-                        [CONFIG_SERVER_SETTINGS, 'name'])
-        self.ip, _ = get_config_param(self.config, \
-                        [CONFIG_SERVER_SETTINGS, 'ip'])
         self.port, _ = get_config_param(self.config, \
-                        [CONFIG_SERVER_SETTINGS, 'port'])
+                        ['port'])
 
 
     def connect_mongo(self, mongo_addr=None):
         """Config and connect to the mongodb database"""
-        self.db_name = MONGO_SERVERS_KEY.format(self.name)
+        self.db_name = MONGO_SERVERS_KEY.format(self.port)
         if mongo_addr:
             self.mongo_addr = mongo_addr
         else:
@@ -284,30 +278,7 @@ class InstrumentServer(InstrumentService):
                             replicaset=MONGO_RS,
                             serverSelectionTimeoutMS=MONGO_CONNECT_TIMEOUT)
         self.db = self.mongo_client[self.db_name]
-        # mongodb doesn't do any actual database queries until you try to
-        # perform an action on the database, so this is the point where
-        # connection will occur
-        try:
-            current_db = self.mongo_client[self.db_name]\
-                                    [MONGO_SERVERS_SETTINGS_KEY].find_one()
-        except Exception as exc:
-            raise InstrumentServerError(exc, 'Failed connecting to mongodb '
-                                    '[{}]'.format(self.mongo_addr)) from None
-        try:
-            current_db_address = current_db['address']
-        except:
-            current_db_address = self.ip
-        # check that there isn't already an instrument server with same
-        # name but different address
-        if current_db_address != self.ip:
-            raise InstrumentServerError('An instrument server with the name '
-                    '[{}] and a different address [{}] is already present on '
-                    'mongodb. Instrument servers must have unique names.'.\
-                    format(self.name, current_db_address)) from None
         self.mongo_client.drop_database(self.db_name)
-        # add a special settings document so clients can auto-detect us
-        self.db[MONGO_SERVERS_SETTINGS_KEY].insert_one({'address' : self.ip,
-                                                    'port' : self.port})
         logging.info('connected to mongodb server [{}]'.format(self.mongo_addr))
 
 
@@ -495,7 +466,7 @@ class InstrumentServer(InstrumentService):
         logging.info('reloaded all devices')
 
 
-    def update_config(self, config_file=None):
+    def reload_config(self, config_file=None):
         """Reload the config files"""
         # update the config with a new file if one was passed as argument
         if config_file:

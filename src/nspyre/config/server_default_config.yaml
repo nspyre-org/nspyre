@@ -1,12 +1,5 @@
-server_settings:
-  # name of the instrument server that the client will use to connect
-  name: 'local1'
-  # ip address / domain name of the instrument server as seen by the client
-  # recommended to use a local network static ip for remote clients, e.g.:
-  # ip: '192.168.0.15'
-  ip: 'localhost' # only allow client connections from the same machine
-  # port to run the RPyC instrument server on
-  port: 5556
+# port to run the instrument server on
+port: 5556
 
 # address of the mongodb server in the format 'mongodb://<ip>:<port>/'
 mongodb_addr: 'mongodb://localhost:27017/'

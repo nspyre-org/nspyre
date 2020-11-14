@@ -17,16 +17,12 @@ import logging
 
 # 3rd party
 import parse
-import pymongo
-from pymongo.errors import PyMongoError
 import rpyc
 
 # nspyre
 from nspyre.utils.misc import register_quantity_brining
 from nspyre.config.config_files import get_config_param, load_config
-from nspyre.definitions import MONGO_CONNECT_TIMEOUT, \
-                            MONGO_SERVERS_KEY, MONGO_SERVERS_SETTINGS_KEY, \
-                            MONGO_RS, RPYC_CONN_TIMEOUT, RPYC_SYNC_TIMEOUT, \
+from nspyre.definitions import RPYC_CONN_TIMEOUT, RPYC_SYNC_TIMEOUT, \
                             INSERV_DEV_ACCESSOR, CLIENT_META_CONFIG_PATH
 from nspyre.definitions import Q_
 
@@ -42,6 +38,13 @@ class InservGatewayError(Exception):
     """General InservGateway exception"""
     def __init__(self, msg):
         super().__init__(msg)
+
+###########################
+# globals
+###########################
+
+CONFIG_GATEWAY_SETTINGS = 'instrument_servers'
+CONFIG_GATEWAY_DEVICES = 'devices'
 
 ###########################
 # classes / functions
@@ -70,7 +73,10 @@ class InservGateway():
     instance variable object for each device connected to the remote instrument
     server
     """
-    def __init__(self, config_file=CLIENT_META_CONFIG_PATH, mongo_addr=None):
+    def __init__(self, config_file=None):
+        # if the config file isn't specified, get it from the meta-config
+        if not config_file:
+            config_file = load_meta_config(CLIENT_META_CONFIG_PATH)
         # config dictionary
         self.config = {}
         # dictionary of available rpyc instrument servers
@@ -79,49 +85,23 @@ class InservGateway():
         #                  rpyc.utils.helpers.BgServingThread),
         #       'remote1': ...}
         self._servers = {}
-        self.mongo_addr = None
-        self.mongo_client = None
         self.config = None
-        self.update_config(config_file)
-        self.config_mongo(mongo_addr)
-        self.connect_servers()
+        self.reload_config(config_file)
+        self.reconnect_servers()
 
-    def config_mongo(self, mongo_addr=None):
-        """Set up the mongodb database (but connection won't take place until
-        a query is made)"""
-        if mongo_addr:
-            self.mongo_addr = mongo_addr
-        else:
-            self.mongo_addr,_ = get_config_param(self.config, ['mongodb_addr'])
-        logging.info('connecting to mongodb server [{}]...'.\
-                            format(self.mongo_addr))
-        self.mongo_client = pymongo.MongoClient(mongo_addr,
-                            replicaset=MONGO_RS,
-                            serverSelectionTimeoutMS=MONGO_CONNECT_TIMEOUT)
-
-    def connect_servers(self):
-        """Auto discover and attempt connection to all of the instrument
-        servers in mongodb"""
-        # retrieve all of the instrument server settings from mongo
-        try:
-            all_db_names = self.mongo_client.list_database_names()
-        except PyMongoError:
-            raise InservGatewayError('Failed connecting to mongodb [{}]'.\
-                                        format(self.mongo_addr)) from None
-        logging.info('connected to mongodb server [{}]'.format(self.mongo_addr))
-        for db_name in all_db_names:
-            server_name = parse.parse(MONGO_SERVERS_KEY, db_name)
-            # filter out all of the dbs that aren't instrument servers
-            if server_name:
-                # if the name was extracted successfully,
-                # get it's value as a string
-                server_name = server_name[0]
-                # retrieve the server settings dictionary
-                db_entry = self.mongo_client[db_name]\
-                                    [MONGO_SERVERS_SETTINGS_KEY].find_one()
-                self.connect_server(server_name,
-                                    db_entry['address'],
-                                    db_entry['port'])
+    def reconnect_servers(self):
+        """Attempt connection to all of the instrument servers specified in the config"""
+        servers,_ = get_config_param(self.config, [CONFIG_GATEWAY_SETTINGS])
+        # iterate through servers
+        for server_name in servers:
+            # only try connecting if there isn't already a connection
+            if server_name not in self._servers:
+                ip,_ = get_config_param(self.config, [CONFIG_GATEWAY_SETTINGS, server_name, 'ip'])
+                port,_ = get_config_param(self.config, [CONFIG_GATEWAY_SETTINGS, server_name, 'port'])
+                try:
+                    self.connect_server(server_name, ip, port)
+                except InservGatewayError:
+                    logging.warning('Couldn\'t connect to instrument server [{}]'.format(server_name))
 
     def disconnect_servers(self):
         """Attempt disconnection from all of the instrument servers"""
@@ -186,7 +166,7 @@ class InservGateway():
             raise AttributeError('\'{}\' object has no attribute \'{}\''.\
                         format(self.__class__.__name__, attr))
 
-    def update_config(self, filename):
+    def reload_config(self, filename):
         """Reload the config file"""
         self.config = load_config(filename)
 

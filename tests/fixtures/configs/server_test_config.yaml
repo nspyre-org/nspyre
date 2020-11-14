@@ -1,0 +1,32 @@
+server_settings:
+  # name of the instrument server that the client will use to connect
+  name: 'tserv'
+  # ip address / domain name of the instrument server as seen by the client
+  # recommended to use a local network static ip for remote clients, e.g.:
+  # ip: '192.168.0.15'
+  ip: 'localhost' # only allow client connections from the same machine
+  # port to run the RPyC instrument server on
+  port: 30249
+
+mongodb_addr: 'mongodb://localhost:27017/'
+
+devices:
+  fake_sg:
+    class_file: '../drivers/fake_sg.py'
+    class: 'FakeSigGen'
+    args: []
+    kwargs: {}
+  fake_daq:
+    class_file: '../drivers/fake_daq.py'
+    class: 'FakeDAQ'
+    args: []
+    kwargs: {}
+  fake_pellicle:
+    class_file: '../drivers/fake_pellicle.py'
+    class: 'FakePellicle'
+    args: []
+    kwargs: {}
+  lantz_osc:
+    lantz_class: examples.dummydrivers.DummyOsci
+    args: []
+    kwargs: {}

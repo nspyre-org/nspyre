@@ -174,7 +174,7 @@ def load_meta_config(meta_config_path=None):
 
     # resolve relative paths
     if not cfg_path.is_absolute():
-        cfg_path = meta_config_path.parent / cfg_path
+        cfg_path = (meta_config_path.parent / cfg_path).resolve()
 
     return cfg_path
 

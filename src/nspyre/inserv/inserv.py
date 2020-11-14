@@ -185,10 +185,8 @@ class InstrumentServer(InstrumentService):
         self.feat_hook_functions = {}
         self.dictfeat_hook_functions = {}
 
-        self.reload_config(config_file)
-        self.reload_server_config()
-        self.start_server()
-        self.reload_devices()
+        # start everything
+        self.restart(config_file, mongo_addr)
 
 
     def __getattr__(self, name):
@@ -254,6 +252,8 @@ class InstrumentServer(InstrumentService):
         logging.info('restarting...')
         self.reload_config(config_file)
         self.reload_server_config()
+        self.disconnect_mongo()
+        self.connect_mongo(mongo_addr)
         self.reload_devices()
         self.reload_server()
 
@@ -284,10 +284,11 @@ class InstrumentServer(InstrumentService):
 
     def disconnect_mongo(self):
         """Disconnect from the mongodb database"""
-        # remove the database entry from mongo
-        self.mongo_client.drop_database(self.db_name)
-        # disconnect
-        self.mongo_client.close()
+        if self.mongo_client:
+            # remove the database entry from mongo
+            self.mongo_client.drop_database(self.db_name)
+            # disconnect
+            self.mongo_client.close()
 
 
     def add_device(self, dev_name):
@@ -489,7 +490,6 @@ class InstrumentServer(InstrumentService):
             logging.warning('can\'t start the rpyc server because one '
                             'is already running')
             return
-        self.connect_mongo()
         thread = threading.Thread(target=self._rpyc_server_thread)
         thread.start()
         # wait for the server to start
@@ -499,7 +499,6 @@ class InstrumentServer(InstrumentService):
 
     def stop_server(self):
         """Stop the RPyC server"""
-        self.disconnect_mongo()
         if not self._rpyc_server:
             logging.warning('can\'t stop the rpyc server because there '
                             'isn\'t one running')

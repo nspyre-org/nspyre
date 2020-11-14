@@ -10,7 +10,6 @@ class FakeSigGen(Driver):
     @Feat(units='Hz')
     def frequency(self):
         return self._frequency
-
     @frequency.setter
     def frequency(self, value):
         self._frequency = value
@@ -18,7 +17,6 @@ class FakeSigGen(Driver):
     @Feat(units='V')
     def amplitude(self):
         return self._amplitude
-
     @amplitude.setter
     def amplitude(self, value):
         self._amplitude = value

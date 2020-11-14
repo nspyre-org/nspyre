@@ -1,25 +1,25 @@
-# address of the mongodb server
+instrument_servers:
+  tserv:
+    ip: 'localhost'
+    port: 30249
+
 mongodb_addr: 'mongodb://localhost:27017/'
 
-# experiment (spyrelets) list - the syntax is:
-# name:
-#   file: 'path/to/file.py' (can be absolute or relative to this config)
-#   class: 'SpyreletClass'
-#   device_aliases: {sg1: 'local_inserv1/fake_sg',
-#                   osc1: 'local_inserv1/fake_osc'} }
-#   [optional] spyrelets: {'sub1': 'sub_spyrelet1', ...}
-#   [optional] args: 'Other arguments'
 spyrelets:
-  s2:
+  sweep:
     file: '../spyrelet/test_spyrelets.py'
-    class: 'SubSpyrelet'
-    device_aliases: {sg: 'local1/fake_tcpip_sg'}
-
-  my_exp:
-    file: '../spyrelet/test_spyrelets.py'
-    class: 'MyExperiment'
+    class: 'FreqAmpSweep'
     device_aliases:
-      sg: 'local1/fake_tcpip_sg'
-      osc: 'local1/fake_osc'
-    spyrelets: {s2: 's2'}
+      fake_sg: 'tserv/fake_sg'
+      fake_daq: 'tserv/fake_daq'
+      fake_pellicle: 'tserv/fake_pellicle'
+      lantz_scope: 'tserv/lantz_scope'
+    args: {}
+  single:
+    file: '../spyrelet/test_spyrelets.py'
+    class: 'SinglePoint'
+    device_aliases:
+      fake_sg: 'tserv/fake_sg'
+      fake_daq: 'tserv/fake_daq'
+      fake_pellicle: 'tserv/fake_pellicle'
     args: {}

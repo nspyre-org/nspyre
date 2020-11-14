@@ -19,21 +19,34 @@ from nspyre.definitions import Q_
 # tests
 ###########################
 
-def test_feats(client_config_path):
-    with InservGateway(client_config_path) as insgw:
-        insgw.tserv.fake_sg.amplitude = Q_(1.0, 'V')
-        assert insgw.tserv.fake_sg.amplitude == Q_(1.0, 'V')
-        insgw.tserv.fake_sg.amplitude = Q_(10.0, 'V')
-        assert insgw.tserv.fake_sg.amplitude == Q_(10.0, 'V')
+class TestInserv:
+    def test_feats_get_set(self, gateway):
+        """test basic feat get/set"""
+        gateway.tserv.fake_sg.amplitude = Q_(1.0, 'V')
+        assert gateway.tserv.fake_sg.amplitude == Q_(1.0, 'V')
+        gateway.tserv.fake_sg.amplitude = Q_(10.0, 'V')
+        assert gateway.tserv.fake_sg.amplitude == Q_(10.0, 'V')
 
-def test_dictfeats(client_config_path):
-    with InservGateway(client_config_path) as insgw:
+    def test_feats_units(self, gateway):
+        """test get/set with different pint units"""
+        gateway.tserv.fake_sg.amplitude = Q_(0.1, 'V')
+        assert gateway.tserv.fake_sg.amplitude == Q_(100.0, 'mV')
+        gateway.tserv.fake_sg.amplitude = Q_(10, 'mV')
+        assert gateway.tserv.fake_sg.amplitude == Q_(0.01, 'V')
+
+    def test_dictfeats_get_set(self, gateway):
+        """test basic dictfeat get/set"""
         for k in range(1, 10):
-            insgw.tserv.fake_daq.dout[k] = True
-            assert insgw.tserv.fake_daq.dout[k] == True
+            gateway.tserv.fake_daq.dout[k] = False
+            assert gateway.tserv.fake_daq.dout[k] == False
         for k in range(1, 10):
-            insgw.tserv.fake_daq.dout[k] = False
-            assert insgw.tserv.fake_daq.dout[k] == False
+            gateway.tserv.fake_daq.dout[k] = True
+            assert gateway.tserv.fake_daq.dout[k] == True
+
+    def test_dictfeats_ro(self, gateway):
+        """test read-only dictfeats"""
+        gateway.tserv.fake_daq.reset_din(False)
         for k in range(1, 10):
-            insgw.tserv.fake_daq.dout[k] = True
-            assert insgw.tserv.fake_daq.dout[k] == True
+            assert gateway.tserv.fake_daq.din[k] == False
+            gateway.tserv.fake_daq.toggle_din(k)
+            assert gateway.tserv.fake_daq.din[k] == True

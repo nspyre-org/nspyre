@@ -3,114 +3,115 @@
 ###########################
 
 # std
-import numpy as np
-import time
-from itertools import cycle
 import logging
 
 # nspyre
-from nspyre.gui.widgets.views import Plot1D, Plot2D, PlotFormatInit, PlotFormatUpdate
 from nspyre.spyrelet.spyrelet import Spyrelet
-from nspyre.gui.widgets.plotting import LinePlotWidget
-from nspyre.gui.colors import colors
 from nspyre.definitions import Q_
 
-COLORS = cycle(colors.keys())
+# from nspyre.gui.widgets.views import Plot1D, Plot2D, PlotFormatInit, PlotFormatUpdate
+# from nspyre.gui.widgets.plotting import LinePlotWidget
 
 ###########################
 # classes
 ###########################
 
-class SubSpyrelet(Spyrelet):
+class SinglePoint(Spyrelet):
     REQUIRED_DEVICES = [
-        'sg'
+        'fake_sg',
+        'fake_daq',
+        'fake_pellicle',
     ]
 
     PARAMS = {
-        'iterations':{
-            'type':int,
-            'positive':True},
-        'amplitude':{
-            'type':float,
-            'positive':True},
+        'amp': {
+            'type': float,
+            'units':'V'},
+        'freq': {
+            'type': float,
+            'units':'GHz'},
     }
 
-    def main(self, iterations, amplitude):
-        for i in self.progress(range(iterations)):
-            self.sg.amplitude = amplitude
-            time.sleep(0.1)
-            self.acquire({
-                'ind': i,
-                'rand': np.random.uniform(1,2, 100),
-                'freq': self.sg.frequency,
-            })
-    @Plot1D
-    def last_rand(df, cache):
-        last_rand = np.array(df.rand.iloc[-1])
-        return {'rand':[np.arange(len(last_rand)), last_rand]}
+    def main(self, freq, amp):
+        # open the pellicle
+        self.fake_pellicle.opened = True
+        # set the frequency / amplitude of the sg
+        self.fake_sg.amplitude = amp
+        self.fake_sg.frequency = freq
+        # make an analog input read
+        val = self.fake_daq.ain[0]
+        # gather the data
+        self.acquire({
+            'freq': freq,
+            'A': amp,
+            'result': val,
+        })
 
-    @Plot1D
-    def avg_rand(df, cache):
-        rand = np.array(list(df.rand.values))
-        return {'rand':[df.ind.values, rand.mean(axis=1)]}
+        # close the pellicle
+        self.fake_pellicle.opened = False
 
-    @Plot2D
-    def data_im(df, cache):
-        im = np.array(list(df.rand.values))
-        return im
+    def initialize(self, freq, amp):
+        logging.info('initializing [{}]...'.format(self.name))
 
+    def finalize(self, freq, amp):
+        logging.info('finalizing [{}]...'.format(self.name))
 
-    @PlotFormatUpdate(LinePlotWidget, ['last_rand'])
-    def formatter(plot, df, cache):
-        for item in plot.plot_item.listDataItems():
-            item.setPen(colors[next(COLORS)])
-
-class MyExperiment(Spyrelet):
+class FreqAmpSweep(Spyrelet):
     REQUIRED_DEVICES = [
-        'sg',
-        'osc'
+        'fake_sg',
+        'fake_daq',
+        'fake_pellicle',
+        'lantz_scope'
     ]
 
-    REQUIRED_SPYRELETS = {
-        's2': SubSpyrelet
-    }
-
     PARAMS = {
-        'amplitude': {
-                'type': float,
-                'units':'V'},
-        'fs': {
+        'amp_range': {
+            'type': range,
+            'units':'V'},
+        'freq_range': {
             'type': range,
             'units':'GHz'},
     }
 
-    def main(self, fs, amplitude):
-        for i, f in enumerate(self.progress(fs)):
-            self.sg.frequency = f
-            self.call(self.s2, 100, amplitude)
-            val = self.s2.data.rand.mean().mean()
-            self.acquire({
-                'ind':i,
-                'f':f,
-                'A':amplitude,
-                'result': val,
-            })
+    def main(self, freq_range, amp_range):
+        # flip up the pellicle
+        self.fake_pellicle.opened = True
 
-    def initialize(self, fs, amplitude):
+        # iterate over ampitudes
+        for a, amp in enumerate(self.progress(amp_range)):
+            self.fake_sg.amplitude = amp
+            # iterate over frequencies
+            for f, freq in enumerate(self.progress(freq_range)):
+                self.fake_sg.frequency = f
+                # measure an analog input voltage
+                val = self.fake_daq.ain[0]
+                # gather the data
+                self.acquire({
+                    'ind': i,
+                    'f': f,
+                    'a': a,
+                    'A': amplitude,
+                    'result': val,
+                })
+
+        rand_array = self.lantz_scope.measure()
+        self.fake_pellicle.opened = False
+
+    def initialize(self, freq_range, amp_range):
         logging.info('initializing [{}]...'.format(self.name))
 
-    def finalize(self, fs, amplitude):
+    def finalize(self, freq_range, amp_range):
         logging.info('finalizing [{}]...'.format(self.name))
 
-    @Plot1D
-    def plot_results(df, cache):
-        return {'result':[df.ind.values, df.result.values]}
+    # @Plot1D
+    # def plot_results(df, cache):
+    #     return {'result':[df.ind.values, df.result.values]}
 
-    @Plot1D
-    def plot_f(df, cache):
-        return {'f':[df.ind.values, df.f.values], 'f2':[df.ind.values, 2*df.f.values]}
+    # @Plot1D
+    # def plot_f(df, cache):
+    #     return {'f':[df.ind.values, df.f.values], 'f2':[df.ind.values, 2*df.f.values]}
 
-    @PlotFormatInit(LinePlotWidget, ['plot_f', 'plot_results'])
-    def init_formatter(plot):
-        plot.xlabel = 'My x axis (a.u.)'
-        plot.ylabel = 'Signal (in bananas)'
+    # @PlotFormatInit(LinePlotWidget, ['plot_f', 'plot_results'])
+    # def init_formatter(plot):
+    #     plot.xlabel = 'My x axis (a.u.)'
+    #     plot.ylabel = 'Signal (in bananas)'

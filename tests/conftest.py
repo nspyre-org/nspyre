@@ -22,8 +22,6 @@ import psutil
 
 # nspyre
 from nspyre.inserv.gateway import InservGateway
-from nspyre.config.config_files import load_config, get_config_param
-from nspyre.inserv.inserv import CONFIG_SERVER_SETTINGS
 
 ###########################
 # globals
@@ -38,8 +36,16 @@ client_cfg_path = Path(__file__).parent / Path('fixtures/configs/client_test_con
 
 @pytest.fixture()
 def client_config_path():
+    """return the client config path"""
     logging.info('getting client config')
     return client_cfg_path
+
+@pytest.fixture(scope='class')
+def gateway():
+    """return an instrument gateway"""
+    logging.info('getting gateway')
+    with InservGateway(client_cfg_path) as insgw:
+        yield insgw
 
 @pytest.fixture(scope='session', autouse=True)
 def setup():
@@ -68,8 +74,9 @@ def setup():
     atexit.register(cleanup)
 
     # wait until the server is online
-    server_cfg = load_config(server_cfg_path)
-    server_name,_ = get_config_param(server_cfg, [CONFIG_SERVER_SETTINGS, 'name'])
+    # ignore log warnings while we attempt to connect
+    logger = logging.getLogger()
+    logger.disabled = True
     while True:
         try:
             with InservGateway(client_cfg_path) as insgw:
@@ -77,6 +84,7 @@ def setup():
                 break
         except:
             time.sleep(0.1)
+    logger.disabled = False
 
     # now the tests run
     yield

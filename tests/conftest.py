@@ -72,10 +72,6 @@ def setup():
         inserv.kill()
     atexit.register(cleanup)
 
-    # TODO
-    # root_logger = logging.getLogger()
-    # root_logger.setLevel(logging.DEBUG)
-
     # ignore logging while we attempt to connect
     logging.disable(logging.CRITICAL)
     # wait until the server is online

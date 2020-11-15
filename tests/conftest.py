@@ -38,7 +38,7 @@ client_cfg_path = Path(__file__).parent / Path('fixtures/configs/client_test_con
 def client_config_path():
     """return the client config path"""
     logging.info('getting client config')
-    return client_cfg_path
+    return client_cfg_path.resolve()
 
 @pytest.fixture(scope='class')
 def gateway():
@@ -55,7 +55,7 @@ def setup():
     logging.info('test setup...')
 
     # search through all running processes, and only start mongo if it's not
-    # already running, since it takes awhile to startup
+    # already running, since it takes awhile to start up
     if not 'mongod' in [p.name() for p in psutil.process_iter()]:
         logging.info('running nspyre-mongodb')
         # start mongod in a subprocess
@@ -63,20 +63,22 @@ def setup():
         # give time for the database to start
         time.sleep(30)
 
-    # start the server
-    inserv = subprocess.Popen(['python',
-                    str(Path(__file__).parent / Path('fixtures/inserv_proc.py')),
-                    server_cfg_path])
-    
+    # start the instrument server
+    inserv = subprocess.Popen(['nspyre-inserv', '-c', server_cfg_path, '-v', 'debug'],
+                                stdin=subprocess.PIPE)
+
     # make sure the inserv gets killed on exit even if there's an error
     def cleanup():
         inserv.kill()
     atexit.register(cleanup)
 
+    # TODO
+    # root_logger = logging.getLogger()
+    # root_logger.setLevel(logging.DEBUG)
+
+    # ignore logging while we attempt to connect
+    logging.disable(logging.CRITICAL)
     # wait until the server is online
-    # ignore log warnings while we attempt to connect
-    logger = logging.getLogger()
-    logger.disabled = True
     while True:
         try:
             with InservGateway(client_cfg_path) as insgw:
@@ -84,7 +86,8 @@ def setup():
                 break
         except:
             time.sleep(0.1)
-    logger.disabled = False
+    # re-enable logging
+    logging.disable(logging.NOTSET)
 
     # now the tests run
     yield

@@ -20,7 +20,7 @@ import parse
 import rpyc
 
 # nspyre
-from nspyre.utils.misc import register_quantity_brining
+from nspyre.misc.misc import register_quantity_brining
 from nspyre.config.config_files import get_config_param, load_config
 from nspyre.definitions import RPYC_CONN_TIMEOUT, RPYC_SYNC_TIMEOUT, \
                             INSERV_DEV_ACCESSOR, CLIENT_META_CONFIG_PATH
@@ -31,6 +31,15 @@ from nspyre.definitions import Q_
 register_quantity_brining(Q_)
 
 ###########################
+# globals
+###########################
+
+logger = logging.getLogger(__name__)
+
+CONFIG_GATEWAY_SETTINGS = 'instrument_servers'
+CONFIG_GATEWAY_DEVICES = 'devices'
+
+###########################
 # exceptions
 ###########################
 
@@ -38,13 +47,6 @@ class InservGatewayError(Exception):
     """General InservGateway exception"""
     def __init__(self, msg):
         super().__init__(msg)
-
-###########################
-# globals
-###########################
-
-CONFIG_GATEWAY_SETTINGS = 'instrument_servers'
-CONFIG_GATEWAY_DEVICES = 'devices'
 
 ###########################
 # classes / functions
@@ -101,7 +103,7 @@ class InservGateway():
                 try:
                     self.connect_server(server_name, ip, port)
                 except InservGatewayError:
-                    logging.warning('Couldn\'t connect to instrument server [{}]'.format(server_name))
+                    logger.error('Couldn\'t connect to instrument server [{}]'.format(server_name))
 
     def disconnect_servers(self):
         """Attempt disconnection from all of the instrument servers"""
@@ -130,7 +132,7 @@ class InservGateway():
             raise InservGatewayError('Failed to connect to '
                             'instrument server [{}] at address [{}]'.\
                             format(s_id, s_addr)) from None
-        logging.info('instrument server gateway connected to instrument '
+        logger.info('instrument server gateway connected to instrument '
                     'server [{}]'.format(s_id))
 
     def disconnect_server(self, s_id):
@@ -145,7 +147,7 @@ class InservGateway():
         except BaseException:
             raise InservGatewayError('Failed to disconnect from '
                             'instrument server [{}]'.format(s_id)) from None
-        logging.info('instrument server gateway disconnected '
+        logger.info('instrument server gateway disconnected '
                         'from server [{}]'.format(s_id))
 
     def servers(self):

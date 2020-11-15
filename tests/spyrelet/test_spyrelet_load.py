@@ -9,6 +9,9 @@ Date: 11/13/2020
 # imports
 ###########################
 
+# std
+from pathlib import Path
+
 # nspyre
 from nspyre.spyrelet.spyrelet import load_all_spyrelets, unload_all_spyrelets, \
                                     unload_spyrelet, load_spyrelet, reload_all_spyrelets, \
@@ -20,19 +23,16 @@ from nspyre.inserv.gateway import InservGateway
 ###########################
 
 class TestSpyrelets:
-    def test_spyrelet_load(client_config_path):
-        pass
-        # with InservGateway(client_config_path) as im:
-        #     import pdb; pdb.set_trace()
-        #     spyrelets = load_all_spyrelets(im)
-        #     unload_all_spyrelets()
-        #     spyrelets = load_all_spyrelets(im)
-        #     unload_spyrelet('sweep')
-        #     try:
-        #         spyrelets = load_all_spyrelets(im)
-        #         raise Exception('this should have failed in the previous line')
-        #     except SpyreletLoadError:
-        #         pass
-        #     load_spyrelet('sweep', im)
-        #     reload_all_spyrelets(im)
-        #     reload_spyrelet('sweep', im)
+    def test_spyrelet_load(self, gateway):
+        spyrelets = load_all_spyrelets(gateway)
+        unload_all_spyrelets()
+        # spyrelets = load_all_spyrelets(gateway)
+        # unload_spyrelet('sweep')
+        # try:
+        #     spyrelets = load_all_spyrelets(gateway)
+        #     raise Exception('this should have failed in the previous line')
+        # except SpyreletLoadError:
+        #     pass
+        # load_spyrelet('sweep', gateway)
+        # reload_all_spyrelets(gateway)
+        # reload_spyrelet('sweep', gateway)

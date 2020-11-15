@@ -11,9 +11,18 @@ Date: 11/12/2020
 # imports
 ###########################
 
+# std
+import logging
+
 # nspyre
 from nspyre.inserv.gateway import InservGateway
 from nspyre.definitions import Q_
+
+###########################
+# globals
+###########################
+
+logger = logging.getLogger(__name__)
 
 ###########################
 # tests

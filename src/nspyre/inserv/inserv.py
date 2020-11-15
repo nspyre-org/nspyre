@@ -15,12 +15,12 @@ Date: 7/8/2020
 
 # std
 from pathlib import Path
-import logging
 import threading
 import time
 from functools import partial
 import copy
 import functools
+import logging
 
 # 3rd party
 import rpyc
@@ -31,11 +31,10 @@ from pimpmyclass.helpers import DictPropertyNameKey
 from pint import Quantity
 
 # nspyre
-from nspyre.utils.misc import register_quantity_brining
 from nspyre.config.config_files import get_config_param, load_config, \
                                     meta_config_add, meta_config_remove, \
                                     meta_config_files, ConfigEntryNotFoundError
-from nspyre.utils.misc import load_class_from_str, load_class_from_file
+from nspyre.misc.misc import load_class_from_str, load_class_from_file, register_quantity_brining
 from nspyre.definitions import MONGO_SERVERS_KEY, \
                 MONGO_SERVERS_SETTINGS_KEY, MONGO_CONNECT_TIMEOUT, \
                 MONGO_RS, RPYC_SYNC_TIMEOUT, CONFIG_MONGO_ADDR_KEY, \
@@ -48,6 +47,8 @@ register_quantity_brining(Q_)
 ###########################
 # globals
 ###########################
+
+logger = logging.getLogger(__name__)
 
 CONFIG_SERVER_DEVICES = 'devices'
 CONFIG_SERVER_DEVICE_LANTZ_CLASS = 'lantz_class'
@@ -65,7 +66,7 @@ class InstrumentServerError(Exception):
     def __init__(self, error, msg):
         super().__init__(msg)
         if error:
-            logging.exception(error)
+            logger.exception(error)
 
 ###########################
 # classes
@@ -186,8 +187,11 @@ class InstrumentServer(InstrumentService):
         self.dictfeat_hook_functions = {}
 
         # start everything
-        self.restart(config_file, mongo_addr)
-
+        self.reload_config(config_file)
+        self.reload_server_config()
+        self.connect_mongo(mongo_addr)
+        self.reload_devices()
+        self.start_server()
 
     def __getattr__(self, name):
         """Allow the user to access the driver objects directly using
@@ -202,10 +206,10 @@ class InstrumentServer(InstrumentService):
 
     def on_connect(self, conn):
         """Called when a client connects to the RPyC server"""
-        logging.info('client [{}] connected'.format(conn))
+        logger.info('client [{}] connected'.format(conn))
 
     def on_about_to_disconnect(self, conn):
-        logging.info('client [{}] about to disconnect'.format(conn))
+        logger.info('client [{}] about to disconnect'.format(conn))
         for device_name, device in self._devs.items():
             # iterate over all feats and dictfeats
             for attr_name, attr in list(device._lantz_feats.items()) + list(device._lantz_dictfeats.items()):
@@ -221,7 +225,7 @@ class InstrumentServer(InstrumentService):
 
     def on_disconnect(self, conn):
         """Called when a client disconnects from the RPyC server"""
-        logging.info('client [{}] disconnected'.format(conn))
+        logger.info('client [{}] disconnected'.format(conn))
 
         # when an RPyC client disconnects, there are dangling netrefs
         # left over in PySignal _slots that point to objects on the client
@@ -249,7 +253,7 @@ class InstrumentServer(InstrumentService):
 
     def restart(self, config_file=None, mongo_addr=None):
         """Restart the server AND reload the config file and all devices"""
-        logging.info('restarting...')
+        logger.info('restarting...')
         self.reload_config(config_file)
         self.reload_server_config()
         self.disconnect_mongo()
@@ -272,14 +276,14 @@ class InstrumentServer(InstrumentService):
         else:
             self.mongo_addr,_ = get_config_param(self.config, \
                                                 [CONFIG_MONGO_ADDR_KEY])
-        logging.info('connecting to mongodb server [{}]...'.\
+        logger.info('connecting to mongodb server [{}]...'.\
                         format(self.mongo_addr))
         self.mongo_client = pymongo.MongoClient(mongo_addr,
                             replicaset=MONGO_RS,
                             serverSelectionTimeoutMS=MONGO_CONNECT_TIMEOUT)
         self.db = self.mongo_client[self.db_name]
         self.mongo_client.drop_database(self.db_name)
-        logging.info('connected to mongodb server [{}]'.format(self.mongo_addr))
+        logger.info('connected to mongodb server [{}]'.format(self.mongo_addr))
 
 
     def disconnect_mongo(self):
@@ -327,10 +331,12 @@ class InstrumentServer(InstrumentService):
                             CONFIG_SERVER_DEVICE_CLASS_FILE,
                             CONFIG_SERVER_DEVICE_CLASS_NAME))
             dev_class_path = Path(dev_class_file_str)
+            
             # resolve relative paths
             if not dev_class_path.is_absolute():
-                dev_class_path = (Path(dev_class_file_cfg_file).parent / \
-                                    dev_class_path).resolve()
+                dev_class_path = Path(dev_class_file_cfg_file).parent / dev_class_path
+            dev_class_path = dev_class_path.resolve()
+
             try:
                 dev_class = load_class_from_file(dev_class_path, dev_class_name)
             except Exception as exc:
@@ -400,7 +406,7 @@ class InstrumentServer(InstrumentService):
             # add a custom hook for updating mongodb whenever the feat/dictfeat is written
             if isinstance(feat, DictFeat):
                 def update_mongo_dictfeat(value, old_value, key, attr=feat_name, keys=keys):
-                    logging.debug('{}[{}]: {} -> {}'.format(attr, key, old_value, value))
+                    logger.debug('{}[{}]: {} -> {}'.format(attr, key, old_value, value))
                     if isinstance(value, Quantity):
                         value = value.to(self._devs[dev_name]._lantz_dictfeats[attr]._kwargs['units']).m
                     self.db[dev_name].update_one({'name': attr},
@@ -411,7 +417,7 @@ class InstrumentServer(InstrumentService):
                 getattr(self._devs[dev_name], feat_name + '_changed').connect(self.dictfeat_hook_functions[feat_name])
             else:
                 def update_mongo_feat(value, old_value, attr=feat_name):
-                    logging.debug('{}: {} -> {}'.format(attr, old_value, value))
+                    logger.debug('{}: {} -> {}'.format(attr, old_value, value))
                     if isinstance(value, Quantity):
                         value = value.to(self._devs[dev_name]._lantz_feats[attr]._kwargs['units']).m
                     self.db[dev_name].update_one({'name': attr},
@@ -432,13 +438,13 @@ class InstrumentServer(InstrumentService):
         try:
             self._devs[dev_name].initialize()
         except Exception as exc:
-            logging.error(exc)
+            logger.error(exc)
             self._devs.pop(dev_name)
-            logging.error('device [{}] initialization sequence failed'.\
+            logger.error('device [{}] initialization sequence failed'.\
                             format(dev_name))
             return
 
-        logging.info('added device [{}] with args: {} kwargs: {}'.\
+        logger.info('added device [{}] with args: {} kwargs: {}'.\
                         format(dev_name, dev_args, dev_kwargs))
 
 
@@ -449,7 +455,7 @@ class InstrumentServer(InstrumentService):
         except Exception as exc:
             raise InstrumentServerError(exc, 'Failed deleting device [{}]'.\
                                         format(dev_name)) from None
-        logging.info('deleted [{}]'.format(dev_name))
+        logger.info('deleted [{}]'.format(dev_name))
 
 
     def reload_device(self, dev_name):
@@ -464,7 +470,7 @@ class InstrumentServer(InstrumentService):
         devs, _ = get_config_param(self.config, ['devices'])
         for dev_name in devs:
             self.reload_device(dev_name)
-        logging.info('reloaded all devices')
+        logger.info('reloaded all devices')
 
 
     def reload_config(self, config_file=None):
@@ -474,7 +480,7 @@ class InstrumentServer(InstrumentService):
             self.config_file = config_file
         # reload the config dictionary
         self.config = load_config(self.config_file)
-        logging.info('loaded config files {}'.\
+        logger.info('loaded config files {}'.\
                         format(list(self.config.keys())))
 
 
@@ -487,7 +493,7 @@ class InstrumentServer(InstrumentService):
     def start_server(self):
         """Start the RPyC server"""
         if self._rpyc_server:
-            logging.warning('can\'t start the rpyc server because one '
+            logger.warning('can\'t start the rpyc server because one '
                             'is already running')
             return
         thread = threading.Thread(target=self._rpyc_server_thread)
@@ -500,10 +506,10 @@ class InstrumentServer(InstrumentService):
     def stop_server(self):
         """Stop the RPyC server"""
         if not self._rpyc_server:
-            logging.warning('can\'t stop the rpyc server because there '
+            logger.warning('can\'t stop the rpyc server because there '
                             'isn\'t one running')
             return
-        logging.info('stopping RPyC server...')
+        logger.info('stopping RPyC server...')
         self._rpyc_server.close()
         # wait for the server to stop
         while self._rpyc_server.active:
@@ -515,7 +521,7 @@ class InstrumentServer(InstrumentService):
 
     def _rpyc_server_thread(self):
         """Thread for running the RPyC server asynchronously"""
-        logging.info('starting RPyC server...')
+        logger.info('starting RPyC server...')
         self._rpyc_server = ThreadedServer(self, port=self.port,
                         protocol_config={'allow_pickle' : True,
                                     'allow_all_attrs' : True,
@@ -523,5 +529,5 @@ class InstrumentServer(InstrumentService):
                                     'allow_delattr' : True,
                                     'sync_request_timeout' : RPYC_SYNC_TIMEOUT})
         self._rpyc_server.start()
-        logging.info('RPyC server stopped')
+        logger.info('RPyC server stopped')
         RPYC_SERVER_STOP_EVENT.set()

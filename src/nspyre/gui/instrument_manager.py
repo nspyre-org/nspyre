@@ -32,8 +32,12 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
-import functools
 
+# std
+import functools
+import logging
+
+# 3rd party
 from pimpmyclass.helpers import DictPropertyNameKey
 from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QFont
@@ -41,9 +45,16 @@ from PyQt5.QtWidgets import QApplication, QComboBox, QHeaderView, QLineEdit, QMa
 from pyqtgraph import SpinBox as pyqtgraph_SpinBox
 from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
 
+# nspyre
 from nspyre.config.config_files import load_meta_config
-from nspyre.definitions import Q_, CLIENT_META_CONFIG_PATH, NSPYRE_LOG_FMT
+from nspyre.definitions import Q_, CLIENT_META_CONFIG_PATH
 from nspyre.inserv.gateway import InservGateway
+
+###########################
+# globals
+###########################
+
+logger = logging.getLogger(__name__)
 
 ###########################
 # exceptions
@@ -330,13 +341,11 @@ if __name__ ==  '__main__':
     import sys
     from PyQt5.QtCore import Qt
     from nspyre.gui.app import NSpyreApp
+    from nspyre.misc.logging import nspyre_init_logger
 
-    # configure server logging behavior
-    logging.basicConfig(level=logging.INFO,
-                        format=NSPYRE_LOG_FMT,
-                        handlers=[logging.StreamHandler()])
+    nspyre_init_logger(logging.INFO)
 
-    logging.info('starting Instrument Manager...')
+    logger.info('starting Instrument Manager...')
     if hasattr(Qt, 'AA_EnableHighDpiScaling'):
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
     if hasattr(Qt, 'AA_UseHighDpiPixmaps'):

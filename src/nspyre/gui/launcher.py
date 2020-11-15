@@ -13,7 +13,6 @@ Date: 10/30/2019
 # std
 import time
 import traceback
-import logging
 
 # 3rd party
 from PyQt5 import QtWidgets, QtCore
@@ -22,12 +21,18 @@ from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
 
 # nspyre
 from nspyre.config.config_files import load_meta_config
-from nspyre.definitions import CLIENT_META_CONFIG_PATH, NSPYRE_LOG_FMT
+from nspyre.definitions import CLIENT_META_CONFIG_PATH
 from nspyre.spyrelet.spyrelet import Spyrelet_Launcher
 from nspyre.gui.widgets.param_widget import ParamWidget
 from nspyre.gui.widgets.save_widget import Save_Widget
 from nspyre.spyrelet.spyrelet import load_all_spyrelets
 from nspyre.inserv.gateway import InservGateway
+
+###########################
+# globals
+###########################
+
+logger = logging.getLogger(__name__)
 
 ###########################
 # classes
@@ -253,13 +258,11 @@ if __name__ ==  '__main__':
     import sys
     from PyQt5.QtCore import Qt
     from nspyre.gui.app import NSpyreApp
+    from nspyre.misc.logging import nspyre_init_logger
 
-    # configure server logging behavior
-    logging.basicConfig(level=logging.INFO,
-                        format=NSPYRE_LOG_FMT,
-                        handlers=[logging.StreamHandler()])
+    nspyre_init_logger(logging.INFO)
 
-    logging.info('starting Instrument Manager...')
+    logger.info('starting Instrument Manager...')
     if hasattr(Qt, 'AA_EnableHighDpiScaling'):
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
 

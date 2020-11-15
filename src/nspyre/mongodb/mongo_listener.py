@@ -4,7 +4,7 @@ import pandas as pd
 
 import time
 from bson.objectid import ObjectId
-from nspyre.utils.misc import get_mongo_client
+from nspyre.misc.misc import get_mongo_client
 import traceback
 
 class DropEvent():

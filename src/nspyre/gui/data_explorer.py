@@ -11,6 +11,7 @@
 
 # std
 import os
+import logging
 
 # 3rd party
 from PyQt5 import QtWidgets, QtCore

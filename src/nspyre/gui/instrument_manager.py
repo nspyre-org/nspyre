@@ -44,6 +44,7 @@ from PyQt5.QtGui import QFont, QColor
 from PyQt5.QtWidgets import QApplication, QComboBox, QHeaderView, QLineEdit, QMainWindow, QPushButton, QTreeWidget, QTreeWidgetItem
 from pyqtgraph import SpinBox as pyqtgraph_SpinBox
 from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
+from pint.util import infer_base_unit
 
 # nspyre
 from nspyre.config.config_files import load_meta_config
@@ -185,7 +186,8 @@ class InstrumentManagerWindow(QMainWindow):
                         action_widget.setFont(QFont('Helvetica [Cronyx]', 14))
                         action_item = QTreeWidgetItem(action_tree, [action_name, ''])
                         self.tree.setItemWidget(action_item, 1, action_widget)
-                except:
+                except Exception as exc:
+                    logger.error(exc)
                     # some error has occured loading the device attributes
                     device_tree.setText(0, 'ERROR: {}'.format(device_name))
                     device_tree.setBackground(0, QColor(255, 0, 0, 150))
@@ -247,9 +249,15 @@ class InstrumentManagerWindow(QMainWindow):
             optional_args = {}
             
             if feat._config['units']:
-                optional_args['suffix'] = feat._config['units']
-                optional_args['siPrefix'] = True
-            
+                if isinstance(feat_value, Q_):
+                    base_units = infer_base_unit(feat_value)
+                    base_units_str = '{0.units:~}'.format(Q_(1, base_units))
+                    optional_args['suffix'] = base_units_str
+                    optional_args['siPrefix'] = True
+                else:
+                    raise Exception('Didn\'t think this could happen... '
+                        'the value of a lantz feat with units isn\'t a Q_')
+
             if feat._config['limits']:
                 if len(feat._config['limits']) == 1:
                     # only min or only max was specified e.g.
@@ -288,11 +296,11 @@ class InstrumentManagerWindow(QMainWindow):
             if feat._config['units']:
                 # callback function for when the user changes the value from the GUI
                 def setattr_func(value):
-                    setattr(device, feat_name, Q_(widget.value(), feat._config['units']))
+                    setattr(device, feat_name, Q_(widget.value(), base_units))
                 # callback function to modify the GUI when the the feat is changed externally
                 def getattr_func(value, old_value, widget=widget):
                     if isinstance(value, Q_):
-                        widget.setValue(value.to(feat._config['units']).m)
+                        widget.setValue(value.to(base_units).m)
                     else:
                         widget.setValue(value)
             else:

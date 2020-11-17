@@ -1,10 +1,15 @@
 rem script for starting the mongodb server
 
 set THIS_DIR=%~dp0
+rem mongod (daemon) port numbers to use
 set DB1_PORT=27017
 set DB2_PORT=27018
+rem mongo replicate set name
 set REPLSET=NSpyreSet
+rem max mongo operation log length (MB)
 set OPLOG=1024
+
+rem database file locations
 
 set DB_DATA_NAME=db_files
 set DB_DATA_BACKUP_NAME=%DB_DATA_NAME%_backup
@@ -16,6 +21,9 @@ set DB2_DIR=%DBDATA_DIR%\db2
 set LOG_DIR=%DBDATA_DIR%\logs
 set DB1_LOG=%LOG_DIR%\db1
 set DB2_LOG=%LOG_DIR%\db2
+
+rem max time (s) to wait for the mongod instances to start and elect a primary
+set TIMEOUT=60
 
 rem kill existing mongod instances
 echo "killing mongodb daemons..."
@@ -54,9 +62,24 @@ start /b mongod --dbpath %DB2_DIR% --logpath %DB2_LOG% ^
 rem allow time for mongod to start
 SLEEP 2
 
-rem only needs to performed for first-time setup
-rem or if the db1/db2 directories were cleared,
-rem but no disadvantage of running it anyway
 rem add both servers to a replica set to allow them to start serving the db
 rem make db1 be the preferred primary using priorities
 mongo --eval "rs.initiate({_id:'%REPLSET%', members:[ {_id: 0, host: 'localhost:%DB1_PORT%', priority: 2}, {_id: 1, host: 'localhost:%DB2_PORT%', priority: 1}]})"
+
+for /l %i in (1, 1, %TIMEOUT%) do (
+    rem if running rs.status() on the mongo console contains "PRIMARY" then
+    rem the election process has succeeded and mongodb is now running
+    mongo --eval "rs.status()" | findstr "PRIMARY"
+    if %ERRORLEVEL% EQU 0 (
+        goto :end_rs_status_loop
+    )
+    SLEEP 1
+)
+:end_rs_status_loop
+
+if %i% NEQ %TIMEOUT% (
+    echo "mongodb started successfully..."
+) else (
+	echo "ERROR: timed out waiting for mongod to start..."
+	exit /b 1
+)

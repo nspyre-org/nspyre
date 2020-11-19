@@ -14,6 +14,7 @@ import time
 import inspect
 import traceback
 import textwrap
+import logging
 
 # 3rd party
 from PyQt5 import QtWidgets, QtCore, QtGui

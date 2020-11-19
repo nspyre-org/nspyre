@@ -13,6 +13,7 @@ Date: 10/30/2019
 # std
 import time
 import traceback
+import logging
 
 # 3rd party
 from PyQt5 import QtWidgets, QtCore

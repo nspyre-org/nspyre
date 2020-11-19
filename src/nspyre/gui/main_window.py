@@ -114,16 +114,16 @@ class NSpyreMainWindow(QMainWindow):
         process = QProcess()
         if window_name == 'inserv_manager':
             logger.info('starting Instrument Manager...')
-            process.start('python3', [str(HERE.joinpath('instrument_manager.py'))])
+            process.start('python', [str(HERE.joinpath('instrument_manager.py'))])
         elif window_name == 'view_manager':
             logger.info('starting View Manager...')
-            process.start('python3', [str(HERE.joinpath('view_manager.py')), 'react_to_drop=False'])
+            process.start('python', [str(HERE.joinpath('view_manager.py')), 'react_to_drop=False'])
         elif window_name == 'spyrelet_startup':
             logger.info('starting Syrelet GUI window...')
-            process.start('python3', [str(HERE.joinpath('launcher.py'))])
+            process.start('python', [str(HERE.joinpath('launcher.py'))])
         elif window_name == 'data_explorer':
             logger.info('starting Data Explorer...')
-            process.start('python3', [str(HERE.joinpath('data_explorer.py'))])
+            process.start('python', [str(HERE.joinpath('data_explorer.py'))])
         else:
             raise ValueError('Incorrect input for window_name: {}'.format(window_name))
         self._windows.append(process)

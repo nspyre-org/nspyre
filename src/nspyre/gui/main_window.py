@@ -26,19 +26,32 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
-import functools
-import logging
-from pathlib import Path
 
+# std
+import functools
+from pathlib import Path
+import logging
+
+# 3rd party
 from PyQt5.QtCore import QProcess
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget
 
+# nspyre
 from nspyre.definitions import LOGO_PATH
 from nspyre.gui.image import ImageWidget
 
+###########################
+# globals
+###########################
+
+logger = logging.getLogger(__name__)
+
 HERE = Path(__file__).parent
 
+###########################
+# classes / functions
+###########################
 
 class NSpyreMainWindow(QMainWindow):
     """The Qt QtWidgets.QMainWindow object for launching NSpyre.
@@ -100,17 +113,17 @@ class NSpyreMainWindow(QMainWindow):
         """Spawn an additional window in a new process."""
         process = QProcess()
         if window_name == 'inserv_manager':
-            logging.info('starting Instrument Manager...')
-            process.start('python3', [str(HERE.joinpath('instrument_manager.py'))])
+            logger.info('starting Instrument Manager...')
+            process.start('python', [str(HERE.joinpath('instrument_manager.py'))])
         elif window_name == 'view_manager':
-            logging.info('starting View Manager...')
-            process.start('python3', [str(HERE.joinpath('view_manager.py')), 'react_to_drop=False'])
+            logger.info('starting View Manager...')
+            process.start('python', [str(HERE.joinpath('view_manager.py')), 'react_to_drop=False'])
         elif window_name == 'spyrelet_startup':
-            logging.info('starting Syrelet GUI window...')
-            process.start('python3', [str(HERE.joinpath('launcher.py'))])
+            logger.info('starting Syrelet GUI window...')
+            process.start('python', [str(HERE.joinpath('launcher.py'))])
         elif window_name == 'data_explorer':
-            logging.info('starting Data Explorer...')
-            process.start('python3', [str(HERE.joinpath('data_explorer.py'))])
+            logger.info('starting Data Explorer...')
+            process.start('python', [str(HERE.joinpath('data_explorer.py'))])
         else:
             raise ValueError('Incorrect input for window_name: {}'.format(window_name))
         self._windows.append(process)

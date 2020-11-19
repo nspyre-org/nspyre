@@ -25,6 +25,8 @@ from nspyre.definitions import join_nspyre_path, CLIENT_META_CONFIG_PATH
 # globals
 ###########################
 
+logger = logging.getLogger(__name__)
+
 META_CONFIG_FILES_ENTRY = 'config_files'
 META_CONFIG_ENABLED_IDX = 'enabled'
 
@@ -47,7 +49,7 @@ class ConfigError(Exception):
     def __init__(self, error, msg):
         super().__init__(msg)
         if error:
-            logging.exception(error)
+            logger.exception(error)
 
 ###########################
 # classes / functions
@@ -175,7 +177,8 @@ def load_meta_config(meta_config_path=None):
     # resolve relative paths
     if not cfg_path.is_absolute():
         cfg_path = meta_config_path.parent / cfg_path
-
+    cfg_path = cfg_path.resolve()
+    
     return cfg_path
 
 def load_config(cfg_path):

@@ -6,7 +6,7 @@ import json
 import pymongo
 import pandas as pd
 
-from nspyre.utils.misc import get_mongo_client
+from nspyre.misc.misc import get_mongo_client
 
 def get_exp_state_from_db(mongodb_addr=None, debug=False):
     c = get_mongo_client(mongodb_addr=mongodb_addr)

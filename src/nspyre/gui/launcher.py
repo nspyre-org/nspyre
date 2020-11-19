@@ -30,6 +30,12 @@ from nspyre.spyrelet.spyrelet import load_all_spyrelets
 from nspyre.inserv.gateway import InservGateway
 
 ###########################
+# globals
+###########################
+
+logger = logging.getLogger(__name__)
+
+###########################
 # classes
 ###########################
 
@@ -253,13 +259,11 @@ if __name__ ==  '__main__':
     import sys
     from PyQt5.QtCore import Qt
     from nspyre.gui.app import NSpyreApp
+    from nspyre.misc.logging import nspyre_init_logger
 
-    # configure server logging behavior
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s -- %(levelname)s -- %(message)s',
-                        handlers=[logging.StreamHandler()])
+    nspyre_init_logger(logging.INFO)
 
-    logging.info('starting Instrument Manager...')
+    logger.info('starting Instrument Manager...')
     if hasattr(Qt, 'AA_EnableHighDpiScaling'):
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
 

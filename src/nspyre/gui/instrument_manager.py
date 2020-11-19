@@ -32,18 +32,30 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
-import functools
 
+# std
+import functools
+import logging
+
+# 3rd party
 from pimpmyclass.helpers import DictPropertyNameKey
 from PyQt5.QtCore import QSize
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QColor
 from PyQt5.QtWidgets import QApplication, QComboBox, QHeaderView, QLineEdit, QMainWindow, QPushButton, QTreeWidget, QTreeWidgetItem
 from pyqtgraph import SpinBox as pyqtgraph_SpinBox
 from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
+from pint.util import infer_base_unit
 
+# nspyre
 from nspyre.config.config_files import load_meta_config
 from nspyre.definitions import Q_, CLIENT_META_CONFIG_PATH
 from nspyre.inserv.gateway import InservGateway
+
+###########################
+# globals
+###########################
+
+logger = logging.getLogger(__name__)
 
 ###########################
 # exceptions
@@ -118,61 +130,68 @@ class InstrumentManagerWindow(QMainWindow):
                 device_tree = QTreeWidgetItem(server_tree, [device_name, ''])
                 device_tree.setExpanded(True)
 
-                # handle feats
-                for feat_name, feat in device._lantz_feats.items():
-                    # filter out any dictfeats
-                    if isinstance(feat_name, DictPropertyNameKey):
-                        continue
-                    feat_widget, feat_getattr_func = self._generate_feat_widget(feat, feat_name, device)
-                    # we have to use a partial here because PySignal and RPyC don't
-                    # play nicely if you .connect() a lambda or other function / method
-                    # to PySignal
-                    feat_getattr_func.__name__ = 'InstrumentManager_getattr_func'
-                    getattr_partial = functools.partial(feat_getattr_func)
-                    getattr_partial = functools.update_wrapper(getattr_partial, feat_getattr_func)
-                    # register the feat_getattr_func() to be called when the feat changes using
-                    # pimpmyclass "ObservableProperty" mixin
-                    getattr(device, feat_name + '_changed').connect(getattr_partial)
-                    
-                    feat_widget.setFont(QFont('Helvetica [Cronyx]', 14))
-                    feat_item = QTreeWidgetItem(device_tree, [feat_name, ''])
-                    feat_item.sizeHint(0)
-                    feat_item.setSizeHint(1, QSize(79,24))
-                    self.tree.setItemWidget(feat_item, 1, feat_widget)
-
-                # handle dictfeats
-                for dictfeat_name, dictfeat in device._lantz_dictfeats.items():
-                    """Generate a Qt gui element for a lantz dictfeat"""
-                    dictfeat_tree = QTreeWidgetItem(device_tree, [dictfeat_name, ''])
-
-                    for feat_key in dictfeat.keys:
-                        feat = dictfeat.subproperty(getattr(device, dictfeat_name).instance, feat_key)
-                        feat_widget, feat_getattr_func = self._generate_feat_widget(feat, dictfeat_name, device, dictfeat_key=feat_key)
-                        feat_item = QTreeWidgetItem(dictfeat_tree, ['{} {}'.format(dictfeat_name, feat_key), ''])
+                try:
+                    # handle feats
+                    for feat_name, feat in device._lantz_feats.items():
+                        # filter out any dictfeats
+                        if isinstance(feat_name, DictPropertyNameKey):
+                            continue
+                        feat_widget, feat_getattr_func = self._generate_feat_widget(feat, feat_name, device)
+                        # we have to use a partial here because PySignal and RPyC don't
+                        # play nicely if you .connect() a lambda or other function / method
+                        # to PySignal
+                        feat_getattr_func.__name__ = 'InstrumentManager_getattr_func'
+                        getattr_partial = functools.partial(feat_getattr_func)
+                        getattr_partial = functools.update_wrapper(getattr_partial, feat_getattr_func)
+                        # register the feat_getattr_func() to be called when the feat changes using
+                        # pimpmyclass "ObservableProperty" mixin
+                        getattr(device, feat_name + '_changed').connect(getattr_partial)
+                        
+                        feat_widget.setFont(QFont('Helvetica [Cronyx]', 14))
+                        feat_item = QTreeWidgetItem(device_tree, [feat_name, ''])
+                        feat_item.sizeHint(0)
+                        feat_item.setSizeHint(1, QSize(79,24))
                         self.tree.setItemWidget(feat_item, 1, feat_widget)
-                        if feat_key == dictfeat.keys[-1]:
-                            # connect the feat_getattr() to be called when the feat changes using
-                            # pimpmyclass "ObservableProperty" mixin
-                            def dictfeat_getattr_func(df_tree, df_keys, getattr_func, value, old_value, key):
-                                w = self.tree.itemWidget(df_tree.child(df_keys.index(key)), 1)
-                                getattr_func(value, old_value, widget=w)
-                            feat_getattr_func.__name__ = 'InstrumentManager_getattr_func'
-                            getattr_partial = functools.partial(dictfeat_getattr_func, dictfeat_tree, dictfeat.keys, feat_getattr_func)
-                            getattr_partial = functools.update_wrapper(getattr_partial, feat_getattr_func)
-                            getattr(device, dictfeat_name + '_changed').connect(getattr_partial)
 
-                # handle actions
-                action_tree = QTreeWidgetItem(device_tree, ['Actions', ''])
-                for action_name, action in device._lantz_actions.items():
-                    # actions that shouldn't be added to the GUI
-                    ignore_actions = ['initialize', 'finalize', 'update', 'refresh']
-                    if action_name in ignore_actions or '_async' in action_name:
-                        continue
+                    # handle dictfeats
+                    for dictfeat_name, dictfeat in device._lantz_dictfeats.items():
+                        """Generate a Qt gui element for a lantz dictfeat"""
+                        dictfeat_tree = QTreeWidgetItem(device_tree, [dictfeat_name, ''])
 
-                    action_widget = self._generate_action_widget(device, action, action_name)
-                    action_widget.setFont(QFont('Helvetica [Cronyx]', 14))
-                    action_item = QTreeWidgetItem(action_tree, [action_name, ''])
-                    self.tree.setItemWidget(action_item, 1, action_widget)
+                        for feat_key in dictfeat.keys:
+                            feat = dictfeat.subproperty(getattr(device, dictfeat_name).instance, feat_key)
+                            feat_widget, feat_getattr_func = self._generate_feat_widget(feat, dictfeat_name, device, dictfeat_key=feat_key)
+                            feat_item = QTreeWidgetItem(dictfeat_tree, ['{} {}'.format(dictfeat_name, feat_key), ''])
+                            self.tree.setItemWidget(feat_item, 1, feat_widget)
+                            if feat_key == dictfeat.keys[-1]:
+                                # connect the feat_getattr() to be called when the feat changes using
+                                # pimpmyclass "ObservableProperty" mixin
+                                def dictfeat_getattr_func(df_tree, df_keys, getattr_func, value, old_value, key):
+                                    w = self.tree.itemWidget(df_tree.child(df_keys.index(key)), 1)
+                                    getattr_func(value, old_value, widget=w)
+                                feat_getattr_func.__name__ = 'InstrumentManager_getattr_func'
+                                getattr_partial = functools.partial(dictfeat_getattr_func, dictfeat_tree, dictfeat.keys, feat_getattr_func)
+                                getattr_partial = functools.update_wrapper(getattr_partial, feat_getattr_func)
+                                getattr(device, dictfeat_name + '_changed').connect(getattr_partial)
+
+                    # handle actions
+                    action_tree = QTreeWidgetItem(device_tree, ['Actions', ''])
+                    for action_name, action in device._lantz_actions.items():
+                        # actions that shouldn't be added to the GUI
+                        ignore_actions = ['initialize', 'finalize', 'update', 'refresh']
+                        if action_name in ignore_actions or '_async' in action_name:
+                            continue
+
+                        action_widget = self._generate_action_widget(device, action, action_name)
+                        action_widget.setFont(QFont('Helvetica [Cronyx]', 14))
+                        action_item = QTreeWidgetItem(action_tree, [action_name, ''])
+                        self.tree.setItemWidget(action_item, 1, action_widget)
+                except Exception as exc:
+                    logger.error(exc)
+                    # some error has occured loading the device attributes
+                    device_tree.setText(0, 'ERROR: {}'.format(device_name))
+                    device_tree.setBackground(0, QColor(255, 0, 0, 150))
+                    pass
 
 
     def _generate_feat_widget(self, feat, feat_name, device, dictfeat_key=None):
@@ -230,9 +249,15 @@ class InstrumentManagerWindow(QMainWindow):
             optional_args = {}
             
             if feat._config['units']:
-                optional_args['suffix'] = feat._config['units']
-                optional_args['siPrefix'] = True
-            
+                if isinstance(feat_value, Q_):
+                    base_units = infer_base_unit(feat_value)
+                    base_units_str = '{0.units:~}'.format(Q_(1, base_units))
+                    optional_args['suffix'] = base_units_str
+                    optional_args['siPrefix'] = True
+                else:
+                    raise Exception('Didn\'t think this could happen... '
+                        'the value of a lantz feat with units isn\'t a Q_')
+
             if feat._config['limits']:
                 if len(feat._config['limits']) == 1:
                     # only min or only max was specified e.g.
@@ -271,11 +296,11 @@ class InstrumentManagerWindow(QMainWindow):
             if feat._config['units']:
                 # callback function for when the user changes the value from the GUI
                 def setattr_func(value):
-                    setattr(device, feat_name, Q_(widget.value(), feat._config['units']))
+                    setattr(device, feat_name, Q_(widget.value(), base_units))
                 # callback function to modify the GUI when the the feat is changed externally
                 def getattr_func(value, old_value, widget=widget):
                     if isinstance(value, Q_):
-                        widget.setValue(value.to(feat._config['units']).m)
+                        widget.setValue(value.to(base_units).m)
                     else:
                         widget.setValue(value)
             else:
@@ -330,13 +355,11 @@ if __name__ ==  '__main__':
     import sys
     from PyQt5.QtCore import Qt
     from nspyre.gui.app import NSpyreApp
+    from nspyre.misc.logging import nspyre_init_logger
 
-    # configure server logging behavior
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s -- %(levelname)s -- %(message)s',
-                        handlers=[logging.StreamHandler()])
+    nspyre_init_logger(logging.INFO)
 
-    logging.info('starting Instrument Manager...')
+    logger.info('starting Instrument Manager...')
     if hasattr(Qt, 'AA_EnableHighDpiScaling'):
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
     if hasattr(Qt, 'AA_UseHighDpiPixmaps'):

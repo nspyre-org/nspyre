@@ -37,13 +37,15 @@ from tqdm.auto import tqdm
 from nspyre.gui.data_handling import save_data
 from nspyre.config.config_files import load_config, get_config_param, \
                                     ConfigEntryNotFoundError
-from nspyre.utils.misc import get_mongo_client, custom_decode, custom_encode, \
+from nspyre.misc.misc import get_mongo_client, custom_decode, custom_encode, \
                                 RangeDict, load_class_from_file
 from nspyre.definitions import Q_
 
 ###########################
 # globals
 ###########################
+
+logger = logging.getLogger(__name__)
 
 # config file key for spyrelets
 CONFIG_SPYRELETS_KEY = 'spyrelets'
@@ -72,14 +74,14 @@ class SpyreletLoadError(Exception):
     def __init__(self, error, msg):
         super().__init__(msg)
         if error:
-            logging.exception(error)
+            logger.exception(error)
 
 class SpyreletUnloadError(Exception):
     """Exception while unloading a Spyrelet"""
     def __init__(self, error, msg):
         super().__init__(msg)
         if error:
-            logging.exception(error)
+            logger.exception(error)
 
 ###########################
 # classes / functions
@@ -411,8 +413,9 @@ def load_spyrelet_class(spyrelet_name, cfg):
     # if the path isn't absolute resolve it relative to the config file
     spyrelet_path = Path(spyrelet_path_str)
     if not spyrelet_path.is_absolute():
-        spyrelet_path = (Path(spyrelet_cfg_path_str).parent / \
-                                spyrelet_path).resolve()
+        spyrelet_path = Path(spyrelet_cfg_path_str).parent / spyrelet_path
+    spyrelet_path = spyrelet_path.resolve()
+
     return load_class_from_file(spyrelet_path, spyrelet_class_name)
 
 def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False):
@@ -434,7 +437,7 @@ def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False):
                                                  [CONFIG_SPYRELETS_KEY, spyrelet_name, \
                                                   CONFIG_SUB_SPYRELETS_KEY])
     except ConfigEntryNotFoundError:
-        logging.debug('spyrelet [{}] no sub-spyrelets found'. \
+        logger.debug('spyrelet [{}] no sub-spyrelets found'. \
                       format(spyrelet_name))
         sub_spyrelet_names = {}
 
@@ -459,7 +462,7 @@ def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False):
         dev_aliases, _ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY, \
                                                 spyrelet_name, CONFIG_DEVS_KEY])
     except ConfigEntryNotFoundError:
-        logging.debug('spyrelet [{}] no device aliases found'. \
+        logger.debug('spyrelet [{}] no device aliases found'. \
                       format(spyrelet_name))
         dev_aliases = {}
 
@@ -468,14 +471,14 @@ def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False):
         args, _ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY, \
                                          spyrelet_name, CONFIG_SPYRELETS_ARGS_KEY])
     except ConfigEntryNotFoundError:
-        logging.debug('spyrelet [{}] no args found'.format(spyrelet_name))
+        logger.debug('spyrelet [{}] no args found'.format(spyrelet_name))
         args = {}
     args = custom_decode(args)
 
     # create the spyrelet
     spyrelet = spyrelet_class(spyrelet_name, gateway, device_aliases=dev_aliases, spyrelets=sub_spyrelets, **args)
     _LOADED_SPYRELETS[spyrelet_name] = spyrelet
-    logging.info('loaded spyrelet [{}]'.format(spyrelet_name))
+    logger.info('loaded spyrelet [{}]'.format(spyrelet_name))
 
     return spyrelet
 

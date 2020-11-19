@@ -1,3 +1,10 @@
+instrument_servers:
+  local1:
+    # ip address / domain name of the instrument server
+    ip: 'localhost'
+    # port the instrument server is on
+    port: 5556
+
 # address of the mongodb server
 mongodb_addr: 'mongodb://localhost:27017/'
 

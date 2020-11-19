@@ -42,10 +42,10 @@ class NSpyreApp(QApplication):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setApplicationName('NSpyre')
         icon_path = Path(__file__).parent.joinpath('images/favicon.ico')
         self.setWindowIcon(QIcon(str(icon_path)))
         self.set_theme()
-        self.setApplicationName('NSpyre')
 
     def set_theme(self):
         """A method containing the appearance settings for NSpyre."""

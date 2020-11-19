@@ -1,3 +1,4 @@
+@echo off
 rem script for starting the mongodb server
 
 set THIS_DIR=%~dp0
@@ -26,22 +27,22 @@ rem max time (s) to wait for the mongod instances to start and elect a primary
 set TIMEOUT=60
 
 rem kill existing mongod instances
-echo "killing mongodb daemons..."
-taskkill /t /f /im mongod.exe
+echo killing mongodb daemons...
+taskkill /t /f /im mongod.exe 2>nul
 
 rem allow time for mongod to release access to db files
 SLEEP 2
 
 rem move dbs and logs to backup folder
-echo "removing database files..."
+echo removing database files...
 rem make the backups directory if it doesn't exist
 if not exist %DBDATA_BACKUP_DIR% mkdir %DBDATA_BACKUP_DIR%
 rem find a number to append to the db files directory
 set i=0
-:while
+:data_backup_dir_loop
 if exist %DBDATA_BACKUP_DIR%/%DB_DATA_BACKUP_NAME%_%i% (
     set /a i=%i%+1
-    goto :while
+    goto :data_backup_dir_loop
 )
 rem move the current db files to the backup folder
 if exist %DBDATA_DIR% (
@@ -66,20 +67,18 @@ rem add both servers to a replica set to allow them to start serving the db
 rem make db1 be the preferred primary using priorities
 mongo --eval "rs.initiate({_id:'%REPLSET%', members:[ {_id: 0, host: 'localhost:%DB1_PORT%', priority: 2}, {_id: 1, host: 'localhost:%DB2_PORT%', priority: 1}]})"
 
-for /l %i in (1, 1, %TIMEOUT%) do (
-    rem if running rs.status() on the mongo console contains "PRIMARY" then
-    rem the election process has succeeded and mongodb is now running
-    mongo --eval "rs.status()" | findstr "PRIMARY"
-    if %ERRORLEVEL% EQU 0 (
-        goto :end_rs_status_loop
-    )
+set i=0
+:rs_status_loop
+rem if running rs.status() on the mongo console contains "PRIMARY" then
+rem the election process has succeeded and mongodb is now running
+mongo --eval "rs.status()" | findstr "PRIMARY" >nul
+if %i% gtr %TIMEOUT% (
+    echo ERROR: timed out waiting for mongod to start...
+    exit /b 1
+) else if %ERRORLEVEL% neq 0 (
+    set /a i=%i%+1
     SLEEP 1
-)
-:end_rs_status_loop
-
-if %i% NEQ %TIMEOUT% (
-    echo "mongodb started successfully..."
+    goto :rs_status_loop
 ) else (
-	echo "ERROR: timed out waiting for mongod to start..."
-	exit /b 1
+    echo mongodb started successfully...
 )

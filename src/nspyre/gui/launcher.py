@@ -23,7 +23,7 @@ from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
 # nspyre
 from nspyre.config.config_files import load_meta_config
 from nspyre.definitions import CLIENT_META_CONFIG_PATH
-from nspyre.spyrelet.spyrelet import Spyrelet_Launcher
+from nspyre.spyrelet.spyrelet import SpyreletLauncher
 from nspyre.gui.widgets.param_widget import ParamWidget
 from nspyre.gui.widgets.save_widget import Save_Widget
 from nspyre.spyrelet.spyrelet import load_all_spyrelets
@@ -96,7 +96,7 @@ class Spyrelet_Launcher_Widget(QtWidgets.QWidget):
     def __init__(self, spyrelet, parent=None):
         self.spyrelet = spyrelet
         self.progress_bar = Progress_Bar()
-        self.launcher = Spyrelet_Launcher(spyrelet)
+        self.launcher = SpyreletLauncher(spyrelet)
         self.param_w = ParamWidget(self.launcher.params)
         self.param_w.set(**self.launcher.get_defaults())
         super().__init__(parent=parent)

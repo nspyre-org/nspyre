@@ -6,51 +6,25 @@ InservGateway class.
 Author: Jacob Feder
 Date: 7/11/2020
 """
-
-###########################
-# imports
-###########################
-
-# std
 import os
 import logging
 
-# 3rd party
 import parse
 import rpyc
 
-# nspyre
-from nspyre.misc.misc import register_quantity_brining
 from nspyre.config.config_files import get_config_param, load_config
-from nspyre.definitions import RPYC_CONN_TIMEOUT, RPYC_SYNC_TIMEOUT, \
-                            INSERV_DEV_ACCESSOR, CLIENT_META_CONFIG_PATH
-from nspyre.definitions import Q_
+from nspyre.definitions import MONGO_CONNECT_TIMEOUT, MONGO_RS, MONGO_SERVERS_KEY, MONGO_SERVERS_SETTINGS_KEY, Q_, RPYC_CONN_TIMEOUT, RPYC_SYNC_TIMEOUT
+from nspyre.errors import InservGatewayError
+from nspyre.misc.misc import register_quantity_brining
 
 # for properly serializing/deserializing quantity objects using the local
 # pint unit registry
 register_quantity_brining(Q_)
 
-###########################
-# globals
-###########################
-
 logger = logging.getLogger(__name__)
 
 CONFIG_GATEWAY_SETTINGS = 'instrument_servers'
 CONFIG_GATEWAY_DEVICES = 'devices'
-
-###########################
-# exceptions
-###########################
-
-class InservGatewayError(Exception):
-    """General InservGateway exception"""
-    def __init__(self, msg):
-        super().__init__(msg)
-
-###########################
-# classes / functions
-###########################
 
 # Temporary monkey patching of rpyc to implement synchronous about_to_disconnect feature
 # Need to define consts.HANDLE_ABOUT_TO_CLOSE before consts is import by protocol (this is done
@@ -66,7 +40,7 @@ from rpyc.core.service import VoidService
 VoidService = nspyre.inserv.inserv.VoidInstrumentService
 
 
-class InservGateway():
+class InservGateway:
     """Loads a configuration file, then attempts to connect to all 
     instrument servers
 

@@ -26,32 +26,21 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
-
-# std
 import functools
 from pathlib import Path
 import logging
 
-# 3rd party
 from PyQt5.QtCore import QProcess
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget
 
-# nspyre
 from nspyre.definitions import LOGO_PATH
 from nspyre.gui.image import ImageWidget
-
-###########################
-# globals
-###########################
 
 logger = logging.getLogger(__name__)
 
 HERE = Path(__file__).parent
 
-###########################
-# classes / functions
-###########################
 
 class NSpyreMainWindow(QMainWindow):
     """The Qt QtWidgets.QMainWindow object for launching NSpyre.

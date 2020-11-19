@@ -71,7 +71,7 @@ class Mongo_Listenner(QtCore.QThread):
                 if self.exit_flag:
                     return
         if not self.exit_flag:
-            self.run() #This takes care of the invalidate event which stops the change_stream cursor
+            self.run() # This takes care of the invalidate event which stops the change_stream cursor
 
 class Synched_Mongo_Collection(QtCore.QObject):
     updated_row = QtCore.pyqtSignal(object) # Emit the updated row
@@ -189,9 +189,3 @@ class Synched_Mongo_Database(QtCore.QObject):
 
     def __del__(self):
         self.watcher.exit_flag = True
-
-    
-
-
-    
-            

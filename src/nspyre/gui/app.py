@@ -51,7 +51,7 @@ class NSpyreApp(QApplication):
         """A method containing the appearance settings for NSpyre."""
         fusion = QStyleFactory.create('Fusion')
         self.setStyle(fusion)
-        dark = QColor(53, 53, 53)
+        dark = QColor(53, 53, 53) #(61, 64, 62) (196,201,201)
         palette = QPalette()
         palette.setColor(QPalette.Window, dark)
         palette.setColor(QPalette.WindowText, Qt.white)

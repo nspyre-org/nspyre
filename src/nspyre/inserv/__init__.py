@@ -6,38 +6,24 @@ the instrument server
 Author: Jacob Feder
 Date: 7/8/2020
 """
-
-###########################
-# imports
-###########################
-
-# std
 import argparse
-from cmd import Cmd
+import cmd
+import pathlib
 import pdb
-from pathlib import Path
 import logging
 
-# 3rd party
 import pyvisa
 
-# nspyre
-from nspyre.inserv.inserv import InstrumentServer
 from nspyre.config.config_files import load_meta_config
 from nspyre.definitions import SERVER_META_CONFIG_PATH
+from nspyre.errors import InstrumentServerError
+from nspyre.inserv.inserv import InstrumentServer
 from nspyre.misc.logging import nspyre_init_logger
-
-###########################
-# globals
-###########################
 
 logger = logging.getLogger(__name__)
 
-###########################
-# classes / functions
-###########################
 
-class InservCmdPrompt(Cmd):
+class InservCmdPrompt(cmd.Cmd):
     """Instrument Server shell prompt processor"""
     def __init__(self, inserv):
         super().__init__()
@@ -62,8 +48,7 @@ class InservCmdPrompt(Cmd):
             return
         # attempt to reload the config files
         try:
-            self.inserv.update_config(config_file=\
-                                    args[0] if arg_string else None)
+            self.inserv.update_config(config_file=args[0] if arg_string else None)
         except Exception as exc:
             logger.exception(exc)
             print('Failed to reload config files')
@@ -198,7 +183,7 @@ def main():
             raise InstrumentServerError('didn\'t recognize logging level [{}]'.\
                                         format(cmd_args.verbosity)) from None
         if cmd_args.log:
-            nspyre_init_logger(log_level, log_path=Path(cmd_args.log),
+            nspyre_init_logger(log_level, log_path=pathlib.Path(cmd_args.log),
                                         log_path_level=logging.DEBUG,
                                         prefix='inserv')
         else:
@@ -220,9 +205,6 @@ def main():
     cmd_prompt.prompt = 'inserv > '
     cmd_prompt.cmdloop('instrument server started...')
 
-###########################
-# standalone main
-###########################
 
 if __name__ == '__main__':
     main()

@@ -8,21 +8,15 @@ This module:
 Author: Jacob Feder
 Date: 7/8/2020
 """
-
-###########################
-# imports
-###########################
-
-# std
 from pathlib import Path
+import logging
 import threading
 import time
 from functools import partial
 import copy
 import functools
-import logging
+import weakref
 
-# 3rd party
 import rpyc
 from rpyc.utils.server import ThreadedServer
 import pymongo
@@ -30,26 +24,18 @@ from lantz import Q_, DictFeat
 from pimpmyclass.helpers import DictPropertyNameKey
 from pint import Quantity
 
-# nspyre
-from nspyre.config.config_files import get_config_param, load_config, \
-                                    meta_config_add, meta_config_remove, \
-                                    meta_config_files, ConfigEntryNotFoundError
-from nspyre.misc.misc import load_class_from_str, load_class_from_file, register_quantity_brining
-from nspyre.definitions import MONGO_SERVERS_KEY, \
-                MONGO_SERVERS_SETTINGS_KEY, MONGO_CONNECT_TIMEOUT, \
-                MONGO_RS, RPYC_SYNC_TIMEOUT, CONFIG_MONGO_ADDR_KEY, \
-                join_nspyre_path, SERVER_META_CONFIG_PATH
+from nspyre.config.config_files import get_config_param, load_config
+from nspyre.definitions import CONFIG_MONGO_ADDR_KEY, MONGO_CONNECT_TIMEOUT, MONGO_RS, MONGO_SERVERS_KEY, MONGO_SERVERS_SETTINGS_KEY, RPYC_SYNC_TIMEOUT
+from nspyre.errors import EntryNotFoundError, InstrumentServerError
+from nspyre.misc.misc import load_class_from_file, load_class_from_str, register_quantity_brining
 
 # for properly serializing/deserializing quantity objects using the local
 # pint unit registry
 register_quantity_brining(Q_)
 
-###########################
-# globals
-###########################
-
 logger = logging.getLogger(__name__)
 
+CONFIG_SERVER_SETTINGS = 'server_settings'
 CONFIG_SERVER_DEVICES = 'devices'
 CONFIG_SERVER_DEVICE_LANTZ_CLASS = 'lantz_class'
 CONFIG_SERVER_DEVICE_CLASS_FILE = 'class_file'
@@ -57,20 +43,6 @@ CONFIG_SERVER_DEVICE_CLASS_NAME = 'class'
 
 RPYC_SERVER_STOP_EVENT = threading.Event()
 
-###########################
-# exceptions
-###########################
-
-class InstrumentServerError(Exception):
-    """General InstrumentServer exception"""
-    def __init__(self, error, msg):
-        super().__init__(msg)
-        if error:
-            logger.exception(error)
-
-###########################
-# classes
-###########################
 
 
 rpyc.core.consts.HANDLE_ABOUT_TO_CLOSE = 21
@@ -204,6 +176,7 @@ class InstrumentServer(InstrumentService):
             #raise AttributeError('\'{}\' object has no attribute \'{}\''.\
             #            format(self.__class__.__name__, name))
 
+
     def on_connect(self, conn):
         """Called when a client connects to the RPyC server"""
         logger.info('client [{}] connected'.format(conn))
@@ -264,8 +237,7 @@ class InstrumentServer(InstrumentService):
 
     def reload_server_config(self):
         """Reload RPyC server settings from the config"""
-        self.port, _ = get_config_param(self.config, \
-                        ['port'])
+        self.port, _ = get_config_param(self.config, ['port'])
 
 
     def connect_mongo(self, mongo_addr=None):
@@ -274,10 +246,8 @@ class InstrumentServer(InstrumentService):
         if mongo_addr:
             self.mongo_addr = mongo_addr
         else:
-            self.mongo_addr,_ = get_config_param(self.config, \
-                                                [CONFIG_MONGO_ADDR_KEY])
-        logger.info('connecting to mongodb server [{}]...'.\
-                        format(self.mongo_addr))
+            self.mongo_addr,_ = get_config_param(self.config, [CONFIG_MONGO_ADDR_KEY])
+        logger.info('connecting to mongodb server [{}]...'.format(self.mongo_addr))
         self.mongo_client = pymongo.MongoClient(mongo_addr,
                             replicaset=MONGO_RS,
                             serverSelectionTimeoutMS=MONGO_CONNECT_TIMEOUT)
@@ -312,7 +282,7 @@ class InstrumentServer(InstrumentService):
                 raise InstrumentServerError(exc, 'The specified lantz driver '
                     '[{}] for device [{}] couldn\'t be loaded'.\
                     format(dev_lantz_class, dev_name))
-        except ConfigEntryNotFoundError:
+        except EntryNotFoundError:
             # if the lantz class isn't defined, try getting an absolute file
             # path and class name
             try:
@@ -323,7 +293,7 @@ class InstrumentServer(InstrumentService):
                 dev_class_name, _ = get_config_param(self.config,
                                             [CONFIG_SERVER_DEVICES, dev_name,
                                             CONFIG_SERVER_DEVICE_CLASS_NAME])
-            except ConfigEntryNotFoundError as exc:
+            except EntryNotFoundError as exc:
                 raise InstrumentServerError(exc, 'The device [{}] didn\'t '
                     'contain an entry for either a lantz class "{}" or a file '
                     'path "{}" / class name "{}" to define it\'s driver type'.\
@@ -331,7 +301,7 @@ class InstrumentServer(InstrumentService):
                             CONFIG_SERVER_DEVICE_CLASS_FILE,
                             CONFIG_SERVER_DEVICE_CLASS_NAME))
             dev_class_path = Path(dev_class_file_str)
-            
+
             # resolve relative paths
             if not dev_class_path.is_absolute():
                 dev_class_path = Path(dev_class_file_cfg_file).parent / dev_class_path

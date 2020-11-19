@@ -248,8 +248,6 @@ class ViewManagerWindow(QMainWindow):
             names.sort()
             for name in names:
                 self.add_col(name, try_update=False)
-        
-        self.show()
 
 
         self.tree.currentItemChanged.connect(self.new_table_selection)

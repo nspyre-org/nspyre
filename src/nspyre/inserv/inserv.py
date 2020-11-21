@@ -15,7 +15,6 @@ import time
 from functools import partial
 import copy
 import functools
-import weakref
 
 import rpyc
 from rpyc.utils.server import ThreadedServer
@@ -24,8 +23,8 @@ from lantz import Q_, DictFeat
 from pimpmyclass.helpers import DictPropertyNameKey
 from pint import Quantity
 
-from nspyre.config.config_files import get_config_param, load_config
-from nspyre.definitions import CONFIG_MONGO_ADDR_KEY, MONGO_CONNECT_TIMEOUT, MONGO_RS, MONGO_SERVERS_KEY, MONGO_SERVERS_SETTINGS_KEY, RPYC_SYNC_TIMEOUT
+from nspyre.config.config_files import get_config_param, load_config, load_meta_config
+from nspyre.definitions import CONFIG_MONGO_ADDR_KEY, MONGO_CONNECT_TIMEOUT, MONGO_RS, MONGO_SERVERS_KEY, RPYC_SYNC_TIMEOUT, SERVER_META_CONFIG_PATH
 from nspyre.errors import EntryNotFoundError, InstrumentServerError
 from nspyre.misc.misc import load_class_from_file, load_class_from_str, register_quantity_brining
 
@@ -248,9 +247,7 @@ class InstrumentServer(InstrumentService):
         else:
             self.mongo_addr,_ = get_config_param(self.config, [CONFIG_MONGO_ADDR_KEY])
         logger.info('connecting to mongodb server [{}]...'.format(self.mongo_addr))
-        self.mongo_client = pymongo.MongoClient(mongo_addr,
-                            replicaset=MONGO_RS,
-                            serverSelectionTimeoutMS=MONGO_CONNECT_TIMEOUT)
+        self.mongo_client = pymongo.MongoClient(mongo_addr, replicaset=MONGO_RS, serverSelectionTimeoutMS=MONGO_CONNECT_TIMEOUT)
         self.db = self.mongo_client[self.db_name]
         self.mongo_client.drop_database(self.db_name)
         logger.info('connected to mongodb server [{}]'.format(self.mongo_addr))

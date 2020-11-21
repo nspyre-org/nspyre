@@ -5,7 +5,8 @@ This module handles reading and writing YAML configuration files
 Author: Jacob Feder
 Date: 7/25/2020
 """
-from pathlib import Path
+import logging
+import pathlib
 
 import yaml
 
@@ -36,7 +37,7 @@ def meta_config_add(meta_config_file, files):
     config_list = meta_config[META_CONFIG_FILES_ENTRY]
     new_files = []
     for f in files:
-        f_path = Path(f).resolve()
+        f_path = pathlib.Path(f).resolve()
         if not f_path.is_file():
             raise FileNotFoundError('file [{}] not found'.format(f_path))
         if str(f_path) in config_list:
@@ -134,7 +135,7 @@ def load_meta_config(meta_config_path=None):
     config_files = meta_config[META_CONFIG_FILES_ENTRY]
     if not config_files:
         raise ConfigurationError(None, 'no configuration files exist - use nspyre-config --add-config to add files') from None
-    cfg_path = Path(config_files[enabled_idx])
+    cfg_path = pathlib.Path(config_files[enabled_idx])
 
     # resolve relative paths
     if not cfg_path.is_absolute():

@@ -100,9 +100,18 @@ setup(
         'tqdm>=4.49.0',
         'rpyc>=4.1.5',
     ],
+    extras_require={
+        'dev': [
+            'pytest>=6.1.2',
+            'psutil>=5.7.3',
+        ]
+    },
     test_requires=[
         'pytest>=6.1.2',
         'psutil>=5.7.3',
+    ],
+    test_suite=[
+        'tests',
     ],
     entry_points={
         'console_scripts': [

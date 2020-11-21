@@ -239,9 +239,12 @@ class ViewManagerWindow(QMainWindow):
         vsplitter.setSizes([1, 400])
         vsplitter.setHandleWidth(10)
 
-        layout = QtWidgets.QHBoxLayout()
-        layout.addWidget(vsplitter)
-        self.setLayout(layout)
+        #layout = QtWidgets.QHBoxLayout()
+        #layout.addWidget(vsplitter)
+        #self.setLayout(layout)
+        #w = QWidget()
+        #w.setLayout(layout)
+        self.setCentralWidget(vsplitter)
 
         if 'Register' in self.db.dfs:
             names = list(self.db.get_df('Register').index)

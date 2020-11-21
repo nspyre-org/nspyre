@@ -41,6 +41,6 @@ def main(args=None):
 
     if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
         QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-    app = NSpyreApp([sys.argv])
+    app = NSpyreApp(['NSpyre', sys.argv])
     main_window = NSpyreMainWindow()
     sys.exit(app.exec())

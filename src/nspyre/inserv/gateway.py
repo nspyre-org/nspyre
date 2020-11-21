@@ -12,8 +12,8 @@ import logging
 import parse
 import rpyc
 
-from nspyre.config.config_files import get_config_param, load_config
-from nspyre.definitions import MONGO_CONNECT_TIMEOUT, MONGO_RS, MONGO_SERVERS_KEY, MONGO_SERVERS_SETTINGS_KEY, Q_, RPYC_CONN_TIMEOUT, RPYC_SYNC_TIMEOUT
+from nspyre.config.config_files import get_config_param, load_config, load_meta_config
+from nspyre.definitions import CLIENT_META_CONFIG_PATH, Q_, RPYC_CONN_TIMEOUT, RPYC_SYNC_TIMEOUT
 from nspyre.errors import InservGatewayError
 from nspyre.misc.misc import register_quantity_brining
 

@@ -110,9 +110,7 @@ setup(
         'pytest>=6.1.2',
         'psutil>=5.7.3',
     ],
-    test_suite=[
-        'tests',
-    ],
+    test_suite='tests',
     entry_points={
         'console_scripts': [
             'nspyre=nspyre.gui:main',

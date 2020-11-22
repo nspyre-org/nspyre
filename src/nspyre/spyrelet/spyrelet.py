@@ -30,9 +30,9 @@ from pint.util import infer_base_unit
 from pymongo.errors import PyMongoError
 from tqdm.auto import tqdm
 
-from nspyre.config.config_files import ConfigEntryNotFoundError, get_config_param
+from nspyre.config.config_files import get_config_param
 from nspyre.definitions import Q_
-from nspyre.errors import SpyreletLoadError, SpyreletRunningError, SpyreletUnloadError
+from nspyre.errors import EntryNotFoundError, SpyreletLoadError, SpyreletRunningError, SpyreletUnloadError
 from nspyre.gui.data_handling import save_data
 from nspyre.misc.misc import custom_decode, custom_encode, get_mongo_client, load_class_from_file, RangeDict
 
@@ -74,7 +74,7 @@ class Spyrelet:
         CONSTS: An extra dictionary, which can be defined by the user at initialization time.
     """
 
-    REQUIRED_DEVICES = dict()
+    REQUIRED_DEVICES = list()
     REQUIRED_SPYRELETS = dict()
     PARAMS = dict()
     CONSTS = dict()
@@ -107,11 +107,30 @@ class Spyrelet:
                 # e.g. "local1/dev1"
                 dev_accessor = device_aliases[dev_alias]
             except Exception as exc:
-                raise SpyreletLoadError(exc, 'Spyrelet [{}] requires the device [{}] but it wasn\'t defined in the [{}] section of the config file'.format(unique_name, dev_alias, CONFIG_DEVS_KEY)) from None
-            if dev_accessor in gateway.devs:
-                setattr(self, dev_alias, gateway.devs[dev_accessor])
-            else:
-                raise SpyreletLoadError(None, 'Spyrelet [{}] requires the device [{}] (alias [{}]) but either the instrument server is unreachable, or the device isn\'t available on the server'.format(unique_name, dev_accessor, dev_alias))
+                raise SpyreletLoadError(exc, 'Spyrelet [{}] requires the '
+                                             'device [{}] but it wasn\'t defined in the [{}] '
+                                             'section of the config file'.format(unique_name, dev_alias, CONFIG_DEVS_KEY)) from None
+            try:
+                server_name, device_name = device_aliases[dev_alias].split('/')
+            except:
+                raise SpyreletLoadError(None, 'Spyrelet [{}] with the '
+                                              'device alias [{}] has an invalid device accessor [{}].'
+                                              'The accessor should be in the form '
+                                              '"server_name/device_name"'.format(unique_name, dev_accessor, dev_alias))
+            try:
+                server = getattr(gateway, server_name)
+            except:
+                raise SpyreletLoadError(None, 'Spyrelet [{}] requires the '
+                                              'device [{}] (alias [{}]) but the instrument '
+                                              'server is unreachable'.format(unique_name, dev_accessor, dev_alias))
+            try:
+                device = getattr(server, device_name)
+            except:
+                raise SpyreletLoadError(None, 'Spyrelet [{}] requires the '
+                                              'device [{}] (alias [{}]) but the instrument '
+                                              'server doesn\'t contain the device'.format(unique_name, dev_accessor,
+                                                                                          dev_alias))
+            setattr(self, dev_alias, device)
 
         # check that the sub spyrelets are loaded and add them as
         # instance variables
@@ -317,7 +336,7 @@ class SpyreletLauncher:
         def infer(default):
             return {'type': type(default)}
 
-        self.params = [(k, params[k] if k in params else infer(p.default)) for k, p in ps.items() if not p.kind is inspect.Parameter.VAR_KEYWORD]
+        self.params = [(k, params[k] if k in params else infer(p.default)) for k, p in ps.items() if p.kind is not inspect.Parameter.VAR_KEYWORD]
         for pname, pdescr in self.params.items():
             if not 'defaults' in pdescr and ps[pname].default != inspect._empty:
                 self.params[pname].update(default=ps[pname].default)
@@ -376,7 +395,7 @@ def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False):
     # discover any sub-spyrelets
     try:
         sub_spyrelet_names, _ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY, spyrelet_name, CONFIG_SUB_SPYRELETS_KEY])
-    except ConfigEntryNotFoundError:
+    except EntryNotFoundError:
         logger.debug('spyrelet [{}] no sub-spyrelets found'.format(spyrelet_name))
         sub_spyrelet_names = {}
 
@@ -398,7 +417,7 @@ def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False):
     try:
         dev_aliases, _ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY, \
                                                 spyrelet_name, CONFIG_DEVS_KEY])
-    except ConfigEntryNotFoundError:
+    except EntryNotFoundError:
         logger.debug('spyrelet [{}] no device aliases found'. \
                       format(spyrelet_name))
         dev_aliases = {}
@@ -407,13 +426,12 @@ def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False):
     try:
         args, _ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY, \
                                          spyrelet_name, CONFIG_SPYRELETS_ARGS_KEY])
-    except ConfigEntryNotFoundError:
+    except EntryNotFoundError:
         logger.debug('spyrelet [{}] no args found'.format(spyrelet_name))
         args = {}
     args = custom_decode(args)
 
     # create the spyrelet
-    #import pdb; pdb.set_trace()
     spyrelet = spyrelet_class(spyrelet_name, gateway, device_aliases=dev_aliases, spyrelets=sub_spyrelets, **args)
     _LOADED_SPYRELETS[spyrelet_name] = spyrelet
     logger.info('loaded spyrelet [{}]'.format(spyrelet_name))
@@ -440,7 +458,6 @@ def load_all_spyrelets(gateway):
     Raises:
         SpyreletLoadError: An error occurred because one (or more) spyrelet(s) is(are) already loaded.
     """
-    cfg = gateway.config
     # spyrelet parameters to parse
     spyrelet_configs, _ = copy.copy(get_config_param(gateway.config, [CONFIG_SPYRELETS_KEY]))
     # check to see if any spyrelets are loaded

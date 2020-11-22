@@ -11,7 +11,7 @@ import pathlib
 import yaml
 
 from nspyre.definitions import CLIENT_META_CONFIG_PATH
-from nspyre.errors import ConfigurationError
+from nspyre.errors import ConfigurationError, EntryNotFoundError
 
 
 logger = logging.getLogger(__name__)
@@ -177,8 +177,8 @@ def get_config_param(config_dict, path):
                 try:
                     loc = loc[p]
                 except KeyError:
-                    raise ConfigEntryNotFoundError(path) from None
+                    raise EntryNotFoundError(path) from None
             return loc, conf
     # if we reach this point the first path element wasn't found in any
     # config file entries
-    raise ConfigEntryNotFoundError(path) from None
+    raise EntryNotFoundError(path) from None

@@ -33,8 +33,6 @@ class NSpyreError(Exception):
         super().__init__(message)
         self._message = message
         self._error_labels = set(error_labels or [])
-        if error:
-            logging.exception(error)
 
     def has_error_label(self, label):
         """Return True if this error contains the given label."""

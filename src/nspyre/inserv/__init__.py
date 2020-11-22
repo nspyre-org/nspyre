@@ -186,7 +186,8 @@ def main():
         if cmd_args.log:
             nspyre_init_logger(log_level, log_path=pathlib.Path(cmd_args.log),
                                         log_path_level=logging.DEBUG,
-                                        prefix='inserv')
+                                        prefix='inserv',
+                                        file_size=100e6)
         else:
             # the user asked for no log file
             nspyre_init_logger(log_level)

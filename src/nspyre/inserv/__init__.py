@@ -11,6 +11,7 @@ import cmd
 import pathlib
 import pdb
 import logging
+import signal
 
 import pyvisa
 
@@ -199,6 +200,13 @@ def main():
     # init and start RPyC server
     logger.info('starting instrument server...')
     inserv = InstrumentServer(config_path)
+
+    # properly stop the server when a kill signal is received
+    def stop_server(signum, frame):
+        inserv.stop_server()
+        raise SystemExit
+    signal.signal(signal.SIGINT, stop_server)
+    signal.signal(signal.SIGTERM, stop_server)
 
     # start the shell prompt event loop
     cmd_prompt = InservCmdPrompt(inserv)

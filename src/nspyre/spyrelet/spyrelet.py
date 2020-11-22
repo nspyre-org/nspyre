@@ -17,6 +17,7 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
+from collections import OrderedDict
 import copy
 import inspect
 import logging
@@ -336,7 +337,7 @@ class SpyreletLauncher:
         def infer(default):
             return {'type': type(default)}
 
-        self.params = [(k, params[k] if k in params else infer(p.default)) for k, p in ps.items() if p.kind is not inspect.Parameter.VAR_KEYWORD]
+        self.params = OrderedDict([(k, params[k] if k in params else infer(p.default)) for k, p in ps.items() if p.kind is not inspect.Parameter.VAR_KEYWORD])
         for pname, pdescr in self.params.items():
             if not 'defaults' in pdescr and ps[pname].default != inspect._empty:
                 self.params[pname].update(default=ps[pname].default)

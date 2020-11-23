@@ -103,11 +103,13 @@ setup(
     extras_require={
         'dev': [
             'pytest>=6.1.2',
+            'pytest-cov',
             'psutil>=5.7.3',
         ]
     },
     test_requires=[
         'pytest>=6.1.2',
+        'pytest-cov',
         'psutil>=5.7.3',
     ],
     test_suite='tests',

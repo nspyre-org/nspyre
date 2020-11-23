@@ -96,7 +96,7 @@ class InstrumentManagerWindow(QMainWindow):
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
         # header.setSectionResizeMode(0, QHeaderView.Fixed) QHeaderView.Stretch, QHeaderView.Stretch, QHeaderView.Interactive
         header.setSectionsMovable(True)
-        header.setStretchLastSection(False)
+        header.setStretchLastSection(True)  # False
 
         # generate gui elements and set minimum window dimensions before displaying
         self._create_widgets()

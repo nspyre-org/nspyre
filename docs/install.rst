@@ -10,26 +10,19 @@ currently support **Python 3.8+**.
 
    $ conda install -c conda-forge nspyre
 
-.. attention::
-
-   Please see the below commands for correctly installing PyVISA and PyVISA-py.
-
 Conda
 =====
 
-NSpyre is not a pure-python module because it relies on MongoDB to handle both its
-instrument server and measurement server databases — a dependency that cannot be
-package by PyPI. In addition, the large volume of deployments made in a research
-setting makes it desirable to have a consistent, reproducible programming
-environment. To this end, conda is a suitable solution to both requirements and is
-the **recommended** way to install NSpyre.
+NSpyre is not a pure-python module because it relies on MongoDB to handle its measurement database — a dependency that cannot be packaged
+by PyPI. In addition, the large volume of deployments made in a research setting makes it desirable to have a consistent, reproducible
+programming environment. To this end, conda is a suitable solution for both requirements and is the **recommended** way to install NSpyre.
 
 If you do not already have conda installed, we recommend using the Miniconda distribution
 (instead of the Anaconda distribution) because it contains fewer default packages, many
 of which are unnecessary for the vast majority of users. The latest release
 of Miniconda for your platform is available here:
 `Miniconda installers <https://docs.conda.io/en/latest/miniconda.html>`_. It's best to
-choose the Python 3.8 64-bit distribution for your platform. The default installation
+choose the Python 3.8+ 64-bit distribution for your platform. The default installation
 options are appropriate for most users:
 
 * install for *Just Me* (gives full control over install and doesn't require admin privileges)
@@ -37,7 +30,7 @@ options are appropriate for most users:
 * **DO NOT** *Add Anaconda to my PATH environment variable*. This will make your conda
   base environment always available.
 * **DO** *Register Anaconda as my default Python 3.8*. This will make conda available
-  to other programs for integration, such as setting up a development environemnt
+  to other programs for integration, such as setting up a development environment
   in **PyCharm**.
 
 Once conda is installed, you'll want to add the conda-forge channel as a repository
@@ -100,7 +93,7 @@ If you already have conda installed and/or you use conda for managing environmen
 projects in which the above configuration settings aren't ideal, then simply make sure to add
 the *conda-forge* channel to whatever environments you want to install nspyre in.
 
-Once you have conda setup, it's trivial to install nspyre. Make sure to create a new conda
+Once you have conda setup, it's trivial to install nspyre. Make sure to create and activate a new conda
 environment for running nspyre so you don't mess with your base environment:
 
 .. code-block:: console
@@ -110,12 +103,6 @@ environment for running nspyre so you don't mess with your base environment:
    ([nspyre-env]) $ conda install nspyre
    ...
    ([nspyre-env]) $ pip install -U pyvisa pyvisa-py
-
-.. attention::
-
-   There is currently a problem with the distribution of ``PyVISA`` on *conda-forge*. The most
-   up-to-date version can be installed from pip in the meantime. We will update the documentation
-   and remove this step once this hot-fix is no longer necessary.
 
 
 PyPI (aka using pip)
@@ -142,7 +129,7 @@ NSpyre itself can be installed with the following:
 .. attention::
 
    The distribution of `Lantz <https://github.com/lantzproject/lantz-core>`_ available on PyPI
-   is currently outdated and needs to be installed directly from github
+   is currently outdated and needs to be installed directly from GitHub as shown in the commands above.
 
 
 Development Environment

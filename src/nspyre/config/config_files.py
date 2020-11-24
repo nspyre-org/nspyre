@@ -116,7 +116,7 @@ def meta_config_enabled_idx(meta_config_file):
 
 
 def meta_config_set_enabled_idx(meta_config_file, idx_or_str):
-    """Return the index of the enabled config"""
+    """Set the index of the enabled config"""
     meta_config = load_raw_config(meta_config_file)
     try:
         idx = int(idx_or_str)

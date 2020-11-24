@@ -29,6 +29,7 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 import functools
 from pathlib import Path
 import logging
+from subprocess import Popen
 
 from PyQt5.QtCore import QProcess
 from PyQt5.QtGui import QFont
@@ -53,7 +54,6 @@ class NSpyreMainWindow(QMainWindow):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._windows = []
         self.setWindowTitle('NSpyre')
 
         # Set the main window layout to consist of vertical boxes.
@@ -100,19 +100,18 @@ class NSpyreMainWindow(QMainWindow):
 
     def _launch_window(self, window_name=None):
         """Spawn an additional window in a new process."""
-        process = QProcess()
+
         if window_name == 'inserv_manager':
             logger.info('starting Instrument Manager...')
-            process.start('python', [str(HERE.joinpath('instrument_manager.py'))])
+            Popen(['python', str(HERE.joinpath('instrument_manager.py'))])
         elif window_name == 'view_manager':
             logger.info('starting View Manager...')
-            process.start('python', [str(HERE.joinpath('view_manager.py')), 'react_to_drop=False'])
+            Popen(['python', str(HERE.joinpath('view_manager.py'))])
         elif window_name == 'spyrelet_startup':
             logger.info('starting Syrelet GUI window...')
-            process.start('python', [str(HERE.joinpath('launcher.py'))])
+            Popen(['python', str(HERE.joinpath('launcher.py'))])
         elif window_name == 'data_explorer':
             logger.info('starting Data Explorer...')
-            process.start('python', [str(HERE.joinpath('data_explorer.py'))])
+            Popen(['python', str(HERE.joinpath('data_explorer.py'))])
         else:
             raise ValueError('Incorrect input for window_name: {}'.format(window_name))
-        self._windows.append(process)

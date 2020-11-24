@@ -29,7 +29,7 @@ import logging
 
 class NSpyreError(Exception):
     """Base class for all NSpyre exceptions."""
-    def __init__(self, error, message='', error_labels=None):
+    def __init__(self, message='', error_labels=None):
         super().__init__(message)
         self._message = message
         self._error_labels = set(error_labels or [])

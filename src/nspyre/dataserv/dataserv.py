@@ -20,6 +20,7 @@ import xdelta3
 from threading import Thread, Lock, Event
 import queue
 import time
+import ctypes
 from typing import List
 
 logger = logging.getLogger(__name__)
@@ -79,9 +80,8 @@ def recv_msg(sock: socket.socket) -> tuple:
     # get the payload
     msg = sock.recv(msg_len)
 
-    # confirm data was actually received
-    if len(msg_len_bytes) == 0 or len(meta_data) == 0 or (len(msg) == 0 and msg_len != 0):
-        # the connection has closed
+    # confirm all data was actually received
+    if len(msg_len_bytes) != HEADER_MSG_LEN or len(meta_data) != HEADER_METADATA_LEN or (len(msg) != msg_len):
         raise BrokenPipeError
 
     logger.debug(f'{sock.getsockname()} recv: [{msg_len_bytes + meta_data + msg}]')
@@ -102,6 +102,9 @@ def send_msg(sock: socket.socket, msg: bytes, meta_data: bytes=b'\x00'*HEADER_ME
     
     logger.debug(f'{sock.getsockname()} sent: [{msg_len_bytes + meta_data + msg}]')
 
+class KillTheadException(Exception):
+    """ """
+
 class FIFOProcessor():
     """A class for transferring data to/from a queue"""
     def __init__(self):
@@ -119,13 +122,18 @@ class FIFOProcessor():
         self.enabled = True
         self.thread.start()
 
-    def stop_async(self):
-        """Stop the data processing thread without waiting for it to finish"""
-        self.enabled = False
-
     def stop(self):
         """Stop the data processing thread and wait for it to finish"""
-        self.stop_async()
+        # this asynchronously raises an exception in the thread
+        self.enabled = False
+        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(self.thread.ident), 
+                                                ctypes.py_object(KillTheadException))
+        if res == 0:
+            print('fail1')
+        elif res > 1:
+            print('fail2')
+        # if any socket operations are happening, interrupt them by closing the socket
+        self.conn.shutdown(socket.SHUT_RDWR)
         # wait until thread exits
         self.thread.join()
 
@@ -204,7 +212,9 @@ class DataServer():
                     # if there was a timeout / problem receiving the message
                     # the source client is dead and will be terminated
                     logger.warning(f'client [{self.conn.getsockname()}] hasn\'t sent any data or keepalive message - dropping connection')
-                    self.stop_async()
+                    # TODO
+                    self.enabled = False
+                    #self.stop_async()
                     continue
 
                 if len(new_pickle):
@@ -393,6 +403,7 @@ class DataServer():
                 # wait until a client tries to connect
                 try:
                     conn, addr = sock.accept()
+                    print(addr)
                 except socket.timeout:
                     continue
                 # spawn a thread to deal with it
@@ -514,46 +525,51 @@ class DataSource(FIFOProcessor):
     def _thread_fun(self):
         """Data processing thread for sending data to the server"""
         while self.enabled:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                # allow POSIX OSes to immediately reuse sockets previously bound
-                # to the same address
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                # connect to the DataServer
-                sock.settimeout(TIMEOUT)
+            self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # allow POSIX OSes to immediately reuse sockets previously bound
+            # to the same address
+            self.conn.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # connect to the DataServer
+            self.conn.settimeout(TIMEOUT)
+            # TODO try:
+            self.conn.connect((self.addr, self.port))
+            # except:
+            #     logger.warning(f'source couldn\'t reach server [{self.addr}] - retrying...')
+            #     time.sleep(FAST_TIMEOUT)
+            #     continue
+
+            # TODO try:
+            # notify the server that this is a data source client
+            send_msg(self.conn, NEGOTIATION_SOURCE)
+            # send the dataset name to source
+            send_msg(self.conn, self.name.encode())
+            # except:
+            #     logger.warning(f'failed initializing source connection with server [{self.addr}] - retrying...')
+            #     time.sleep(FAST_TIMEOUT)
+            #     continue
+
+            # retrieve data from the queue and send it to the server
+            while self.enabled:
+                # retrieve data from the queue
                 try:
-                    sock.connect((self.addr, self.port))
-                except:
-                    logger.warning(f'source couldn\'t reach server [{self.addr}] - retrying...')
-                    time.sleep(FAST_TIMEOUT)
-                    continue
+                    new_pickle = self.get(timeout=KEEPALIVE)
+                except KillTheadException:
+                    print('ASDFASDFASDFASDFASFDSDFSFDA')
+                except queue.Empty:
+                    # this will send a keepalive message
+                    new_pickle = b''
 
-                try:
-                    # notify the server that this is a data source client
-                    send_msg(sock, NEGOTIATION_SOURCE)
-                    # send the dataset name to source
-                    send_msg(sock, self.name.encode())
-                except:
-                    logger.warning(f'failed initializing source connection with server [{self.addr}] - retrying...')
-                    time.sleep(FAST_TIMEOUT)
-                    continue
-
-                # retrieve data from the queue and send it to the server
-                while self.enabled:
-                    # retrieve data from the queue
-                    try:
-                        new_pickle = self.get(timeout=KEEPALIVE)
-                    except queue.Empty:
-                        # this will send a keepalive message
-                        new_pickle = b''
-
-                    # send the data over the socket
-                    try:
-                        send_msg(sock, new_pickle)
-                    except:
-                        # if there was a timeout / problem sending the message
-                        # the server couldn't be reached
-                        logger.warning(f'server [{self.addr}] didn\'t accept message - dropping connection')
-                        break
+                # send the data over the socket
+                # TODO try:
+                send_msg(self.conn, new_pickle)
+                # except:
+                #     # if there was a timeout / problem sending the message
+                #     # the server couldn't be reached
+                #     logger.warning(f'server [{self.addr}] didn\'t accept message - dropping connection')
+                #     break
+            self.conn.close()
+        # TODO
+        logger.debug(f'source exited')
 
     def serialize(self, obj):
         """Serialize a python object into a byte stream"""
@@ -600,32 +616,34 @@ class DataSink(FIFOProcessor):
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 # connect to the DataServer
                 sock.settimeout(TIMEOUT)
-                try:
-                    sock.connect((self.addr, self.port))
-                except:
-                    logger.warning(f'sink couldn\'t reach server [{self.addr}] - retrying...')
-                    time.sleep(FAST_TIMEOUT)
-                    continue
+                # TODO try:
+                sock.connect((self.addr, self.port))
+                # except:
+                #     logger.warning(f'sink couldn\'t reach server [{self.addr}] - retrying...')
+                #     time.sleep(FAST_TIMEOUT)
+                #     continue
 
-                try:
-                    # notify the server that this is a data sink client
-                    send_msg(sock, NEGOTIATION_SINK)
-                    # send the dataset name to sink
-                    send_msg(sock, self.name.encode())
-                except:
-                    logger.warning(f'failed initializing sink connection with server [{self.addr}] - retrying...')
-                    time.sleep(FAST_TIMEOUT)
-                    continue
+                # TODO try:
+                # notify the server that this is a data sink client
+                send_msg(sock, NEGOTIATION_SINK)
+                # send the dataset name to sink
+                send_msg(sock, self.name.encode())
+                # except:
+                #     logger.warning(f'failed initializing sink connection with server [{self.addr}] - retrying...')
+                #     time.sleep(FAST_TIMEOUT)
+                #     continue
 
                 while self.enabled:
                     # retrieve data from the server
                     try:
                         new_data, meta_data = recv_msg(sock)
-                    except:
-                        # if there was a timeout / problem receiving the message
-                        # the source client is dead and will be terminated
-                        logger.warning(f'server [{self.addr}] hasn\'t sent any data or keepalive message - dropping connection')
-                        break
+                    except KillTheadException:
+                        print('ASDFASDFASDFASDFASFDSasdd')
+                    # TODO except:
+                    #     # if there was a timeout / problem receiving the message
+                    #     # the source client is dead and will be terminated
+                    #     logger.warning(f'server [{self.addr}] hasn\'t sent any data or keepalive message - dropping connection')
+                    #     break
 
                     if len(new_data):
                         # unpack the data if necessary by using the delta
@@ -653,6 +671,9 @@ class DataSink(FIFOProcessor):
                     else:
                         # the server just sent a keepalive signal
                         pass
+        # TODO
+        logger.debug(f'source exited')
+
 
     def pop(self, block=True, timeout=None):
         """retrieve a reconstructed object from the queue"""

@@ -22,6 +22,7 @@ import psutil
 
 # nspyre
 from nspyre.inserv.gateway import InservGateway
+from nspyre.definitions import DATASERV_PORT
 
 ###########################
 # globals
@@ -54,32 +55,47 @@ def setup():
 
     logging.info('test setup...')
 
-    # search through all running processes, and only start mongo if it's not
-    # already running, since it takes awhile to start up
-    if not 'mongod' in [p.name() for p in psutil.process_iter()]:
+    # list of the names of currently running processes so that we can
+    # only start our own instances if they're not already running
+    processes = [p.name() for p in psutil.process_iter()]
+
+    if not 'mongod' in processes:
         logging.info('running nspyre-mongodb')
         # start mongod in a subprocess
         mongo = subprocess.run(['nspyre-mongodb'])
         # give time for the database to start
         time.sleep(30)
 
-    # start the instrument server
-    inserv = subprocess.Popen(['nspyre-inserv', '-c', server_cfg_path, '-v', 'debug'],
-                                stdin=subprocess.PIPE)
+    processes_to_kill = []
 
-    # make sure the inserv gets killed on exit even if there's an error
+    if not 'nspyre-inserv' in processes:
+        # start the instrument server
+        inserv = subprocess.Popen(['nspyre-inserv', '-c', server_cfg_path, '-v', 'debug'],
+                                    stdin=subprocess.PIPE)
+        processes_to_kill.append(inserv)
+
+    if not 'nspyre-dataserv' in processes:
+        # start the data server
+        dataserv = subprocess.Popen(['nspyre-dataserv', '-v', 'debug'],
+                                    stdin=subprocess.PIPE)
+        processes_to_kill.append(dataserv)
+
+    # make sure the processes get killed on exit even if there's an error
     def cleanup():
-        inserv.kill()
+        for p in processes_to_kill:
+            p.kill()
     atexit.register(cleanup)
 
     # ignore logging while we attempt to connect
     logging.disable(logging.CRITICAL)
-    # wait until the server is online
+    # wait until the servers are online
     while True:
         try:
             with InservGateway(client_cfg_path) as insgw:
                 getattr(insgw, 'tserv')
                 break
+            source = DataSource('data1', 'localhost', DATASERV_PORT)
+            source.stop()
         except:
             time.sleep(0.1)
     # re-enable logging

@@ -70,3 +70,6 @@ RPYC_SYNC_TIMEOUT = None
 
 # config file key for mongodb address
 CONFIG_MONGO_ADDR_KEY = 'mongodb_addr'
+
+# default port to host the data server on
+DATASERV_PORT = 30000

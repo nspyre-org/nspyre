@@ -105,6 +105,7 @@ setup(
             'nspyre-config=nspyre.config:main',
             'nspyre-mongodb=nspyre.mongodb:main',
             'nspyre-inserv=nspyre.inserv:main',
+            'nspyre-dataserv=nspyre.dataserv.cli_dataserv:main',
         ],
     },
     project_urls={

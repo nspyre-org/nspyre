@@ -19,7 +19,7 @@ import datetime
 # classes / functions
 ###########################
 
-class StreamToLogger(object):
+class StreamToLog(object):
     """Fake stream object that redirects writes to a logger"""
     def __init__(self, logger, log_level, terminator):
         self.logger = logger
@@ -63,16 +63,26 @@ def nspyre_init_logger(log_level, log_path=None, log_path_level=None, prefix=Non
     # the root logger will accept all messages
     root_logger.setLevel(logging.DEBUG)
 
-    # log format for stdout/err messages
+    # log format for stdout messages
     stdout_formatter = logging.Formatter('%(asctime)s.%(msecs)03d [%(levelname)8s] %(message)s', '%Y-%m-%d %H:%M:%S')
     # create stdout log handler
-    stdout_handler = logging.StreamHandler()
+    stdout_handler = logging.StreamHandler(stream=sys.stdout)
     stdout_handler.setLevel(log_level)
     stdout_handler.setFormatter(stdout_formatter)
     root_logger.addHandler(stdout_handler)
 
-    # all stderr messages will now be redirected to the root logger
-    sys.stderr = StreamToLogger(root_logger, logging.CRITICAL, '\n')
+    # all stderr messages will now be redirected to a special logger
+    stderr_logger = logging.getLogger('stderr')
+    stderr_logger.propagate = False
+    sys.stderr = StreamToLog(stderr_logger, logging.CRITICAL, '\n')
+
+    # log format for stderr messages
+    stderr_formatter = logging.Formatter('[stderr] %(message)s')
+    # create stderr log handler
+    stderr_handler = logging.StreamHandler(stream=sys.stdout)
+    stderr_handler.setLevel(log_level)
+    stderr_handler.setFormatter(stderr_formatter)
+    stderr_logger.addHandler(stderr_handler)
 
     # if a log file / folder was specified
     if log_path:
@@ -96,10 +106,11 @@ def nspyre_init_logger(log_level, log_path=None, log_path_level=None, prefix=Non
             file_handler = logging.handlers.RotatingFileHandler(log_path, maxBytes=file_size, backupCount=1000)
         else:
             file_handler = logging.FileHandler(log_path)
-        file_formatter = logging.Formatter('%(asctime)s.%(msecs)03d [%(levelname)s] (%(filename)s:%(lineno)s) %(message)s', '%Y-%m-%d %H:%M:%S')
+        file_formatter = logging.Formatter('[stderr] %(asctime)s.%(msecs)03d [%(levelname)s] (%(filename)s:%(lineno)s) %(message)s', '%Y-%m-%d %H:%M:%S')
         file_handler.setFormatter(file_formatter)
         if log_path_level:
             file_handler.setLevel(log_path_level)
         else:
             file_handler.setLevel(log_level)
         root_logger.addHandler(file_handler)
+        stderr_logger.addHandler(file_handler)

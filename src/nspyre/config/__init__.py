@@ -12,10 +12,11 @@ Date: 9/13/2020
 
 # std
 import argparse
-import logging
 from pathlib import Path
+import logging
 
 # nspyre
+from nspyre.misc.logging import nspyre_init_logger
 from nspyre.definitions import CLIENT_META_CONFIG_PATH, SERVER_META_CONFIG_PATH
 from nspyre.config.config_files import meta_config_add, meta_config_remove, \
                                 meta_config_files, meta_config_enabled_idx, \
@@ -85,10 +86,7 @@ def main():
         else:
             raise Exception('didn\'t recognize logging level [{}]'.\
                                         format(cmd_args.verbosity)) from None
-
-        logging.basicConfig(level=log_level,
-                        format='%(asctime)s -- %(levelname)s -- %(message)s',
-                        handlers=[logging.StreamHandler()])
+        nspyre_init_logger(log_level)
 
     if cmd_args.client_or_inserv == 'client':
         meta_config_path = CLIENT_META_CONFIG_PATH

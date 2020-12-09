@@ -21,11 +21,19 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
 
 # nspyre
-from nspyre.spyrelet.spyrelet import Spyrelet_Launcher
+from nspyre.config.config_files import load_meta_config
+from nspyre.definitions import CLIENT_META_CONFIG_PATH
+from nspyre.spyrelet.spyrelet import SpyreletLauncher
 from nspyre.gui.widgets.param_widget import ParamWidget
 from nspyre.gui.widgets.save_widget import Save_Widget
 from nspyre.spyrelet.spyrelet import load_all_spyrelets
 from nspyre.inserv.gateway import InservGateway
+
+###########################
+# globals
+###########################
+
+logger = logging.getLogger(__name__)
 
 ###########################
 # classes
@@ -88,7 +96,7 @@ class Spyrelet_Launcher_Widget(QtWidgets.QWidget):
     def __init__(self, spyrelet, parent=None):
         self.spyrelet = spyrelet
         self.progress_bar = Progress_Bar()
-        self.launcher = Spyrelet_Launcher(spyrelet)
+        self.launcher = SpyreletLauncher(spyrelet)
         self.param_w = ParamWidget(self.launcher.params)
         self.param_w.set(**self.launcher.get_defaults())
         super().__init__(parent=parent)
@@ -251,13 +259,11 @@ if __name__ ==  '__main__':
     import sys
     from PyQt5.QtCore import Qt
     from nspyre.gui.app import NSpyreApp
+    from nspyre.misc.logging import nspyre_init_logger
 
-    # configure server logging behavior
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s -- %(levelname)s -- %(message)s',
-                        handlers=[logging.StreamHandler()])
+    nspyre_init_logger(logging.INFO)
 
-    logging.info('starting Instrument Manager...')
+    logger.info('starting Instrument Manager...')
     if hasattr(Qt, 'AA_EnableHighDpiScaling'):
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
 
@@ -265,6 +271,7 @@ if __name__ ==  '__main__':
         QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = NSpyreApp([sys.argv])
     pyqtgraph_connectCleanup()
-    with InservGateway() as isg:
+    config_path = load_meta_config(CLIENT_META_CONFIG_PATH)
+    with InservGateway(config_path) as isg:
         combined_spyrelet_window = CombinedSpyreletWindow(isg)
         sys.exit(app.exec())

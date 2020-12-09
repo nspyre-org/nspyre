@@ -93,12 +93,26 @@ setup(
         'pyvisa>=1.10.1',
         # Lantz
         'pint>=0.15',
+        'pimpmyclass>=0.4.3',
         'lantzdev>=0.5.2',
         # Utilities
         'parse>=1.18.0',
         'tqdm>=4.49.0',
         'rpyc>=4.1.5',
     ],
+    extras_require={
+        'dev': [
+            'pytest>=6.1.2',
+            'pytest-cov',
+            'psutil>=5.7.3',
+        ]
+    },
+    test_requires=[
+        'pytest>=6.1.2',
+        'pytest-cov',
+        'psutil>=5.7.3',
+    ],
+    test_suite='tests',
     entry_points={
         'console_scripts': [
             'nspyre=nspyre.gui:main',

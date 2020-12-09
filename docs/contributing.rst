@@ -158,7 +158,7 @@ rest can now be completed using the console:
    git push --set-upstream origin descriptive-branch-title
 
 You will notice the addition of two new terms -- *branch* and *push*. Each
-repository can have multiple versions of it's codebase that are under
+repository can have multiple versions of its codebase that are under
 development. The ``master`` *branch* is the main version of the code on the
 repository and is the root branch from which all others originate. This is the
 official working version that is used out in the wild and the one you eventually

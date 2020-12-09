@@ -6,37 +6,25 @@ the instrument server
 Author: Jacob Feder
 Date: 7/8/2020
 """
-
-###########################
-# imports
-###########################
-
-# std
 import argparse
-from cmd import Cmd
-import logging
+import cmd
+import pathlib
 import pdb
-from pathlib import Path
+import logging
+import signal
 
-# 3rd party
 import pyvisa
 
-# nspyre
-from nspyre.inserv.inserv import InstrumentServer
+from nspyre.config.config_files import load_meta_config
 from nspyre.definitions import SERVER_META_CONFIG_PATH
+from nspyre.errors import InstrumentServerError
+from nspyre.inserv.inserv import InstrumentServer
+from nspyre.misc.logging import nspyre_init_logger
 
-###########################
-# globals
-###########################
+logger = logging.getLogger(__name__)
 
-THIS_DIR = Path(__file__).parent
-DEFAULT_LOG = THIS_DIR / 'inserv.log'
 
-###########################
-# classes / functions
-###########################
-
-class InservCmdPrompt(Cmd):
+class InservCmdPrompt(cmd.Cmd):
     """Instrument Server shell prompt processor"""
     def __init__(self, inserv):
         super().__init__()
@@ -61,10 +49,9 @@ class InservCmdPrompt(Cmd):
             return
         # attempt to reload the config files
         try:
-            self.inserv.update_config(config_file=\
-                                    args[0] if arg_string else None)
+            self.inserv.update_config(config_file=args[0] if arg_string else None)
         except Exception as exc:
-            logging.exception(exc)
+            logger.exception(exc)
             print('Failed to reload config files')
             return
 
@@ -78,7 +65,7 @@ class InservCmdPrompt(Cmd):
         try:
             self.inserv.reload_device(dev_name)
         except Exception as exc:
-            logging.exception(exc)
+            logger.exception(exc)
             print('Failed to reload device [{}]'.format(dev_name))
             return
 
@@ -90,7 +77,7 @@ class InservCmdPrompt(Cmd):
         try:
             self.inserv.reload_devices()
         except Exception as exc:
-            logging.exception(exc)
+            logger.exception(exc)
             print('Failed to reload all devices')
             return
 
@@ -102,7 +89,7 @@ class InservCmdPrompt(Cmd):
         try:
             self.inserv.restart()
         except Exception as exc:
-            logging.exception(exc)
+            logger.exception(exc)
             print('Failed to restart')
             return
 
@@ -114,7 +101,7 @@ class InservCmdPrompt(Cmd):
         try:
             self.inserv.reload_server()
         except Exception as exc:
-            logging.exception(exc)
+            logger.exception(exc)
             print('Failed to restart server')
             return
 
@@ -126,7 +113,7 @@ class InservCmdPrompt(Cmd):
         try:
             self.inserv.stop_server()
         except Exception as exc:
-            logging.exception(exc)
+            logger.exception(exc)
             print('Failed to stop server')
             return
 
@@ -138,7 +125,7 @@ class InservCmdPrompt(Cmd):
         try:
             self.inserv.start_server()
         except Exception as exc:
-            logging.exception(exc)
+            logger.exception(exc)
             print('Failed to start server')
             return
 
@@ -154,7 +141,7 @@ class InservCmdPrompt(Cmd):
         if arg_string:
             print('Expected 0 args')
             return
-        logging.info('exiting...')
+        logger.info('exiting...')
         # close all open resources
         self.inserv.stop_server()
         for dev_name in list(self.inserv._devs):
@@ -164,23 +151,22 @@ class InservCmdPrompt(Cmd):
 
 def main():
     """Entry point for instrument server CLI"""
+
     # parse command-line arguments
     arg_parser = argparse.ArgumentParser(prog='nspyre-inserv',
                             description='Run an nspyre instrument server')
-    arg_parser.add_argument('-l', '--log',
-                            default=DEFAULT_LOG,
-                            help='log to the provided file location')
-    arg_parser.add_argument('-m', '--mongo',
+    arg_parser.add_argument('-c', '--config',
                             default=None,
-                            help='use the provided mongodb address rather than '
-                            'the one listed in the config (e.g. '
-                            'mongodb://192.168.1.27:27017/)') 
+                            help='use the provided config file') 
+    arg_parser.add_argument('-l', '--log',
+                            default=None,
+                            help='log to the provided file / directory')
     arg_parser.add_argument('-q', '--quiet',
                             action='store_true',
                             help='disable logging')
     arg_parser.add_argument('-v', '--verbosity',
-                            default='debug',
-                            help='the verbosity of logging - options are: '
+                            default='info',
+                            help='the verbosity of logging to stdout - options are: '
                             'debug, info, warning, error')
     cmd_args = arg_parser.parse_args()
 
@@ -197,24 +183,37 @@ def main():
         else:
             raise InstrumentServerError('didn\'t recognize logging level [{}]'.\
                                         format(cmd_args.verbosity)) from None
+        if cmd_args.log:
+            nspyre_init_logger(log_level, log_path=pathlib.Path(cmd_args.log),
+                                        log_path_level=logging.DEBUG,
+                                        prefix='inserv',
+                                        file_size=100e6)
+        else:
+            # the user asked for no log file
+            nspyre_init_logger(log_level)
 
-        logging.basicConfig(level=log_level,
-                        format='%(asctime)s -- %(levelname)s -- %(message)s',
-                        handlers=[logging.FileHandler(cmd_args.log, 'w+'),
-                                logging.StreamHandler()])
+    # get the config file
+    if cmd_args.config:
+        config_path = cmd_args.config
+    else:
+        config_path = load_meta_config(SERVER_META_CONFIG_PATH)
 
     # init and start RPyC server
-    logging.info('starting instrument server...')
-    inserv = InstrumentServer(SERVER_META_CONFIG_PATH, cmd_args.mongo)
+    logger.info('starting instrument server...')
+    inserv = InstrumentServer(config_path)
+
+    # properly stop the server when a kill signal is received
+    def stop_server(signum, frame):
+        inserv.stop_server()
+        raise SystemExit
+    signal.signal(signal.SIGINT, stop_server)
+    signal.signal(signal.SIGTERM, stop_server)
 
     # start the shell prompt event loop
     cmd_prompt = InservCmdPrompt(inserv)
     cmd_prompt.prompt = 'inserv > '
     cmd_prompt.cmdloop('instrument server started...')
 
-###########################
-# standalone main
-###########################
 
 if __name__ == '__main__':
     main()

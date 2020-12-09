@@ -5,51 +5,35 @@ CLI for controlling mongodb
 Author: Jacob Feder
 Date: 9/13/2020
 """
-
-###########################
-# imports
-###########################
-
-# std
 import argparse
-from sys import platform
+from sys import platform, exit
 from pathlib import Path
-import subprocess
+from subprocess import check_call, CalledProcessError
 
-###########################
-# globals
-###########################
+from nspyre.errors import OSNotSupportedError
+
 
 THIS_DIR = Path(__file__).parent
 
-###########################
-# exceptions
-###########################
-
-class OSNotSupportedError(Exception):
-    pass
-
-###########################
-# classes / functions
-###########################
 
 def main():
     """Entry point for mongodb CLI"""
     # parse command-line arguments
-    arg_parser = argparse.ArgumentParser(prog='nspyre-mongodb',
-                            description='Start / restart the MongoDB server')
+    arg_parser = argparse.ArgumentParser(prog='nspyre-mongodb', description='Start / restart the MongoDB server')
     cmd_args = arg_parser.parse_args()
-    if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-        subprocess.run(['bash', str(THIS_DIR / 'start_mongo_unix.sh')])
-    elif platform == 'win32':
-        subprocess.run([str(THIS_DIR / 'start_mongo_win.bat')])
-    else:
-        raise OSNotSupportedError('Your OS [{}] is not supported'.\
-                                    format(platform))
+    try:
+        if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
+            check_call(['bash', str(THIS_DIR / 'start_mongo_unix.sh')])
+        elif platform == 'win32':
+            check_call([str(THIS_DIR / 'start_mongo_win.bat')])
+        else:
+            raise OSNotSupportedError('Your OS [{}] is not supported'.\
+                                        format(platform))
+    except CalledProcessError:
+        exit(1)
 
-###########################
-# standalone main
-###########################
+    exit(0)
+
 
 if __name__ == '__main__':
     main()

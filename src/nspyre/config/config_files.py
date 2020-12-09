@@ -5,57 +5,25 @@ This module handles reading and writing YAML configuration files
 Author: Jacob Feder
 Date: 7/25/2020
 """
-
-###########################
-# imports
-###########################
-
-# std
-from pathlib import Path
-from importlib import import_module
 import logging
+import pathlib
 
-# 3rd party
 import yaml
 
-# nspyre
-from nspyre.definitions import join_nspyre_path, CLIENT_META_CONFIG_PATH
+from nspyre.definitions import CLIENT_META_CONFIG_PATH
+from nspyre.errors import ConfigurationError, EntryNotFoundError
 
-###########################
-# globals
-###########################
+
+logger = logging.getLogger(__name__)
 
 META_CONFIG_FILES_ENTRY = 'config_files'
 META_CONFIG_ENABLED_IDX = 'enabled'
 
-###########################
-# exceptions
-###########################
 
-class ConfigEntryNotFoundError(Exception):
-    """Exception for when a configuration file doesn't contain the desired
-    entry"""
-    def __init__(self, config_path, msg=None):
-        if msg is None:
-            msg = 'Config file was expected to contain parameter: [{}] ' \
-                    'but it wasn\'t found'.format(' -> '.join(config_path))
-        super().__init__(msg)
-        self.config_path = config_path
-
-class ConfigError(Exception):
-    """General Config file exception"""
-    def __init__(self, error, msg):
-        super().__init__(msg)
-        if error:
-            logging.exception(error)
-
-###########################
-# classes / functions
-###########################
-
-# A meta-config.yaml file contains a single entry with key 
+# A meta-config.yaml file contains a single entry with key
 # META_CONFIG_FILES_ENTRY and value = a list of all the config files that
 # should be read
+
 
 def load_raw_config(filepath):
     """Return a config file dictionary loaded from a YAML file"""
@@ -63,25 +31,29 @@ def load_raw_config(filepath):
         conf = yaml.safe_load(f)
     return conf
 
+
 def meta_config_add(meta_config_file, files):
     """Add config files to the meta-config"""
     meta_config = load_raw_config(meta_config_file)
     config_list = meta_config[META_CONFIG_FILES_ENTRY]
     new_files = []
     for f in files:
-        f_path = Path(f).resolve()
+        f_path = pathlib.Path(f).resolve()
         if not f_path.is_file():
             raise FileNotFoundError('file [{}] not found'.format(f_path))
         if str(f_path) in config_list:
-            raise ConfigError(None, 'the config file {} is already available'.format(f))
+            raise ConfigurationError(
+                None, 'the config file {} is already available'.format(f)
+            )
         new_files.append(str(f_path))
     meta_config[META_CONFIG_FILES_ENTRY] = config_list + new_files
     write_config(meta_config, meta_config_file)
 
+
 def meta_config_remove(meta_config_file, files):
     """Remove config files from the meta-config"""
     meta_config = load_raw_config(meta_config_file)
-    enabled_idx = meta_config_enabled_idx(meta_config_file)
+    enabled_idx = meta_config[META_CONFIG_ENABLED_IDX]
     config_list = meta_config[META_CONFIG_FILES_ENTRY]
     # list of indicies to remove from config_list
     pop_list = []
@@ -96,10 +68,12 @@ def meta_config_remove(meta_config_file, files):
             try:
                 idx = meta_config[META_CONFIG_FILES_ENTRY].index(c)
             except ValueError as exc:
-                raise ConfigError(exc, 'config file [{}] was not found in the '
-                                'meta-config - check that the file path shown '
-                                'using --list-configs matches given input'.\
-                                format(c)) from None
+                raise ConfigurationError(
+                    exc,
+                    'config file [{}] was not found in the meta-config - check that the file path shown using --list-configs matches given input'.format(
+                        c
+                    ),
+                ) from None
         pop_list.append(idx)
 
     pop_list.sort(reverse=True)
@@ -112,8 +86,12 @@ def meta_config_remove(meta_config_file, files):
             if idx < enabled_idx:
                 new_enabled_idx -= 1
         except IndexError as exc:
-            raise ConfigError(exc, 'tried to remove config file index [{}] '
-                'that was out of range'.format(idx))
+            raise ConfigurationError(
+                exc,
+                'tried to remove config file index [{}] that was out of range'.format(
+                    idx
+                ),
+            )
 
     # if the user removed the currently enabled config
     if enabled_idx in pop_list:
@@ -123,16 +101,19 @@ def meta_config_remove(meta_config_file, files):
     meta_config[META_CONFIG_ENABLED_IDX] = new_enabled_idx
     write_config(meta_config, meta_config_file)
 
+
 def meta_config_files(meta_config_file):
     """Return the paths of the config files in the meta-config"""
     meta_config = load_raw_config(meta_config_file)
     config_list = meta_config[META_CONFIG_FILES_ENTRY]
     return config_list
 
+
 def meta_config_enabled_idx(meta_config_file):
     """Return the index of the enabled config"""
     meta_config = load_raw_config(meta_config_file)
     return meta_config[META_CONFIG_ENABLED_IDX]
+
 
 def meta_config_set_enabled_idx(meta_config_file, idx_or_str):
     """Set the index of the enabled config"""
@@ -145,36 +126,56 @@ def meta_config_set_enabled_idx(meta_config_file, idx_or_str):
         try:
             idx = meta_config[META_CONFIG_FILES_ENTRY].index(idx_or_str)
         except ValueError as exc:
-            raise ConfigError(exc, 'config file [{}] was not found in the '
-                'meta-config - check that the file path shown '
-                'using --list-configs matches given input'.\
-                format(idx_or_str)) from None
+            raise ConfigurationError(
+                exc,
+                'config file [{}] was not found in the meta-config - check that the file path shown using --list-configs matches given input'.format(
+                    idx_or_str
+                ),
+            ) from None
     meta_config[META_CONFIG_ENABLED_IDX] = idx
     write_config(meta_config, meta_config_file)
 
-def load_config(meta_config_path=None):
-    """Takes a 'meta' config file that specifies the location of other config
-    files to load, then make a dictionary where the keys are the config file
-    names and the values are the config dictionaries of that file."""
+
+def load_meta_config(meta_config_path=None):
+    """Takes a 'meta' config file and returns the file path of the activated
+    config file"""
+
+    # TODO this logic should be removed and meta_config_path always passed in
     if not meta_config_path:
         meta_config_path = CLIENT_META_CONFIG_PATH
+
     # load the meta config
     meta_config = load_raw_config(meta_config_path)
-    enabled_idx = meta_config_enabled_idx(meta_config_path)
-    # get the config file paths
+    # get the index of the enabled config file
+    enabled_idx = meta_config[META_CONFIG_ENABLED_IDX]
+
+    # get the config file path
     config_files = meta_config[META_CONFIG_FILES_ENTRY]
     if not config_files:
-        raise ConfigError(None, 'no configuration files exist - '
-                    'use nspyre-config --add-config to add files') from None
-    cfg_path = Path(config_files[enabled_idx])
+        raise ConfigurationError(
+            None,
+            'no configuration files exist - use nspyre-config --add-config to add files',
+        ) from None
+    cfg_path = pathlib.Path(config_files[enabled_idx])
+
+    # resolve relative paths
     if not cfg_path.is_absolute():
         cfg_path = meta_config_path.parent / cfg_path
+    cfg_path = cfg_path.resolve()
+
+    return cfg_path
+
+
+def load_config(cfg_path):
+    """Load a config file and return the configuration as a dictionary"""
     try:
         cfg_dict = {str(cfg_path): load_raw_config(cfg_path)}
-    except FileNotFoundError as exc:
-        raise ConfigError(exc, 'configuration file [{}] doesn\'t exist'.\
-                            format(cfg_path)) from None
+    except FileNotFoundError as error:
+        raise ConfigurationError(
+            error, 'configuration file [{}] doesn\'t exist'.format(cfg_path)
+        ) from None
     return cfg_dict
+
 
 def write_config(config_dict, filepath):
     """Write a dictionary to a YAML file"""
@@ -182,8 +183,9 @@ def write_config(config_dict, filepath):
     with open(filepath, 'w') as file:
         yaml.dump(config_dict, file, default_flow_style=False)
 
+
 def get_config_param(config_dict, path):
-    """Navigate a YAML-loaded config file and return a particular parameter 
+    """Navigate a YAML-loaded config file and return a particular parameter
     given by 'path'. If multiple config files contain the first element of
     'path', this will attempt to navigate the the first config file it finds
     that contains the first element of 'path'."""
@@ -198,8 +200,8 @@ def get_config_param(config_dict, path):
                 try:
                     loc = loc[p]
                 except KeyError:
-                    raise ConfigEntryNotFoundError(path) from None
+                    raise EntryNotFoundError(path) from None
             return loc, conf
     # if we reach this point the first path element wasn't found in any
     # config file entries
-    raise ConfigEntryNotFoundError(path) from None
+    raise EntryNotFoundError(path) from None

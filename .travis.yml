@@ -2,10 +2,13 @@ language: python
 python:
   - '3.8'
 install:
-  - pip install .
+  - pip install coverage coveralls pre-commit
+  - pip install .[dev]
 script:
   - pip install check-manifest
   - check-manifest --ignore 'tests/**' -vv
+after_success:
+  - coveralls
 deploy:
   provider: pypi
   username: __token__

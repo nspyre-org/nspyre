@@ -13,11 +13,6 @@ __pycache__/
 .tox
 .cache
 
-# due to config logs stored internally
-src/nspyre/config/cli_config.log
-src/nspyre/gui/nspyre.log
-src/nspyre/inserv/inserv.log
-
 # due to db config and backups stored internally
 src/nspyre/mongodb/db_files/
 src/nspyre/mongodb/db_files_backup/

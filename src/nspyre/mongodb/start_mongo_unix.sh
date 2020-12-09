@@ -3,11 +3,15 @@
 # script for starting the mongodb server
 
 THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# mongod (daemon) port numbers to use
 DB1_PORT=27017
 DB2_PORT=27018
+# mongo replicate set name
 REPLSET=NSpyreSet
+# max mongo operation log length (MB)
 OPLOG=1024
 
+# database file locations
 DB_DATA_NAME=db_files
 DB_DATA_BACKUP_NAME=$DB_DATA_NAME"_backup"
 
@@ -19,7 +23,10 @@ LOG_DIR=$DBDATA_DIR/logs
 DB1_LOG=$LOG_DIR/db1
 DB2_LOG=$LOG_DIR/db2
 
-# kill existing mongod instances
+# max time (s) to wait for the mongod instances to start and elect a primary
+TIMEOUT=60
+
+# kill any existing mongod instances
 echo "killing mongodb daemons..."
 killall -q mongod
 
@@ -56,16 +63,28 @@ mongod --dbpath $DB2_DIR --logpath $DB2_LOG --bind_ip_all \
 
 # allow time for mongod to start
 sleep 2
-# TODO tail log file instead
-# ( tail -f -n0 $DB1_LOG & ) | grep -qE -- '[initandlisten] waiting for connections|[initandlisten] now exiting'
-# ( tail -f -n0 $DB2_LOG & ) | grep -qE -- '[initandlisten] waiting for connections|[initandlisten] now exiting'
 
-# only needs to performed for first-time setup
-# or if the db1/db2 directories were cleared,
-# but no disadvantage to running it anyway
 # add both servers to a replica set to allow them to start serving the db
 # make db1 be the preferred primary using priorities
 mongo --eval "rs.initiate({_id:'${REPLSET}', members:[ \
 {_id: 0, host: 'localhost:${DB1_PORT}', priority: 2}, \
 {_id: 1, host: 'localhost:${DB2_PORT}', priority: 1}  \
 ]})"
+
+# wait for mongod to elect a primary and be ready for calls
+for i in $(seq 1 1 $TIMEOUT); do
+	# if running rs.status() on the mongo console contains "PRIMARY" then
+	# the election process has succeeded and mongodb is now running
+	mongo --eval "rs.status()" | grep "PRIMARY"
+	if [ $? -eq 0 ]; then
+		break
+	fi
+	sleep 1.0
+done
+
+if [ $i -ne $TIMEOUT ]; then
+	echo "mongodb started successfully..."
+else
+	echo "ERROR: timed out waiting for mongod to start..."
+	exit 1
+fi

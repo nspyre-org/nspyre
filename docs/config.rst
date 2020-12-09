@@ -3,123 +3,78 @@ Configuration Settings
 ######################
 
 NSpyre uses configuration files to understand what hardware you're connecting, which spyrelets you want to access, their
-parameters and required hardware, and how to configure connections to MongoDB and Instrument Servers.
-There are two configuration files in NSpyre. One is for the instrument 
-server (inserv), and one for the spyrelets and other tools connecting to the instrument 
-server (client).
+parameters and required hardware, and how to configure connections to MongoDB and Instrument Servers. In order to run, nspyre needs to
+be given two configuration files - one for the instrument server and one for *'spyre'* (i.e. the client). There is a convenient
+command-line interface to make providing file paths and switching between configurations easy.
 
 Command-line Interface (CLI)
 ============================
-The config files used by the client and instrument server can be changed using the ``nspyre-config`` tool. Details about its operation can be found by typing 
-``nspyre-config --help``, but some usage examples are shown below.
+The config files used by the client and instrument server can be changed using the ``nspyre-config`` tool. Details about its operation
+can be found by typing ``nspyre-config --help``, but some usage examples are shown below.
 
-Adding Config Files
--------------------
-To add a new config file for the client, use the command:
+Add the configuration file for your experiment:
 
 .. code-block:: console
-   
+
    $ nspyre-config client -a path/to/client_config.yaml
-
-And a server config:
-
-.. code-block:: console
-   
-   $ nspyre-config inserv -a path/to/server_config.yaml
-
-The paths are allowed to be relative to the current working directory, but will always be expanded internally as absolute paths.
-
-Listing Configs Files
----------------------
-The console command below lists the set of available config files, and marks the active one with an asterisk:
-
-.. code-block:: console
-
-   $ nspyre-config client -l
+   $ nspyre-config -l
    * 0: client_default_config.yaml
-     1: /path/to/client_config.yaml
+     1: path/to/client_config.yaml
 
-Setting Active Config File
---------------------------
-To set the active config file that will be used by NSpyre, use the ``-s`` option and specify 
-the config file path:
+Set the activate configuration file to your experiment configuration:
 
 .. code-block:: console
 
-   $ nspyre-config client -l
-   * 0: client_default_config.yaml
-     1: /path/to/client_config.yaml
-   $ nspyre-config client -s /path/to/client_config.yaml
+   $ nspyre-config client -s 1  # (or using path/to/client_config.yaml)
    $ nspyre-config client -l
      0: client_default_config.yaml
-   * 1: /path/to/client_config.yaml
+   * 1: path/to/client_config.yaml
 
-Or entry number:
-
-.. code-block:: console
-
-   $ nspyre-config client -l
-     0: client_default_config.yaml
-   * 1: /path/to/client_config.yaml
-   $ nspyre-config client -s 0
-   $ nspyre-config client -l
-   * 0: client_default_config.yaml
-     1: /path/to/client_config.yaml
-
-Removing Config Files
----------------------
-To remove a config file, use the ``-d`` option, then the path of the config file to remove:
+Delete a configuration file from path:
 
 .. code-block:: console
 
-   $ nspyre-config client -l
-     0: client_default_config.yaml
-   * 1: /path/to/client_config.yaml
-   $ nspyre-config client -d path/to/client_config.yaml
+   $ nspyre-config client -d 2  # (or using path/to/client_config.yaml)
    $ nspyre-config client -l
    * 0: client_default_config.yaml
 
-Or entry number:
-
-.. code-block:: console
-
-   $ nspyre-config client -l
-   0: client_default_config.yaml
-   1: /path/to/client_config.yaml
-   $ nspyre-config -d 1
-   $ nspyre-config client -l
-   * 0: client_default_config.yaml
-
-.. Factory Reset
-.. -------------
-
-.. And if you completely f**k'd your system, you can restore the default configuration of either or both files:
-
-.. .. code-block:: console
-
-..    $ nspyre-config reset inserv
-..    $ nspyre-config inserv -l
-
-..    $ nspyre-config reset client
-..    $ nspyre-config client -l
-..    * 0: client_default_config.yaml
-
-..    $ nspyre-config reset
-..    $ nspyre-config -l
+..
+   Factory Reset
+   -------------
+..
+   And if you completely f**k'd your system, you can restore the default configuration of either or both files:
+..
+   .. code-block:: console
+..
+      $ nspyre-config reset inserv
+      $ nspyre-config inserv -l
+      * 0: server_default_config.yaml
+..
+      $ nspyre-config reset client
+      $ nspyre-config client -l
+      * 0: client_default_config.yaml
+..
+      $ nspyre-config reset
+      $ nspyre-config -l
+      inserv:
+      * 0: server_default_config.yaml
+      client
+      * 0: client_default_config.yaml
 
 Configuration Entries
 =====================
 
-The client and inserv each have a separate set of configuration entries that 
-they expect to be contained somewhere in their respective config files. The 
-config entries for the client and server are documented below with example 
-config files.
+The client and inserv each have a separate set of configuration entries that they expect to be contained somewhere in their
+respective config files. The configuration entries for the client and server are documented below with the default configurations
+presented as an example.
+
+.. _`Configuration Section`:
 
 Example Configurations
 ======================
 
-These are the default configuration files with which NSpyre comes loaded. They 
-can be used as starting points for your own custom config files.
+These are the default configuration files with which NSpyre comes loaded. They can be used as starting points for your own
+custom configuration files.
 
 Inserv Config File
 ------------------
@@ -156,15 +111,13 @@ Inserv Config File
        # ordinary python class stored somewhere on the file system by using the 
        # 'class' and 'class_file' parameters - in this case 'lantz_class' 
        # should be omitted
-       class: 'python class name' # e.g. 'LantzSignalGenerator'       
-       
+       class: 'python class name' # e.g. 'LantzSignalGenerator'
        # python file containing the class (can be absolute or relative to
        # this config file), e.g. class_file: '../path/to/driver/fungen.py'
        class_file: 'file path'
        
        # list of arguments to be passed to the constructor for the driver
        args: ['arg1', 'arg2', 'arg3']
-       
        # list of keyword arguments to be passed to the constructor for the driver
        kwargs:
          key1: 'value1'
@@ -178,16 +131,20 @@ Inserv Config File
        lantz_class: examples.LantzSignalGenerator
        args: [TCPIP::localhost::5678::SOCKET]
        kwargs: {}
-   fake_sg:
-     lantz_class: examples.dummydrivers.DummyFunGen
-     args: []
-     kwargs: {}
-   fake_osc:
-     lantz_class: examples.dummydrivers.DummyOsci
-     args: []
-     kwargs: {}
+     fake_sg:
+       lantz_class: examples.dummydrivers.DummyFunGen
+       args: []
+       kwargs: {}
+     fake_osc:
+       lantz_class: examples.dummydrivers.DummyOsci
+       args: []
+       kwargs: {}
+     fake_shutter:
+       lantz_class: examples.dummydrivers.DummyShutter
+       args: []
+       kwargs: {}
 
-Client Config File
+Spyre Config File
 -----------------
 
 .. code-block:: yaml
@@ -199,13 +156,17 @@ Client Config File
    # name:
    #   file: 'path/to/file.py' (can be absolute or relative to this config)
    #   class: 'SpyreletClass'
-   #   device_aliases: {sg1: 'local1/fake_sg',
-   #                   osc1: 'local1/fake_osc'} }
+   #   device_aliases: {sg1: 'local_inserv1/fake_sg',
+   #                   osc1: 'local_inserv1/fake_osc'} }
+   #   [optional] spyrelets: {'sub1': 'sub_spyrelet1', ...}
+   #   [optional] args: 'Other arguments'
    spyrelets:
      s2:
        file: '../spyrelet/examples/test_spyrelets.py'
        class: 'SubSpyrelet'
        device_aliases: {sg: 'local1/fake_tcpip_sg'}
+       spyrelets: {}
+       args: {}
 
      my_exp:
        file: '../spyrelet/examples/test_spyrelets.py'

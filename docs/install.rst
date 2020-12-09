@@ -4,29 +4,34 @@ Install
 
 The recommended way to install NSpyre is to **install the latest stable release**
 from `conda-forge <https://conda-forge.org/docs/>`_ (more info below). We
-currently support **Python 3.8+**. If you already have conda installed and know how to use it, 
-you can install nspyre with:
+currently support **Python 3.8+**.
 
 .. code-block:: console
 
-   conda install -c conda-forge nspyre
+   $ conda install -c conda-forge nspyre
 
 Conda
 =====
 
-NSpyre is not a pure-python module because it relies on MongoDB to handle its
-measurement database — a dependency that cannot be easily
-packaged by PyPI. In addition, the large volume of deployments made in a research
-setting makes it desirable to have a consistent, reproducible programming
-environment. To this end, conda is a suitable solution for both requirements and is
-the **recommended** way to install NSpyre.
+NSpyre is not a pure-python module because it relies on MongoDB to handle its measurement database — a dependency that cannot be packaged
+by PyPI. In addition, the large volume of deployments made in a research setting makes it desirable to have a consistent, reproducible
+programming environment. To this end, conda is a suitable solution for both requirements and is the **recommended** way to install NSpyre.
 
 If you do not already have conda installed, we recommend using the Miniconda distribution
 (instead of the Anaconda distribution) because it contains fewer default packages, many
 of which are unnecessary for the vast majority of users. The latest release
-of Miniconda is available here:
-`Miniconda installers <https://docs.conda.io/en/latest/miniconda.html>`_. Choose 
-the Python 3.x 64-bit distribution for your platform.
+of Miniconda for your platform is available here:
+`Miniconda installers <https://docs.conda.io/en/latest/miniconda.html>`_. It's best to
+choose the Python 3.8+ 64-bit distribution for your platform. The default installation
+options are appropriate for most users:
+
+* install for *Just Me* (gives full control over install and doesn't require admin privileges)
+* default file location (e.g. C:\\Users\\<UserName>\\Miniconda3)
+* **DO NOT** *Add Anaconda to my PATH environment variable*. This will make your conda
+  base environment always available.
+* **DO** *Register Anaconda as my default Python 3.8*. This will make conda available
+  to other programs for integration, such as setting up a development environment
+  in **PyCharm**.
 
 Once conda is installed, you'll want to add the conda-forge channel as a repository
 and rebuild/update conda with the latest packages from conda-forge:
@@ -68,7 +73,10 @@ this by running the following:
 
 You will see that everything is installed from *conda-forge*. It is desirable to have all the
 packages come from the same repository due to compiling complexities, ABI compatibility, and
-consistent build environments (beyond the scope of this discussion).
+consistent build environments (beyond the scope of discussion). The ``channel_priority`` can be
+set to ``strict`` so that only the highest priority channel is even searched when updating or
+installing; however, there are a few exceptions where a package is needed from *defaults* so
+this config parameter should not be modified.
 
 Finally, by default the base environment will always be active upon opening the terminal (you
 probably didn't need to run ``conda activate`` above). Specifically, the ``miniconda3/bin``
@@ -85,32 +93,33 @@ If you already have conda installed and/or you use conda for managing environmen
 projects in which the above configuration settings aren't ideal, then simply make sure to add
 the *conda-forge* channel to whatever environments you want to install nspyre in.
 
-Once you have conda setup, make a new environment:
+Once you have conda setup, it's trivial to install nspyre. Make sure to create and activate a new conda
+environment for running nspyre so you don't mess with your base environment:
 
 .. code-block:: console
 
-   (base) $ conda create --name <your-env-name>
+   (base) $ conda env create --name [nspyre-env] python=3.8
+   (base) $ conda activate [nspyre-env]
+   ([nspyre-env]) $ conda install nspyre
+   ...
+   ([nspyre-env]) $ pip install -U pyvisa pyvisa-py
 
-And install nspyre:
-
-.. code-block:: console
-
-   (base) $ conda activate <your-env-name>
-   (<your-env-name>) $ conda install nspyre
 
 PyPI (aka using pip)
 ====================
 
-Although it is highly recommended to install NSpyre using conda, it is also available from PyPI. However, MongoDB must be installed separately. The latest
-release of MongoDB for your platform can be obtained here:
+NSpyre is also available from PyPI, however, MongoDB must be installed separately. The latest
+release of Miniconda for your platform can be obtained here:
 `MongoDB downloads <https://www.mongodb.com/download-center/community>`_ (v4.4.1 or greater
-required). The MongoDB binaries also need to be added to your PATH. In Windows, this can be accomplished with:
+required). In order for the database configuration files for nspyre to operate correctly,
+MongoDB needs to be added to your PATH. For a typical install, this required running a command
+similar to:
 
 .. code-block:: console
 
    $ ``C:\Program Files\MongoDB\Server\4.4\bin``
 
-NSpyre itself can then be installed:
+NSpyre itself can be installed with the following:
 
 .. code-block:: console
 
@@ -119,5 +128,20 @@ NSpyre itself can then be installed:
 
 .. attention::
 
-   If installing NSpyre with PyPi, be aware that the distribution of `Lantz <https://github.com/lantzproject/lantz-core>`_ available on PyPI
-   is currently outdated and needs to be installed directly from GitHub as shown in the commands above
+   The distribution of `Lantz <https://github.com/lantzproject/lantz-core>`_ available on PyPI
+   is currently outdated and needs to be installed directly from GitHub as shown in the commands above.
+
+
+Development Environment
+=======================
+
+The following should be run in a standard windows cmd line or equivalent
+(eg: https://cmder.net/) This is because you need to have git installed (ideally
+hub, too) and on the path to perform the above installation from github. Bash
+will also need to be enabled - will include directions for this soon.
+
+.. note::
+
+   If you are planning on using **NSpyre** from different computers, you
+   will also need to open the appropriate port in the firewall of the server
+   machine (by default these are 27017 and 27018).

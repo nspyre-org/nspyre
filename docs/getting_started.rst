@@ -1,13 +1,13 @@
 .. attention::
    
-   We know some of these webpages could use some work -- this documentation is in active development. If you discover any errors or inconsistencies, please report them on `GitHub <https://github.com/nspyre-org/nspyre/issues>`_.
+   We know some of these webpages could use some work -- this documentation is in active development. If you discover any errors or inconsistencies, please report them at `GitHub <https://github.com/nspyre-org/nspyre/issues>`_.
 
-***************
+###############
 Getting Started
-***************
+###############
 
 Testing Successful Installation
--------------------------------
+===============================
 
 The first thing you should do is test that the installation was successful. This will also get you familiar with the startup process
 for running NSpyre on new systems. Fortunately, NSpyre comes bundled with default configurations that allow you to test your
@@ -15,11 +15,12 @@ installation out of the box.
 
 Lantz comes bundled with a live simulation signal generator that runs over a TCP/IP connection and can be useful to check
 everything is running correctly. As with any experiment, you have to make sure all your hardware is on and connected before
-starting the instrument server. Start the lantz simulated function generator device in a new console (remember to activate your conda env) with:
+starting the instrument server (there are now methods for loading devices into the server without a hard reset but we'll
+get to those later). Therefore, start the Lantz simulated function generator in a new console (remember to activate your conda env):
 
 .. code-block:: console
 
-   $ lantz-sims fungen tcp
+   ([nspyre-env]) $ lantz-sims fungen tcp
    Dispatching fungen
    2020-15-10 02:36:34 Listening to localhost:5678
    2020-15-10 02:36:34 interrupt the program with Ctrl-C
@@ -31,7 +32,7 @@ running) and use the CLI for starting nspyre's database:
 
 .. code-block:: console
 
-   $ nspyre-mongodb
+   ([nspyre-env]) $ nspyre-mongodb
    ...
    Implicit session: session { "id" : UUID("70838660-1424-4f33-b0b0-493f3b5022d1") }
    MongoDB server version: 4.2.10
@@ -48,14 +49,15 @@ running) and use the CLI for starting nspyre's database:
    }
 
 The CLI will print out logging information as it runs, but if the MongoDB process has started successfully and the database
-is running, then the output will end in the above printout.
+is running, then the output will end in a printout similar to the one above.
 
 Next, it's time to start the instrument server. This is a `RPyC <https://rpyc.readthedocs.io/en/latest/index.html>`_ service which handles the connections to each device and functions
-as a server for communicating between nspyre experiment code and your hardware. To start the server simply type:
+as a server for communicating between nspyre experiment code and your hardware. If the MongoDB databases are not running, then
+the instrument server will error out on startup. To start the server simply type:
 
 .. code-block:: console
 
-   $ nspyre-inserv
+   ([nspyre-env]) $ nspyre-inserv
    2020-10-15 02:37:55,888 -- INFO -- starting instrument server...
    2020-10-15 02:37:55,894 -- INFO -- loaded config files ['path/to/inserv_config.yaml']
    2020-10-15 02:37:55,895 -- INFO -- connecting to mongodb server [mongodb://localhost:27017/]...
@@ -71,7 +73,7 @@ Depending on the logging level set, the instrument server will print out lots of
 as it attempts to startup, establish connections, and load the hardware specified in your configuration file. If the
 instrument server has successfully started and loaded all specified devices, then at a minimum you will see the above
 information. Notice that there is a new prompt `inserv >` - this is the instrument server command line and can be very
-useful for quickly reloading devices and debugging. To see all the available commands simply
+useful for quickly reloading devices, debugging, and checking the state of the system. To see all the available commands simply
 type help:
 
 .. code-block:: console
@@ -85,9 +87,15 @@ type help:
 
    inserv >
 
-*Note:* This console should be kept running at all times, as it is the master process for the instrument server. If you close this
-console the server will shutdown. Keeping the console window in the corner of your screen is very useful for verifying
-successful completion of communications with hardware.
+.. important::
+
+   This console should be kept running at all times, as it is the master process for the instrument server. If you close this
+   console the server will shutdown, disconnecting any running devices in the process.
+
+.. tip::
+
+   Keeping the console window in the corner of your screen while operating is very useful for verifying successful
+   completion of communications with hardware.
 
 Finally, if you want to boot up the graphical user interface, open a new console window and run:
 
@@ -95,7 +103,10 @@ Finally, if you want to boot up the graphical user interface, open a new console
 
    $ nspyre
 
-From here you can start the instrument manager (for manually controlling instrument settings), spyrelet launcher (for running experiments), and data viewer (for plotting data from spyrelets).
+From here you can start the instrument manager (for manually controlling instrument settings), launch spyrelets (for running
+experiments), and view data (for plotting data from spyrelets). These functionalities use a *Gateway* to connect to the instrument
+server and is the standard method of connecting and communicating with the instrument server. For users running nspyre through
+a jupyter notebook, or an interpreter this is the desired method.
 
 Next Steps
 ----------
@@ -103,23 +114,33 @@ Next Steps
 If you've made it here, then nspyre is successfully running on your machine and you can begin using nspyre for your
 own experiments. The first thing you need to do is write configuration files for the instrument server and spyrelets, so
 that nspyre knows what you want to run. The instrument server config file contains information on what connections to make (for
-mongoDB and it's out ports), and what hardware should be loaded (with what parameters). The spyrelet config files specify
-the experimentation code files you plan to run and the associated hardware loaded in the inserv config file needed. More
-information about these configuration files, how to set them, and examples are included in the Configuration Section of the
+mongoDB and networking ports), and what hardware should be loaded (with what parameters). The spyrelet config files specify
+the experimentation code files you plan to run and the associated hardware needed from the loaded inserv config file. More
+information about these configuration files, how to set them, and examples are included in the `Configuration Section`_ of the
 docs.
 
 Lantz
 -----
 
-`Lantz <https://lantz.readthedocs.io/en/0.3/>`_ is a framework for writing drivers to control and connect to instruments that is used extensively with nspyre.
-Lantz drivers can have 3 types of attributes:
+`Lantz <https://lantz.readthedocs.io/en/0.3/>`_ is a framework for writing drivers to control and connect to instruments
+that is used extensively with nspyre. Lantz drivers can have 3 types of attributes:
 
-* Feature (Feat), which can be a read only, or a read/write parameter of the instruments (e.g, the frequency of a signal generator).
-* Dictionary feature (dictFeat), which is essentially a dictionary of Feats. This is useful for instruments with several parameters that all function identically, like the digital inputs/outputs of a data acquisition system
-* Action, which is a function that acts on the device (calibration, initialization, get an array of points, etc.)
+* Feature (Feat), which can be a read only, or a read/write parameter (e.g. the frequency of a signal generator).
+* Dictionary feature (dictFeat), which is essentially a dictionary of Feats. This is useful for instruments with several parameters
+  that all function identically (e.g. the digital inputs/outputs of a data acquisition system)
+* Action, which is a function that acts on the device (e.g. calibration, initialization, get an array of points, etc.)
 
-The code for all of the drivers built in to lantz can be found `here <https://github.com/lantzproject/lantz-drivers/tree/master/lantz/drivers>`_
+In general, when the device property is a single variable that is easy to read or read/write that should be a Feat. When it
+is more complicated it is usually an Action. In each driver file there will be imported libraries. The minimum set of classes you need
+to import from lantz are the driver class (e.g. *Driver*, *LibraryDriver*, *MessagedBasedDriver*) corresponding to the type of device
+you are implementing and the attributes classes (i.e. *Feat*, *DicFeat*, *Action*, *ureg*).
 
-The lantz docs linked above provide a very good introduction of a toy signal generator to a typical use case.
+Lantz comes bundled with a large selection of drivers, which can be used by importing the associated class from ``lantz.drivers`` and
+can be found in the `lantz-drivers <https://github.com/lantzproject/lantz-drivers/tree/master/lantz/drivers>`_ repo or in the
+*drivers* subpackage of lantz. For example, opening ``lantz/drivers/stanford/sg396.py`` in your editor would show the driver for an
+actual signal generator (the SG396) while opening ``lantz/drivers/examples/fungen.py`` would show the driver for the simulated device.
+
+The lantz docs linked `above <https://lantz.readthedocs.io/en/0.3/>`_ provide a very good introduction starting from a toy signal
+generator and working up to a typical use case.
 
 

@@ -4,7 +4,8 @@ server_settings:
   # ip address / domain name of the instrument server as seen by the client
   # recommended to use a local network static ip for remote clients, e.g.:
   # ip: '192.168.0.15'
-  ip: 'localhost' # only allow client connections from the same machine
+  # 'localhost' can be used to only allow client connections from the same machine
+  ip: 'localhost'
   # port to run the RPyC instrument server on
   port: 5556
 
@@ -18,12 +19,18 @@ devices_doc: # 'devices' for the real one
     # lantz class specified as a path in the style of a python import starting
     # from the lantz-drivers folder,
     # e.g. 'examples.LantzSignalGenerator' or 'examples.dummydrivers.DummyOsci'
+    # see https://github.com/lantzproject/lantz-drivers/tree/master/lantz/drivers
     lantz_class: 'lantz driver'
-    # instead of 'lantz_class', can also be specified by 'class' / 'class_file'
+
+    # if the driver is not part of lantz-drivers, it can be specified by an
+    # ordinary python class stored somewhere on the file system by using the
+    # 'class' and 'class_file' parameters - in this case 'lantz_class'
+    # should be omitted
     class: 'python class name' # e.g. 'LantzSignalGenerator'
     # python file containing the class above (can be absolute or relative to
     # this config file), e.g. class_file: '../path/to/driver/fungen.py'
     class_file: 'file path'
+
     # list of arguments to be passed to the constructor for the driver
     args: ['arg1', 'arg2', 'arg3']
     # list of keyword arguments to be passed to the constructor for the driver

@@ -74,10 +74,14 @@ def setup():
         processes_to_kill.append(inserv)
 
     if not 'nspyre-dataserv' in processes:
-        # start the data server
-        dataserv = subprocess.Popen(['nspyre-dataserv', '-v', 'debug'],
-                                    stdin=subprocess.PIPE)
-        processes_to_kill.append(dataserv)
+        # TODO start the data server
+        # for some reason starting the dataserv from pytest breaks
+        # the ProcessPoolExecutor and hangs the xdelta3 call in the dataserv
+        # (tested only on debian)
+        # dataserv = subprocess.Popen(['nspyre-dataserv', '-v', 'debug'],
+        #                             stdin=subprocess.PIPE)
+        # processes_to_kill.append(dataserv)
+        pass
 
     # make sure the processes get killed on exit even if there's an error
     def cleanup():
@@ -106,4 +110,4 @@ def setup():
     # now the tests run
     yield
 
-    logging.info('test teardown')
+    logging.info('tests completed')

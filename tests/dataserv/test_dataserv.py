@@ -23,10 +23,10 @@ def test_dataserv_push_pop(name: str='push_pop', data_type_override: bytes=SINK_
 
     # example data set 2D array
     # array size
-    n = 10
+    n = 100
     watched_var = np.zeros((n, n))
 
-    iterations = 100
+    iterations = 1000
     start_time = time.time()
     for i in range(iterations):
         # pick a number of changes to make to the data set

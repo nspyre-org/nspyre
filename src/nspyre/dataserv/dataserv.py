@@ -21,10 +21,13 @@ import xdelta3
 logger = logging.getLogger(__name__)
 
 # if no data is available, any socket sender should send an empty message with an
-# interval given by KEEPALIVE
-KEEPALIVE = 3
-# general timeout (s) for data source / sink connections
-TIMEOUT = KEEPALIVE + 1.0
+# interval given by KEEPALIVE_TIMEOUT (s)
+KEEPALIVE_TIMEOUT = 3
+# time (s) that the sender has to do work before it should give up
+# in order to prevent a timeout on its associated receiver
+OPS_TIMEOUT = 10
+# timeout (s) for receive connections
+TIMEOUT = (KEEPALIVE_TIMEOUT + OPS_TIMEOUT) + 1
 
 # maximum size of the data queue
 QUEUE_SIZE = 5
@@ -74,7 +77,7 @@ class CustomSock():
         # (ip addr, port) of the client
         self.addr = sock_writer.get_extra_info('peername')
 
-    async def recv_msg(self, timeout=None) -> tuple:
+    async def recv_msg(self) -> tuple:
         """Receive a message through a socket by decoding the header then reading 
         the rest of the message"""
 
@@ -252,7 +255,7 @@ class DataServer():
                 while True:
                     try:
                         # get pickle data from the queue
-                        new_pickle = await asyncio.wait_for(queue.get(), timeout=KEEPALIVE/2)
+                        new_pickle = await asyncio.wait_for(queue.get(), timeout=KEEPALIVE_TIMEOUT)
                         queue.task_done()
                         logger.debug(f'sink [{sock.addr}] got [{len(new_pickle)}] bytes from queue')
                     except asyncio.TimeoutError:
@@ -265,11 +268,27 @@ class DataServer():
                         if last_pickle and (data_type_override == SINK_DATA_TYPE_DELTA or
                             (data_type_override == SINK_DATA_TYPE_DEFAULT and sock.addr[0] != '127.0.0.1')):
                             # create a new process for running the xdelta algorithm and await it
-                            with concurrent.futures.ProcessPoolExecutor() as executor:
+                            with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
                                 # TODO if there are many remote clients, they will be potentially duplicating work by all diff'ing the same
                                 # pickles - this could be resolved by using memoization to store recently calculated diffs 
+                                logger.debug(f'sink [{sock.addr}] calculating delta of [{len(new_pickle)}] bytes')
                                 try:
-                                    delta = await event_loop.run_in_executor(executor, xdelta3.encode, last_pickle, new_pickle)# TODO fast/no compression? xdelta3.Flags.COMPLEVEL_1
+                                    delta_future = event_loop.run_in_executor(executor, xdelta3.encode, last_pickle, new_pickle) # TODO fast/no compression? xdelta3.Flags.COMPLEVEL_1
+                                    delta = await asyncio.wait_for(delta_future, timeout=3/4*OPS_TIMEOUT, loop=event_loop)
+                                except concurrent.futures.process.BrokenProcessPool:
+                                    # the process was somehow killed
+                                    logger.error(f'sink [{sock.addr}] diff process was killed externally - sending pickle ([{len(new_pickle)}] bytes) instead')
+                                    data_type = SINK_DATA_TYPE_PICKLE
+                                except asyncio.TimeoutError:
+                                    # the process timed out
+                                    try:
+                                        delta_exc = delta_future.exception(timeout=0)
+                                        logger.error(f'delta error: {delta_exc}')
+                                    except concurrent.futures.TimeoutError:
+                                        logger.error('AHH')
+                                    logger.error(f'sink [{sock.addr}] diff process timed out - sending pickle ([{len(new_pickle)}] bytes) instead')
+                                    data_type = SINK_DATA_TYPE_PICKLE
+                                else:
                                     if len(delta) < len(new_pickle):
                                         # will send delta to remote client
                                         logger.debug(f'sink [{sock.addr}] will send delta of [{len(delta)}] bytes')
@@ -277,12 +296,8 @@ class DataServer():
                                         data_to_send = delta
                                     else:
                                         # the delta is actually longer than the pickle data, so just send the pickle
-                                        logger.debug(f'sink [{sock.addr}] delta ([{len(delta)}] bytes) is longer than the pickle ([{len(new_data)}] bytes) - sending pickle')
+                                        logger.debug(f'sink [{sock.addr}] delta ([{len(delta)}] bytes) is longer than the pickle ([{len(new_pickle)}] bytes) - sending pickle')
                                         data_type = SINK_DATA_TYPE_PICKLE
-                                except concurrent.futures.process.BrokenProcessPool:
-                                    # the process was somehow killed
-                                    logger.error(f'sink [{sock.addr}] diff process was killed externally - sending pickle ([{len(new_data)}] bytes) instead')
-                                    data_type = SINK_DATA_TYPE_PICKLE
                         else:
                             data_type = SINK_DATA_TYPE_PICKLE
                         last_pickle = new_pickle
@@ -291,7 +306,7 @@ class DataServer():
                         data_type = SINK_DATA_TYPE_PICKLE
 
                     try:
-                        await asyncio.wait_for(sock.send_msg(data_to_send, meta_data=data_type), timeout=KEEPALIVE/2)
+                        await asyncio.wait_for(sock.send_msg(data_to_send, meta_data=data_type), timeout=OPS_TIMEOUT/4)
                         logger.debug(f'sink [{sock.addr}] sent [{len(data_to_send)}] bytes')
                     except (ConnectionError, asyncio.TimeoutError):
                         logger.info(f'sink [{sock.addr}] disconnected or isn\'t accepting data - dropping connection')
@@ -517,7 +532,7 @@ class DataSource():
             while True:
                 try:
                     # connect to the data server
-                    sock_reader, sock_writer = await asyncio.wait_for(asyncio.open_connection(self.addr, self.port), timeout=TIMEOUT)
+                    sock_reader, sock_writer = await asyncio.wait_for(asyncio.open_connection(self.addr, self.port), timeout=NEGOTIATION_TIMEOUT)
                 except OSError:
                     logger.warning(f'source failed connecting to data server [{(self.addr, self.port)}]')
                     await asyncio.sleep(FAST_TIMEOUT)
@@ -545,16 +560,16 @@ class DataSource():
                 while True:
                     try:
                         # get pickle data from the queue
-                        new_data = await asyncio.wait_for(self.queue.get(), timeout=KEEPALIVE/2)
+                        new_data = await asyncio.wait_for(self.queue.get(), timeout=KEEPALIVE_TIMEOUT)
                         self.queue.task_done()
-                        logger.debug(f'source sending pickle of [{len(new_data)}] bytes to data server [{sock.addr}]')
+                        logger.debug(f'source dequeued pickle of [{len(new_data)}] bytes - sending to data server [{sock.addr}]')
                     except asyncio.TimeoutError:
                         # if there's no data available, send a keepalive message
                         new_data = b''
                         logger.debug('source sending keepalive to data server')
                     # send the data to the server
                     try:
-                        await asyncio.wait_for(sock.send_msg(new_data), timeout=KEEPALIVE/2)
+                        await asyncio.wait_for(sock.send_msg(new_data), timeout=OPS_TIMEOUT)
                         logger.debug(f'source sent pickle of [{len(new_data)}] bytes to data server [{sock.addr}]')
                     except (ConnectionError, asyncio.TimeoutError) as exc:
                         logger.warning(f'source failed sending to data server [{sock.addr}] - attempting reconnect')
@@ -651,7 +666,7 @@ class DataSink():
             while True:
                 try:
                     # connect to the data server
-                    sock_reader, sock_writer = await asyncio.wait_for(asyncio.open_connection(self.addr, self.port), timeout=TIMEOUT)
+                    sock_reader, sock_writer = await asyncio.wait_for(asyncio.open_connection(self.addr, self.port), timeout=NEGOTIATION_TIMEOUT)
                 except OSError:
                     logger.warning(f'sink failed connecting to data server [{(self.addr, self.port)}]')
                     await asyncio.sleep(FAST_TIMEOUT)

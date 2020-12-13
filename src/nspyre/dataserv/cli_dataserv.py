@@ -9,9 +9,14 @@ import argparse
 from cmd import Cmd
 import pdb
 import logging
+from threading import Thread
+import logging
+import argparse
+import signal
 
 from nspyre.dataserv import DataServer
 from nspyre.definitions import DATASERV_PORT
+from nspyre.misc.logging import nspyre_init_logger
 
 logger = logging.getLogger(__name__)
 
@@ -48,14 +53,14 @@ class DataservCmdPrompt(Cmd):
         logger.info('exiting...')
         # stop the server
         self.dataserv.stop()
-        # exit
-        raise SystemExit
+        # notify the command loop to exit
+        return True
+
+def _cmd_prompt(dataserv_cmd):
+    dataserv_cmd.cmdloop()
 
 def main():
     """Entry point for data server"""
-    from nspyre.misc.logging import nspyre_init_logger
-    import logging
-    import argparse
 
     # parse command-line arguments
     arg_parser = argparse.ArgumentParser(prog='nspyre-dataserv',
@@ -86,10 +91,8 @@ def main():
         elif cmd_args.verbosity.lower() == 'error':
             log_level = logging.ERROR
         else:
-            pass
-            # TODO
-            # raise DataServerError('didn\'t recognize logging level [{}]'.\
-            #                             format(cmd_args.verbosity)) from None
+            raise ValueError('didn\'t recognize logging level [{}]'.\
+                                        format(cmd_args.verbosity)) from None
         if cmd_args.log:
             nspyre_init_logger(log_level, log_path=Path(cmd_args.log),
                                         log_path_level=logging.DEBUG,
@@ -98,14 +101,28 @@ def main():
             # the user asked for no log file
             nspyre_init_logger(log_level)
 
-    # init and start data server
-    logger.info('starting data server...')
+    # init the data server
     dataserv = DataServer(cmd_args.port)
 
-    # start the shell prompt event loop
+    # properly stop the server when a kill signal is received
+    def stop_server(signum, frame):
+        dataserv.stop()
+    signal.signal(signal.SIGINT, stop_server)
+    signal.signal(signal.SIGTERM, stop_server)
+
+    # init command prompt
     cmd_prompt = DataservCmdPrompt(dataserv)
     cmd_prompt.prompt = 'dataserv > '
-    cmd_prompt.cmdloop('data server started...')
+
+    # start the shell prompt event loop in a new thread, since DataServer
+    # must be run in the main thread
+    # daemon=True so that the program will exit when the data server is stopped with a signal - otherwise the cmd loop will hang forever
+    cmd_prompt_thread = Thread(target=_cmd_prompt, args=(cmd_prompt,), daemon=True)
+    cmd_prompt_thread.start()
+
+    # start the data server event loop
+    logger.info('starting data server...')
+    dataserv.serve_forever()
 
 if __name__ == '__main__':
     main()

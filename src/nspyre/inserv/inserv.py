@@ -249,7 +249,10 @@ class InstrumentServer(InstrumentService):
         logger.info('connecting to mongodb server [{}]...'.format(self.mongo_addr))
         self.mongo_client = pymongo.MongoClient(mongo_addr, replicaset=MONGO_RS, serverSelectionTimeoutMS=MONGO_CONNECT_TIMEOUT)
         self.db = self.mongo_client[self.db_name]
-        self.mongo_client.drop_database(self.db_name)
+        try:
+            self.mongo_client.drop_database(self.db_name)
+        except Exception as exc:
+            raise InstrumentServerError('Failed connecting to mongodb [{}]'.format(self.mongo_addr), exception=exc) from None
         logger.info('connected to mongodb server [{}]'.format(self.mongo_addr))
 
 
@@ -276,9 +279,9 @@ class InstrumentServer(InstrumentService):
                 dev_class = load_class_from_str('lantz.drivers.' + \
                                                 dev_lantz_class)
             except Exception as exc:
-                raise InstrumentServerError(exc, 'The specified lantz driver '
+                raise InstrumentServerError('The specified lantz driver '
                     '[{}] for device [{}] couldn\'t be loaded'.\
-                    format(dev_lantz_class, dev_name))
+                    format(dev_lantz_class, dev_name), exception=exc) from None
         except EntryNotFoundError:
             # if the lantz class isn't defined, try getting an absolute file
             # path and class name
@@ -291,12 +294,12 @@ class InstrumentServer(InstrumentService):
                                             [CONFIG_SERVER_DEVICES, dev_name,
                                             CONFIG_SERVER_DEVICE_CLASS_NAME])
             except EntryNotFoundError as exc:
-                raise InstrumentServerError(exc, 'The device [{}] didn\'t '
+                raise InstrumentServerError('The device [{}] didn\'t '
                     'contain an entry for either a lantz class "{}" or a file '
                     'path "{}" / class name "{}" to define it\'s driver type'.\
                     format(dev_name, CONFIG_SERVER_DEVICE_LANTZ_CLASS,
                             CONFIG_SERVER_DEVICE_CLASS_FILE,
-                            CONFIG_SERVER_DEVICE_CLASS_NAME))
+                            CONFIG_SERVER_DEVICE_CLASS_NAME), exception=exc) from None
             dev_class_path = Path(dev_class_file_str)
 
             # resolve relative paths
@@ -307,9 +310,9 @@ class InstrumentServer(InstrumentService):
             try:
                 dev_class = load_class_from_file(dev_class_path, dev_class_name)
             except Exception as exc:
-                raise InstrumentServerError(exc, 'The specified class [{}] '
+                raise InstrumentServerError('The specified class [{}] '
                     'from file [{}] for device [{}] couldn\'t be loaded'.\
-                    format(dev_class_name, dev_class_path, dev_name))
+                    format(dev_class_name, dev_class_path, dev_name), exception=exc) from None
 
         dev_args, _ = get_config_param(self.config,
                                     [CONFIG_SERVER_DEVICES, dev_name, 'args'])
@@ -320,9 +323,8 @@ class InstrumentServer(InstrumentService):
         try:
             self._devs[dev_name] = dev_class(*dev_args, **dev_kwargs)
         except Exception as exc:
-            raise InstrumentServerError(exc, 'Failed to get instance of device '
-                                        '{} of class {}'.\
-                                        format(dev_name, dev_class)) from None
+            raise InstrumentServerError('Failed to get instance of device {} of class {}'.\
+                                        format(dev_name, dev_class), exception=exc) from None
 
         # collect all of the lantz feature attributes
         feat_attr_list = []
@@ -420,8 +422,8 @@ class InstrumentServer(InstrumentService):
         try:
             self._devs.pop(dev_name).finalize()
         except Exception as exc:
-            raise InstrumentServerError(exc, 'Failed deleting device [{}]'.\
-                                        format(dev_name)) from None
+            raise InstrumentServerError('Failed deleting device [{}]'.\
+                                        format(dev_name), exception=exc) from None
         logger.info('deleted [{}]'.format(dev_name))
 
 

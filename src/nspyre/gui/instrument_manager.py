@@ -307,7 +307,7 @@ class InstrumentManagerWindow(QMainWindow):
             # print(widget.sizeHint())
 
             if isinstance(feat_value, Q_):
-                widget.setValue(feat_value.to(feat._config['units']).m)
+                widget.setValue(feat_value.to(base_units).m)
             else:
                 widget.setValue(feat_value)
             

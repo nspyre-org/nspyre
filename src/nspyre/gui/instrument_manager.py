@@ -38,7 +38,7 @@ import logging
 from pimpmyclass.helpers import DictPropertyNameKey
 from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QColor, QFont
-from PyQt5.QtWidgets import QApplication, QComboBox, QHeaderView, QLineEdit, QMainWindow, QPushButton, QTreeWidget, QTreeWidgetItem
+from PyQt5.QtWidgets import QApplication, QComboBox, QHeaderView, QLineEdit, QMainWindow, QPushButton, QTreeWidget, QTreeWidgetItem, QHBoxLayout, QWidget, QLabel
 from pyqtgraph import SpinBox as pyqtgraph_SpinBox
 from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
 from pint.util import infer_base_unit
@@ -96,7 +96,8 @@ class InstrumentManagerWindow(QMainWindow):
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
         # header.setSectionResizeMode(0, QHeaderView.Fixed) QHeaderView.Stretch, QHeaderView.Stretch, QHeaderView.Interactive
         header.setSectionsMovable(True)
-        header.setStretchLastSection(True)  # False
+        # need to set to False to correctly calculate minimum width values
+        header.setStretchLastSection(False)
 
         # generate gui elements and set minimum window dimensions before displaying
         self._create_widgets()
@@ -108,6 +109,8 @@ class InstrumentManagerWindow(QMainWindow):
         # start GUI with the servers expanded
         for i in range(self.tree.topLevelItemCount()):
             self.tree.topLevelItem(i).setExpanded(True)
+        # need to set this last, otherwise minimum width values are not calculated correctly
+        header.setStretchLastSection(True)
         self.show()
 
 
@@ -128,7 +131,7 @@ class InstrumentManagerWindow(QMainWindow):
 
                 try:
                     # handle feats
-                    # TODO this also returns dictfeats!
+                    # This also returns dictfeats!
                     for feat_name, feat in device._lantz_feats.items():
                         # filter out any dictfeats
                         if isinstance(feat_name, DictPropertyNameKey):
@@ -155,9 +158,8 @@ class InstrumentManagerWindow(QMainWindow):
                         """Generate a Qt gui element for a lantz dictfeat"""
                         dictfeat_tree = QTreeWidgetItem(device_tree, [dictfeat_name, ''])
 
-                        # TODO
                         # dummy 'get' of dict feat value in order to force lantz to populate
-                        # its 'subproperties' TODO this is pretty hacky
+                        # its 'subproperties' this is pretty hacky
                         for feat_key in dictfeat.keys:
                             feat = dictfeat.subproperty(getattr(device, dictfeat_name).instance, feat_key)
                             feat_widget, feat_getattr_func = self._generate_feat_widget(feat, dictfeat_name, device, dictfeat_key=feat_key)
@@ -179,12 +181,14 @@ class InstrumentManagerWindow(QMainWindow):
                                 getattr(device, dictfeat_name + '_changed').connect(getattr_partial)
 
                     # handle actions
-                    action_tree = QTreeWidgetItem(device_tree, ['Actions', ''])
+                    action_tree = None
                     for action_name, action in device._lantz_actions.items():
                         # actions that shouldn't be added to the GUI
                         ignore_actions = ['initialize', 'finalize', 'update', 'refresh']
                         if action_name in ignore_actions or '_async' in action_name:
                             continue
+                        if not action_tree:
+                            action_tree = QTreeWidgetItem(device_tree, ['Actions', ''])
 
                         action_widget = self._generate_action_widget(device, action, action_name)
                         action_widget.setFont(QFont('Helvetica [Cronyx]', 14))
@@ -283,8 +287,9 @@ class InstrumentManagerWindow(QMainWindow):
                     # (min, max) was specified
                     optional_args['bounds'] = feat._config['limits']
 
-            # stepping strategy
+            # stepping strategy (specific settings needed to get step_widget working correctly)
             optional_args['dec'] = False
+            optional_args['step'] = 1
             optional_args['minStep'] = 1e-6
             # number of decimal places to display
             optional_args['decimals'] = 6
@@ -294,43 +299,86 @@ class InstrumentManagerWindow(QMainWindow):
                 optional_args['minStep'] = 1
                 # optional_args['decimals'] = 10
             
-            widget = pyqtgraph_SpinBox(**optional_args)
-
-            widget.resize(79, 24)
-            # print(widget.sizeHint())
+            spinbox_widget = pyqtgraph_SpinBox(**optional_args)
             def sizeHint(self):
-                return QSize(79, 24)
-            widget.sizeHint = sizeHint.__get__(widget, pyqtgraph_SpinBox)
-            # print(widget.sizeHint())
-
-            # widget.setSizeHint(QSize(120, 20))
-            # print(widget.sizeHint())
+                return QSize(99, 24)
+            spinbox_widget.sizeHint = sizeHint.__get__(spinbox_widget, pyqtgraph_SpinBox)
 
             if isinstance(feat_value, Q_):
-                widget.setValue(feat_value.to(base_units).m)
+                spinbox_widget.setValue(feat_value.to(base_units).m)
             else:
-                widget.setValue(feat_value)
+                spinbox_widget.setValue(feat_value)
             
             if feat._config['units']:
                 # callback function for when the user changes the value from the GUI
                 def setattr_func(value):
-                    setattr(device, feat_name, Q_(widget.value(), base_units))
+                    setattr(device, feat_name, Q_(spinbox_widget.value(), base_units))
                 # callback function to modify the GUI when the the feat is changed externally
-                def getattr_func(value, old_value, widget=widget):
+                def getattr_func(value, old_value, widget=spinbox_widget):
                     if isinstance(value, Q_):
-                        widget.setValue(value.to(base_units).m)
+                        spinbox_widget.setValue(value.to(base_units).m)
                     else:
-                        widget.setValue(value)
+                        spinbox_widget.setValue(value)
             else:
                 def setattr_func(value):
-                    setattr(device, feat_name, widget.value())
-                def getattr_func(value, old_value, widget=widget):
-                    widget.setValue(value)
+                    setattr(device, feat_name, spinbox_widget.value())
+                def getattr_func(value, old_value, widget=spinbox_widget):
+                    spinbox_widget.setValue(value)
             
             if read_only:
-                widget.lineEdit().setReadOnly(True)
+                spinbox_widget.lineEdit().setReadOnly(True)
+                widget = spinbox_widget
             else:
-                widget.sigValueChanged.connect(setattr_func)
+                spinbox_widget.sigValueChanged.connect(setattr_func)
+
+                # text that says 'step'
+                step_label = QLabel()
+                step_label.setText('step:')
+
+                # editable text box where the user can enter how much the feat should step by when pressing the increment/decrement arrows
+                step_widget = QLineEdit()
+                step_widget.setFixedWidth(61)
+                def sizeHint(self):
+                    return QSize(61, 24)
+                step_widget.sizeHint = sizeHint.__get__(step_widget, QLineEdit)
+                step_widget.setFont(QFont('Helvetica [Cronyx]', 14))
+                if isinstance(feat_value, Q_):
+                    step_widget.setText('1 ' + base_units_str)
+                    def set_step_func(value):
+                        try:
+                            new_step = Q_(value).to(base_units).m
+                        except Exception as exc:
+                            raise InstrumentManagerError(f'The value entered as the step [{value}] for feat [{feat_name}] couldn\'t be interpretted as a valid value with units [{base_units}]', exception=exc) from None
+                        spinbox_widget.setOpts(step=new_step)
+                elif isinstance(feat_value, int):
+                    step_widget.setText('1')
+                    def set_step_func(value):
+                        try:
+                            new_step = int(base_units)
+                        except Exception as exc:
+                            raise InstrumentManagerError(f'The value entered as the step [{value}] for feat [{feat_name}] couldn\'t be interpretted as a valid int', exception=exc) from None
+                        spinbox_widget.setOpts(step=new_step)
+                elif isinstance(feat_value, float):
+                    step_widget.setText('1.0')
+                    def set_step_func(value):
+                        try:
+                            new_step = float(base_units)
+                        except Exception as exc:
+                            raise InstrumentManagerError(f'The value entered as the step [{value}] for feat [{feat_name}] couldn\'t be interpretted as a valid float', exception=exc) from None
+                        spinbox_widget.setOpts(step=new_step)
+                else:
+                    raise InstrumentManagerError('')
+                step_widget.textChanged.connect(set_step_func)
+
+                # wrapper layout/widget to contain the spinbox, 'step' label, and step line edit box
+                wrapper_layout = QHBoxLayout()
+                wrapper_layout.setContentsMargins(0, 0, 0, 0)
+                wrapper_layout.addWidget(spinbox_widget)
+                wrapper_layout.addSpacing(29)
+                wrapper_layout.addWidget(step_label)
+                wrapper_layout.addWidget(step_widget)
+                widget = QWidget()
+                widget.setLayout(wrapper_layout)
 
         # the lantz feat is a string, so we will just make a text box
         elif isinstance(feat_value, str):
@@ -388,5 +436,4 @@ if __name__ ==  '__main__':
     with InservGateway(config_path) as isg:
         inserv_window = InstrumentManagerWindow(isg)
         app.exec()
-        # inserv_window.close_connections()
     sys.exit()

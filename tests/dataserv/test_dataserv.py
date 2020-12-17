@@ -23,11 +23,11 @@ def test_dataserv_push_pop(name: str='push_pop', data_type_override: bytes=SINK_
 
     # example data set 2D array
     # array size
-    n = 100
+    n = 1000
     watched_var = np.zeros((n, n))
 
-    iterations = 1000
-    start_time = time.time()
+    iterations = 100
+    total_time = 0
     for i in range(iterations):
         # pick a number of changes to make to the data set
         nchanges = np.random.randint(1, 10)
@@ -38,20 +38,23 @@ def test_dataserv_push_pop(name: str='push_pop', data_type_override: bytes=SINK_
             # set that index to a random value
             watched_var[idx1][idx2] = np.random.rand()
 
+        start_time = time.time()
         # push the new value to the data server
         source.push(watched_var)
         # pop the new value from the data server
         remote_watched_var = sink.pop()
+        end_time = time.time()
+        total_time += end_time - start_time
         # make sure they're the same
         assert watched_var.all() == remote_watched_var.all()
         logger.info(f'completed [{100*(i+1)/iterations}]%')
-    end_time = time.time()
+    avg_time = total_time / iterations
 
     # clean up
     source.stop()
     sink.stop()
 
-    logger.info(f'completed in [{end_time - start_time:.3f}]s')
+    logger.info(f'completed run [{name}] - total time [{total_time:.3f}]s average time per push/pop [{avg_time:.3f}]s')
 
 def test_dataserv_push_pop_delta():
     """Test the base functionality of the data server by synchronously

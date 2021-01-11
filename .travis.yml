@@ -6,7 +6,7 @@ install:
   - pip install .[dev]
 script:
   - pip install check-manifest
-  - check-manifest --ignore 'tests/**' -vv
+  - check-manifest --ignore '.flake8,.git-blame-ignore-revs,.pre-commit-config.yaml,mypy.ini,tests/**' -vv
 after_success:
   - coveralls
 deploy:

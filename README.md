@@ -1,54 +1,115 @@
 # nspyre
-[![GitHub license](https://img.shields.io/github/license/nspyre-dev/nspyre)](https://github.com/nspyre-dev/nspyre/blob/master/LICENSE)
+[![GitHub license](https://img.shields.io/github/license/nspyre-org/nspyre)](https://github.com/nspyre-org/nspyre/blob/master/LICENSE)
 [![Documentation Status](https://readthedocs.org/projects/nspyre/badge/?version=latest)](https://nspyre.readthedocs.io/en/latest/?badge=latest)
 
-Networked Scientific Python Research Environment
+Pythonic Networked Scientific Experimentation Toolkit
 
-## Installation
+See https://nspyre.readthedocs.io/
 
-The following should be run in a standard windows cmd line or equivalent (eg: https://cmder.net/)
+# What is NSpyre?
 
-#### Install MongoDB
-- Download mongodb v4.2.1 (or greater) from https://www.mongodb.com/download-center/community
-- Install mongodb v4.2.1 using default options
-- Put the bin to the path variable (in system environment variable).  
-  For a standard install this will likelly be something like C:\Program Files\MongoDB\Server\4.2\bin
-  This will allow you to call mongod from the command line. and is necessary for the install.bat script to work
+NSpyre is a Python Framework for conducting physics experiments. It uses a
+networked approach to allow for the running of experiments using distributed
+equipment over many networked systems. The experimental hardware being controlled
+can thus be connected to different computers, which can in turn be controlled by
+another machine running the *experimental* commands. This allows for the easy
+integration of shared resources in a research environment.
 
-#### Install NSpyre
-Clone the repository
-```
-git clone git@github.com:AlexBourassa/nspyre.git nspyre
-```
-or 
-```
-git clone https://github.com/AlexBourassa/nspyre nspyre
-```
+It's built on top of the Lantz (instrumentation communication toolkit) module
+for interfacing with equipment using a variety of protocols and uses the RPyC
+module to implement remote procedure calls for server communication. NSpyre grew
+out of many years of development in the Awschalom Group and others — first from
+many years of LabView and Matlab code into an original *proto-spyre* in python,
+and finally into it’s fully realized networked form.
 
-Configure and start the MongoDB server (this will start two mongo server in the same replica set (one primary and one secondary)). By default these are publicly accessible on ports 27017 and port 27018 so if you are not in a secured private network, make sure to add some security configurations to the mongodb1.cfg and mongodb2.cfg files (better support for these security configurations will be integrated in future versions)
-```
-cd nspyre
-install.bat
-```
+# How is it used?
 
-Now you need to initialize the replica set. To do so enter the mongo shell and input a rs.initiate command
-```
-mongo
-rs.initiate({_id: "NSpyreSet", members:[{_id: 0, host: '0.0.0.0:27017'},{_id: 1, host: '0.0.0.0:27018'}]})
-quit()
-```
-Finally, if you are planning on using NSpyre from different computers, you will also need to open the appropriate port in the firewall of the server machine (by default these are 27017 and 27018)
+The beauty of NSpyre is that many operations can be performed in multiple ways,
+allowing for maximum flexibility. This includes both command line, GUI, and
+Jupyter interfaces. Experiments and analyses can be written in detailed
+*spyrelets* or added in-situ in a scripting style fashion. This
+*plug-and-play* fashion allows for many modalities, but to get up to speed quickly,
+here is some quickstart information:
 
-Finally you can create and configure a conda environment.  The pip command must be run from inside the nspyre folder (where the setup.py script is located). Additionally, some part of this install may require the shell to be started with admin rights:
+Start the main GUI menu:
+
 ```
-conda create -n nspyre python=3
-activate nspyre
-pip install -e .
+$ nspyre
 ```
 
-PyZMQ must be installed manually from within the conda environment with:
+Add the configuration file for your experiment:
+
 ```
-conda install pyzmq
+$ nspyre-config client -a path/to/client_config.yaml
+$ nspyre-config -l
+* 0: client_default_config.yaml
+  1: path/to/client_config.yaml
 ```
 
-Modify your nspyre/nspyre/config.yaml to suit your specific configuration of nspyre.
+Set the activate configuration file to your experiment configuration:
+
+```
+$ nspyre-config client -s 1
+$ nspyre-config -l
+  0: client_default_config.yaml
+* 1: path/to/client_config.yaml
+```
+
+Start (or restart) the MongoDB server:
+
+```
+$ nsypre-mongodb
+```
+
+Start an instrument server for running hardware:
+
+```
+$ nspyre-inserv
+```
+
+Run nspyre using a jupyter notebook:
+
+```python
+%gui qt5
+from nspyre.inserv.gateway import InservGateway
+from nspyre.widgets.launcher import Spyrelet_Launcher_Widget, Combined_Launcher
+```
+
+```python
+%gui qt5 #Sometimes jupyters needs a few runs of this commands for some weird reason
+```
+
+```python
+%gui qt5
+# Add all the instruments
+with InservGateway() as isg:
+    sg_loc = 'local1/fake_sg'
+    isg.devs[sg_loc].amplitude = Q_(2.0, 'volt')
+
+    locals().update(m.get_devices())
+    print('Available devices: ', list(isg.get_devices().keys()))
+
+    # Add all the spyrelets
+    all_spyrelets = load_all_spyrelets()
+    locals().update(all_spyrelets)
+    print('Available spyrelets: ', list(all_spyrelets.keys()))
+
+    # Clean up the mongo database if desired
+    # unload_all_spyrelets(except_list=list(all_spyrelets.keys()))
+
+    # Make a launcher
+    launcher = Combined_Launcher(spyrelets=all_spyrelets)
+```
+
+# Who uses it? (And who are we)
+
+Primarily developed out of the Awschalom Group at the University of Chicago PME,
+we are an experimental quantum physics research lab with a focus on *Spin Dynamics
+and Quantum Information Processing in the Solid State*. There has been growing
+adoption of nspyre in the immediate surroundings outside our doors, but there is
+hope that this software can be adopted by more and more people from different
+institutions and we can all benefit from these shared resources to lower the
+development time for writing code and foster exchange to improve our research
+and maximize our productivity. Anyone in the research or industrial spaces using
+electrical or other computer controlled equipment with a programming interface
+(or an already written Lantz driver) can benefit from these resources.

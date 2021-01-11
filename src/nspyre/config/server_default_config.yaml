@@ -1,0 +1,53 @@
+# port to run the instrument server on
+port: 5556
+
+# address of the mongodb server in the format 'mongodb://<ip>:<port>/'
+mongodb_addr: 'mongodb://localhost:27017/'
+
+# the devices entry will be used by the instrument server to automatically load
+# the specified devices on startup - the syntax is:
+devices_doc: # 'devices' for the real one
+  # user-supplied alias for the device on the instrument server
+  device_name1:
+    # lantz class specified as a path in the style of a python import starting
+    # from the lantz-drivers folder,
+    # e.g. 'examples.LantzSignalGenerator' or 'examples.dummydrivers.DummyOsci'
+    # see https://github.com/lantzproject/lantz-drivers/tree/master/lantz/drivers
+    lantz_class: 'lantz driver'
+
+    # if the driver is not part of lantz-drivers, it can be specified by an
+    # ordinary python class stored somewhere on the file system by using the
+    # 'class' and 'class_file' parameters - in this case 'lantz_class'
+    # should be omitted
+    class: 'python class name' # e.g. 'LantzSignalGenerator'
+    # python file containing the class above (can be absolute or relative to
+    # this config file), e.g. class_file: '../path/to/driver/fungen.py'
+    class_file: 'file path'
+
+    # list of arguments to be passed to the constructor for the driver
+    args: ['arg1', 'arg2', 'arg3']
+    # list of keyword arguments to be passed to the constructor for the driver
+    kwargs:
+      key1: 'value1'
+      key2: 'value2'
+  device_name2:
+    # etc...
+
+# actual devices
+devices:
+  fake_tcpip_sg:
+    lantz_class: examples.LantzSignalGenerator
+    args: [TCPIP::localhost::5678::SOCKET]
+    kwargs: {}
+  fake_sg:
+    lantz_class: examples.dummydrivers.DummyFunGen
+    args: []
+    kwargs: {}
+  fake_osc:
+    lantz_class: examples.dummydrivers.DummyOsci
+    args: []
+    kwargs: {}
+  fake_shutter:
+    lantz_class: examples.dummydrivers.DummyShutter
+    args: []
+    kwargs: {}

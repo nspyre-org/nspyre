@@ -1,0 +1,22 @@
+include AUTHORS LICENSE pyproject.toml *.ipynb *.md
+
+# Stubs
+include src/nspyre/gui/images/*.png
+include src/nspyre/gui/images/favicon.ico
+
+# Config files
+include src/nspyre/config/*.yaml
+
+# MongoDB scripts
+include src/nspyre/mongodb/start_mongo_unix.sh
+include src/nspyre/mongodb/start_mongo_win.bat
+
+# Tests
+recursive-include tests *.py
+
+# Documentation
+include docs/Makefile docs/make.bat docs/requirements.txt
+recursive-include docs *.css
+recursive-include docs *.png
+recursive-include docs *.py
+recursive-include docs *.rst

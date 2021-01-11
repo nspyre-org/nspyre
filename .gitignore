@@ -1,4 +1,18 @@
-NSpyre.egg-info
-nspyre.egg-info
-.ipynb_checkpoints/
+# general things to ignore
+build/
+dist/
+*.egg-info/
+*.egg
+*.ipynb_checkpoints/
+*.py[cod]
 __pycache__/
+*.so
+*~
+
+# due to using tox and pytest
+.tox
+.cache
+
+# due to db config and backups stored internally
+src/nspyre/mongodb/db_files/
+src/nspyre/mongodb/db_files_backup/

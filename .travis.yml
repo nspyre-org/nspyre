@@ -1,0 +1,20 @@
+language: python
+python:
+  - '3.8'
+install:
+  - pip install coverage coveralls pre-commit
+  - pip install .[dev]
+script:
+  - pip install check-manifest
+  - check-manifest --ignore '.flake8,.git-blame-ignore-revs,.pre-commit-config.yaml,mypy.ini,tests/**' -vv
+after_success:
+  - coveralls
+deploy:
+  provider: pypi
+  username: __token__
+  password:
+    secure: OE33w6YDYNBa+6XsD9OjH5A2XcDKLGGHHidXdDQmj9VaXw9bLTw5FKJWHAlVPPMhVVH51CyAalwGirmoJjH5rRgvFC+cXzNNamAL1iZBC2sqxYjTXvjU4O7VXeX12MCE33p0G+kKPuHlgvl/mJh7aF/vyrYweIrJ+nDXfnJnGpimsQlNLo2UX2yzuhFBP8tBROcT1st83J/t8C3ezK+1PiL9a6qq8DP31xIl23f4s6TD/BZzmCvuQ6RKEYqEmmJSxyW5Gq7/UMoXFQcx9BY+mwCvW36Ma0MuD6JKx2u0jzuGYiFm3T5gnKDvv7be+pNZ7g1l71uCER4No1uE889hcjgQyUgxgH9ETtExoL00kjHszkbdxmJ7ba0Pxk0xqd/vmsAqH/o+2f2M7XeMPkS3hWS5XDDoRbZ/ozBE3Fj8Tb/VB3fsYrwAdPsqVMtbH+f6slhAuwI9+rnv8hoaBzyTNU/JPPB8DHydmGlBZ21rMSL/bhTFn46TfRvn9ilDK7NGnqSNR4EBvF124o97MFvPj4WOBhMV+MYKhuxHYojX1X7hurpinBZ7lSRIy5eBfYq6hDgLn+wIDjB7ylV4PBOZ5awSzSWsTQRQ7ln0riZxeOk8GocNLS6+cKEmTV5/7kiL1FBz+sq1X5EniRLzV6daCJdpLJYvsVEQZs2LXdmpFSI=
+  edge: true # opt in to dpl v2
+  skip_existing: true
+  on:
+    tags: true

@@ -1,0 +1,3 @@
+config_files:
+- server_default_config.yaml
+enabled: 0

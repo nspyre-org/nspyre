@@ -6,8 +6,8 @@
 Welcome to nspyre's documentation!
 ==================================
 
-.. image:: https://img.shields.io/github/license/nspyre-dev/nspyre
-   :target: https://github.com/nspyre-dev/nspyre/blob/master/LICENSE
+.. image:: https://img.shields.io/github/license/nspyre-org/nspyre
+   :target: https://github.com/nspyre-org/nspyre/blob/master/LICENSE
    :alt: GitHub
 
 .. image:: https://readthedocs.org/projects/nspyre/badge/?version=latest
@@ -23,10 +23,18 @@ Pythonic Networked Scientific Experimentation Toolkit
 
    install
    getting_started
+   config
    spyrelet
    instrument_server
    the_database
    view_manager
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Misc Guides
+   :hidden:
+
+   guides/ni-daqmx
 
 .. toctree::
    :maxdepth: 1
@@ -53,14 +61,11 @@ can thus be connected to different computers, which can in turn be controlled by
 another machine running the *experimental* commands. This allows for the easy
 integration of shared resources in a research environment.
 
-.. code-block:: console
-   
-   (conda env) $ python main.py
-
 It's built on top of the Lantz (instrumentation communication toolkit) module
-for interfacing with equipment using a variety of protocols and grew out of
-many years of development in the Awschalom Group and others — first from many
-years of LabView and Matlab code into an original *proto-spyre* in python,
+for interfacing with equipment using a variety of protocols and uses the RPyC
+module to implement remote procedure calls for server communication. NSpyre grew
+out of many years of development in the Awschalom Group and others — first from
+many years of LabView and Matlab code into an original *proto-spyre* in python,
 and finally into it’s fully realized networked form.
 
 How is it used?
@@ -70,14 +75,57 @@ The beauty of NSpyre is that many operations can be performed in multiple ways,
 allowing for maximum flexibility. This includes both command line, GUI, and
 Jupyter interfaces. Experiments and analyses can be written in detailed
 *spyrelets* or added in-situ in a scripting style fashion. This
-*plug-and-play* fashion allows for many modalities, but here is a common usage:
+*plug-and-play* fashion allows for many modalities, but to get up to speed quickly,
+here is some quickstart information:
+
+Start the main GUI menu:
+
+.. code-block:: console
+
+   $ nspyre
+
+.. figure:: images/startup-gui.png
+   :align: center
+   :height: 581.4px
+   :width: 763.2px
+
+Add the configuration file for your experiment:
+
+.. code-block:: console
+
+   $ nspyre-config client -a path/to/client_config.yaml
+   $ nspyre-config -l
+   * 0: client_default_config.yaml
+     1: path/to/client_config.yaml
+
+Set the activate configuration file to your experiment configuration:
+
+.. code-block:: console
+
+   $ nspyre-config client -s 1
+   $ nspyre-config -l
+     0: client_default_config.yaml
+   * 1: path/to/client_config.yaml
+
+Start (or restart) the MongoDB server:
+
+.. code-block:: console
+
+   $ nsypre-mongodb
+
+Start an instrument server for running hardware:
+
+.. code-block:: console
+
+   $ nspyre-inserv
+
+Run nspyre using a jupyter notebook:
 
 .. nbinput:: ipython3
    :execution-count: 1
    
    %gui qt5
-   from nspyre import *
-   from nspyre.instrument_manager import Instrument_Manager
+   from nspyre.inserv.gateway import InservGateway
    from nspyre.widgets.launcher import Spyrelet_Launcher_Widget, Combined_Launcher
 
 .. nbinput:: ipython3
@@ -90,20 +138,23 @@ Jupyter interfaces. Experiments and analyses can be written in detailed
    
    %gui qt5
    # Add all the instruments
-   m = Instrument_Manager(timeout=10000)
-   locals().update(m.get_devices())
-   print('Available devices: ', list(m.get_devices().keys()))
-   
-   # Add all the spyrelets
-   all_spyrelets = load_all_spyrelets()
-   locals().update(all_spyrelets)
-   print('Available spyrelets: ', list(all_spyrelets.keys()))
-   
-   # Clean up the mongo database if desired
-   # drop_all_spyrelets(except_list=list(all_spyrelets.keys()))
-   
-   # Make a launcher
-   launcher = Combined_Launcher(spyrelets=all_spyrelets)
+   with InservGateway() as isg:
+       sg_loc = 'local1/fake_sg'
+       isg.devs[sg_loc].amplitude = Q_(2.0, 'volt')
+
+       locals().update(m.get_devices())
+       print('Available devices: ', list(isg.get_devices().keys()))
+
+       # Add all the spyrelets
+       all_spyrelets = load_all_spyrelets()
+       locals().update(all_spyrelets)
+       print('Available spyrelets: ', list(all_spyrelets.keys()))
+
+       # Clean up the mongo database if desired
+       # unload_all_spyrelets(except_list=list(all_spyrelets.keys()))
+
+       # Make a launcher
+       launcher = Combined_Launcher(spyrelets=all_spyrelets)
 
 Who uses it? (And who are we)
 =============================

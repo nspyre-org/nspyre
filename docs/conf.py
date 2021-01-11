@@ -10,9 +10,36 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
+import codecs
 import os
+import pathlib
+import re
 import sys
 sys.path.insert(0, os.path.abspath('.'))
+
+
+def read(*parts):
+    """
+    Build an absolute path from *parts* and and return the contents of the
+    resulting file.  Assume UTF-8 encoding.
+    """
+    here = pathlib.Path(__file__).parent.resolve()
+    with codecs.open(os.path.join(here, *parts), "rb", "utf-8") as f:
+        return f.read()
+
+
+def find_version(*file_paths):
+    """
+    Build a path from *file_paths* and search for a ``__version__``
+    string inside.
+    """
+    version_file = read(*file_paths)
+    version_match = re.search(
+        r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M
+    )
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
 
 
 # -- Project information -----------------------------------------------------
@@ -22,7 +49,8 @@ copyright = '2020, Alexandre Bourassa'
 author = 'Alexandre Bourassa'
 
 # The full version, including alpha/beta/rc tags
-release = '0.2.1'
+meta_path = os.path.join('..', 'src', 'nspyre', '__init__.py')
+release = find_version(meta_path)
 
 
 # -- General configuration ---------------------------------------------------

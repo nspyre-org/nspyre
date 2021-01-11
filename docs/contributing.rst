@@ -158,7 +158,7 @@ rest can now be completed using the console:
    git push --set-upstream origin descriptive-branch-title
 
 You will notice the addition of two new terms -- *branch* and *push*. Each
-repository can have multiple versions of it's codebase that are under
+repository can have multiple versions of its codebase that are under
 development. The ``master`` *branch* is the main version of the code on the
 repository and is the root branch from which all others originate. This is the
 official working version that is used out in the wild and the one you eventually
@@ -524,7 +524,7 @@ any text that should not be formatted -- but we explicity use the
 
 .. code-block:: rst
 
-   This is the paragraph preceding the code sample::
+   This is the paragraph preceding the code sample:
    
    .. code-block:: python
       
@@ -565,7 +565,7 @@ resources already available online and you should avail yourself of them:
 * `reStructuredText Primer (recommended guide) <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_
 * `A ReStructuredText Primer (by docutils -- the maintainers) <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html>`_
 * `Cheatsheet <https://github.com/ralsina/rst-cheatsheet/blob/master/rst-cheatsheet.rst>`_
-* `QuickStart used for above guide ( <https://www.writethedocs.org/guide/writing/reStructuredText/>`_
+* `QuickStart used for above guide <https://www.writethedocs.org/guide/writing/reStructuredText/>`_
 * `Detailed guide from the LSST project <https://developer.lsst.io/restructuredtext/style.html>`_
 
 Resources

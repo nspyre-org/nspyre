@@ -1,0 +1,24 @@
+port: 30249
+
+mongodb_addr: 'mongodb://localhost:27017/'
+
+devices:
+  fake_sg:
+    class_file: '../drivers/fake_sg.py'
+    class: 'FakeSigGen'
+    args: []
+    kwargs: {}
+  fake_daq:
+    class_file: '../drivers/fake_daq.py'
+    class: 'FakeDAQ'
+    args: []
+    kwargs: {}
+  fake_pellicle:
+    class_file: '../drivers/fake_pellicle.py'
+    class: 'FakePellicle'
+    args: []
+    kwargs: {}
+  lantz_scope:
+    lantz_class: examples.dummydrivers.DummyOsci
+    args: []
+    kwargs: {}

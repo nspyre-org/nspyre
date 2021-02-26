@@ -51,7 +51,6 @@ def gateway():
 def setup():
     """start mongodb and the instrument server in subprocesses for use by 
     subsequent tests"""
-
     logging.info('test setup...')
 
     # search through all running processes, and only start mongo if it's not

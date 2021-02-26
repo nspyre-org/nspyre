@@ -51,6 +51,8 @@ CONFIG_DEVS_KEY = 'device_aliases'
 CONFIG_SUB_SPYRELETS_KEY = 'spyrelets'
 # config file key for spyrelet arguments
 CONFIG_SPYRELETS_ARGS_KEY = 'args'
+# config file key for spyrelet keyword arguments
+CONFIG_SPYRELETS_KWARGS_KEY = 'kwargs'
 # record of the loaded spyrelets
 _LOADED_SPYRELETS = {}
 
@@ -80,7 +82,7 @@ class Spyrelet:
     PARAMS = dict()
     CONSTS = dict()
 
-    def __init__(self, unique_name, gateway, device_aliases={}, spyrelets={}, mongodb_addr=None, **consts):
+    def __init__(self, unique_name='', gateway=None, device_aliases={}, spyrelets={}, mongodb_addr=None, **consts):
         self.name = unique_name
         self.progress = tqdm
         self.spyrelets = spyrelets
@@ -136,7 +138,6 @@ class Spyrelet:
         # check that the sub spyrelets are loaded and add them as
         # instance variables
         for sname, sclass in self.REQUIRED_SPYRELETS.items():
-            #import pdb; pdb.set_trace()
             if sname in spyrelets:# and isinstance(spyrelets[sname], sclass):
                 setattr(self, sname, spyrelets[sname])
             else:
@@ -377,6 +378,9 @@ def load_spyrelet_class(spyrelet_name, cfg):
         spyrelet_path = pathlib.Path(spyrelet_cfg_path_str).parent / spyrelet_path
     spyrelet_path = spyrelet_path.resolve()
 
+    if not spyrelet_path.is_file():
+        raise SpyreletLoadError(None, f'spyrelet [{spyrelet_name}] file [{spyrelet_path}] doesn\'t exist')
+
     return load_class_from_file(spyrelet_path, spyrelet_class_name)
 
 
@@ -429,11 +433,20 @@ def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False):
                                          spyrelet_name, CONFIG_SPYRELETS_ARGS_KEY])
     except EntryNotFoundError:
         logger.debug('spyrelet [{}] no args found'.format(spyrelet_name))
-        args = {}
+        args = []
     args = custom_decode(args)
 
+    # discover the spyrelet keyword arguments
+    try:
+        kwargs, _ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY, \
+                                         spyrelet_name, CONFIG_SPYRELETS_KWARGS_KEY])
+    except EntryNotFoundError:
+        logger.debug('spyrelet [{}] no kwargs found'.format(spyrelet_name))
+        kwargs = {}
+    kwargs = custom_decode(kwargs)
+
     # create the spyrelet
-    spyrelet = spyrelet_class(spyrelet_name, gateway, device_aliases=dev_aliases, spyrelets=sub_spyrelets, **args)
+    spyrelet = spyrelet_class(*args, spyrelet_name, gateway, **kwargs, device_aliases=dev_aliases, spyrelets=sub_spyrelets)
     _LOADED_SPYRELETS[spyrelet_name] = spyrelet
     logger.info('loaded spyrelet [{}]'.format(spyrelet_name))
 

@@ -7,19 +7,21 @@ mongodb_addr: 'mongodb://localhost:27017/'
 
 spyrelets:
   sweep:
-    file: '../spyrelet/test_spyrelets.py'
+    file: '../spyrelets/example_spyrelets.py'
     class: 'FreqAmpSweep'
     device_aliases:
       fake_sg: 'tserv/fake_sg'
       fake_daq: 'tserv/fake_daq'
       fake_pellicle: 'tserv/fake_pellicle'
       lantz_scope: 'tserv/lantz_scope'
-    args: {}
+    args: []
+    kwargs: {}
   single:
-    file: '../spyrelet/test_spyrelets.py'
+    file: '../spyrelets/example_spyrelets.py'
     class: 'SinglePoint'
     device_aliases:
       fake_sg: 'tserv/fake_sg'
       fake_daq: 'tserv/fake_daq'
       fake_pellicle: 'tserv/fake_pellicle'
-    args: {}
+    args: []
+    kwargs: {}

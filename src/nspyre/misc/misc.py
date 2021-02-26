@@ -125,18 +125,32 @@ def custom_encode(d):
     return out
 
 def custom_decode(d):
-    out = dict()
-    for k,val in d.items():
-        if isinstance(val, Iterable) and '__type__' in val:
-            if val['__type__'] == 'Quantity':
-                out[k] = Q_(val['m'], val['units'])
-            elif val['__type__'] == 'RangeDict':
-                out[k] = custom_decode(val)
-            elif val['__type__'] == 'ndarray':
-                out[k] = np.array(val['val'])
-        else:
-            out[k] = val
-    return out
+    if isinstance(d, list):
+        out = []
+        for val in d:
+            if isinstance(val, Iterable) and '__type__' in val:
+                if val['__type__'] == 'Quantity':
+                    out.append(Q_(val['m'], val['units']))
+                elif val['__type__'] == 'RangeDict':
+                    out.append(custom_decode(val))
+                elif val['__type__'] == 'ndarray':
+                    out.append(np.array(val['val']))
+            else:
+                out.append(val)
+        return out
+    else:
+        out = dict()
+        for k,val in d.items():
+            if isinstance(val, Iterable) and '__type__' in val:
+                if val['__type__'] == 'Quantity':
+                    out[k] = Q_(val['m'], val['units'])
+                elif val['__type__'] == 'RangeDict':
+                    out[k] = custom_decode(val)
+                elif val['__type__'] == 'ndarray':
+                    out[k] = np.array(val['val'])
+            else:
+                out[k] = val
+        return out
 
 class RangeDict(dict):
     FUNCS = {'linspace':np.linspace, 'arange':np.arange, 'logspace':np.logspace}

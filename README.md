@@ -72,7 +72,7 @@ Run nspyre using a jupyter notebook:
 ```python
 %gui qt5
 from nspyre.inserv.gateway import InservGateway
-from nspyre.widgets.launcher import Spyrelet_Launcher_Widget, Combined_Launcher
+from nspyre.widgets.launcher import SpyreletLauncherWidget, Combined_Launcher
 ```
 
 ```python

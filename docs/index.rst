@@ -126,7 +126,7 @@ Run nspyre using a jupyter notebook:
    
    %gui qt5
    from nspyre.inserv.gateway import InservGateway
-   from nspyre.widgets.launcher import Spyrelet_Launcher_Widget, Combined_Launcher
+   from nspyre.widgets.launcher import SpyreletLauncherWidget, Combined_Launcher
 
 .. nbinput:: ipython3
    :execution-count: 2

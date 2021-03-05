@@ -1,64 +1,41 @@
 #!/usr/bin/env python
-"""
-    ?
-
-    Author: Alexandre Bourassa
-"""
-
-###########################
-# imports
-###########################
-
-# std
-import time
 import inspect
-import traceback
 import textwrap
+import time
+import traceback
 import logging
 
-# 3rd party
+import numpy as np
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QApplication, QMainWindow
-import numpy as np
 
-# nspyre
+from nspyre.definitions import join_nspyre_path
+from nspyre.gui.image import ImageWidget
+from nspyre.gui.widgets.code_editor import Scintilla_Code_Editor, Monokai_Python_Lexer
 from nspyre.gui.widgets.plotting import LinePlotWidget, HeatmapPlotWidget
 from nspyre.gui.widgets.splitter_widget import Splitter, SplitterOrientation
-from nspyre.mongodb.mongo_listener import Synched_Mongo_Database
 from nspyre.gui.widgets.views import Spyrelet_Views
-from nspyre.definitions import join_nspyre_path
+from nspyre.mongodb.mongo_listener import Synched_Mongo_Database
 from nspyre.spyrelet.spyrelet import custom_decode
-from nspyre.misc.misc import cleanup_register
-from nspyre.gui.image import ImageWidget
-from nspyre.gui.widgets.code_editor import Scintilla_Code_Editor, \
-                Monokai_Python_Lexer
-
-###########################
-# globals
-###########################
 
 logger = logging.getLogger(__name__)
 
-###########################
-# classes
-###########################
 
-class CustomView():
+class CustomView:
     def __init__(self, code_editor, w1D, w2D, plot_layout, initial_df, initial_cache):
         self.is_updating = False
         self.editor = code_editor
         self.plot_layout = plot_layout
         self.plot_type = '1D'
         self.w = w1D
-        self.ws = {'1D':w1D, '2D':w2D}
+        self.ws = {'1D': w1D, '2D': w2D}
         self.valid_code = False
         self._source = "plot_type = '1D'\ndef plot(df, cache):\n    return {}"
         self.last_df = initial_df
         self.last_cache = initial_cache
         self.editor.request_run_signal.connect(self.analyze)
-        
-    
+
     def start_updating(self):
         self.analyze()
         self.w.clear()
@@ -109,40 +86,32 @@ class CustomView():
                 im = np.array(self.update_fun(df, cache))
                 self.w.set(im)
 
-class BaseView():
+
+class BaseView:
     def __init__(self, view, w):
         self.view = view
         self.is_updating = False
         self.update_fun = view.update_fun
         self.init_formatter = view.get_formatter(self.w, 'init')
         self.update_formatter = view.get_formatter(self.w, 'update')
-        # if not self.init_formatter is None:
-        #     self.init_formatter(self.w)
             
     def start_updating(self):
         self.w.clear()
-        if not self.init_formatter is None:
+        if self.init_formatter is not None:
             self.init_formatter(self.w)
         self.is_updating = True
 
     def stop_updating(self):
         self.is_updating = False
 
-    # def update(self, df):
-    #     if self.is_updating:
-    #         traces = self.update_fun(df)
-    #         for name, data in traces.items():
-    #             self.w.set(name, xs=data[0], ys=data[1])
-    #         if not self.update_formatter is None:
-    #             self.update_formatter(self.w, df)
-
     def get_source(self):
         return textwrap.dedent(inspect.getsource(self.update_fun))
+
 
 class LinePlotView(BaseView):
     def __init__(self, view, w=None):
         if view.type != '1D':
-            raise "This class is for 1D plot only"
+            raise TypeError('This class is for 1D plot only')
         if w is None:
             self.w = LinePlotWidget()
             self.w.setFont(QFont('Helvetica [Cronyx]', 12))
@@ -154,14 +123,18 @@ class LinePlotView(BaseView):
         if self.is_updating:
             traces = self.update_fun(df, cache)
             for name, data in traces.items():
-                self.w.set(name, xs=data[0], ys=data[1])
-            if not self.update_formatter is None:
+                if len(data) == 2:
+                    self.w.set(name, xs=data[0], ys=data[1])
+                elif len(data) == 3:
+                    self.w.set(name, xs=data[0], ys=data[1], yerrs=data[2])
+            if self.update_formatter is not None:
                 self.update_formatter(self.w, df, cache)
+
 
 class HeatmapPlotView(BaseView):
     def __init__(self, view, w=None):
         if view.type != '2D':
-            raise "This class is for 2D plot only"
+            raise TypeError('This class is for 2D plot only.')
         if w is None:
             self.w = HeatmapPlotWidget()
             self.w.setFont(QFont('Helvetica [Cronyx]', 12))
@@ -173,7 +146,7 @@ class HeatmapPlotView(BaseView):
         if self.is_updating:
             im = np.array(self.update_fun(df, cache))
             self.w.set(im)
-            if not self.update_formatter is None:
+            if self.update_formatter is not None:
                 self.update_formatter(self.w, df, cache)
 
 
@@ -208,8 +181,7 @@ class ViewManagerWindow(QMainWindow):
         self.plot_layout = QtWidgets.QStackedLayout()
         plot_container = QtWidgets.QWidget()
         plot_container.setLayout(self.plot_layout)
-        self.default_image = ImageWidget(str(\
-                                join_nspyre_path('images/logo.png')))
+        self.default_image = ImageWidget(str(join_nspyre_path('images/logo.png')))
         self.plot_layout.addWidget(self.default_image)
         
         self.common_lineplotwidget = LinePlotWidget()
@@ -217,34 +189,19 @@ class ViewManagerWindow(QMainWindow):
         self.plot_layout.addWidget(self.common_lineplotwidget)
         self.plot_layout.addWidget(self.common_heatmapplotwidget)
 
-
-        splitter_config = {
-            'main_w': self.tree,
-            'side_w': plot_container,
-            'orientation': SplitterOrientation.vertical_right_button,
-        }
-        hsplitter = Splitter(**splitter_config)
-        hsplitter.setSizes([1, 400])
-        hsplitter.setHandleWidth(10)
+        horizontal_splitter = Splitter(main_w=self.tree, side_w=plot_container,
+                                       orientation=SplitterOrientation.vertical_right_button)
+        horizontal_splitter.setSizes([1, 400])
+        horizontal_splitter.setHandleWidth(10)
 
         self.code_editor = Scintilla_Code_Editor()
-        lexer = Monokai_Python_Lexer(self.code_editor)
-        self.code_editor.setLexer(lexer)
-        splitter_config = {
-            'main_w': hsplitter,
-            'side_w': self.code_editor,
-            'orientation': SplitterOrientation.horizontal_top_button,
-        }
-        vsplitter = Splitter(**splitter_config)
-        vsplitter.setSizes([1, 400])
-        vsplitter.setHandleWidth(10)
+        self.code_editor.setLexer(Monokai_Python_Lexer(self.code_editor))
 
-        #layout = QtWidgets.QHBoxLayout()
-        #layout.addWidget(vsplitter)
-        #self.setLayout(layout)
-        #w = QWidget()
-        #w.setLayout(layout)
-        self.setCentralWidget(vsplitter)
+        vertical_splitter = Splitter(main_w=horizontal_splitter, side_w=self.code_editor,
+                                     orientation=SplitterOrientation.horizontal_top_button)
+        vertical_splitter.setSizes([200, 20])
+        vertical_splitter.setHandleWidth(10)
+        self.setCentralWidget(vertical_splitter)
 
         if 'Register' in self.db.dfs:
             names = list(self.db.get_df('Register').index)
@@ -252,10 +209,9 @@ class ViewManagerWindow(QMainWindow):
             for name in names:
                 self.add_col(name, try_update=False)
 
-
         self.tree.currentItemChanged.connect(self.new_table_selection)
 
-        #Connect db signals
+        # Connect db signals
         self.db.col_added.connect(self.add_col)
         self.db.updated_row.connect(self._update_plot)
         if react_to_drop:
@@ -263,9 +219,11 @@ class ViewManagerWindow(QMainWindow):
         self.show()
 
     def _update_plot(self, col_name, row):
-        if col_name != 'Register':
-            self.last_updated[col_name] = time.time()
-        self.update_plot(col_name, row)
+        # add a half second delay between updates so system does not lock-up on frequently updated datasets:
+        if (time.time() - self.last_updated[col_name]) > 0.5:
+            if col_name != 'Register':
+                self.last_updated[col_name] = time.time()
+            self.update_plot(col_name, row)
 
     def update_plot(self, col_name, row):
         if col_name == 'Register':
@@ -278,7 +236,6 @@ class ViewManagerWindow(QMainWindow):
                 cache = {}
             view.update(self.db.get_df(col_name), cache)
         
-        
     def add_col(self, col_name, try_update=True):
         if col_name == 'Register':
             return
@@ -288,9 +245,9 @@ class ViewManagerWindow(QMainWindow):
         if col_name in self.views:
             return
         top = QtWidgets.QTreeWidgetItem(self.tree, [col_name])
-        self.default_color = top.background(0) # This is used to remember the default color when instanciating (to restore in update_color)
+        self.default_color = top.background(0)  # This is used to remember the default color when instantiating (to restore in update_color)
 
-        self.items[col_name] = {'__top':top}
+        self.items[col_name] = {'__top': top}
         self.views[col_name] = dict()
         self.last_updated[col_name] = time.time()
 
@@ -299,7 +256,7 @@ class ViewManagerWindow(QMainWindow):
                 self.views[col_name][name] = LinePlotView(view, self.common_lineplotwidget)
             elif view.type == '2D':
                 self.views[col_name][name] = HeatmapPlotView(view, self.common_heatmapplotwidget)
-            self.items[col_name][name] = QtWidgets.QTreeWidgetItem(0)#QtGui.QStandardItem(name)
+            self.items[col_name][name] = QtWidgets.QTreeWidgetItem(0)  # QtGui.QStandardItem(name)
             self.items[col_name][name].setText(0, name)
             
             # self.plot_layout.addWidget(self.views[col_name][name].w)
@@ -326,7 +283,6 @@ class ViewManagerWindow(QMainWindow):
                 self.items[col_name][name].setText(0, name)
                 self.items[col_name]['__top'].addChild(self.items[col_name][name])
                 break
-
 
     def del_col(self, col_name):
         if col_name == 'Register':
@@ -356,7 +312,7 @@ class ViewManagerWindow(QMainWindow):
     def new_table_selection(self, cur, prev):
         spyrelet_name, view_name = self.get_view_name(cur)
         spyrelet_name_old, view_name_old = self.get_view_name(prev)
-        if not view_name_old is None:
+        if view_name_old is not None:
             self.views[spyrelet_name_old][view_name_old].stop_updating()
         if view_name is None:
             # Selected a top level item
@@ -398,7 +354,7 @@ class ViewManagerWindow(QMainWindow):
                 ev.accept()
 
 
-if __name__ ==  '__main__':
+if __name__ == '__main__':
     import logging
     import sys
     from PyQt5.QtCore import Qt
@@ -410,7 +366,6 @@ if __name__ ==  '__main__':
     logger.info('starting View Manager...')
     if hasattr(Qt, 'AA_EnableHighDpiScaling'):
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-
     if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
         QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = NSpyreApp([sys.argv])

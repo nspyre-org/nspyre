@@ -35,7 +35,7 @@ from nspyre.config.config_files import get_config_param
 from nspyre.definitions import Q_
 from nspyre.errors import EntryNotFoundError, SpyreletLoadError, SpyreletRunningError, SpyreletUnloadError
 from nspyre.gui.data_handling import save_data
-from nspyre.misc.misc import custom_decode, custom_encode, get_mongo_client, load_class_from_file, RangeDict
+from nspyre.misc.misc import custom_decode, custom_encode, get_mongo_client, load_class_from_file, RangeDict, deprecated
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ class Spyrelet:
     PARAMS = dict()
     CONSTS = dict()
 
-    def __init__(self, unique_name='', gateway=None, device_aliases={}, spyrelets={}, mongodb_addr=None, **consts):
+    def __init__(self, unique_name, gateway, device_aliases={}, spyrelets={}, mongodb_addr=None, **consts):
         self.name = unique_name
         self.progress = tqdm
         self.spyrelets = spyrelets
@@ -153,7 +153,7 @@ class Spyrelet:
         clear_data = kwargs.pop('clear_data') if ('clear_data' in kwargs) else True
         if self.progress is None: self.progress = lambda *args, **kwargs: tqdm(*args, leave=False, **kwargs)
         try:
-            args, kwargs = self.enforce_args_units(*args, **kwargs)
+            args, kwargs = self._enforce_args_units(*args, **kwargs)
             self._stop_flag = False
             if clear_data:
                 self.clear_data()
@@ -172,10 +172,23 @@ class Spyrelet:
         t.start()
         return t
 
-    def enforce_args_units(self, *args, **kwargs):
+    def _enforce_args_units(self, *args, **kwargs):
+        """This call cross checks the given args and kwargs with those in the signature of the main and the
+        the PARAMS dictionary to enforce appropriate units and use default values for missing kwargs by
+        the following order of priority:
+        1. kwarg given as input
+        2. kwarg default given by main signature
+        3. kwarg default given by PARAMS
+        """
         args = list(args)
+        main_sig = inspect.signature(self.main)
+        main_parameters = list(main_sig.parameters.keys())
 
         def _enforce_units(val, param):
+            """Checks if the input value has an associated unit and
+            returns a Quantity object in base units; otherwise returns
+            the input value.
+            """
             if 'units' in param:
                 if type(val) is Q_:
                     return val.to(param['units'])
@@ -184,32 +197,47 @@ class Spyrelet:
             else:
                 return val
 
-        sig = inspect.signature(self.main)
-        params = list(sig.parameters.keys())
-        for name in list(self.PARAMS.keys()):
-            param_index = params.index(name)
+        # loop through the parameters from PARAMS
+        for param_name in list(self.PARAMS.keys()):
+            param_index = main_parameters.index(param_name)
+
+            # check if current parameter is an arg or kwarg
             if param_index >= len(args):
-                if name in kwargs:
-                    kwargs[name] = _enforce_units(kwargs[name], self.PARAMS[name])
+
+                # check if the current kwarg was given, otherwise use the default value from the main signature,
+                # and if that is empty then use the default value specified in PARAMS.
+                if param_name in kwargs:
+                    kwargs[param_name] = _enforce_units(kwargs[param_name], self.PARAMS[param_name])
+                elif main_sig.parameters[param_name].default == inspect._empty:
+
+                    # check if the current parameter has an associated unit and create the appropriate
+                    # Quantity object if needed
+                    if 'units' in self.PARAMS[param_name]:
+                        kwargs[param_name] = Q_(self.PARAMS[param_name]['default'], self.PARAMS[param_name]['units'])
+                    else:
+                        kwargs[param_name] = self.PARAMS[param_name]['default']
                 else:
-                    kwargs[name] = _enforce_units(sig.parameters[name].default, self.PARAMS[name])
+                    kwargs[param_name] = _enforce_units(main_sig.parameters[param_name].default, self.PARAMS[param_name])
             else:
-                args[param_index] = _enforce_units(args[param_index], self.PARAMS[name])
+                args[param_index] = _enforce_units(args[param_index], self.PARAMS[param_name])
         return args, kwargs
 
     def main(self, *args, **kwargs):
-        """This is the method that will contain the user main logic. \
-        Should be overwritten"""
+        """This is the method that will contain the user main logic.
+        Should be overwritten.
+        """
         raise NotImplementedError
 
+    @deprecated('Consolidate code into the Spyrelet main method. This will be removed in a future version of nspyre.')
     def initialize(self, *args, **kwargs):
-        """This is the method that will contain the user initialize logic. \
-        Should be overwritten"""
+        """This is the method that will contain the user initialize logic.
+        Should be overwritten.
+        """
         pass
 
     def finalize(self, *args, **kwargs):
-        """This is the method that will contain the user finalize logic. \
-        Should be overwritten. This will run even if the initialize or main \
+        """This is the method that will contain the user finalize logic.
+        Should be overwritten. This will run even if the initialize or main
         errors out.
         """
         pass
@@ -420,17 +448,14 @@ def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False):
 
     # discover the spyrelet devices
     try:
-        dev_aliases, _ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY, \
-                                                spyrelet_name, CONFIG_DEVS_KEY])
+        dev_aliases, _ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY, spyrelet_name, CONFIG_DEVS_KEY])
     except EntryNotFoundError:
-        logger.debug('spyrelet [{}] no device aliases found'. \
-                      format(spyrelet_name))
+        logger.debug('spyrelet [{}] no device aliases found'.format(spyrelet_name))
         dev_aliases = {}
 
     # discover the spyrelet arguments
     try:
-        args, _ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY, \
-                                         spyrelet_name, CONFIG_SPYRELETS_ARGS_KEY])
+        args, _ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY, spyrelet_name, CONFIG_SPYRELETS_ARGS_KEY])
     except EntryNotFoundError:
         logger.debug('spyrelet [{}] no args found'.format(spyrelet_name))
         args = []
@@ -438,8 +463,7 @@ def load_spyrelet(spyrelet_name, gateway, sub_spyrelet=False):
 
     # discover the spyrelet keyword arguments
     try:
-        kwargs, _ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY, \
-                                         spyrelet_name, CONFIG_SPYRELETS_KWARGS_KEY])
+        kwargs, _ = get_config_param(cfg, [CONFIG_SPYRELETS_KEY, spyrelet_name, CONFIG_SPYRELETS_KWARGS_KEY])
     except EntryNotFoundError:
         logger.debug('spyrelet [{}] no kwargs found'.format(spyrelet_name))
         kwargs = {}

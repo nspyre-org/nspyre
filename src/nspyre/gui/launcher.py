@@ -1,26 +1,12 @@
 #!/usr/bin/env python
-"""
-This GUI allows the running and managing of spyrelets
-
-Author: Alexandre Bourassa
-Date: 10/30/2019
-"""
-
-###########################
-# imports
-###########################
-
-# std
 import time
 import traceback
 import logging
 
-# 3rd party
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
 
-# nspyre
 from nspyre.config.config_files import load_meta_config
 from nspyre.definitions import CLIENT_META_CONFIG_PATH
 from nspyre.spyrelet.spyrelet import SpyreletLauncher
@@ -29,17 +15,10 @@ from nspyre.gui.widgets.save_widget import Save_Widget
 from nspyre.spyrelet.spyrelet import load_all_spyrelets
 from nspyre.inserv.gateway import InservGateway
 
-###########################
-# globals
-###########################
-
 logger = logging.getLogger(__name__)
 
-###########################
-# classes
-###########################
 
-class Progress_Bar(QtWidgets.QWidget):
+class ProgressBar(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.vars = []
@@ -59,7 +38,7 @@ class Progress_Bar(QtWidgets.QWidget):
 
     def call_iter(self, iterable, max_val):
         # self.iterators.append(iter(iterable))
-        self.vars.append({'val':0, 'max':max_val, 'start':time.time(), 'last':time.time(), 'avg':0, 'tot':0, 'rem':'?', 'per':0})
+        self.vars.append({'val': 0, 'max': max_val, 'start': time.time(), 'last': time.time(), 'avg': 0, 'tot': 0, 'rem': '?', 'per': 0})
 
         if max_val != '?':
             self.pbar.setValue(0)
@@ -79,7 +58,7 @@ class Progress_Bar(QtWidgets.QWidget):
             self.vars[-1]['rem'] = (self.vars[-1]['max'] - self.vars[-1]['val'])*self.vars[-1]['avg']
         s_with_max = '[{per:.0f}% {val:.0f}/{max:.0f} [{tot:.0f}s<{rem:.0f}s] {avg:.2f}s/it]'
         s_without_max = '[{val:.0f}[{tot:.0f}s] {avg:.2f}s/it]'
-        self.text.setText('\t'.join([(s_without_max if d['max']=='?' else s_with_max).format(**d)for d in self.vars]))
+        self.text.setText('\t'.join([(s_without_max if d['max'] == '?' else s_with_max).format(**d)for d in self.vars]))
         QtWidgets.QApplication.processEvents()
     
     def call_stopiter(self):
@@ -90,18 +69,17 @@ class Progress_Bar(QtWidgets.QWidget):
             QtWidgets.QApplication.processEvents()
         # self.iterators = self.iterators[:-1]
 
-    # def update(self, iterator):
 
-class Spyrelet_Launcher_Widget(QtWidgets.QWidget):
+class SpyreletLauncherWidget(QtWidgets.QWidget):
     def __init__(self, spyrelet, parent=None):
         self.spyrelet = spyrelet
-        self.progress_bar = Progress_Bar()
+        self.progress_bar = ProgressBar()
         self.launcher = SpyreletLauncher(spyrelet)
         self.param_w = ParamWidget(self.launcher.params)
         self.param_w.set(**self.launcher.get_defaults())
         super().__init__(parent=parent)
 
-        #Build ctrl pannel
+        # Build ctrl pannel
         ctrl_pannel = QtWidgets.QWidget()
         layout = QtWidgets.QHBoxLayout()
         self.run_btn = QtWidgets.QPushButton('Run')
@@ -111,7 +89,7 @@ class Spyrelet_Launcher_Widget(QtWidgets.QWidget):
         layout.addWidget(self.save_btn)
         ctrl_pannel.setLayout(layout)
 
-        #Build main layout
+        # Build main layout
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(ctrl_pannel)
         layout.addWidget(self.progress_bar)
@@ -119,19 +97,18 @@ class Spyrelet_Launcher_Widget(QtWidgets.QWidget):
         layout.addStretch()
         self.setLayout(layout)
 
-        #Connect signal
+        # Connect signal
         self.run_btn.clicked.connect(self.run)
         self.set_defaults_btn.clicked.connect(self.set_defaults)
         self.save_btn.clicked.connect(self.save_data)
 
         self.run_thread = None
-        
 
     def run(self):
         if self.run_thread is None or self.run_thread.isFinished():
             self.progress_bar.reset()
             param_dict = self.param_w.get()
-            self.run_thread = Spyrelet_Run_Thread(self.launcher, param_dict)
+            self.run_thread = SpyreletRunThread(self.launcher, param_dict)
             self.run_thread.start()
             self.run_btn.setText('Stop')
             self.run_thread.finished.connect(lambda: self.run_btn.setText('Run'))
@@ -148,20 +125,25 @@ class Spyrelet_Launcher_Widget(QtWidgets.QWidget):
         self.save_w = Save_Widget(self.spyrelet)
         self.save_w.show()
 
-class Spyrelet_Run_Thread(QtCore.QThread):
-    """Qt Thread which monitors for changes to qither a collection or a database and emits a signal when something happens"""
-    progressed_iter = QtCore.pyqtSignal(object, object) #This will be emitted when iter is called on progress is called in the spyrelet
-    progressed_next = QtCore.pyqtSignal() #This will be emitted when next is called on progress is called in the spyrelet
-    progressed_stopiter = QtCore.pyqtSignal() #This will be emitted when next is called on progress is called in the spyrelet
-    stop_requested = QtCore.pyqtSignal() # This will be emitted externally to stop the execution of a spyrelet prematurly
+class SpyreletRunThread(QtCore.QThread):
+    """Qt Thread which monitors for changes to qather a collection or a database
+    and emits a signal when something happens.
+    """
+    progressed_iter = QtCore.pyqtSignal(object, object)  # This will be emitted when iter is called on progress is called in the spyrelet
+    progressed_next = QtCore.pyqtSignal()  # This will be emitted when next is called on progress is called in the spyrelet
+    progressed_stopiter = QtCore.pyqtSignal()  # This will be emitted when next is called on progress is called in the spyrelet
+    stop_requested = QtCore.pyqtSignal()  # This will be emitted externally to stop the execution of a spyrelet prematurly
+
     def __init__(self, launcher, param_dict):
         super().__init__()
         self.param_dict = param_dict
         self.launcher = launcher
         self.spyrelet = self.launcher.spyrelet
-        class Progress_Iter():
+
+        class ProgressIter():
             def __init__(_self, iterable):
                 _self.iterable = iterable
+
             def __iter__(_self):
                 try:
                     max_val = len(_self.iterable)
@@ -171,6 +153,7 @@ class Spyrelet_Run_Thread(QtCore.QThread):
                 _self.iterable = iter(_self.iterable)
                 self.progressed_iter.emit(_self.iterable, max_val)
                 return _self
+
             def __next__(_self):
                 try:
                     val = next(_self.iterable)
@@ -180,8 +163,7 @@ class Spyrelet_Run_Thread(QtCore.QThread):
                     raise e
                 return val
 
-
-        self.progress = Progress_Iter
+        self.progress = ProgressIter
         self.stop_requested.connect(self.stop_run)
 
     def progress(self, iterator):
@@ -199,7 +181,6 @@ class Spyrelet_Run_Thread(QtCore.QThread):
 class CombinedSpyreletWindow(QMainWindow):
     def __init__(self, gateway, spyrelets=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setWindowTitle('NSpyre Instrument Manager')
 
         # Set the main window layout to consist of vertical boxes.
         # The QVBoxLayout class lines up widgets vertically.
@@ -209,30 +190,10 @@ class CombinedSpyreletWindow(QMainWindow):
         container = QtWidgets.QWidget()
         layout.addWidget(self.selector)
         layout.addWidget(container)
-        #self.setLayout(layout)
 
         #Create the launchers
         spyrelets = load_all_spyrelets(gateway) if spyrelets is None else spyrelets
-        self.launchers = {name: Spyrelet_Launcher_Widget(s) for name, s in spyrelets.items()}
-        # cfg = get_configs()
-        # names = list(cfg['experiment_list'].keys())
-        # names.sort(key=lambda x: len(cfg['experiment_list'][x][2]))
-        # self.launchers = dict()
-        # last_len = -1
-        # while last_len != len(self.launchers):
-        #     last_len = len(self.launchers)
-        #     for sname in names:
-        #         sclass, devs, subs = cfg['experiment_list'][sname]
-        #         print(sname, all([x in self.launchers for x in list(subs.values())]))
-        #         if not sname in self.launchers and all([x in self.launchers for x in list(subs.values())]):
-        #             try:
-        #                 sclass = get_class_from_str(sclass)
-        #                 subs = {real_name:self.launchers[alias].spyrelet for real_name,alias in subs.items()}
-        #                 s = sclass(sname, spyrelets=subs, device_alias=devs)
-        #                 self.launchers[sname] = Spyrelet_Launcher_Widget(s)
-        #             except:
-        #                 print("Could not instanciate launcher for spyrelet {}...".format(sname))
-        #                 traceback.print_exc()
+        self.launchers = {name: SpyreletLauncherWidget(s) for name, s in spyrelets.items()}
 
         #Add to layout
         stacked_layout = QtWidgets.QStackedLayout()
@@ -241,6 +202,7 @@ class CombinedSpyreletWindow(QMainWindow):
         for n in names:
             stacked_layout.addWidget(self.launchers[n])
         container.setLayout(stacked_layout)
+        self.setWindowTitle('NSpyre Spyrelet Window: {}'.format(names[0]))
 
         self.selector.addItems(names)
         self.container_layout = stacked_layout
@@ -252,9 +214,10 @@ class CombinedSpyreletWindow(QMainWindow):
 
     def change_widget(self, name):
         self.container_layout.setCurrentWidget(self.launchers[name])
+        self.setWindowTitle('NSpyre Spyrelet Window: {}'.format(name))
 
 
-if __name__ ==  '__main__':
+if __name__ == '__main__':
     import logging
     import sys
     from PyQt5.QtCore import Qt
@@ -263,10 +226,9 @@ if __name__ ==  '__main__':
 
     nspyre_init_logger(logging.INFO)
 
-    logger.info('starting Instrument Manager...')
+    logger.info('starting Spyrelets...')
     if hasattr(Qt, 'AA_EnableHighDpiScaling'):
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-
     if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
         QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = NSpyreApp([sys.argv])

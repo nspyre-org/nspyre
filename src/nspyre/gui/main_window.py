@@ -67,7 +67,7 @@ class NSpyreMainWindow(QMainWindow):
         # Add a QtPushButton element for launching each additional
         # GUI window and connect a function for launching each
         # Qt Widget correctly
-        inserv_manager_button = QPushButton('Start Instrument Manager', self)
+        inserv_manager_button = QPushButton('Instrument Manager', self)
         inserv_manager_button.setFont(QFont('Helvetica [Cronyx]', 16))
         inserv_manager_button.clicked.connect(
             functools.partial(self._launch_window, window_name='inserv_manager'))

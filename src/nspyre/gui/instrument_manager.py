@@ -33,6 +33,7 @@ This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 import functools
+import inspect
 import logging
 
 from pimpmyclass.helpers import DictPropertyNameKey
@@ -183,9 +184,11 @@ class InstrumentManagerWindow(QMainWindow):
                     # handle actions
                     action_tree = None
                     for action_name, action in device._lantz_actions.items():
-                        # actions that shouldn't be added to the GUI
+                        # actions that shouldn't be added to the GUI:
+                        # default lantz actions, duplicated _async actions, and
+                        # any actions with parameters other than class object
                         ignore_actions = ['initialize', 'finalize', 'update', 'refresh']
-                        if action_name in ignore_actions or '_async' in action_name:
+                        if action_name in ignore_actions or '_async' in action_name or len(inspect.getfullargspec(action._func).args) > 1:
                             continue
                         if not action_tree:
                             action_tree = QTreeWidgetItem(device_tree, ['Actions', ''])

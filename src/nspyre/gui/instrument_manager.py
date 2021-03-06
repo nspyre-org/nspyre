@@ -343,6 +343,7 @@ class InstrumentManagerWindow(QMainWindow):
                 step_widget.sizeHint = sizeHint.__get__(step_widget, QLineEdit)
                 step_widget.setFont(QFont('Helvetica [Cronyx]', 14))
                 if isinstance(feat_value, Q_):
+                    # set the default step units to be whatever the units are for the lantz feat
                     units_str = '{0.units:~}'.format(feat_value)
                     step_widget.setText('1 ' + units_str)
                     def set_step_func(value):
@@ -369,6 +370,7 @@ class InstrumentManagerWindow(QMainWindow):
                         spinbox_widget.setOpts(step=new_step)
                 else:
                     raise InstrumentManagerError('')
+                # update the spinbox step size
                 set_step_func(step_widget.text())
                 step_widget.textChanged.connect(set_step_func)
 

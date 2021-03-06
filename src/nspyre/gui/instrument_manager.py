@@ -343,7 +343,8 @@ class InstrumentManagerWindow(QMainWindow):
                 step_widget.sizeHint = sizeHint.__get__(step_widget, QLineEdit)
                 step_widget.setFont(QFont('Helvetica [Cronyx]', 14))
                 if isinstance(feat_value, Q_):
-                    step_widget.setText('1 ' + base_units_str)
+                    units_str = '{0.units:~}'.format(feat_value)
+                    step_widget.setText('1 ' + units_str)
                     def set_step_func(value):
                         try:
                             new_step = Q_(value).to(base_units).m
@@ -368,6 +369,7 @@ class InstrumentManagerWindow(QMainWindow):
                         spinbox_widget.setOpts(step=new_step)
                 else:
                     raise InstrumentManagerError('')
+                set_step_func(step_widget.text())
                 step_widget.textChanged.connect(set_step_func)
 
                 # wrapper layout/widget to contain the spinbox, 'step' label, and step line edit box

@@ -1,0 +1,24 @@
+/* Formatting for site-wide QToolTip objects, but written for use with the Instrument Manager */
+QToolTip {
+    border: none;
+    padding: 0.25em;
+    background-color: #535353;
+    opacity: 223;
+    font-size: 12pt;
+}
+
+/* Affects Instrument Manager QComboBox */
+QTreeWidget QComboBox {
+    padding-left: 4px;
+    margin-right: 10px;
+}
+
+/* Affects Instrument Manager QLineEdits, including the step size QLineEdit */
+QTreeWidget QLineEdit {
+    margin-right: 10px;
+}
+
+/* Affects Instrument Manager QPushButton */
+QTreeWidget QPushButton {
+    margin-right: 10px;
+}

@@ -3,6 +3,7 @@ include AUTHORS LICENSE pyproject.toml *.ipynb *.md
 # Stubs
 include src/nspyre/gui/images/*.png
 include src/nspyre/gui/images/favicon.ico
+include src/nspyre/gui/style.css
 
 # Config files
 include src/nspyre/config/*.yaml

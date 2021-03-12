@@ -37,11 +37,12 @@ import inspect
 import logging
 
 from pimpmyclass.helpers import DictPropertyNameKey
-from PyQt5.QtCore import QSize
-from PyQt5.QtGui import QColor, QFont
-from PyQt5.QtWidgets import QApplication, QComboBox, QHeaderView, QLineEdit, QMainWindow, QPushButton, QTreeWidget, QTreeWidgetItem, QHBoxLayout, QWidget, QLabel
-from pyqtgraph import SpinBox as pyqtgraph_SpinBox
+from PyQt5.QtCore import QEvent, QObject, QSize
+from PyQt5.QtGui import QColor, QCursor, QFont
+from PyQt5.QtWidgets import (QApplication, QComboBox, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMainWindow,
+                             QPushButton, QToolTip, QTreeWidget, QTreeWidgetItem, QWidget)
 from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
+from pyqtgraph import SpinBox as pyqtgraph_SpinBox
 from pint.util import infer_base_unit
 
 from nspyre.config.config_files import load_meta_config
@@ -49,7 +50,38 @@ from nspyre.definitions import Q_, CLIENT_META_CONFIG_PATH
 from nspyre.errors import InstrumentManagerError
 from nspyre.inserv.gateway import InservGateway
 
+__all__ = []
+
 logger = logging.getLogger(__name__)
+
+ROW_QSIZE = QSize(79, 23)
+
+
+def disable_widget_scroll_wheel_event(control: QWidget) -> None:
+    """Convenience function to prevent a scroll wheel event from affecting a widget unless:
+    1. The widget has focus
+    2. The cursor is on the widget
+    """
+    control.setFocusPolicy(Qt.StrongFocus)
+    control.installEventFilter(MouseWheelWidgetAdjustmentGuard(control))
+
+
+class MouseWheelWidgetAdjustmentGuard(QObject):
+    """This QObject class contains an Qt eventFilter method to ignore mouse scroll
+     wheel inputs. This is useful to apply on widgets for which:
+     a) you don't want the scroll wheel to change values ever; or
+     b) the widget is inside a QAbstractScrollArea and preventing the scroll wheel from panning
+     the area correctly (for this the FocusPolicy must additionally be changed to StrongFocus).
+    """
+    def __init__(self, parent: QObject):
+        super().__init__(parent)
+
+    def eventFilter(self, qobject: QObject, event: QEvent) -> bool:
+        widget: QWidget = qobject
+        if event.type() == QEvent.Wheel and not widget.hasFocus():
+            event.ignore()
+            return True
+        return super().eventFilter(qobject, event)
 
 
 class InstrumentManagerWindow(QMainWindow):
@@ -82,21 +114,20 @@ class InstrumentManagerWindow(QMainWindow):
 
         # set main GUI layout
         self.tree = QTreeWidget()
+        self.tree.setMouseTracking(True)
+        self.tree.entered.connect(self.handleItemEntered)
         self.tree.setFont(QFont('Helvetica [Cronyx]', 14))
         self.tree.setColumnCount(2)
         self.tree.setMinimumHeight(self.tree.height())
-        # self.tree.setUniformRowHeights(True)
-        # self.tree.setHeaderLabels(['Lantz Feat', 'value'])
-        # self.tree.setDragEnabled(True)
-        # self.tree.setSortingEnabled(True)
-        # self.tree.sortByColumn(0, Qt.AscendingOrder)
+        # set all rows to have the same height.
+        # this provides performance improvements to the rendering time.
+        # the actual height set is determined from the first QTreeWidgetItem given.
+        self.tree.setUniformRowHeights(True)
 
         # configure the QTreeWidget Header
         header = self.tree.header()
         header.setHidden(True)
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
-        # header.setSectionResizeMode(0, QHeaderView.Fixed) QHeaderView.Stretch, QHeaderView.Stretch, QHeaderView.Interactive
-        header.setSectionsMovable(True)
         # need to set to False to correctly calculate minimum width values
         header.setStretchLastSection(False)
 
@@ -114,6 +145,11 @@ class InstrumentManagerWindow(QMainWindow):
         header.setStretchLastSection(True)
         self.show()
 
+    def handleItemEntered(self, index):
+        if index.isValid() and index.data(Qt.ToolTipRole):
+            QToolTip.showText(QCursor.pos(), index.data(Qt.ToolTipRole),
+                              self.tree.viewport(), self.tree.visualRect(index))
+
 
     def _create_widgets(self):
         """Iterate over the available servers and devices, collect their
@@ -124,11 +160,16 @@ class InstrumentManagerWindow(QMainWindow):
         for server_name, server in self.gateway.servers().items():
             server_tree = QTreeWidgetItem(self.tree, [server_name, ''])
             server_tree.setExpanded(True)
+            server_tree.setFont(0, QFont('Helvetica [Cronyx]', 15))
+            # set size hint as the first server is the first QTreeWidgetItem to be added to the tree;
+            # needed to appropriately set the uniform row height.
+            server_tree.setSizeHint(0, ROW_QSIZE)
 
             # iterate over devices
             for device_name, device in server.root._devs.items():
                 device_tree = QTreeWidgetItem(server_tree, [device_name, ''])
                 device_tree.setExpanded(True)
+                device_tree.setFont(0, QFont('Helvetica [Cronyx]', 15))
 
                 try:
                     # handle feats
@@ -148,22 +189,31 @@ class InstrumentManagerWindow(QMainWindow):
                         # pimpmyclass "ObservableProperty" mixin
                         getattr(device, feat_name + '_changed').connect(getattr_partial)
 
+                        # set formatting and add docstring information as a tooltip
                         feat_widget.setFont(QFont('Helvetica [Cronyx]', 14))
                         feat_item = QTreeWidgetItem(device_tree, [feat_name, ''])
-                        feat_item.sizeHint(0)
-                        feat_item.setSizeHint(1, QSize(79,24))
+                        tool_tip = (feat.fget.__doc__.rstrip() if feat.fget.__doc__ else '') + (
+                                    '\n\n' + feat.fset.__doc__.rstrip() if feat.fset.__doc__ else '')
+                        if tool_tip != '':
+                            feat_item.setData(0, Qt.ToolTipRole, tool_tip)
                         self.tree.setItemWidget(feat_item, 1, feat_widget)
 
                     # handle dictfeats
                     for dictfeat_name, dictfeat in device._lantz_dictfeats.items():
-                        """Generate a Qt gui element for a lantz dictfeat"""
+                        # Generate a Qt gui element for a lantz dictfeat and add docstring information as a tooltip
                         dictfeat_tree = QTreeWidgetItem(device_tree, [dictfeat_name, ''])
+                        tool_tip = (dictfeat.fget.__doc__.rstrip() if dictfeat.fget.__doc__ else '') + (
+                                    '\n\n' + dictfeat.fset.__doc__.rstrip() if dictfeat.fset.__doc__ else '')
+                        if tool_tip != '':
+                            dictfeat_tree.setData(0, Qt.ToolTipRole, tool_tip)
 
                         # dummy 'get' of dict feat value in order to force lantz to populate
                         # its 'subproperties' this is pretty hacky
                         for feat_key in dictfeat.keys:
                             feat = dictfeat.subproperty(getattr(device, dictfeat_name).instance, feat_key)
                             feat_widget, feat_getattr_func = self._generate_feat_widget(feat, dictfeat_name, device, dictfeat_key=feat_key)
+
+                            feat_widget.setFont(QFont('Helvetica [Cronyx]', 14))
                             feat_item = QTreeWidgetItem(dictfeat_tree, ['{} {}'.format(dictfeat_name, feat_key), ''])
                             self.tree.setItemWidget(feat_item, 1, feat_widget)
                             if feat_key == dictfeat.keys[-1]:
@@ -194,8 +244,13 @@ class InstrumentManagerWindow(QMainWindow):
                             action_tree = QTreeWidgetItem(device_tree, ['Actions', ''])
 
                         action_widget = self._generate_action_widget(device, action, action_name)
+
+                        # set formatting and add docstring information as a tooltip
                         action_widget.setFont(QFont('Helvetica [Cronyx]', 14))
                         action_item = QTreeWidgetItem(action_tree, [action_name, ''])
+                        tool_tip = action.__doc__.rstrip() if action.__doc__ else None
+                        if tool_tip:
+                            action_item.setData(0, Qt.ToolTipRole, tool_tip)
                         self.tree.setItemWidget(action_item, 1, action_widget)
                 except Exception as exc:
                     logger.error(exc)
@@ -230,7 +285,7 @@ class InstrumentManagerWindow(QMainWindow):
                     widget.setText(value)
             else:
                 widget = QComboBox()
-                # print('combo box' + str(widget.sizeHint()))
+                disable_widget_scroll_wheel_event(widget)
                 # dictionary mapping the possible lantz values to str(values)
                 # e.g. {'True' : True, 'False' : False}
                 keymapping_dict = {}
@@ -255,6 +310,9 @@ class InstrumentManagerWindow(QMainWindow):
                         setattr(device, feat_name, keymapping_dict[widget.currentText()])
                 # call setattr_func() when the combo box value is set from the GUI
                 widget.activated.connect(functools.partial(setattr_func, key=dictfeat_key))
+                def sizeHint(self):
+                    return ROW_QSIZE
+                widget.sizeHint = sizeHint.__get__(widget, QComboBox)
 
                 # callback function to modify the GUI when the the feat is changed externally
                 def getattr_func(value, old_value, widget=widget):
@@ -303,9 +361,11 @@ class InstrumentManagerWindow(QMainWindow):
                 # optional_args['decimals'] = 10
             
             spinbox_widget = pyqtgraph_SpinBox(**optional_args)
+            disable_widget_scroll_wheel_event(spinbox_widget)
             def sizeHint(self):
-                return QSize(99, 24)
+                return QSize(89, 23)
             spinbox_widget.sizeHint = sizeHint.__get__(spinbox_widget, pyqtgraph_SpinBox)
+            spinbox_widget.setFont(QFont('Helvetica [Cronyx]', 14))
 
             if isinstance(feat_value, Q_):
                 spinbox_widget.setValue(feat_value.to(base_units).m)
@@ -340,10 +400,7 @@ class InstrumentManagerWindow(QMainWindow):
 
                 # editable text box where the user can enter how much the feat should step by when pressing the increment/decrement arrows
                 step_widget = QLineEdit()
-                step_widget.setFixedWidth(61)
-                def sizeHint(self):
-                    return QSize(61, 24)
-                step_widget.sizeHint = sizeHint.__get__(step_widget, QLineEdit)
+                step_widget.setFixedSize(73, 23)
                 step_widget.setFont(QFont('Helvetica [Cronyx]', 14))
                 if isinstance(feat_value, Q_):
                     # set the default step units to be whatever the units are for the lantz feat
@@ -378,14 +435,17 @@ class InstrumentManagerWindow(QMainWindow):
                 step_widget.textChanged.connect(set_step_func)
 
                 # wrapper layout/widget to contain the spinbox, 'step' label, and step line edit box
-                wrapper_layout = QHBoxLayout()
-                wrapper_layout.setContentsMargins(0, 0, 0, 0)
-                wrapper_layout.addWidget(spinbox_widget)
-                wrapper_layout.addSpacing(29)
-                wrapper_layout.addWidget(step_label)
-                wrapper_layout.addWidget(step_widget)
+
+                # wrap widgets in a horizontal layout and widget to format column because
+                # a step_widget is being used to specify step size
+                layout = QHBoxLayout()
+                layout.setContentsMargins(0, 0, 0, 0)
+                layout.addWidget(spinbox_widget)
+                layout.addSpacing(29)
+                layout.addWidget(step_label)
+                layout.addWidget(step_widget)
                 widget = QWidget()
-                widget.setLayout(wrapper_layout)
+                widget.setLayout(layout)
 
         # the lantz feat is a string, so we will just make a text box
         elif isinstance(feat_value, str):
@@ -416,6 +476,9 @@ class InstrumentManagerWindow(QMainWindow):
         """Generate a Qt gui element for a lantz action"""
         action_button = QPushButton(action_name, self.tree)
         action_button.setFont(QFont('Helvetica [Cronyx]', 12))
+        def sizeHint(self):
+            return ROW_QSIZE
+        action_button.sizeHint = sizeHint.__get__(action_button, QPushButton)
 
         def action_func():
             getattr(device, action_name)()

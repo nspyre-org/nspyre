@@ -31,6 +31,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QFont, QIcon, QPalette
 from PyQt5.QtWidgets import QApplication, QStyleFactory
 
+HERE = Path(__file__).parent
+
 
 class NSpyreApp(QApplication):
     """The Qt QtWidgets.QApplication object for launching NSpyre.
@@ -43,7 +45,7 @@ class NSpyreApp(QApplication):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setApplicationName('NSpyre')
-        icon_path = Path(__file__).parent.joinpath('images/favicon.ico')
+        icon_path = HERE / 'images/favicon.ico'
         self.setWindowIcon(QIcon(str(icon_path)))
         self.set_theme()
 
@@ -57,7 +59,6 @@ class NSpyreApp(QApplication):
         palette.setColor(QPalette.WindowText, Qt.white)
         palette.setColor(QPalette.Base, QColor(25, 25, 25))
         palette.setColor(QPalette.AlternateBase, dark)
-        palette.setColor(QPalette.ToolTipBase, Qt.white)
         palette.setColor(QPalette.ToolTipText, Qt.white)
         palette.setColor(QPalette.Text, Qt.white)
         palette.setColor(QPalette.Button, dark)
@@ -67,5 +68,6 @@ class NSpyreApp(QApplication):
         palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
         palette.setColor(QPalette.HighlightedText, Qt.black)
         self.setPalette(palette)
-        self.setStyleSheet('QToolTip { color: #ffffff; background-color: #353535; border: 1px solid white; }')
+        style_sheet = (HERE / 'style.css').read_text()
+        self.setStyleSheet(style_sheet)
         self.setFont(QFont('Helvetica [Cronyx]'))

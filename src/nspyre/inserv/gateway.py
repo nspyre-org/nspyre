@@ -9,7 +9,6 @@ Date: 7/11/2020
 import os
 import logging
 
-import parse
 import rpyc
 
 from nspyre.config.config_files import get_config_param, load_config, load_meta_config
@@ -28,7 +27,7 @@ CONFIG_GATEWAY_DEVICES = 'devices'
 
 # Temporary monkey patching of rpyc to implement synchronous about_to_disconnect feature
 # Need to define consts.HANDLE_ABOUT_TO_CLOSE before consts is import by protocol (this is done
-# in the load of nspyre.inser.inserv)
+# in the load of nspyre.inserv.inserv)
 import nspyre.inserv.inserv
 from rpyc.core.protocol import consts
 
@@ -67,13 +66,13 @@ class InservGateway:
 
     def reconnect_servers(self):
         """Attempt connection to all of the instrument servers specified in the config"""
-        servers,_ = get_config_param(self.config, [CONFIG_GATEWAY_SETTINGS])
+        servers, _ = get_config_param(self.config, [CONFIG_GATEWAY_SETTINGS])
         # iterate through servers
         for server_name in servers:
             # only try connecting if there isn't already a connection
             if server_name not in self._servers:
-                ip,_ = get_config_param(self.config, [CONFIG_GATEWAY_SETTINGS, server_name, 'ip'])
-                port,_ = get_config_param(self.config, [CONFIG_GATEWAY_SETTINGS, server_name, 'port'])
+                ip, _ = get_config_param(self.config, [CONFIG_GATEWAY_SETTINGS, server_name, 'ip'])
+                port, _ = get_config_param(self.config, [CONFIG_GATEWAY_SETTINGS, server_name, 'port'])
                 try:
                     self.connect_server(server_name, ip, port)
                 except InservGatewayError:
@@ -91,9 +90,9 @@ class InservGateway:
             # and start up a background thread to fullfill requests on the
             # client side
             conn = rpyc.connect(s_addr, s_port,
-                            config={'allow_pickle' : True,
-                                    'timeout' : RPYC_CONN_TIMEOUT,
-                                    'sync_request_timeout': RPYC_SYNC_TIMEOUT})
+                                config={'allow_pickle': True,
+                                        'timeout': RPYC_CONN_TIMEOUT,
+                                        'sync_request_timeout': RPYC_SYNC_TIMEOUT})
 
             bg_serving_thread = rpyc.BgServingThread(conn)
             
@@ -103,11 +102,8 @@ class InservGateway:
 
             self._servers[s_id] = (conn, bg_serving_thread)
         except BaseException:
-            raise InservGatewayError('Failed to connect to '
-                            'instrument server [{}] at address [{}]'.\
-                            format(s_id, s_addr)) from None
-        logger.info('instrument server gateway connected to instrument '
-                    'server [{}]'.format(s_id))
+            raise InservGatewayError('Failed to connect to instrument server [{}] at address [{}]'.format(s_id, s_addr)) from None
+        logger.info('instrument server gateway connected to instrument server [{}]'.format(s_id))
 
     def disconnect_server(self, s_id):
         """Disconnect from an instrument server and remove it's associated 
@@ -119,10 +115,8 @@ class InservGateway:
             conn.close()
             del self._servers[s_id]
         except BaseException:
-            raise InservGatewayError('Failed to disconnect from '
-                            'instrument server [{}]'.format(s_id)) from None
-        logger.info('instrument server gateway disconnected '
-                        'from server [{}]'.format(s_id))
+            raise InservGatewayError('Failed to disconnect from instrument server [{}]'.format(s_id)) from None
+        logger.info('instrument server gateway disconnected from server [{}]'.format(s_id))
 
     def servers(self):
         """Return a dictionary containing 'server name' mapped to
@@ -139,8 +133,7 @@ class InservGateway:
         if attr in self._servers:
             return self._servers[attr][0].root
         else:
-            raise AttributeError('\'{}\' object has no attribute \'{}\''.\
-                        format(self.__class__.__name__, attr))
+            raise AttributeError('\'{}\' object has no attribute \'{}\''.format(self.__class__.__name__, attr))
 
     def reload_config(self, filename):
         """Reload the config file"""

@@ -22,3 +22,11 @@ QTreeWidget QLineEdit {
 QTreeWidget QPushButton {
     margin-right: 10px;
 }
+
+/* Affects Instrument Manager Refresh All Values QPushButton */
+.refresh_all {
+    font: 16pt 'Helvetica [Cronyx]';
+    margin-left: 0.750em;
+    margin-right: 0.750em;
+    min-height: 32px;
+}

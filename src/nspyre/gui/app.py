@@ -68,6 +68,6 @@ class NSpyreApp(QApplication):
         palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
         palette.setColor(QPalette.HighlightedText, Qt.black)
         self.setPalette(palette)
-        style_sheet = (HERE / 'style.css').read_text()
+        style_sheet = (HERE / 'style.qss').read_text()
         self.setStyleSheet(style_sheet)
         self.setFont(QFont('Helvetica [Cronyx]'))

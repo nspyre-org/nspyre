@@ -165,7 +165,8 @@ Spyre Config File
        class: 'SubSpyrelet'
        device_aliases: {sg: 'local1/fake_tcpip_sg'}
        spyrelets: {}
-       args: {}
+       args: []
+       kwargs: {}
 
      my_exp:
        file: '../spyrelet/examples/test_spyrelets.py'
@@ -174,4 +175,5 @@ Spyre Config File
          sg: 'local1/fake_tcpip_sg'
          osc: 'local1/fake_osc'
        spyrelets: {s2: 's2'}
-       args: {}
+       args: []
+       kwargs: {}

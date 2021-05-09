@@ -1,10 +1,4 @@
 #!/usr/bin/env python
-"""
-This module handles reading and writing YAML configuration files
-
-Author: Jacob Feder
-Date: 7/25/2020
-"""
 import logging
 import pathlib
 
@@ -23,8 +17,6 @@ META_CONFIG_ENABLED_IDX = 'enabled'
 # A meta-config.yaml file contains a single entry with key
 # META_CONFIG_FILES_ENTRY and value = a list of all the config files that
 # should be read
-
-
 def load_raw_config(filepath):
     """Return a config file dictionary loaded from a YAML file"""
     with open(filepath, 'r') as f:

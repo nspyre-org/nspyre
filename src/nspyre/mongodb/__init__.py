@@ -1,16 +1,19 @@
 #!/usr/bin/env python
-"""
-CLI for controlling mongodb
-
-Author: Jacob Feder
-Date: 9/13/2020
-"""
 import argparse
-from sys import platform, exit
+
 from pathlib import Path
 from subprocess import check_call, CalledProcessError
+from sys import platform, exit
 
 from nspyre.errors import OSNotSupportedError
+
+from .mongo_listener import (
+    Synched_Mongo_Database
+)
+
+__all__ = [
+    'Synched_Mongo_Database'
+]
 
 
 THIS_DIR = Path(__file__).parent

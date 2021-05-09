@@ -1,11 +1,12 @@
-import pymongo
-from PyQt5 import QtCore
+import time
+import traceback
+
 import pandas as pd
 
-import time
-from bson.objectid import ObjectId
-from nspyre.misc.misc import get_mongo_client
-import traceback
+from PyQt5 import QtCore
+
+from nspyre.misc import get_mongo_client
+
 
 class DropEvent():
     """Represents a drop of a collection in a certain database"""
@@ -73,6 +74,8 @@ class Mongo_Listenner(QtCore.QThread):
         if not self.exit_flag:
             self.run() # This takes care of the invalidate event which stops the change_stream cursor
 
+
+# unused in the codebase (should this be removed?)
 class Synched_Mongo_Collection(QtCore.QObject):
     updated_row = QtCore.pyqtSignal(object) # Emit the updated row
     # mutex = QtCore.QMutex()
@@ -115,6 +118,7 @@ class Synched_Mongo_Collection(QtCore.QObject):
 
     def __del__(self):
         self.watcher.exit_flag = True
+
 
 class Synched_Mongo_Database(QtCore.QObject):
     updated_row = QtCore.pyqtSignal(object, object) # Emit the updated row in the format (col_name, row)
@@ -183,8 +187,6 @@ class Synched_Mongo_Database(QtCore.QObject):
             traceback.print_exc()
             print('Refreshing the entire database')
             self.refresh_all()
-
-        
         # self.refresh_all() #I will make this a little more efficient later on
 
     def __del__(self):

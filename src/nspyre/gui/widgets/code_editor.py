@@ -1,5 +1,6 @@
-from PyQt5.Qsci import QsciScintilla, QsciLexerPython
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5.Qsci import QsciLexerPython, QsciScintilla
+from PyQt5 import QtCore, QtGui
+
 
 class Scintilla_Code_Editor(QsciScintilla):
     request_run_signal = QtCore.pyqtSignal()
@@ -40,6 +41,7 @@ class Scintilla_Code_Editor(QsciScintilla):
             
         else:
             super().keyPressEvent(ev)
+
 
 class Monokai_Python_Lexer(QsciLexerPython):
     def __init__(self, editor, *args):

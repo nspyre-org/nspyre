@@ -1,11 +1,8 @@
-# 3rd party
-
-from pyqtgraph import SpinBox as _SpinBox
-from PyQt5 import QtCore
 from pint.util import infer_base_unit
+from pyqtgraph import SpinBox as _SpinBox
 
-# nspyre
 from nspyre.definitions import Q_
+
 
 class SpinBox(_SpinBox):
 

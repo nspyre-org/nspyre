@@ -1,32 +1,36 @@
-"""
+"""The class defining the NSpyre Instrument Server RPyC Service.
+
 This module:
     - loads the server config file
     - connects to all of the instruments specified in the config files
     - creates a RPyC (python remote procedure call) server to allow remote
         machines to access the instruments (should be done using InservGateway)
 
-Author: Jacob Feder
-Date: 7/8/2020
+Copyright (c) 2020, Alexandre Bourassa, Michael Solomon, Jacob Feder
+All rights reserved.
+
+This work is licensed under the terms of the 3-Clause BSD license.
+For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 from pathlib import Path
 import logging
 import threading
 import time
-from functools import partial
 import copy
 import functools
 
+import pymongo
 import rpyc
 from rpyc.utils.server import ThreadedServer
-import pymongo
+
 from lantz import Q_, DictFeat
 from pimpmyclass.helpers import DictPropertyNameKey
 from pint import Quantity
 
-from nspyre.config.config_files import get_config_param, load_config, load_meta_config
+from nspyre.config import get_config_param, load_config, load_meta_config
 from nspyre.definitions import CONFIG_MONGO_ADDR_KEY, MONGO_CONNECT_TIMEOUT, MONGO_RS, MONGO_SERVERS_KEY, RPYC_SYNC_TIMEOUT, SERVER_META_CONFIG_PATH
 from nspyre.errors import EntryNotFoundError, InstrumentServerError
-from nspyre.misc.misc import load_class_from_file, load_class_from_str, register_quantity_brining
+from nspyre.misc import load_class_from_file, load_class_from_str, register_quantity_brining
 
 # for properly serializing/deserializing quantity objects using the local
 # pint unit registry

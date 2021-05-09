@@ -2,24 +2,17 @@
 This module defines basic constants and functions that will be used
 throughout nspyre
 
-Author: Jacob Feder
-Date: 7/8/2020
+Copyright (c) 2020, Alexandre Bourassa, Michael Solomon, Jacob Feder
+All rights reserved.
+
+This work is licensed under the terms of the 3-Clause BSD license.
+For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 
-###########################
-# imports
-###########################
-
-# std
-import os
 from pathlib import Path
 
-# 3rd party
 from pint import UnitRegistry
 
-###########################
-# fundamental operations
-###########################
 
 # create a pint registry universal to nspyre
 ureg = UnitRegistry()
@@ -28,14 +21,12 @@ Q_ = ureg.Quantity
 # root directory of nspyre
 NSPYRE_ROOT = Path(__file__).parent
 
+
 def join_nspyre_path(path):
     """Return a full path from a path given relative to the nspyre root 
     directory"""
     return NSPYRE_ROOT / path
 
-###########################
-# resources
-###########################
 
 # config files
 CLIENT_META_CONFIG_PATH = join_nspyre_path('config/client_meta_config.yaml')
@@ -44,9 +35,6 @@ SERVER_META_CONFIG_PATH = join_nspyre_path('config/server_meta_config.yaml')
 # images
 LOGO_PATH = str(join_nspyre_path('gui/images/spyre.png'))
 
-###########################
-# globals
-###########################
 
 # format for accessing instrument server devices from a client, where the first
 # item is the server name and the second is the device name (both defined in the

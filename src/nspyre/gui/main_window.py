@@ -36,7 +36,8 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget
 
 from nspyre.definitions import LOGO_PATH
-from nspyre.gui.image import ImageWidget
+
+from .image import ImageWidget
 
 logger = logging.getLogger(__name__)
 

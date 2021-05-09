@@ -1,12 +1,12 @@
-# 3rd party
 from PyQt5 import QtWidgets
 import pyqtgraph as pg
-import numpy as np
 from collections import OrderedDict
 
 from nspyre.definitions import Q_
-from nspyre.gui.widgets.spinbox import SpinBox
-from nspyre.misc.misc import RangeDict
+from nspyre.misc import RangeDict
+
+from .spinbox import SpinBox
+
 
 class Rangespace(QtWidgets.QWidget):
     def __init__(self, units=None, parent=None, default=None):
@@ -97,6 +97,7 @@ class Rangespace(QtWidgets.QWidget):
             ('num', i_param_dimless(10))
         ]
         add('logspace', params)
+
 
 class ParamWidget(QtWidgets.QWidget):
 
@@ -206,8 +207,6 @@ class ParamWidget(QtWidgets.QWidget):
     def save_state(self):
         state = self.get()
         return state
+
     def load_state(self, state):
         self.set(**state)
-
-
-

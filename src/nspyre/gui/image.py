@@ -1,5 +1,6 @@
 from PyQt5 import QtWidgets, QtGui
 
+
 class ImageWidget(QtWidgets.QWidget):
     def __init__(self, filename, parent=None):
         super().__init__(parent=parent)

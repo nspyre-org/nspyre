@@ -1,10 +1,6 @@
 #!/usr/bin/env python
-"""
-This module serves a shell prompt allowing the user runtime control of 
+"""This module serves a shell prompt allowing the user runtime control of
 the instrument server
-
-Author: Jacob Feder
-Date: 7/8/2020
 """
 import argparse
 import cmd
@@ -15,11 +11,21 @@ import signal
 
 import pyvisa
 
-from nspyre.config.config_files import load_meta_config
+from nspyre.config import load_meta_config
 from nspyre.definitions import SERVER_META_CONFIG_PATH
 from nspyre.errors import InstrumentServerError
-from nspyre.inserv.inserv import InstrumentServer
-from nspyre.misc.logging import nspyre_init_logger
+from nspyre.misc import nspyre_init_logger
+
+# InstrumentServer must be imported before InservGateway; otherwise the gateway has a weird bug
+# on first initialization as seen in the Instrument Manager feat/dictfeat values (goes away
+# after refreshing the values once).
+from .inserv import InstrumentServer
+from .gateway import InservGateway
+
+__all__ = [
+    'InservGateway',
+    'InstrumentServer'
+]
 
 logger = logging.getLogger(__name__)
 

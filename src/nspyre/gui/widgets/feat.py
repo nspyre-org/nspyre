@@ -1,12 +1,12 @@
 from collections import OrderedDict, Iterable
 
-# 3rd party
 from PyQt5 import QtWidgets, QtCore
 from pyqtgraph import ComboBox
 
-# nspyre
-from nspyre.gui.widgets.spinbox import SpinBox
 from nspyre.definitions import Q_
+
+from .spinbox import SpinBox
+
 
 def get_feat_widget(feat):
     if feat['values'] is not None:
@@ -39,6 +39,7 @@ def get_feat_widget(feat):
         w.setter(feat['value'])
     return w
 
+
 class BaseFeatWidget(QtWidgets.QWidget):
 
     set_requested = QtCore.pyqtSignal(object) # This signal will be triggered externally when the display value needs to be changed (argument is the new value)
@@ -46,7 +47,7 @@ class BaseFeatWidget(QtWidgets.QWidget):
     read_clicked = QtCore.pyqtSignal()  # This signal will be triggered when the "read button" is clicked
 
     def __init__(self, parent=None):
-        #The parent class will need to generate a self.val_w a getter and a setter
+        # The parent class will need to generate a self.val_w a getter and a setter
         if not (hasattr(self, 'val_w') and hasattr(self, 'setter') and hasattr(self, 'getter')):
             raise NotImplementedError("This class must be subclassed and implement a value widget (<val_w>) and getter/setter methods")
 
@@ -85,6 +86,7 @@ class BaseFeatWidget(QtWidgets.QWidget):
             self.go_button.setEnabled(True)
         return
 
+
 class SpinBoxFeatWidget(BaseFeatWidget):
 
     def __init__(self, opts=None, parent=None):
@@ -99,6 +101,7 @@ class SpinBoxFeatWidget(BaseFeatWidget):
 
     def getter(self):
         return self.val_w.getValue()
+
 
 class ComboBoxFeatWidget(BaseFeatWidget):
 
@@ -139,6 +142,7 @@ class ComboBoxFeatWidget(BaseFeatWidget):
         else:
             key = values[index]
         return key
+
 
 class LineEditFeatWidget(BaseFeatWidget):
 

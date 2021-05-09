@@ -11,10 +11,10 @@ import logging
 
 import rpyc
 
-from nspyre.config.config_files import get_config_param, load_config, load_meta_config
+from nspyre.config import get_config_param, load_config, load_meta_config
 from nspyre.definitions import CLIENT_META_CONFIG_PATH, Q_, RPYC_CONN_TIMEOUT, RPYC_SYNC_TIMEOUT
 from nspyre.errors import InservGatewayError
-from nspyre.misc.misc import register_quantity_brining
+from nspyre.misc import register_quantity_brining
 
 # for properly serializing/deserializing quantity objects using the local
 # pint unit registry
@@ -28,15 +28,17 @@ CONFIG_GATEWAY_DEVICES = 'devices'
 # Temporary monkey patching of rpyc to implement synchronous about_to_disconnect feature
 # Need to define consts.HANDLE_ABOUT_TO_CLOSE before consts is import by protocol (this is done
 # in the load of nspyre.inserv.inserv)
-import nspyre.inserv.inserv
+from .inserv import (InstrumentConnection as nspyre_InstrumentConnection,
+                     InstrumentService as nspyre_InstrumentService,
+                     VoidInstrumentService as nspyre_VoidInstrumentService)
 from rpyc.core.protocol import consts
 
 # Need to monkey patch VoidService for rpyc.utils.factory.connect_stream
 from rpyc.core.service import Service
-Service._protocol = nspyre.inserv.inserv.InstrumentConnection
-Service = nspyre.inserv.inserv.InstrumentService
+Service._protocol = nspyre_InstrumentConnection
+Service = nspyre_InstrumentService
 from rpyc.core.service import VoidService
-VoidService = nspyre.inserv.inserv.VoidInstrumentService
+VoidService = nspyre_VoidInstrumentService
 
 
 class InservGateway:

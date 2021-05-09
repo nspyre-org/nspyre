@@ -31,11 +31,11 @@ from pint.util import infer_base_unit
 from pymongo.errors import PyMongoError
 from tqdm.auto import tqdm
 
-from nspyre.config.config_files import get_config_param
+from nspyre.config import get_config_param
 from nspyre.definitions import Q_
 from nspyre.errors import EntryNotFoundError, SpyreletLoadError, SpyreletRunningError, SpyreletUnloadError
-from nspyre.gui.data_handling import save_data
-from nspyre.misc.misc import custom_decode, custom_encode, get_mongo_client, load_class_from_file, RangeDict, deprecated
+from nspyre.gui import save_data
+from nspyre.misc import custom_decode, custom_encode, get_mongo_client, load_class_from_file, RangeDict, deprecated
 
 logger = logging.getLogger(__name__)
 

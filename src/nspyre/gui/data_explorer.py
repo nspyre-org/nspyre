@@ -1,49 +1,33 @@
 #!/usr/bin/env python
-"""
-    ?
-
-    Author: Alexandre Bourassa
-"""
-
-###########################
-# imports
-###########################
-
-# std
 import os
 import logging
 
-# 3rd party
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QApplication
 import pandas as pd
 
-# nspyre
-from nspyre.gui.view_manager import ViewManagerWindow
-from nspyre.gui.widgets.splitter_widget import Splitter, SplitterOrientation
-from nspyre.gui.data_handling import load_data
+from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtWidgets import QApplication
 
-###########################
-# globals
-###########################
+__package__ = 'nspyre.gui'
+
+from .widgets.splitter_widget import Splitter, SplitterOrientation
+from .data_handling import load_data
+from .view_manager import ViewManagerWindow
 
 logger = logging.getLogger(__name__)
 
-###########################
-# classes
-###########################
 
 class Permanent_QFileDialog(QtWidgets.QFileDialog):
     def done(self, r):
         print('done')
 
+
 class Local_json_DB(QtCore.QObject):
     """This essentially emulates a nspyre.mongo_listner.Synched_Mongo_Database by implementing
     a dfs proprety and a get_df function"""
-    updated_row = QtCore.pyqtSignal(object, object) # Emit the updated row in the format (col_name, row)
-    col_added = QtCore.pyqtSignal(object) # Emit the name of the collection which was added
-    col_dropped = QtCore.pyqtSignal(object) # Emit the name of the collection which was dropped
-    db_dropped = QtCore.pyqtSignal() #Emitted when the database is dropped
+    updated_row = QtCore.pyqtSignal(object, object)  # Emit the updated row in the format (col_name, row)
+    col_added = QtCore.pyqtSignal(object)  # Emit the name of the collection which was added
+    col_dropped = QtCore.pyqtSignal(object)  # Emit the name of the collection which was dropped
+    db_dropped = QtCore.pyqtSignal()  # Emitted when the database is dropped
 
     def __init__(self, filename=None):
         super().__init__()
@@ -88,7 +72,6 @@ class Local_json_DB(QtCore.QObject):
         return self.dfs[df_name]
 
 
-
 class Data_Explorer(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -129,19 +112,18 @@ class Data_Explorer(QtWidgets.QWidget):
         self.view_manager.tree.setCurrentItem(item)
 
 
-if __name__ ==  '__main__':
+if __name__ == '__main__':
     import logging
     import sys
     from PyQt5.QtCore import Qt
-    from nspyre.gui.app import NSpyreApp
-    from nspyre.misc.logging import nspyre_init_logger
+    from nspyre.gui import NSpyreApp
+    from nspyre.misc import nspyre_init_logger
 
     nspyre_init_logger(logging.INFO)
 
     logger.info('starting Data Explorer...')
     if hasattr(Qt, 'AA_EnableHighDpiScaling'):
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-
     if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
         QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = NSpyreApp([sys.argv])

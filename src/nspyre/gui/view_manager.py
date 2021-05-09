@@ -10,14 +10,19 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
+from nspyre.config import load_config, load_meta_config
 from nspyre.definitions import join_nspyre_path
-from nspyre.gui.image import ImageWidget
-from nspyre.gui.widgets.code_editor import Scintilla_Code_Editor, Monokai_Python_Lexer
-from nspyre.gui.widgets.plotting import LinePlotWidget, HeatmapPlotWidget
-from nspyre.gui.widgets.splitter_widget import Splitter, SplitterOrientation
-from nspyre.gui.widgets.views import Spyrelet_Views
-from nspyre.mongodb.mongo_listener import Synched_Mongo_Database
-from nspyre.spyrelet.spyrelet import custom_decode
+from nspyre.misc import custom_decode
+from nspyre.mongodb import Synched_Mongo_Database
+from nspyre.spyrelet import load_spyrelet_class
+
+__package__ = 'nspyre.gui'
+
+from .image import ImageWidget
+from .widgets.code_editor import Scintilla_Code_Editor, Monokai_Python_Lexer
+from .widgets.plotting import LinePlotWidget, HeatmapPlotWidget
+from .widgets.splitter_widget import Splitter, SplitterOrientation
+from .widgets.views import Formatter, View
 
 logger = logging.getLogger(__name__)
 
@@ -148,6 +153,39 @@ class HeatmapPlotView(BaseView):
             self.w.set(im)
             if self.update_formatter is not None:
                 self.update_formatter(self.w, df, cache)
+
+
+class Spyrelet_Views:
+    def __init__(self, spyrelet_class):
+        if type(spyrelet_class) is str:
+            cfg_path = load_meta_config()
+            cfg = load_config(cfg_path)
+            spyrelet_class = load_spyrelet_class(spyrelet_class, cfg)
+
+        self.views = {x:getattr(spyrelet_class, x) for x in dir(spyrelet_class) if type(getattr(spyrelet_class, x)) is View}
+        formatters = [getattr(spyrelet_class, x) for x in dir(spyrelet_class) if type(getattr(spyrelet_class, x)) is Formatter]
+
+        # Associate format_init and format_update functions
+        for f in formatters:
+            for view_name in f.view_list:
+                if view_name in self.views:
+                    self.views[view_name].add_formatter(f)
+
+    def get_1D_views(self):
+        return {x:self.views[x] for x in self.views if self.views[x].type=='1D'}
+
+    def get_2D_views(self):
+        return {x:self.views[x] for x in self.views if self.views[x].type=='2D'}
+
+    # def init_plot(self, plots):
+    #     """plots should be a dictionary with the view_names as keys and plot_objects as value"""
+    #     for name, plot in plots.items():
+    #         self.views[name].format_plot(plot, 'init')
+
+    # def update_plot(self, view_name, df, plot_obj):
+    #     view = self.views[view_name]
+    #     view.update_fun(df)
+    #     view.format_plot(plot_obj, 'update')
 
 
 class ViewManagerWindow(QMainWindow):
@@ -358,8 +396,8 @@ if __name__ == '__main__':
     import logging
     import sys
     from PyQt5.QtCore import Qt
-    from nspyre.gui.app import NSpyreApp
-    from nspyre.misc.logging import nspyre_init_logger
+    from nspyre.gui import NSpyreApp
+    from nspyre.misc import nspyre_init_logger
 
     nspyre_init_logger(logging.INFO)
 

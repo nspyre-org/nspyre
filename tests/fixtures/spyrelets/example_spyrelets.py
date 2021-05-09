@@ -9,8 +9,7 @@ import logging
 from nspyre.spyrelet.spyrelet import Spyrelet
 from nspyre.definitions import Q_
 
-# from nspyre.gui.widgets.views import Plot1D, Plot2D, PlotFormatInit, PlotFormatUpdate
-# from nspyre.gui.widgets.plotting import LinePlotWidget
+# from nspyre.gui import LinePlotWidget, Plot1D, Plot2D, PlotFormatInit, PlotFormatUpdate
 
 ###########################
 # classes

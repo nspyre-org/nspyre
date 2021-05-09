@@ -1,7 +1,13 @@
-from PyQt5 import QtWidgets, QtCore, QtGui
+import os
 
 from enum import Enum
-import os
+
+from PyQt5 import QtWidgets, QtCore
+
+__package__ = 'nspyre.gui.widgets'
+
+from ..app import NSpyreApp
+
 
 class SplitterOrientation(Enum):
 
@@ -9,6 +15,7 @@ class SplitterOrientation(Enum):
     vertical_right_button = 1
     horizontal_top_button = 2
     horizontal_bottom_button = 3
+
 
 class Splitter(QtWidgets.QSplitter):
 
@@ -51,6 +58,7 @@ class Splitter(QtWidgets.QSplitter):
             button.closed = False
             button.on_splitter_moved(None, None)
         return
+
 
 class SplitterHoverArea(QtWidgets.QWidget):
 
@@ -114,6 +122,7 @@ class SplitterHoverArea(QtWidgets.QWidget):
         animation.setEndValue(end)
         animation.start()
         return
+
 
 class SplitterHoverButton(QtWidgets.QPushButton):
 
@@ -223,6 +232,7 @@ class SplitterHoverButton(QtWidgets.QPushButton):
         ev.ignore()
         return
 
+
 class Container(QtWidgets.QWidget):
 
     def __init__(self, w, collapse=None, parent=None):
@@ -263,11 +273,10 @@ class Container(QtWidgets.QWidget):
                     self.collapse_area.move(w - b_w, (h - b_h) / 2)
                 else:
                     self.collapse_area.move(0, (h - b_h) / 2)
-        return
 
 
 def main():
-    app = SpyreApp([])
+    app = NSpyreApp([])
 
     layout = QtWidgets.QGridLayout()
 

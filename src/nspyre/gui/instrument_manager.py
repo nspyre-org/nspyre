@@ -45,10 +45,10 @@ from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
 from pyqtgraph import SpinBox as pyqtgraph_SpinBox, ValueLabel as pyqtgraph_ValueLabel
 from pint.util import infer_base_unit
 
-from nspyre.config.config_files import load_meta_config
+from nspyre.config import load_meta_config
 from nspyre.definitions import Q_, CLIENT_META_CONFIG_PATH
 from nspyre.errors import InstrumentManagerError
-from nspyre.inserv.gateway import InservGateway
+from nspyre.inserv import InservGateway
 
 __all__ = []
 
@@ -616,8 +616,8 @@ if __name__ == '__main__':
     import logging
     import sys
     from PyQt5.QtCore import Qt
-    from nspyre.gui.app import NSpyreApp
-    from nspyre.misc.logging import nspyre_init_logger
+    from nspyre.gui import NSpyreApp
+    from nspyre.misc import nspyre_init_logger
 
     nspyre_init_logger(logging.INFO)
 

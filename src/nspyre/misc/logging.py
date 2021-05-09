@@ -1,23 +1,9 @@
-"""
-Set up logging for an nspyre app
-
-Author: Jacob Feder
-Date: 11/14/2020
-"""
-
-###########################
-# imports
-###########################
-
-# std
+import datetime
 import logging
 import sys
-from pathlib import Path
-import datetime
 
-###########################
-# classes / functions
-###########################
+from pathlib import Path
+
 
 class StreamToLog(object):
     """Fake stream object that redirects writes to a logger"""
@@ -47,6 +33,7 @@ class StreamToLog(object):
     def flush(self):
         if self.write_buffer:
             self.write(self.terminator)
+
 
 def nspyre_init_logger(log_level, log_path=None, log_path_level=None, prefix=None, file_size=None):
     """Initialize system-wide logging to stdout/err and, optionally, a file

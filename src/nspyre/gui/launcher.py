@@ -7,13 +7,15 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
 
-from nspyre.config.config_files import load_meta_config
+from nspyre.config import load_meta_config
 from nspyre.definitions import CLIENT_META_CONFIG_PATH
-from nspyre.spyrelet.spyrelet import SpyreletLauncher
-from nspyre.gui.widgets.param_widget import ParamWidget
-from nspyre.gui.widgets.save_widget import Save_Widget
-from nspyre.spyrelet.spyrelet import load_all_spyrelets
-from nspyre.inserv.gateway import InservGateway
+from nspyre.inserv import InservGateway
+from nspyre.spyrelet import SpyreletLauncher, load_all_spyrelets
+
+__package__ = 'nspyre.gui'
+
+from .widgets.param_widget import ParamWidget
+from .widgets.save_widget import Save_Widget
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +28,7 @@ class ProgressBar(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
         self.pbar = QtWidgets.QProgressBar()
         self.pbar.setTextVisible(True)
-        self.text = QtWidgets.QLabel('stopped')
+        self.text = QtWidgets.QLabel()
         layout.addWidget(self.pbar)
         layout.addWidget(self.text)
         self.setLayout(layout)
@@ -34,11 +36,12 @@ class ProgressBar(QtWidgets.QWidget):
     def reset(self):
         self.vars = []
         # self.iterators = []
-        self.text.setText('stopped')
+        self.text.clear()
 
     def call_iter(self, iterable, max_val):
         # self.iterators.append(iter(iterable))
         self.vars.append({'val': 0, 'max': max_val, 'start': time.time(), 'last': time.time(), 'avg': 0, 'tot': 0, 'rem': '?', 'per': 0})
+        self.text.setText('started')
 
         if max_val != '?':
             self.pbar.setValue(0)
@@ -221,8 +224,8 @@ if __name__ == '__main__':
     import logging
     import sys
     from PyQt5.QtCore import Qt
-    from nspyre.gui.app import NSpyreApp
-    from nspyre.misc.logging import nspyre_init_logger
+    from nspyre.gui import NSpyreApp
+    from nspyre.misc import nspyre_init_logger
 
     nspyre_init_logger(logging.INFO)
 

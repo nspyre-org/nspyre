@@ -1,26 +1,22 @@
+import inspect
 import itertools as it
 
-from PyQt5 import QtWidgets, QtCore
+from collections import OrderedDict
 
-import pyqtgraph as pg
-from pyqtgraph.graphicsItems.GraphicsObject import GraphicsObject
-from pyqtgraph import functions as fn
-
-pg.setConfigOptions(imageAxisOrder='row-major')
 import numpy as np
+import pyqtgraph as pg
 
-from nspyre.gui.colormap import viridis
-from nspyre.gui.colors import cyclic_colors, colors
-from nspyre.gui.widgets.splitter_widget import Splitter, SplitterOrientation
-
-from nspyre.gui.widgets.spinbox import SpinBox
-from nspyre.gui.widgets.code_editor import Scintilla_Code_Editor, Monokai_Python_Lexer
-
-import traceback
-import inspect
+from PyQt5 import QtWidgets, QtCore
+from pyqtgraph import functions as fn
 from scipy.optimize import curve_fit
 
-from collections import OrderedDict
+from ..colormap import viridis
+from ..colors import cyclic_colors, colors
+from .code_editor import Scintilla_Code_Editor, Monokai_Python_Lexer
+from .spinbox import SpinBox
+from .splitter_widget import Splitter, SplitterOrientation
+
+pg.setConfigOptions(imageAxisOrder='row-major')
 
 
 class BasePlotWidget(QtWidgets.QWidget):
@@ -148,6 +144,7 @@ class BasePlotWidget(QtWidgets.QWidget):
         for key in params:
             if key in meta and hasattr(self, key):
                 setattr(self, key, meta[key])
+
 
 class HeatmapPlotWidget(BasePlotWidget):
 
@@ -355,8 +352,6 @@ class LinePlotWidget(BasePlotWidget):
     def __getitem__(self, tracename):
         return self.get(tracename)
 
-
-
 class FastImageWidget(BasePlotWidget):
 
     def __init__(self, parent=None):
@@ -367,13 +362,13 @@ class FastImageWidget(BasePlotWidget):
         graphic_view.setCentralItem(plot_item)
         super().__init__(parent=parent, w=graphic_view, plot_item=plot_item)
 
-    def set(self, image=None, autoLevels=None, **kargs):
-        self.img_item.setImage(image=image, autoLevels=autoLevels, **kargs)
+    def set(self, image=None, autoLevels=None, **kwargs):
+        self.img_item.setImage(image=image, autoLevels=autoLevels, **kwargs)
 
 
-##---------------------------------------------------------------
-##                      Crosshairs
-##---------------------------------------------------------------
+# ----------
+# Crosshairs
+# ----------
 class Crosshair(QtCore.QObject):
     sigPositionChanged = QtCore.pyqtSignal(object)
     sigPositionChangeFinished = QtCore.pyqtSignal(object)
@@ -557,6 +552,7 @@ class CrosshairAddon(QtWidgets.QWidget):
 
     def __len__(self):
         return len(self.cross_list)
+
 
 class FitterWidget(QtWidgets.QWidget):
 

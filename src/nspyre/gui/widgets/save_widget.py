@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets
-import time
-from nspyre.gui.data_handling import save_data
+
+from ..data_handling import save_data
+
 
 class Save_Widget(QtWidgets.QWidget):
 
@@ -59,4 +60,3 @@ class Save_Widget(QtWidgets.QWidget):
         if self.filename:
             save_data(self.spyrelet, self.filename, name=name, description=description)
             print('Data for {} was saved under {}'.format(self.spyrelet.name, self.filename))
-        return

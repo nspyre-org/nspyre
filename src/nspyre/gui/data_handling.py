@@ -1,12 +1,13 @@
-from collections import OrderedDict
 import traceback
 import time
 
+from collections import OrderedDict
+
 import json
-import pymongo
 import pandas as pd
 
-from nspyre.misc.misc import get_mongo_client
+from nspyre.misc import get_mongo_client
+
 
 def get_exp_state_from_db(mongodb_addr=None, debug=False):
     c = get_mongo_client(mongodb_addr=mongodb_addr)
@@ -35,6 +36,7 @@ def get_exp_state_from_db(mongodb_addr=None, debug=False):
                 if debug: traceback.print_exc()
     return state
 
+
 def gen_exp_state(mode='current', mongodb_addr=None, debug=False):
     if mode == 'current':
         return get_exp_state_from_db(mongodb_addr=mongodb_addr, debug=debug)
@@ -51,6 +53,7 @@ def gen_exp_state(mode='current', mongodb_addr=None, debug=False):
     #     return {}
     else:
         raise Exception("Invalid mode to generate the experimental state")
+
 
 def save_data(spyrelet, filename, name=None, description=None, save_state_mode='current', debug=False, **kwargs):
     d = spyrelet.data.drop(['_id'], axis=1)
@@ -102,6 +105,7 @@ def save_data(spyrelet, filename, name=None, description=None, save_state_mode='
             with open(filename, 'w') as f:
                 results = json.dump(data_dict, f, indent=4)
             return results
+
 
 def load_data(filename, load_to_mongo=False, mongodb_addr=None, db_name='Spyre_Data_Loaded'):
     with open(filename, 'r') as f:

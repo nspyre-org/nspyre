@@ -10,7 +10,7 @@ import pymongo
 import rpyc
 
 from nspyre.definitions import Q_, MONGO_RS, CONFIG_MONGO_ADDR_KEY
-from nspyre.config.config_files import load_meta_config, load_config, get_config_param
+from nspyre.config import get_config_param, load_config, load_meta_config
 
 string_types = (type(b''), type(u''))
 

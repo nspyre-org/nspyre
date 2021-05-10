@@ -116,7 +116,7 @@ setup(
     entry_points={
         'console_scripts': [
             'nspyre=nspyre.gui:main',
-            'nspyre-config=nspyre.config:main',
+            'nspyre-config=nspyre.config.config_cli:main',
             'nspyre-mongodb=nspyre.mongodb:main',
             'nspyre-inserv=nspyre.inserv:main',
         ],

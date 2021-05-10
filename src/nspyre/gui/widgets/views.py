@@ -28,21 +28,18 @@ class Formatter:
         self.view_list = view_list
 
 
-@staticmethod
 def Plot1D(fun):
     """Functions marked with this decorators should take a single argument (beyond self) which will be the dataframe representing the data
        The function marked must return a dict with the following format {'trace_name_1':[x1, y1], 'trace_name_2':[x2, y2], ...}"""
     return View(fun, '1D')
 
 
-@staticmethod
 def Plot2D(fun):
     """Functions marked with this decorators should take a single argument (beyond self) which will be the dataframe representing the data
        The function marked must return a 2D ndarray to be plotted"""
     return View(fun, '2D')
 
 
-@staticmethod
 def PlotFormatInit(class_type_handled, view_list):
     """Functions marked with this decorators will be called once when initializing the views.
        They should declare in the decorators argument what type of class they will handle.
@@ -63,7 +60,6 @@ def PlotFormatInit(class_type_handled, view_list):
     return PlotFormatInit_Decorator
 
 
-@staticmethod
 def PlotFormatUpdate(class_type_handled, view_list):
     """Same idea as PlotFormatUpdate, but functions marked with this decorators will be called every time the plot is updated."""
     def PlotFormatUpdate_Decorator(fun):

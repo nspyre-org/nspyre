@@ -213,7 +213,8 @@ def custom_decode(d):
                 out[k] = val
         return out
 
-@deprecated('Use a normal numpy.linspace, numpy.arange, or numpy.logspace. This will be removed in a future version of nspyre.')
+# pymongo does not like the deprecated decorator, so it's not being used for now.
+# @deprecated('Use a normal numpy.linspace, numpy.arange, or numpy.logspace. This will be removed in a future version of nspyre.')
 class RangeDict(dict):
     FUNCS = {'linspace': np.linspace, 'arange': np.arange, 'logspace': np.logspace}
 

@@ -228,7 +228,8 @@ class Spyrelet:
         """
         raise NotImplementedError
 
-    @deprecated('Consolidate code into the Spyrelet main method. This will be removed in a future version of nspyre.')
+    # pymongo does not like the deprecated decorator, so it's not being used for now.
+    # @deprecated('Consolidate code into the Spyrelet main method. This will be removed in a future version of nspyre.')
     def initialize(self, *args, **kwargs):
         """This is the method that will contain the user initialize logic.
         Should be overwritten.

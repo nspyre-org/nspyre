@@ -1,145 +1,75 @@
 """
-This module manages and centralizes connections to one or more instrument
-servers. All instrument server connections should be done through the
-InservGateway class.
+This module allows interfacing with an instrument server.
 
-Author: Jacob Feder
-Date: 7/11/2020
+Copyright (c) 2021, Michael Solomon, Jacob Feder
+All rights reserved.
+
+This work is licensed under the terms of the 3-Clause BSD license.
+For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
-import os
+
 import logging
 
 import rpyc
 
-from nspyre.config import get_config_param, load_config, load_meta_config
-from nspyre.definitions import CLIENT_META_CONFIG_PATH, Q_, RPYC_CONN_TIMEOUT, RPYC_SYNC_TIMEOUT
-from nspyre.errors import InservGatewayError
-from nspyre.misc import register_quantity_brining
-
-# for properly serializing/deserializing quantity objects using the local
-# pint unit registry
-register_quantity_brining(Q_)
+from nspyre.definitions import RPYC_CONN_TIMEOUT, RPYC_SYNC_TIMEOUT, INSERV_DEFAULT_PORT
+from nspyre.errors import InstrumentGatewayError
 
 logger = logging.getLogger(__name__)
 
-CONFIG_GATEWAY_SETTINGS = 'instrument_servers'
-CONFIG_GATEWAY_DEVICES = 'devices'
+class InstrumentGateway:
+    """This class is a wrapper around an RPyC server connection"""
+    def __init__(self, addr: str = 'localhost', port: int = INSERV_DEFAULT_PORT):
+        """Initialize a connection to an Instrument Server
+        :param addr: network address of the Instrument Server
+        :param port: port number of the Instrument Server
+        """
+        self.addr = addr
+        self.port = port
+        self._connection = None
+        self._thread = None
+        self.connect()
 
-# Temporary monkey patching of rpyc to implement synchronous about_to_disconnect feature
-# Need to define consts.HANDLE_ABOUT_TO_CLOSE before consts is import by protocol (this is done
-# in the load of nspyre.inserv.inserv)
-from .inserv import (InstrumentConnection as nspyre_InstrumentConnection,
-                     InstrumentService as nspyre_InstrumentService,
-                     VoidInstrumentService as nspyre_VoidInstrumentService)
-from rpyc.core.protocol import consts
-
-# Need to monkey patch VoidService for rpyc.utils.factory.connect_stream
-from rpyc.core.service import Service
-Service._protocol = nspyre_InstrumentConnection
-Service = nspyre_InstrumentService
-from rpyc.core.service import VoidService
-VoidService = nspyre_VoidInstrumentService
-
-
-class InservGateway:
-    """Loads a configuration file, then attempts to connect to all 
-    instrument servers
-
-    This class is a representation of the instrument server from the
-    client's perspective. It contains server connection information, and an
-    instance variable object for each device connected to the remote instrument
-    server
-    """
-    def __init__(self, config_file=None):
-        # if the config file isn't specified, get it from the meta-config
-        if not config_file:
-            config_file = load_meta_config(CLIENT_META_CONFIG_PATH)
-        # config dictionary
-        self.config = {}
-        # dictionary of available rpyc instrument servers
-        # key is the server string id, value is a tuple (rpyc conn, bg thread)
-        # e.g. {'local1': (rpyc.core.protocol.Connection, 
-        #                  rpyc.utils.helpers.BgServingThread),
-        #       'remote1': ...}
-        self._servers = {}
-        self.config = None
-        self.reload_config(config_file)
-        self.reconnect_servers()
-
-    def reconnect_servers(self):
-        """Attempt connection to all of the instrument servers specified in the config"""
-        servers, _ = get_config_param(self.config, [CONFIG_GATEWAY_SETTINGS])
-        # iterate through servers
-        for server_name in servers:
-            # only try connecting if there isn't already a connection
-            if server_name not in self._servers:
-                ip, _ = get_config_param(self.config, [CONFIG_GATEWAY_SETTINGS, server_name, 'ip'])
-                port, _ = get_config_param(self.config, [CONFIG_GATEWAY_SETTINGS, server_name, 'port'])
-                try:
-                    self.connect_server(server_name, ip, port)
-                except InservGatewayError:
-                    logger.error('Couldn\'t connect to instrument server [{}]'.format(server_name))
-
-    def disconnect_servers(self):
-        """Attempt disconnection from all of the instrument servers"""
-        for s in list(self._servers):
-            self.disconnect_server(s)
-
-    def connect_server(self, s_id, s_addr, s_port):
+    def connect(self):
         """Attempt connection to an instrument server"""
         try:
             # connect to the rpyc server running on the instrument server
-            # and start up a background thread to fullfill requests on the
-            # client side
-            conn = rpyc.connect(s_addr, s_port,
+            self._connection = rpyc.connect(self.addr, self.port,
                                 config={'allow_pickle': True,
                                         'timeout': RPYC_CONN_TIMEOUT,
                                         'sync_request_timeout': RPYC_SYNC_TIMEOUT})
+            # start up a background thread to fullfill requests on the
+            # client side
+            self._thread = rpyc.BgServingThread(self._connection)
 
-            bg_serving_thread = rpyc.BgServingThread(conn)
-            
             # this allows the instrument server to have full access to this
             # client's object dictionaries - appears necessary for lantz
-            conn._config['allow_all_attrs'] = True
+            self._connection._config['allow_all_attrs'] = True
+        except Exception as exc:
+            raise InstrumentGatewayError(f'Failed to connect to instrument server at {self.addr}:{self.port}', exception=exc) from None
+        logger.info(f'Gateway connected to instrument server at {self.addr}:{self.port}')
 
-            self._servers[s_id] = (conn, bg_serving_thread)
-        except BaseException:
-            raise InservGatewayError('Failed to connect to instrument server [{}] at address [{}]'.format(s_id, s_addr)) from None
-        logger.info('instrument server gateway connected to instrument server [{}]'.format(s_id))
+    def disconnect(self):
+        """Disconnect from the instrument server"""
+        self._thread.stop()
+        self._thread = None
+        self._connection.close()
+        self._connection = None
+        logger.info(f'Gateway disconnected from server at {self.addr}:{self.port}')
 
-    def disconnect_server(self, s_id):
-        """Disconnect from an instrument server and remove it's associated 
-        devices"""
-        try:
-            conn = self._servers[s_id][0]
-            bg_serving_thread = self._servers[s_id][1]
-            bg_serving_thread.stop()
-            conn.close()
-            del self._servers[s_id]
-        except BaseException:
-            raise InservGatewayError('Failed to disconnect from instrument server [{}]'.format(s_id)) from None
-        logger.info('instrument server gateway disconnected from server [{}]'.format(s_id))
+    def reconnect(self):
+        """Disconnect then connect to the instrument server"""
+        self.disconnect()
+        self.connect()
 
-    def servers(self):
-        """Return a dictionary containing 'server name' mapped to
-        an rpyc conn object"""
-        servers_dict = {}
-        for s in self._servers:
-            servers_dict[s] = self._servers[s][0]
-
-        return servers_dict
-
-    def __getattr__(self, attr):
-        """Allow the user to access the server objects directly using
-        e.g. gateway.server1.sig_gen.frequency notation"""
-        if attr in self._servers:
-            return self._servers[attr][0].root
+    def __getattr__(self, attr: str):
+        """Allow the user to access the server objects directly using gateway.device notation
+        e.g. gateway.sg.amplitude"""
+        if self._connection:
+            return getattr(self._connection.root, attr)
         else:
-            raise AttributeError('\'{}\' object has no attribute \'{}\''.format(self.__class__.__name__, attr))
-
-    def reload_config(self, filename):
-        """Reload the config file"""
-        self.config = load_config(filename)
+            # raise the default python error when an attribute isn't found
+            return self.__getattribute__(attr)
 
     def __enter__(self):
         """Python context manager setup"""
@@ -147,4 +77,4 @@ class InservGateway:
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Python context manager teardown"""
-        self.disconnect_servers()
+        self.disconnect()

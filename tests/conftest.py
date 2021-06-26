@@ -1,71 +1,53 @@
 """
 pytest fixtures
 
-Author: Jacob Feder
-Date: 11/12/2020
+Copyright (c) 2021, Michael Solomon, Jacob Feder
+All rights reserved.
+
+This work is licensed under the terms of the 3-Clause BSD license.
+For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 
-###########################
-# imports
-###########################
-
-# std
 from pathlib import Path
 import subprocess
 import atexit
 import time
 import logging
+import importlib
+import inspect
+import sys
 
-# 3rd party
 import pytest
-import psutil
 
-# nspyre
-from nspyre.inserv.gateway import InservGateway
+from nspyre import InstrumentGateway
 
-###########################
-# globals
-###########################
-
-server_cfg_path = Path(__file__).parent / Path('fixtures/configs/server_test_config.yaml')
-client_cfg_path = Path(__file__).parent / Path('fixtures/configs/client_test_config.yaml')
-
-###########################
-# fixtures
-###########################
-
-@pytest.fixture()
-def client_config_path():
-    """return the client config path"""
-    logging.info('getting client config')
-    return client_cfg_path.resolve()
+HERE = Path(__file__).parent
 
 @pytest.fixture(scope='class')
 def gateway():
     """return an instrument gateway"""
     logging.info('getting gateway')
-    with InservGateway(client_cfg_path) as insgw:
-        yield insgw
+
+    drivers_path = HERE / 'fixtures/drivers'
+    with InstrumentGateway() as gw:
+        # add test drivers to instrument server
+        gw.add('daq', drivers_path / 'fake_daq.py', 'FakeDAQ')
+        gw.add('pel', drivers_path / 'fake_pellicle.py', 'FakePellicle')
+        gw.add('sg', drivers_path / 'fake_sg.py', 'FakeSigGen')
+        # now the tests run
+        yield gw
+        # remove drivers from instrument server
+        for d in list(gw.devs):
+            gw.remove(d)
 
 @pytest.fixture(scope='session', autouse=True)
 def setup():
-    """start mongodb and the instrument server in subprocesses for use by 
-    subsequent tests"""
+    """start the instrument server in a subprocess for use by subsequent tests"""
     logging.info('test setup...')
 
-    # search through all running processes, and only start mongo if it's not
-    # already running, since it takes awhile to start up
-    if not 'mongod' in [p.name() for p in psutil.process_iter()]:
-        logging.info('running nspyre-mongodb')
-        # start mongod in a subprocess
-        mongo = subprocess.run(['nspyre-mongodb'])
-        # give time for the database to start
-        time.sleep(30)
-
     # start the instrument server
-    inserv = subprocess.Popen(['nspyre-inserv', '-c', server_cfg_path, '-v', 'debug'],
+    inserv = subprocess.Popen(['nspyre-inserv', '-s', '-v', 'debug'],
                                 stdin=subprocess.PIPE)
-
     # make sure the inserv gets killed on exit even if there's an error
     def cleanup():
         inserv.kill()
@@ -74,17 +56,20 @@ def setup():
     # ignore logging while we attempt to connect
     logging.disable(logging.CRITICAL)
     # wait until the server is online
+    counter = 0
     while True:
         try:
-            with InservGateway(client_cfg_path) as insgw:
-                getattr(insgw, 'tserv')
+            with InstrumentGateway() as insgw:
+                getattr(insgw, 'devs')
                 break
         except:
             time.sleep(0.1)
+            assert counter < 10
+            counter += 1
     # re-enable logging
     logging.disable(logging.NOTSET)
 
     # now the tests run
     yield
 
-    logging.info('test teardown')
+    logging.info('tests completed')

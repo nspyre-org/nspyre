@@ -1,10 +1,10 @@
 from setuptools import setup, find_packages
 import codecs
-import pathlib
+from pathlib import Path
 import re
 
 
-here = pathlib.Path(__file__).parent.resolve()
+here = Path(__file__).parent.resolve()
 
 
 def read(*parts):
@@ -12,7 +12,7 @@ def read(*parts):
     Build an absolute path from *parts* and and return the contents of the
     resulting file.  Assume UTF-8 encoding.
     """
-    with codecs.open(pathlib.PurePath(here, *parts), "rb", "utf-8") as f:
+    with codecs.open(Path(here, *parts), "rb", "utf-8") as f:
         return f.read()
 
 
@@ -30,7 +30,7 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 
-meta_path = pathlib.PurePath('src', 'nspyre', '__init__.py')
+meta_path = Path('src', 'nspyre', '__init__.py')
 version = find_version(meta_path)
 
 long_description = (here / 'README.md').read_text(encoding='utf-8')
@@ -59,9 +59,6 @@ setup(
         'Operating System :: POSIX',
         'Operating System :: Unix',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Physics',
@@ -77,24 +74,16 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
     zip_safe=False,
-    python_requires='>=3.8, <4',
+    python_requires='>=3.9, <4',
     install_requires=[
         # SciPy
         'numpy>=1.19.1',
         'scipy>=1.5.2',
         'pandas>=1.1.2',
-        # MongoDB
-        'pymongo>=3.10.1',
         # Qt
         'pyqt5>=5.12.3',
         'pyqtgraph>=0.11.0',
         'qscintilla>=2.11.2',
-        # VISA
-        'pyvisa>=1.10.1',
-        # Lantz
-        'pint>=0.15',
-        'pimpmyclass>=0.4.3',
-        'lantzdev>=0.5.2',
         # Utilities
         'parse>=1.18.0',
         'tqdm>=4.49.0',
@@ -116,9 +105,7 @@ setup(
     entry_points={
         'console_scripts': [
             'nspyre=nspyre.gui:main',
-            'nspyre-config=nspyre.config.config_cli:main',
-            'nspyre-mongodb=nspyre.mongodb:main',
-            'nspyre-inserv=nspyre.inserv:main',
+            'nspyre-inserv=nspyre.tools.inserv_cli:main',
         ],
     },
     project_urls={

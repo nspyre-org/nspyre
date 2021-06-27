@@ -143,7 +143,7 @@ def main():
         else:
             raise InstrumentServerError(
                 'didn\'t recognize logging level [{}]'.format(cmd_args.verbosity)
-            ) from None
+            )
 
         if cmd_args.log:
             nspyre_init_logger(

@@ -46,7 +46,7 @@ class InstrumentGateway:
             # client's object dictionaries - appears necessary for lantz
             self._connection._config['allow_all_attrs'] = True
         except Exception as exc:
-            raise InstrumentGatewayError(f'Failed to connect to instrument server at {self.addr}:{self.port}', exception=exc) from None
+            raise InstrumentGatewayError(f'Failed to connect to instrument server at {self.addr}:{self.port}', exception=exc) from exc
         logger.info(f'Gateway connected to instrument server at {self.addr}:{self.port}')
 
     def disconnect(self):

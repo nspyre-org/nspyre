@@ -20,6 +20,7 @@ class NSpyreError(Exception):
         self._error_labels = set(error_labels or [])
         if exception:
             logger.exception(exception)
+        logger.exception(message)
 
     def has_error_label(self, label):
         """Return True if this error contains the given label."""

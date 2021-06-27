@@ -531,7 +531,7 @@ class InstrumentManagerWindow(QMainWindow):
                         try:
                             new_step = Q_(value).to(base_units).m
                         except Exception as exc:
-                            raise InstrumentManagerError(f'The value entered as the step [{value}] for feat [{feat_name}] couldn\'t be interpretted as a valid value with units [{base_units}]', exception=exc) from None
+                            raise InstrumentManagerError(f'The value entered as the step [{value}] for feat [{feat_name}] couldn\'t be interpretted as a valid value with units [{base_units}]', exception=exc) from exc
                         pyqt_widget.setOpts(step=new_step)
                 elif isinstance(feat_value, int):
                     step_widget.setText('1')
@@ -539,7 +539,7 @@ class InstrumentManagerWindow(QMainWindow):
                         try:
                             new_step = int(base_units)
                         except Exception as exc:
-                            raise InstrumentManagerError(f'The value entered as the step [{value}] for feat [{feat_name}] couldn\'t be interpretted as a valid int', exception=exc) from None
+                            raise InstrumentManagerError(f'The value entered as the step [{value}] for feat [{feat_name}] couldn\'t be interpretted as a valid int', exception=exc) from exc
                         pyqt_widget.setOpts(step=new_step)
                 elif isinstance(feat_value, float):
                     step_widget.setText('1.0')
@@ -547,7 +547,7 @@ class InstrumentManagerWindow(QMainWindow):
                         try:
                             new_step = float(base_units)
                         except Exception as exc:
-                            raise InstrumentManagerError(f'The value entered as the step [{value}] for feat [{feat_name}] couldn\'t be interpretted as a valid float', exception=exc) from None
+                            raise InstrumentManagerError(f'The value entered as the step [{value}] for feat [{feat_name}] couldn\'t be interpretted as a valid float', exception=exc) from exc
                         pyqt_widget.setOpts(step=new_step)
                 else:
                     raise InstrumentManagerError('')

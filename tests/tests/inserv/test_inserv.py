@@ -10,12 +10,17 @@ import logging
 logger = logging.getLogger(__name__)
 
 class TestInserv:
-    def test_connect(self, gateway):
-        """Test the gateway connection connected properly and contains our drivers"""
-        assert 'daq' in gateway.devs
-        assert 'pel' in gateway.devs
-        assert 'sg' in gateway.devs
-        assert 'not_a_driver' not in gateway.devs
+
+    # def test_connect(self, inserv):
+    #     with pytest.raises(InstrumentGatewayError) as e_info:
+    #         not_a_gateway = InstrumentGateway(addr='an invalid ip!')
+
+#     def test_connect(self, gateway):
+#         """Test the gateway connected properly and contains our drivers"""
+#         assert 'daq' in gateway.devs
+#         assert 'pel' in gateway.devs
+#         assert 'sg' in gateway.devs
+#         assert 'not_a_driver' not in gateway.devs
 
     # def test_device_mgmt(self, gateway):
     #     gateway.add('test', 'path', 'class')

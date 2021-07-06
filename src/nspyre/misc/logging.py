@@ -1,7 +1,7 @@
 import datetime
 import logging
+import logging.handlers
 import sys
-
 from pathlib import Path
 
 
@@ -74,13 +74,9 @@ def nspyre_init_logger(log_level, log_path=None, log_path_level=None, prefix=Non
     # if a log file / folder was specified
     if log_path:
         # resolve relative paths
-        if not log_path.is_absolute():
-            log_path = Path.cwd() / log_path
-        log_path = log_path.resolve()
+        log_path = log_path.expanduser().resolve()
 
-        if log_path.is_file():
-            pass
-        elif log_path.is_dir():
+        if log_path.is_dir():
             # log to a file in the folder
             file_name = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S.log'.format())
             # prepend the prefix if present
@@ -93,7 +89,7 @@ def nspyre_init_logger(log_level, log_path=None, log_path_level=None, prefix=Non
             file_handler = logging.handlers.RotatingFileHandler(log_path, maxBytes=file_size, backupCount=1000)
         else:
             file_handler = logging.FileHandler(log_path)
-        file_formatter = logging.Formatter('[stderr] %(asctime)s.%(msecs)03d [%(levelname)s] (%(filename)s:%(lineno)s) %(message)s', '%Y-%m-%d %H:%M:%S')
+        file_formatter = logging.Formatter('%(asctime)s.%(msecs)03d [%(levelname)s] (%(filename)s:%(lineno)s) %(message)s', '%Y-%m-%d %H:%M:%S')
         file_handler.setFormatter(file_formatter)
         if log_path_level:
             file_handler.setLevel(log_path_level)

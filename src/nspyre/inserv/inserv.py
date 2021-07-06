@@ -86,8 +86,7 @@ class InstrumentServer(Service):
                 dev_class = load_class_from_file(dev_class_path, class_name)
             except Exception as exc:
                 raise InstrumentServerError(
-                    f'The specified class "{class_name}" from file "{class_path}" for device "{name}" couldn\'t be loaded',
-                    exception=exc,
+                    f'The specified class "{class_name}" from file "{class_path}" for device "{name}" couldn\'t be loaded'
                 ) from exc
         elif import_or_file == 'import':
             # load the class from a python module
@@ -97,7 +96,6 @@ class InstrumentServer(Service):
             except Exception as exc:
                 raise InstrumentServerError(
                     f'The specified class "{dev_class_path}" for device "{name}" couldn\'t be loaded',
-                    exception=exc,
                 ) from exc
         else:
             raise InstrumentServerError(
@@ -110,7 +108,6 @@ class InstrumentServer(Service):
         except Exception as exc:
             raise InstrumentServerError(
                 f'Failed to create an instance of device "{name}" of class "{dev_class}"',
-                exception=exc,
             ) from exc
 
         # save the device and config info
@@ -133,7 +130,7 @@ class InstrumentServer(Service):
             self.devs.pop(name)
         except Exception as exc:
             raise InstrumentServerError(
-                f'Failed deleting device "{name}"', exception=exc
+                f'Failed deleting device "{name}"'
             ) from exc
         logger.info(f'deleted device "{name}"')
 

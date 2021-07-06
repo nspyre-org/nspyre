@@ -12,7 +12,7 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 
 import argparse
 import cmd
-import pathlib
+from pathlib import Path
 import pdb
 import logging
 import signal
@@ -148,7 +148,7 @@ def main():
         if cmd_args.log:
             nspyre_init_logger(
                 log_level,
-                log_path=pathlib.Path(cmd_args.log),
+                log_path=Path(cmd_args.log),
                 log_path_level=logging.DEBUG,
                 prefix='inserv',
                 file_size=LOG_FILE_MAX_SIZE,

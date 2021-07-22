@@ -14,20 +14,24 @@ import logging
 import time
 import threading
 
-from rpyc import Service
+from rpyc import ClassicService
 from rpyc.utils.server import ThreadedServer
 from rpyc.utils.classic import obtain
 
 from nspyre.errors import InstrumentServerError
-from nspyre.misc.misc import load_class_from_file, load_class_from_str
 from nspyre.definitions import RPYC_SYNC_TIMEOUT, INSERV_DEFAULT_PORT
+from nspyre.misc.misc import load_class_from_file, load_class_from_str, register_quantity_brining
+
+# monkey-patch fix for pint module
+from nspyre.definitions import Q_
+register_quantity_brining(Q_)
 
 logger = logging.getLogger(__name__)
 
 # event used for waiting until the rpyc server thread has finished
 RPYC_SERVER_STOP_EVENT = threading.Event()
 
-class InstrumentServer(Service):
+class InstrumentServer(ClassicService):
     """RPyC service that loads devices and exposes them to the client"""
 
     def __init__(self, port=INSERV_DEFAULT_PORT):
@@ -70,9 +74,13 @@ class InstrumentServer(Service):
         :return: None
         """
 
-        # make sure that the args and kwargs actually exist on the local machine
+        # make sure that the arguments actually exist on the local machine
         # and are not netrefs - otherwise there could be dangling references left over
         # in the self.devs dictionary after the client disconnects
+        name = obtain(name)
+        class_path = obtain(class_path)
+        class_name = obtain(class_name)
+        import_or_file = obtain(import_or_file)
         args = obtain(args)
         kwargs = obtain(kwargs)
 
@@ -144,7 +152,7 @@ class InstrumentServer(Service):
         args = config_dict['args']
         import_or_file = config_dict['import_or_file']
         kwargs = config_dict['kwargs']
-        self.delete_device(device)
+        self.remove(device)
         self.add(
             device,
             class_path,

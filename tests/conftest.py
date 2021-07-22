@@ -14,6 +14,8 @@ import atexit
 import time
 import logging
 from contextlib import contextmanager
+import socket
+from contextlib import closing
 
 import pytest
 
@@ -22,45 +24,40 @@ from nspyre import InstrumentGateway, nspyre_init_logger
 HERE = Path(__file__).parent
 DRIVERS = HERE / 'fixtures/drivers'
 
-@pytest.fixture
-def tmp_log_file():
-    """Generate a temporary log file that can be analyzed by the test"""
-    path = Path(HERE / 'tmp/test.log')
-    # delete the log file if it already exists
-    path.unlink(missing_ok=True)
-    nspyre_init_logger(
-        logging.DEBUG,
-        log_path=path,
-        log_path_level=logging.DEBUG
-    )
+def _free_port():
+    """Return a free port number"""
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(('', 0))
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return s.getsockname()[1]
 
-    return path
+@pytest.fixture
+def free_port():
+    return _free_port()
 
 @pytest.fixture
 def inserv():
     """Create an instrument server"""
-
-    # start the instrument server in a new process
-    # TODO if another inserv is already running, start one on a new port
+    port = _free_port()
     inserv_log_path = Path(HERE / 'tmp/inserv.log')
     # delete the log file if it already exists
     inserv_log_path.unlink(missing_ok=True)
-    inserv_proc = subprocess.Popen(['nspyre-inserv', '-s', '-v', 'debug', '-l', inserv_log_path],
+    # start the instrument server in a new process
+    inserv_proc = subprocess.Popen(['nspyre-inserv', '-s', '-v', 'debug', '-l', inserv_log_path, '-p', str(port)],
                                 stdin=subprocess.PIPE)
     # make sure the inserv gets killed on exit even if there's an error
     def cleanup():
         inserv_proc.kill()
     atexit.register(cleanup)
 
-    # return the log path
-    yield inserv_log_path
+    yield {'port': port, 'log': inserv_log_path}
 
     # stop the instrument server process
     inserv_proc.kill()
 
-# depend on tmp_log_file to make sure it gets called first
+# depend on inserv to make sure it gets started first
 @pytest.fixture
-def gateway(inserv, tmp_log_file):
+def gateway(inserv):
     """Return a gateway connected to the instrument server"""
 
     # ignore logging while we attempt to connect
@@ -69,7 +66,7 @@ def gateway(inserv, tmp_log_file):
     counter = 0
     while True:
         try:
-            with InstrumentGateway() as gw:
+            with InstrumentGateway(port=inserv['port']) as gw:
                 # connection succeeded, so re-enable logging
                 logging.disable(logging.NOTSET)
 
@@ -83,14 +80,13 @@ def gateway(inserv, tmp_log_file):
             counter += 1
 
 @pytest.fixture
-def gateway_devs(gateway):
+def gateway_with_devs(gateway):
     """Return a gateway with initialized test devices"""
 
     # add test drivers to instrument server
     gateway.add('daq', DRIVERS / 'fake_daq.py', 'FakeDAQ')
     gateway.add('pel', DRIVERS / 'fake_pellicle.py', 'FakePellicle')
     gateway.add('sg', DRIVERS / 'fake_sg.py', 'FakeSigGen')
-    gateway.add('vm', 'lantz.drivers.examples', 'LantzVoltmeter', import_or_file='import')
 
     yield gateway
 

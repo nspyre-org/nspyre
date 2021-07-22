@@ -14,6 +14,11 @@ import rpyc
 
 from nspyre.definitions import RPYC_CONN_TIMEOUT, RPYC_SYNC_TIMEOUT, INSERV_DEFAULT_PORT
 from nspyre.errors import InstrumentGatewayError
+from nspyre.misc.misc import register_quantity_brining
+
+# monkey-patch fix for pint module
+from nspyre.definitions import Q_
+register_quantity_brining(Q_)
 
 logger = logging.getLogger(__name__)
 

@@ -83,15 +83,20 @@ def deprecated(reason):
     else:
         raise TypeError(repr(type(reason)))
 
-
+# for properly serializing / deserializing quantity objects using the local
+# pint unit registry
 def register_quantity_brining(quantity_class):
-    """pint has an associated unit registry, and Quantity objects 
-    cannot be shared between registries. Because Quantity objects 
-    passed from the client to server or vice versa have a different 
-    unit registry, they must be converted to Quantity objects of the 
-    local registry. RPyC serializes objects using "brine". We will 
-    make a custom brine serializer for Quantity objects to properly 
-    pack and unpack them using the local unit registry.
+    """Monkey-patch fix that allows the use of the pint module with RPyC. 
+    Pint does not work over an RPyC connection for a few reasons. First, it
+    it makes liberal uses the python type() function, which will return
+    a netref if used on a Quantity object over an RPyC connection. This breaks 
+    internal pint functionality. Furthermore, Pint has an associated unit 
+    registry, and Quantity objects cannot be shared between registries. Because 
+    Quantity objects passed from the client to server or vice versa have a 
+    different unit registry, they must be converted to Quantity objects of the 
+    local registry. RPyC serializes fundamental python types using "brine". 
+    We will make a custom brine serializer for Quantity objects to properly 
+    pack and unpack them using the provided unit registry.
     For more details, see pint documentation and
     https://github.com/tomerfiliba-org/rpyc/blob/master/rpyc/core/brine.py
 

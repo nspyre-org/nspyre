@@ -12,9 +12,10 @@ import time
 import datetime
 
 import pytest
+from pint import UnitRegistry
+from rpyc.core.vinegar import GenericException
 
 from nspyre import InstrumentGateway, InstrumentGatewayError, Q_
-from pint import UnitRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -74,19 +75,44 @@ class TestInserv:
         vm_proc.kill()
 
 class TestInservLantz:
-    def test_lantz_feats_get_set(self, gateway_with_devs):
+    def test_lantz_feats_get_set_value(self, gateway_with_devs):
+        """Test lantz feat get/set with feat with 'values=' specified"""
+        gateway_with_devs.sg.output_enabled = True
+        assert gateway_with_devs.sg.output_enabled == True
+        gateway_with_devs.sg.output_enabled = False
+        assert gateway_with_devs.sg.output_enabled == False
+
+        gateway_with_devs.sg.waveform = 'sine'
+        assert gateway_with_devs.sg.waveform == 'sine'
+        gateway_with_devs.sg.waveform = 'square'
+        assert gateway_with_devs.sg.waveform == 'square'
+
+    def test_lantz_feats_units(self, gateway_with_devs):
         """Test basic lantz feat get/set"""
+        # using pint units
         gateway_with_devs.sg.amplitude = Q_(1.0, 'V')
         assert gateway_with_devs.sg.amplitude == Q_(1.0, 'V')
         gateway_with_devs.sg.amplitude = Q_(10.0, 'V')
         assert gateway_with_devs.sg.amplitude == Q_(10.0, 'V')
-
-    def test_lantz_feats_units(self, gateway_with_devs):
-        """test get/set with different pint units"""
+        
+        # unit conversions
         gateway_with_devs.sg.amplitude = Q_(0.1, 'V')
         assert gateway_with_devs.sg.amplitude == Q_(100.0, 'mV')
         gateway_with_devs.sg.amplitude = Q_(10, 'mV')
         assert gateway_with_devs.sg.amplitude == Q_(0.01, 'V')
+
+    def test_lantz_feats_units_errors(self, gateway_with_devs):
+        """test get/set with different pint units"""
+
+        # setting the wrong type
+        with pytest.raises(ValueError):
+            gateway_with_devs.sg.amplitude = 'not a number'
+
+        # setting the wrong unit
+        # since the error is happening remotely, we have to use this special
+        # rpyc error type that emulates the remote exception
+        with pytest.raises(GenericException):
+            gateway_with_devs.sg.amplitude = Q_(1, 's')
 
     def test_lantz_dictfeats_get_set(self, gateway_with_devs):
         """test basic dictfeat get/set"""

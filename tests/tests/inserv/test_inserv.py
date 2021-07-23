@@ -73,21 +73,22 @@ class TestInserv:
         # stop the lantz voltmeter process
         vm_proc.kill()
 
-    def test_feats_get_set(self, gateway_with_devs):
+class TestInservLantz:
+    def test_lantz_feats_get_set(self, gateway_with_devs):
         """Test basic lantz feat get/set"""
         gateway_with_devs.sg.amplitude = Q_(1.0, 'V')
         assert gateway_with_devs.sg.amplitude == Q_(1.0, 'V')
         gateway_with_devs.sg.amplitude = Q_(10.0, 'V')
         assert gateway_with_devs.sg.amplitude == Q_(10.0, 'V')
 
-    def test_feats_units(self, gateway_with_devs):
+    def test_lantz_feats_units(self, gateway_with_devs):
         """test get/set with different pint units"""
         gateway_with_devs.sg.amplitude = Q_(0.1, 'V')
         assert gateway_with_devs.sg.amplitude == Q_(100.0, 'mV')
         gateway_with_devs.sg.amplitude = Q_(10, 'mV')
         assert gateway_with_devs.sg.amplitude == Q_(0.01, 'V')
 
-    def test_dictfeats_get_set(self, gateway_with_devs):
+    def test_lantz_dictfeats_get_set(self, gateway_with_devs):
         """test basic dictfeat get/set"""
         for k in range(1, 10):
             gateway_with_devs.daq.dout[k] = False
@@ -96,7 +97,7 @@ class TestInserv:
             gateway_with_devs.daq.dout[k] = True
             assert gateway_with_devs.daq.dout[k] == True
 
-    def test_dictfeats_ro(self, gateway_with_devs):
+    def test_lantz_dictfeats_ro(self, gateway_with_devs):
         """test read-only dictfeats"""
         gateway_with_devs.daq.reset_din(False)
         for k in range(1, 10):

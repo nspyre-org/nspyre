@@ -62,9 +62,11 @@ def gateway(inserv):
 
     # ignore logging while we attempt to connect
     logging.disable(logging.CRITICAL)
+
     # wait until the server is online
     counter = 0
     while True:
+        # wait until the instrument server is online
         try:
             with InstrumentGateway(port=inserv['port']) as gw:
                 # connection succeeded, so re-enable logging

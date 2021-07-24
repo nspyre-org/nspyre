@@ -37,3 +37,6 @@ RPYC_SYNC_TIMEOUT = None
 
 # max size of a log file (in bytes) before creating a new one
 LOG_FILE_MAX_SIZE = 100e6
+
+# default port to host the data server on
+DATASERV_PORT = 30000

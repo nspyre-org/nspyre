@@ -76,18 +76,20 @@ setup(
     zip_safe=False,
     python_requires='>=3.9, <4',
     install_requires=[
-        # SciPy
-        'numpy>=1.19.1',
-        'scipy>=1.5.2',
-        'pandas>=1.1.2',
-        # Qt
+        # instrument server
+        'rpyc>=4.1.5',
+        # data server
+        'xdelta3>=0.0.4'
+        # Qt / GUI
         'pyqt5>=5.12.3',
         'pyqtgraph>=0.11.0',
         'qscintilla>=2.11.2',
+        'numpy>=1.19.1',
+        'scipy>=1.5.2',
+        'pandas>=1.1.2',
         # Utilities
         'parse>=1.18.0',
         'tqdm>=4.49.0',
-        'rpyc>=4.1.5',
     ],
     extras_require={
         'dev': [
@@ -106,6 +108,7 @@ setup(
         'console_scripts': [
             'nspyre=nspyre.gui:main',
             'nspyre-inserv=nspyre.tools.inserv_cli:main',
+            'nspyre-dataserv=nspyre.tools.dataserv_cli:main',
         ],
     },
     project_urls={

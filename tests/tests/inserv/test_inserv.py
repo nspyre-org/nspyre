@@ -94,7 +94,7 @@ class TestInservLantz:
         assert gateway_with_devs.sg.amplitude == Q_(1.0, 'V')
         gateway_with_devs.sg.amplitude = Q_(10.0, 'V')
         assert gateway_with_devs.sg.amplitude == Q_(10.0, 'V')
-        
+
         # unit conversions
         gateway_with_devs.sg.amplitude = Q_(0.1, 'V')
         assert gateway_with_devs.sg.amplitude == Q_(100.0, 'mV')

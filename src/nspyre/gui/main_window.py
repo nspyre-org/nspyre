@@ -35,7 +35,7 @@ from PyQt5.QtCore import QProcess
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QVBoxLayout, QWidget
 
-from nspyre.definitions import LOGO_PATH
+from nspyre import LOGO_PATH
 
 from .image import ImageWidget
 

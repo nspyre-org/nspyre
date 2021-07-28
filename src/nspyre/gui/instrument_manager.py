@@ -22,7 +22,7 @@ create the slots that are called when the user clicks menu items or toolbar butt
 
   app = app.NSpyreApp([sys.argv])
   pyqtgraph._connectCleanup()
-  with ..inserv.gateway.InservGateway() as isg:
+  with InstrumentGateway() as isg:
       window = main_window.InstrumentManagerWindow(isg)
       sys.exit(app.exec())
 
@@ -45,9 +45,7 @@ from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
 from pyqtgraph import SpinBox as pyqtgraph_SpinBox, ValueLabel as pyqtgraph_ValueLabel
 from pint.util import infer_base_unit
 
-from nspyre.config import load_meta_config
-from nspyre.definitions import Q_, CLIENT_META_CONFIG_PATH
-from nspyre.inserv import InservGateway
+from nspyre import InstrumentGateway, Q_
 
 __all__ = []
 
@@ -629,8 +627,7 @@ if __name__ == '__main__':
         QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = NSpyreApp([sys.argv])
     pyqtgraph_connectCleanup()
-    config_path = load_meta_config(CLIENT_META_CONFIG_PATH)
-    with InservGateway(config_path) as isg:
+    with InstrumentGateway() as isg:
         inserv_window = InstrumentManagerWindow(isg)
         app.exec()
     sys.exit()

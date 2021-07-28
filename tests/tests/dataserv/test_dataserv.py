@@ -51,13 +51,13 @@ def dataserv_push_pop(name: str='push_pop', data_type_override: bytes=SINK_DATA_
 
     logger.info(f'completed run [{name}] - total time [{total_time:.3f}]s average time per push/pop [{avg_time:.3f}]s')
 
-def test_dataserv_push_pop_delta():
+def test_dataserv_push_pop_delta(dataserv):
     """Test the base functionality of the data server by synchronously
     pushing then popping an object repeatedly, but force the server to use 
     deltas"""
     dataserv_push_pop(name='push_pop_delta', data_type_override=SINK_DATA_TYPE_DELTA)
 
-def test_dataserv_push_pop_pickle():
+def test_dataserv_push_pop_pickle(dataserv):
     """Test the base functionality of the data server by synchronously
     pushing then popping an object repeatedly, but force the server to use 
     pickles"""
@@ -107,13 +107,13 @@ def dataserv_push_multipop(name: str='push_multipop', data_type_override: bytes=
                 logger.info(f'completed [{100*(i+1)/iterations:>5.1f}]%')
             avg_time = total_time / iterations
 
-def test_dataserv_push_multipop_delta():
+def test_dataserv_push_multipop_delta(dataserv):
     """Test the base functionality of the data server by synchronously
     pushing an object, then popping it from two different sinks, but force the 
     server to use deltas"""
     dataserv_push_multipop(name='push_pop_delta', data_type_override=SINK_DATA_TYPE_DELTA)
 
-def test_dataserv_push_multipop_pickle():
+def test_dataserv_push_multipop_pickle(dataserv):
     """Test the base functionality of the data server by synchronously
     pushing an object, then popping it from two different sinks, but force the 
     server to use pickles"""

@@ -18,6 +18,7 @@ import socket
 from contextlib import closing
 
 import pytest
+import psutil
 
 from nspyre import InstrumentGateway, nspyre_init_logger
 
@@ -34,6 +35,13 @@ def _free_port():
 @pytest.fixture
 def free_port():
     return _free_port()
+
+@pytest.fixture
+def dataserv():
+    """An unresolved bug currently prevents nspyre-dataserv from being started
+    automatically, so for now just throw an error if it isn't running"""
+    if not 'nspyre-dataserv' in [p.name() for p in psutil.process_iter()]:
+        raise Exception("nspyre-dataserv doesn't seem to be running and must be started manually")
 
 @pytest.fixture
 def inserv():

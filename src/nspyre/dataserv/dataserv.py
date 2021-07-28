@@ -1,9 +1,65 @@
 """
-The DataServer asynchronously serves data to a set of network clients. Data 
-is pushed to the server and serialized into binary data. For remote clients,
-the data is then diffed with any previously pushed data and the diff is 
-sent rather than the full object in order to minimize the required network bandwidth. 
-The client can then reconstruct the pushed data on the other side.
+The nspyre DataServer transports arbitrary python objects over a TCP/IP socket 
+to a set of local or remote network clients, and keeps those objects up to date 
+as they are modified. For each data set on the data server, there is a single 
+data "source", and a set of data "sinks".
+
+Objects are serialized by the source then pushed to the server. For local 
+clients, the data server sends the serialized data directly to the be 
+deserialized by the sink process. For remote clients, the serialized object 
+data is diffed with any previously pushed data and the diff is sent rather than 
+the full object in order to minimize the required network bandwidth. The client 
+can then reconstruct the pushed data using a local copy of the last version of 
+the object, and the diff received from the server.
+
+Example usage:
+
+# run the command-line tool for starting up the data server, specifying the port
+nspyre-dataserv -p 12345
+
+----------------------------------
+
+# data "source" code
+# running on the same machine as the data server, in the same or a different
+# process
+
+from nspyre import DataSource
+import numpy as np
+
+# connect to the data server and create a data set, or connect to an
+# existing one with the same name if it was created earlier
+source = DataSource('my_dataset', 12345)
+
+# do an experiment where we measure voltage of something as a function of frequency
+n = 100
+frequencies = np.linspace(1e6, 100e6, n)
+voltages = np.zeros(n)
+
+# add objects to the data set
+source.add('freq', x)
+source.add('volts', y)
+
+for f in frequencies:
+    some_instrument.set_frequency(f)
+    voltages[i] = other_instrument.get_voltage()
+    source.update()
+
+----------------------------------
+
+# data "sink" code
+# running on the same or a different machine as the source / data server
+
+from nspyre import DataSink
+
+# connect the data set on the data server
+sink = DataSink('my_dataset', '192.168.1.50', 12345)
+
+while True:
+    # block until an updated version of the data set is available
+    sink.update()
+    # sink.freq and sink.volts have been modified
+    # replot the data to show the new values
+    my_plot_update(sink.freq, sink.volts)
 
 Author: Jacob Feder
 Date: 11/29/2020
@@ -19,6 +75,9 @@ import concurrent.futures
 import xdelta3
 
 logger = logging.getLogger(__name__)
+
+# default port to host the data server on
+DATASERV_PORT = 30000
 
 # if no data is available, any socket sender should send an empty message with an
 # interval given by KEEPALIVE_TIMEOUT (s)
@@ -43,7 +102,7 @@ NEGOTIATION_SINK = b'\xEF'
 # timeout (s) for send/recv operations during the client negotiation phase
 NEGOTIATION_TIMEOUT = TIMEOUT
 
-# timeout for relatively quick
+# timeout for relatively quick operations
 FAST_TIMEOUT = 1.0
 
 # custom recv_msg() and send_msg() use the following packet structure
@@ -149,9 +208,10 @@ class DataServer():
     and previous data to generate a 'delta', which is sent out instead of the 
     pickle. The remote client can then reconstruct the data using the delta.
 
+    i.e.
     self.datasets = {
 
-    'spyrelet1' : DataSet(
+    'dataset1' : DataSet(
                         ------> FIFO ------> diff ------> socket (remote client)
                        /
     socket (source) ----------> FIFO ------> diff ------> socket (remote client)
@@ -159,7 +219,7 @@ class DataServer():
                         ------> FIFO -------------------> socket (local client)
     ),
 
-    'spyrelet2' : DataSet(
+    'dataset2' : DataSet(
                         ------> FIFO ------> diff ------> socket (remote client)
                        /
     socket (source) ----------> FIFO -------------------> socket (local client)
@@ -317,7 +377,7 @@ class DataServer():
                 self.sinks.pop(sink_id)
                 logger.debug(f'dropped sink [{sock.addr}]')
 
-    def __init__(self, port: int):
+    def __init__(self, port: int=DATASERV_PORT):
         """port: TCP/IP port of the data server"""
         self.port = port
         # a dictionary with string identifiers mapping to DataSet objects
@@ -488,11 +548,21 @@ class DataServer():
                 pass
             raise
 
+    def __enter__(self):
+        """Python context manager setup"""
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Python context manager teardown"""
+        self.stop()
+
 class DataSource():
     """For sourcing data to a DataServer"""
-    def __init__(self, name: str, addr: str, port: int):
+    def __init__(self, name: str, addr: str='localhost', port: int=DATASERV_PORT):
         # name of the dataset
         self.name = name
+        # dict mapping the object name to the watched object itself
+        self.data = {}
         # IP address of the data server to connect to
         self.addr = addr
         # port of the data server to connect to
@@ -504,6 +574,13 @@ class DataSource():
         # thread for running self.event_loop
         self.thread = Thread(target=self._event_loop_thread)
         self.thread.start()
+
+    def add(self, name, obj):
+        """Add a new object to the data set"""
+        if not name in self.data:
+            self.data[name] = obj
+        else:
+            raise DataServerError(f'An object with the name "{name}" already exists in the data set')
 
     def _event_loop_thread(self):
         """Run the asyncio event loop - this may be run in a separate thread because
@@ -607,21 +684,31 @@ class DataSource():
         """Serialize a python object into a byte stream"""
         return pickle.dumps(obj)
 
-    def push(self, obj):
+    def update(self):
         """User-facing function for pushing new data to the server"""
-        # serialize the object
-        new_pickle = self._serialize(obj)
+        # serialize the objects
+        new_pickle = self._serialize(self.data)
         logger.debug(f'source pushing object of [{len(new_pickle)}] bytes pickled')
         # put it on the queue
         future = asyncio.run_coroutine_threadsafe(self._push(new_pickle), self.event_loop)
         # wait for the coroutine to return
         result = future.result()
 
+    def __enter__(self):
+        """Python context manager setup"""
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Python context manager teardown"""
+        self.stop()
+
 class DataSink():
     """For sinking data from a DataServer"""
-    def __init__(self, name: str, addr: str, port: int, data_type_override: bytes=SINK_DATA_TYPE_DEFAULT):
+    def __init__(self, name: str, addr: str='localhost', port: int=DATASERV_PORT, data_type_override: bytes=SINK_DATA_TYPE_DEFAULT):
         # name of the dataset
         self.name = name
+        # dict mapping the object name to the watched object
+        self.data = {}
         # IP address of the data server to connect to
         self.addr = addr
         # port of the data server to connect to
@@ -769,9 +856,9 @@ class DataSink():
         """Deserialize a python object from a byte stream"""
         return pickle.loads(obj)
 
-    def pop(self, timeout=None):
+    def update(self, timeout=None):
         """User-facing function for popping new data from the server"""
-        # get the most pickle from the queue
+        # get the most recent pickle from the queue
         future = asyncio.run_coroutine_threadsafe(self._pop(timeout), self.event_loop)
         try:
             # wait for the coroutine to return
@@ -780,5 +867,21 @@ class DataSink():
             # raise TimeoutError if no pickle is available
             raise TimeoutError
         logger.debug(f'pop returning [{len(new_pickle)}] bytes unpickled')
-        # return unpickled object
-        return self._deserialize(new_pickle)
+        # update objects
+        self.data = self._deserialize(new_pickle)
+
+    def __getattr__(self, attr: str):
+        """Allow the user to access the data objects using sink.obj notation"""
+        if attr in self.data:
+            return self.data[attr]
+        else:
+            # raise the default python error when an attribute isn't found
+            return self.__getattribute__(attr)
+
+    def __enter__(self):
+        """Python context manager setup"""
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Python context manager teardown"""
+        self.stop()

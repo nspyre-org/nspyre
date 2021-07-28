@@ -3,104 +3,121 @@ import time
 import logging
 import random
 
-from nspyre.dataserv import DataSource, DataSink, SINK_DATA_TYPE_DEFAULT, SINK_DATA_TYPE_DELTA, SINK_DATA_TYPE_PICKLE
-from nspyre.definitions import DATASERV_PORT
+from nspyre import DataSource, DataSink, SINK_DATA_TYPE_DEFAULT, SINK_DATA_TYPE_DELTA, SINK_DATA_TYPE_PICKLE
 
 logger = logging.getLogger(__name__)
 
-def test_dataserv_push_pop(name: str='push_pop', data_type_override: bytes=SINK_DATA_TYPE_DEFAULT):
+def dataserv_push_pop(name: str='push_pop', data_type_override: bytes=SINK_DATA_TYPE_DEFAULT):
     """Test the base functionality of the data server by synchronously
-    pushing then popping an object repeatedly, and verifying the data integrity
-    after it passes through the server"""
+    pushing then popping an object repeatedly"""
 
-    source = DataSource(name, 'localhost', DATASERV_PORT)
-    # allow time for the server to set up the data source
-    time.sleep(0.1)
+    with DataSource(name) as source:
+        # allow time for the server to set up the data source
+        time.sleep(0.1)
+        with DataSink(name, data_type_override=data_type_override) as sink:
+            # allow time for the server to set up the data sink
+            time.sleep(0.1)
 
-    sink = DataSink(name, 'localhost', DATASERV_PORT, data_type_override=data_type_override)
-    # allow time for the server to set up the data sink
-    time.sleep(0.1)
+            # example data set 2D array
+            # array size
+            n = 1000
+            watched_var = np.zeros((n, n))
+            source.add('watched_var', watched_var)
 
-    # example data set 2D array
-    # array size
-    n = 1000
-    watched_var = np.zeros((n, n))
+            iterations = 100
+            total_time = 0
+            for i in range(iterations):
+                # pick a number of changes to make to the data set
+                nchanges = np.random.randint(1, 10)
+                for c in range(nchanges):
+                    # pick a random index
+                    idx1 = np.random.randint(0, n-1)
+                    idx2 = np.random.randint(0, n-1)
+                    # set that index to a random value
+                    watched_var[idx1][idx2] = np.random.rand()
 
-    iterations = 100
-    total_time = 0
-    for i in range(iterations):
-        # pick a number of changes to make to the data set
-        nchanges = np.random.randint(1, 10)
-        for c in range(nchanges):
-            # pick a random index
-            idx1 = np.random.randint(0, n-1)
-            idx2 = np.random.randint(0, n-1)
-            # set that index to a random value
-            watched_var[idx1][idx2] = np.random.rand()
-
-        start_time = time.time()
-        # push the new value to the data server
-        source.push(watched_var)
-        # pop the new value from the data server
-        remote_watched_var = sink.pop()
-        end_time = time.time()
-        total_time += end_time - start_time
-        # make sure they're the same
-        assert watched_var.all() == remote_watched_var.all()
-        logger.info(f'completed [{100*(i+1)/iterations}]%')
-    avg_time = total_time / iterations
-
-    # clean up
-    source.stop()
-    sink.stop()
+                # time the data server operations
+                start_time = time.time()
+                # push the new value to the data server
+                source.update()
+                # wait for the new data to be available from the data server
+                sink.update()
+                end_time = time.time()
+                total_time += end_time - start_time
+                # make sure the data is identical
+                assert watched_var.all() == sink.watched_var.all()
+                logger.info(f'completed [{100*(i+1)/iterations:>5.1f}]%')
+            avg_time = total_time / iterations
 
     logger.info(f'completed run [{name}] - total time [{total_time:.3f}]s average time per push/pop [{avg_time:.3f}]s')
 
 def test_dataserv_push_pop_delta():
     """Test the base functionality of the data server by synchronously
-    pushing then popping an object repeatedly, and verifying the data integrity
-    after it passes through the server - but force the server to use deltas"""
-    test_dataserv_push_pop(name='push_pop_delta', data_type_override=SINK_DATA_TYPE_DELTA)
+    pushing then popping an object repeatedly, but force the server to use 
+    deltas"""
+    dataserv_push_pop(name='push_pop_delta', data_type_override=SINK_DATA_TYPE_DELTA)
 
 def test_dataserv_push_pop_pickle():
     """Test the base functionality of the data server by synchronously
-    pushing then popping an object repeatedly, and verifying the data integrity
-    after it passes through the server - but force the server to use pickles"""
-    test_dataserv_push_pop(name='push_pop_pickle', data_type_override=SINK_DATA_TYPE_PICKLE)
+    pushing then popping an object repeatedly, but force the server to use 
+    pickles"""
+    dataserv_push_pop(name='push_pop_pickle', data_type_override=SINK_DATA_TYPE_PICKLE)
 
-# def test_dataserv_push_multipop():
+def dataserv_push_multipop(name: str='push_multipop', data_type_override: bytes=SINK_DATA_TYPE_DEFAULT):
+    """Test the base functionality of the data server by synchronously
+    pushing an object, then popping it from two different sinks"""
 
-#     # test object
-#     obj_n = 5
-#     obj = np.ones((obj_n, obj_n))
+    with DataSource(name) as source:
+        # allow time for the server to set up the data source
+        time.sleep(0.1)
+        with DataSink(name, data_type_override=data_type_override) as sink1, DataSink(name, data_type_override=data_type_override) as sink2:
+            # allow time for the server to set up the data sink
+            time.sleep(0.1)
 
-#     # connection to the data server that we can push objects to
-#     source = DataSource('data1', 'localhost', DATASERV_PORT)
+            # example data set 2D array
+            # array size
+            n = 1000
+            watched_var = np.zeros((n, n))
+            source.add('watched_var', watched_var)
 
-#     # wait for the data source to be connected
-#     time.sleep(1)
+            iterations = 100
+            total_time = 0
+            for i in range(iterations):
+                # pick a number of changes to make to the data set
+                nchanges = np.random.randint(1, 10)
+                for c in range(nchanges):
+                    # pick a random index
+                    idx1 = np.random.randint(0, n-1)
+                    idx2 = np.random.randint(0, n-1)
+                    # set that index to a random value
+                    watched_var[idx1][idx2] = np.random.rand()
 
-#     # connection to the data server that we can pop objects from
-#     sink1 = DataSink('data1', 'localhost', DATASERV_PORT)
-#     sink2 = DataSink('data1', 'localhost', DATASERV_PORT)
+                # time the data server operations
+                start_time = time.time()
+                # push the new value to the data server
+                source.update()
+                # wait for the new data to be available from the data server
+                sink1.update()
+                sink2.update()
+                end_time = time.time()
+                total_time += end_time - start_time
+                # make sure the data is identical
+                assert watched_var.all() == sink1.watched_var.all()
+                assert watched_var.all() == sink2.watched_var.all()
+                logger.info(f'completed [{100*(i+1)/iterations:>5.1f}]%')
+            avg_time = total_time / iterations
 
-#     for i in range(obj_n):
-#         for j in range(obj_n):
-#             # change the object
-#             obj[i][j] = np.random.rand()
-#             # push the change to the server
-#             source.push(obj)
+def test_dataserv_push_multipop_delta():
+    """Test the base functionality of the data server by synchronously
+    pushing an object, then popping it from two different sinks, but force the 
+    server to use deltas"""
+    dataserv_push_multipop(name='push_pop_delta', data_type_override=SINK_DATA_TYPE_DELTA)
 
-#             # pop the change from the server
-#             tele_obj1 = sink1.pop()
-#             tele_obj2 = sink2.pop()
-#             # make sure the copy coming from the server is identical to the local copy
-#             assert obj.all() == tele_obj1.all()
-#             assert obj.all() == tele_obj2.all()
-
-#     source.stop()
-#     sink1.stop()
-#     sink2.stop()
+def test_dataserv_push_multipop_pickle():
+    """Test the base functionality of the data server by synchronously
+    pushing an object, then popping it from two different sinks, but force the 
+    server to use pickles"""
+    dataserv_push_multipop(name='push_pop_pickle', data_type_override=SINK_DATA_TYPE_PICKLE)
 
 # def test_dataserv_push_late_pop():
 

@@ -18,18 +18,25 @@ from rpyc import ClassicService
 from rpyc.utils.server import ThreadedServer
 from rpyc.utils.classic import obtain
 
-from nspyre.errors import InstrumentServerError
-from nspyre.definitions import RPYC_SYNC_TIMEOUT, INSERV_DEFAULT_PORT
-from nspyre.misc.misc import load_class_from_file, load_class_from_str, register_quantity_brining
+from ..misc.misc import load_class_from_file, load_class_from_str
+from ..misc.pint import register_quantity_brining, Q_
 
 # monkey-patch fix for pint module
-from nspyre.definitions import Q_
 register_quantity_brining(Q_)
 
 logger = logging.getLogger(__name__)
 
+# default instrument server port
+INSERV_DEFAULT_PORT = 42068
+
+# rpyc send/receive timeout in s
+RPYC_SYNC_TIMEOUT = None
+
 # event used for waiting until the rpyc server thread has finished
 RPYC_SERVER_STOP_EVENT = threading.Event()
+
+class InstrumentServerError(Exception):
+    """Raised for failures related to the Instrument Server."""
 
 class InstrumentServer(ClassicService):
     """RPyC service that loads devices and exposes them to the client"""

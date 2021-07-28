@@ -12,15 +12,19 @@ import logging
 
 import rpyc
 
-from nspyre.definitions import RPYC_CONN_TIMEOUT, RPYC_SYNC_TIMEOUT, INSERV_DEFAULT_PORT
-from nspyre.errors import InstrumentGatewayError
-from nspyre.misc.misc import register_quantity_brining
+from .inserv import INSERV_DEFAULT_PORT, RPYC_SYNC_TIMEOUT
+from ..misc.pint import register_quantity_brining, Q_
 
 # monkey-patch fix for pint module
-from nspyre.definitions import Q_
 register_quantity_brining(Q_)
 
 logger = logging.getLogger(__name__)
+
+# rpyc connection timeout in s
+RPYC_CONN_TIMEOUT = None
+
+class InstrumentGatewayError(Exception):
+    """Raised for failures related to the Instrument Gateway."""
 
 class InstrumentGateway:
     """This class is a wrapper around an RPyC server connection"""

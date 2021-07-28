@@ -47,7 +47,6 @@ from pint.util import infer_base_unit
 
 from nspyre.config import load_meta_config
 from nspyre.definitions import Q_, CLIENT_META_CONFIG_PATH
-from nspyre.errors import InstrumentManagerError
 from nspyre.inserv import InservGateway
 
 __all__ = []
@@ -59,6 +58,8 @@ UPDATE_HEX_COLOR = '#1CE33D'
 UPDATE_DISPLAY_TIME = 350
 REFRESH_PROGRESS_HEX_COLOR = '#2E5E9B'
 
+class InstrumentManagerError(Exception):
+    """Raised for failures related to the InstrumentManagerWindow QMainWindow."""
 
 def disable_widget_scroll_wheel_event(control: QWidget) -> None:
     """Convenience function to prevent a scroll wheel event from affecting a widget unless:

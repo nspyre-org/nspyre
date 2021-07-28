@@ -4,6 +4,8 @@ import logging.handlers
 import sys
 from pathlib import Path
 
+# max size of a log file (in bytes) before creating a new one
+LOG_FILE_MAX_SIZE = 100e6
 
 class StreamToLog(object):
     """Fake stream object that redirects writes to a logger"""

@@ -14,9 +14,8 @@ import logging
 import argparse
 import signal
 
-from nspyre.dataserv import DataServer
-from nspyre.definitions import DATASERV_PORT
-from nspyre.misc.logging import nspyre_init_logger
+from ..dataserv.dataserv import DataServer
+from ..misc.logging import nspyre_init_logger, LOG_FILE_MAX_SIZE
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +68,7 @@ def main():
                             default=None,
                             help='log to the provided file / directory')
     arg_parser.add_argument('-p', '--port', type=int,
-                            default=DATASERV_PORT,
+                            default=None,
                             help='Port to run the server on')
     arg_parser.add_argument('-q', '--quiet',
                             action='store_true',
@@ -96,13 +95,17 @@ def main():
         if cmd_args.log:
             nspyre_init_logger(log_level, log_path=Path(cmd_args.log),
                                         log_path_level=logging.DEBUG,
-                                        prefix='dataserv')
+                                        prefix='dataserv',
+                                        filesize=LOG_FILE_MAX_SIZE)
         else:
             # the user asked for no log file
             nspyre_init_logger(log_level)
 
     # init the data server
-    dataserv = DataServer(cmd_args.port)
+    if cmd_args.port:
+        dataserv = DataServer(cmd_args.port)
+    else:
+        dataserv = DataServer()
 
     # properly stop the server when a kill signal is received
     def stop_server(signum, frame):

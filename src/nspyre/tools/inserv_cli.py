@@ -17,8 +17,9 @@ import pdb
 import logging
 import signal
 
-from nspyre import InstrumentServer, InstrumentGateway, InstrumentServerError, nspyre_init_logger
-from nspyre.definitions import LOG_FILE_MAX_SIZE
+from ..inserv.inserv import InstrumentServer, InstrumentServerError
+from ..inserv.gateway import InstrumentGateway
+from ..misc.logging import nspyre_init_logger, LOG_FILE_MAX_SIZE
 
 logger = logging.getLogger(__name__)
 

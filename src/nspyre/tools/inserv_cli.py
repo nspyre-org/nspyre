@@ -17,11 +17,16 @@ import pdb
 import logging
 import signal
 
-from ..inserv.inserv import InstrumentServer, InstrumentServerError
-from ..inserv.gateway import InstrumentGateway
-from ..misc.logging import nspyre_init_logger, LOG_FILE_MAX_SIZE
+from nspyre import (
+    InstrumentServer,
+    InstrumentServerError,
+    InstrumentGateway,
+    nspyre_init_logger,
+)
+from nspyre.misc.logging import LOG_FILE_MAX_SIZE
 
 logger = logging.getLogger(__name__)
+
 
 class InservCmdPrompt(cmd.Cmd):
     """Instrument Server shell prompt processor"""
@@ -111,16 +116,26 @@ def main():
         prog='nspyre-inserv', description='Start an nspyre instrument server'
     )
     arg_parser.add_argument(
-        '-l', '--log', default=None, help='log to the provided file / directory'
+        '-l',
+        '--log',
+        default=None,
+        help='log to the provided file / directory',
     )
     arg_parser.add_argument(
-        '-p', '--port', default=None, type=int, help='port to start the server on'
+        '-p',
+        '--port',
+        default=None,
+        type=int,
+        help='port to start the server on',
     )
     arg_parser.add_argument(
         '-q', '--quiet', action='store_true', help='disable logging'
     )
     arg_parser.add_argument(
-        '-s', '--start', action='store_true', help='start the instrument server without trying to connect'
+        '-s',
+        '--start',
+        action='store_true',
+        help='start the instrument server without trying to connect',
     )
     arg_parser.add_argument(
         '-v',
@@ -169,7 +184,9 @@ def main():
                 inserv = InstrumentGateway()
         except Exception as exc:
             logger.exception(exc)
-            answer = input('Failed connecting to the Instrument Server. Create one? [Y/n] ')
+            answer = input(
+                'Failed connecting to the Instrument Server. Create one? [Y/n] '
+            )
             if answer in ['y', 'Y', '']:
                 new_server = True
             else:
@@ -189,6 +206,7 @@ def main():
         def stop_server(signum, frame):
             inserv.stop()
             raise SystemExit
+
         signal.signal(signal.SIGINT, stop_server)
         signal.signal(signal.SIGTERM, stop_server)
 

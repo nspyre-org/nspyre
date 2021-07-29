@@ -9,7 +9,6 @@ from .spinbox import SpinBox
 
 
 class ParamWidget(QtWidgets.QWidget):
-
     def __init__(self, parameters, parent=None):
         super().__init__(parent=parent)
         self.parameters = parameters
@@ -75,7 +74,9 @@ class ParamWidget(QtWidgets.QWidget):
                 if type(items) == list:
                     w.setItems(items)
                 else:
-                    raise ValueError('items must be specified and of type list to add a list type entry to ParamWidget')
+                    raise ValueError(
+                        'items must be specified and of type list to add a list type entry to ParamWidget'
+                    )
                 getter_method = w.value
                 setter_method = w.setText
                 if not default is None:
@@ -89,7 +90,9 @@ class ParamWidget(QtWidgets.QWidget):
                 if type(items) == dict:
                     w.setItems(items)
                 else:
-                    raise ValueError('items must be specified and of type dict to add a dict type entry to ParamWidget')
+                    raise ValueError(
+                        'items must be specified and of type dict to add a dict type entry to ParamWidget'
+                    )
                 getter_method = w.value
                 setter_method = w.setValue
                 if not default is None:

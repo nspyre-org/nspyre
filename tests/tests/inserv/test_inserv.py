@@ -9,10 +9,8 @@ import logging
 import atexit
 import subprocess
 import time
-import datetime
 
 import pytest
-from pint import UnitRegistry
 from rpyc.core.vinegar import GenericException
 
 from nspyre import InstrumentGateway, InstrumentGatewayError, Q_
@@ -27,8 +25,8 @@ class TestInserv:
 
     def test_connect_fail(self, inserv):
         """Test the gateway returns an error if the ip is wrong"""
-        with pytest.raises(InstrumentGatewayError) as e_info:
-            not_a_gateway = InstrumentGateway(addr='an invalid ip!')
+        with pytest.raises(InstrumentGatewayError):
+            InstrumentGateway(addr='an invalid ip!')
 
     def test_device_add_from_file(self, gateway_with_devs):
         """Test the gateway fixture contains drivers that were loaded from files"""
@@ -42,7 +40,7 @@ class TestInserv:
         gateway_with_devs.restart('daq')
         assert gateway_with_devs.daq
         gateway_with_devs.remove('daq')
-        with pytest.raises(AttributeError) as e_info:
+        with pytest.raises(AttributeError):
             gateway_with_devs.daq
 
     def test_device_add_from_module(self, gateway, free_port):
@@ -51,8 +49,11 @@ class TestInserv:
 
         # start the lantz example voltmeter process
         vm_proc = subprocess.Popen(
-            ['lantz-sims', 'voltmeter', 'tcp', '--port', str(free_port)], stdin=subprocess.PIPE, stdout=subprocess.PIPE
+            ['lantz-sims', 'voltmeter', 'tcp', '--port', str(free_port)],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
         )
+
         # make sure the inserv gets killed on exit even if there's an error
         def cleanup():
             vm_proc.kill()
@@ -63,7 +64,11 @@ class TestInserv:
 
         # add the driver to the inserv
         gateway.add(
-            'vm', 'lantz.drivers.examples', 'LantzVoltmeter', f'TCPIP::localhost::{free_port}::SOCKET', import_or_file='import'
+            'vm',
+            'lantz.drivers.examples',
+            'LantzVoltmeter',
+            f'TCPIP::localhost::{free_port}::SOCKET',
+            import_or_file='import',
         )
 
         # lantz requires drivers to be initialized before use
@@ -74,13 +79,14 @@ class TestInserv:
         # stop the lantz voltmeter process
         vm_proc.kill()
 
+
 class TestInservLantz:
     def test_lantz_feats_get_set_value(self, gateway_with_devs):
         """Test lantz feat get/set with feat with 'values=' specified"""
         gateway_with_devs.sg.output_enabled = True
-        assert gateway_with_devs.sg.output_enabled == True
+        assert gateway_with_devs.sg.output_enabled
         gateway_with_devs.sg.output_enabled = False
-        assert gateway_with_devs.sg.output_enabled == False
+        assert not gateway_with_devs.sg.output_enabled
 
         gateway_with_devs.sg.waveform = 'sine'
         assert gateway_with_devs.sg.waveform == 'sine'
@@ -118,15 +124,15 @@ class TestInservLantz:
         """test basic dictfeat get/set"""
         for k in range(1, 10):
             gateway_with_devs.daq.dout[k] = False
-            assert gateway_with_devs.daq.dout[k] == False
+            assert not gateway_with_devs.daq.dout[k]
         for k in range(1, 10):
             gateway_with_devs.daq.dout[k] = True
-            assert gateway_with_devs.daq.dout[k] == True
+            assert gateway_with_devs.daq.dout[k]
 
     def test_lantz_dictfeats_ro(self, gateway_with_devs):
         """test read-only dictfeats"""
         gateway_with_devs.daq.reset_din(False)
         for k in range(1, 10):
-            assert gateway_with_devs.daq.din[k] == False
+            assert not gateway_with_devs.daq.din[k]
             gateway_with_devs.daq.toggle_din(k)
-            assert gateway_with_devs.daq.din[k] == True
+            assert gateway_with_devs.daq.din[k]

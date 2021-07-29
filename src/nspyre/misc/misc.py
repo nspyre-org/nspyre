@@ -1,13 +1,13 @@
-from collections.abc import Iterable
 import functools
 import importlib
 import inspect
 import sys
 import warnings
-
-import numpy as np
+from pathlib import Path
+from typing import Type
 
 string_types = (type(b''), type(u''))
+
 
 def deprecated(reason):
     """
@@ -39,7 +39,7 @@ def deprecated(reason):
                 warnings.warn(
                     fmt1.format(name=func1.__name__, reason=reason),
                     category=DeprecationWarning,
-                    stacklevel=2
+                    stacklevel=2,
                 )
                 warnings.simplefilter('default', DeprecationWarning)
                 return func1(*args, **kwargs)
@@ -71,7 +71,7 @@ def deprecated(reason):
             warnings.warn(
                 fmt2.format(name=func2.__name__),
                 category=DeprecationWarning,
-                stacklevel=2
+                stacklevel=2,
             )
             warnings.simplefilter('default', DeprecationWarning)
             return func2(*args, **kwargs)
@@ -82,7 +82,7 @@ def deprecated(reason):
         raise TypeError(repr(type(reason)))
 
 
-def load_class_from_str(class_str):
+def load_class_from_str(class_str: str) -> Type:
     """Load a python class object (available in the local scope)
     from a string"""
     class_name = class_str.split('.')[-1]
@@ -94,11 +94,11 @@ def load_class_from_str(class_str):
     else:
         # load the module
         mod = importlib.import_module(module_name)
-    
+
     return getattr(mod, class_name)
 
 
-def load_class_from_file(file_path, class_name):
+def load_class_from_file(file_path: Path, class_name: str) -> Type:
     """Load a python class object from an external python file"""
 
     # confirm the file exists
@@ -114,9 +114,9 @@ def load_class_from_file(file_path, class_name):
         loaded_module = importlib.reload(sys.modules[file_name])
     else:
         loaded_module = importlib.import_module(file_name)
-    
+
     loaded_class = getattr(loaded_module, class_name)
-    
+
     return loaded_class
 
 
@@ -124,5 +124,6 @@ def qt_set_trace():
     """Set a tracepoint in the Python debugger that works with Qt"""
     from PyQt5.QtCore import pyqtRemoveInputHook
     from pdb import set_trace
+
     pyqtRemoveInputHook()
     set_trace()

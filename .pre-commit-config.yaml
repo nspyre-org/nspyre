@@ -1,27 +1,30 @@
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1 # https://github.com/pre-commit/pre-commit-hooks/tags
     hooks:
-      - id: check-added-large-files
-      - id: check-yaml
-      - id: end-of-file-fixer
-        exclude:
-      - id: trailing-whitespace
+    -   id: check-added-large-files
+    -   id: check-docstring-first
+    -   id: check-executables-have-shebangs
+    -   id: check-merge-conflict
+    -   id: check-shebang-scripts-are-executable
+    -   id: check-yaml
+    -   id: end-of-file-fixer
 
-  - repo: https://github.com/psf/black
-    rev: 20.8b1 # Replace by any tag/version: https://github.com/psf/black/tags
+-   repo: https://github.com/psf/black
+    rev: 21.7b0 # https://github.com/psf/black/tags
     hooks:
-      - id: black
-        language_version: python3 # Should be a command that runs python3.6+
+    -   id: black
+        language_version: python3.9
 
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.8.1
+-   repo: https://gitlab.com/pycqa/flake8
+    rev: 3.9.2 # https://gitlab.com/pycqa/flake8/-/tags
     hooks:
-      - id: flake8
+    -   id: flake8
         additional_dependencies: [flake8-bugbear, flake8-docstrings]
+        exclude: ^src/nspyre/gui/
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.770
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v0.910
     hooks:
-      - id: mypy
-        exclude: ^docs/conf.py
+    -   id: mypy
+        exclude: ^src/nspyre/gui/|^tests/fixtures/drivers/

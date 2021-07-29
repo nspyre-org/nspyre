@@ -13,17 +13,17 @@ import subprocess
 import atexit
 import time
 import logging
-from contextlib import contextmanager
 import socket
 from contextlib import closing
 
 import pytest
 import psutil
 
-from nspyre import InstrumentGateway, nspyre_init_logger
+from nspyre import InstrumentGateway, InstrumentGatewayError
 
 HERE = Path(__file__).parent
 DRIVERS = HERE / 'fixtures/drivers'
+
 
 def _free_port():
     """Return a free port number"""
@@ -32,16 +32,21 @@ def _free_port():
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         return s.getsockname()[1]
 
+
 @pytest.fixture
 def free_port():
     return _free_port()
+
 
 @pytest.fixture
 def dataserv():
     """An unresolved bug currently prevents nspyre-dataserv from being started
     automatically, so for now just throw an error if it isn't running"""
-    if not 'nspyre-dataserv' in [p.name() for p in psutil.process_iter()]:
-        raise Exception("nspyre-dataserv doesn't seem to be running and must be started manually")
+    if 'nspyre-dataserv' not in [p.name() for p in psutil.process_iter()]:
+        raise Exception(
+            "nspyre-dataserv doesn't seem to be running and must be started manually"
+        )
+
 
 @pytest.fixture
 def inserv():
@@ -51,17 +56,31 @@ def inserv():
     # delete the log file if it already exists
     inserv_log_path.unlink(missing_ok=True)
     # start the instrument server in a new process
-    inserv_proc = subprocess.Popen(['nspyre-inserv', '-s', '-v', 'debug', '-l', inserv_log_path, '-p', str(port)],
-                                stdin=subprocess.PIPE)
+    inserv_proc = subprocess.Popen(
+        [
+            'nspyre-inserv',
+            '-s',
+            '-v',
+            'debug',
+            '-l',
+            inserv_log_path,
+            '-p',
+            str(port),
+        ],
+        stdin=subprocess.PIPE,
+    )
+
     # make sure the inserv gets killed on exit even if there's an error
     def cleanup():
         inserv_proc.kill()
+
     atexit.register(cleanup)
 
     yield {'port': port, 'log': inserv_log_path}
 
     # stop the instrument server process
     inserv_proc.kill()
+
 
 # depend on inserv to make sure it gets started first
 @pytest.fixture
@@ -83,11 +102,12 @@ def gateway(inserv):
                 yield gw
 
                 break
-        except:
+        except InstrumentGatewayError:
             time.sleep(0.1)
             # wait up to 1 second before giving up
             assert counter < 10
             counter += 1
+
 
 @pytest.fixture
 def gateway_with_devs(gateway):

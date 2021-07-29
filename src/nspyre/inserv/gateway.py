@@ -23,11 +23,14 @@ logger = logging.getLogger(__name__)
 # rpyc connection timeout in s
 RPYC_CONN_TIMEOUT = None
 
+
 class InstrumentGatewayError(Exception):
     """Raised for failures related to the Instrument Gateway."""
 
+
 class InstrumentGateway:
     """This class is a wrapper around an RPyC server connection"""
+
     def __init__(self, addr: str = 'localhost', port: int = INSERV_DEFAULT_PORT):
         """Initialize a connection to an Instrument Server
         :param addr: network address of the Instrument Server
@@ -43,10 +46,15 @@ class InstrumentGateway:
         """Attempt connection to an instrument server"""
         try:
             # connect to the rpyc server running on the instrument server
-            self._connection = rpyc.connect(self.addr, self.port,
-                                config={'allow_pickle': True,
-                                        'timeout': RPYC_CONN_TIMEOUT,
-                                        'sync_request_timeout': RPYC_SYNC_TIMEOUT})
+            self._connection = rpyc.connect(
+                self.addr,
+                self.port,
+                config={
+                    'allow_pickle': True,
+                    'timeout': RPYC_CONN_TIMEOUT,
+                    'sync_request_timeout': RPYC_SYNC_TIMEOUT,
+                },
+            )
             # start up a background thread to fullfill requests on the
             # client side
             self._thread = rpyc.BgServingThread(self._connection)
@@ -55,8 +63,12 @@ class InstrumentGateway:
             # client's object dictionaries - appears necessary for lantz
             self._connection._config['allow_all_attrs'] = True
         except Exception as exc:
-            raise InstrumentGatewayError(f'Failed to connect to instrument server at "{self.addr}:{self.port}"') from exc
-        logger.info(f'Gateway connected to instrument server at "{self.addr}:{self.port}"')
+            raise InstrumentGatewayError(
+                f'Failed to connect to instrument server at "{self.addr}:{self.port}"'
+            ) from exc
+        logger.info(
+            f'Gateway connected to instrument server at "{self.addr}:{self.port}"'
+        )
 
     def disconnect(self):
         """Disconnect from the instrument server"""

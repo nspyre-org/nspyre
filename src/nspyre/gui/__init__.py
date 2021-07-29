@@ -22,7 +22,7 @@ __all__ = [
     'PlotFormatInit',
     'PlotFormatUpdate',
     'colors',
-    'save_data'
+    'save_data',
 ]
 
 logger = logging.getLogger(__name__)

@@ -15,6 +15,7 @@ import os
 import pathlib
 import re
 import sys
+
 sys.path.insert(0, os.path.abspath('.'))
 
 
@@ -34,9 +35,7 @@ def find_version(*file_paths):
     string inside.
     """
     version_file = read(*file_paths)
-    version_match = re.search(
-        r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M
-    )
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M)
     if version_match:
         return version_match.group(1)
     raise RuntimeError("Unable to find version string.")
@@ -64,19 +63,19 @@ needs_sphinx = '3.1.2'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.mathjax', # for math formulas
-    'sphinx.ext.napoleon', # for numpy and google style docstrings
-    #'sphinx_autodoc_typehints',
-    #'sphinx.ext.viewcode',
-    #'sphinx.ext.extlinks',
-    #'sphinx_tabs.tabs',
-    #'sphinx_automodapi.automodapi',
-    #'jupyter_sphinx',
-    'nbsphinx', # for .ipynb file support (i.e. jupyter notebooks)
-    #'sphinxcontrib.bibtex', # for bibliographic references
+    'sphinx.ext.mathjax',  # for math formulas
+    'sphinx.ext.napoleon',  # for numpy and google style docstrings
+    # 'sphinx_autodoc_typehints',
+    # 'sphinx.ext.viewcode',
+    # 'sphinx.ext.extlinks',
+    # 'sphinx_tabs.tabs',
+    # 'sphinx_automodapi.automodapi',
+    # 'jupyter_sphinx',
+    'nbsphinx',  # for .ipynb file support (i.e. jupyter notebooks)
+    # 'sphinxcontrib.bibtex', # for bibliographic references
     'sphinx.ext.imgconverter',
-    'sphinxcontrib.rsvgconverter', # for SVG->PDF conversion in LaTeX output
-    'sphinx_copybutton' # for adding 'copy to clipboard' buttons to all text/code boxes
+    'sphinxcontrib.rsvgconverter',  # for SVG->PDF conversion in LaTeX output
+    'sphinx_copybutton',  # for adding 'copy to clipboard' buttons to all text/code boxes
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -100,20 +99,20 @@ html_theme = 'sphinx_rtd_theme'
 # documentation.
 
 html_theme_options = {
-    #'canonical_url': '',
-    #'analytics_id': 'UA-XXXXXXX-1',  #  Provided by Google in your dashboard
+    # 'canonical_url': '',
+    # 'analytics_id': 'UA-XXXXXXX-1',  #  Provided by Google in your dashboard
     'logo_only': False,
     'display_version': True,
     'prev_next_buttons_location': 'bottom',
     'style_external_links': False,
-    #'vcs_pageview_mode': '',
+    # 'vcs_pageview_mode': '',
     'style_nav_header_background': '#2b2b2b',
     # Toc options
     'collapse_navigation': True,
     'sticky_navigation': False,
     'navigation_depth': 4,
     'includehidden': True,
-    'titles_only': False
+    'titles_only': False,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -122,8 +121,8 @@ html_theme_options = {
 html_static_path = ['_static']
 html_css_files = ['custom.css']
 
-#html_logo = 'images/logo.png'
-#html_favicon = 'images/favicon.ico'
+# html_logo = 'images/logo.png'
+# html_favicon = 'images/favicon.ico'
 
 html_last_updated_fmt = '%b %d, %Y'
-#'%Y/%m/%d'
+# '%Y/%m/%d'

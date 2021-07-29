@@ -20,7 +20,6 @@ pg.setConfigOptions(imageAxisOrder='row-major')
 
 
 class BasePlotWidget(QtWidgets.QWidget):
-
     def __init__(self, w=None, plot_item=None, parent=None):
         super().__init__(parent=parent)
         if w is None:
@@ -112,7 +111,7 @@ class BasePlotWidget(QtWidgets.QWidget):
     def clear(self):
         ypos = 'left' if self.yonleft else 'right'
         xpos = 'bottom' if self.xonbottom else 'top'
-        self.plot_item.setLabels(**{'title':'', xpos:'', ypos:''})
+        self.plot_item.setLabels(**{'title': '', xpos: '', ypos: ''})
 
     @property
     def invertY(self):
@@ -135,19 +134,25 @@ class BasePlotWidget(QtWidgets.QWidget):
         return
 
     def generate_meta(self, **kwargs):
-        d = {'xlabel':self._xlabel, 'ylabel':self._ylabel, 'title':self._title, 'invertX':self._invertX, 'invertY':self._invertY}
+        d = {
+            'xlabel': self._xlabel,
+            'ylabel': self._ylabel,
+            'title': self._title,
+            'invertX': self._invertX,
+            'invertY': self._invertY,
+        }
         d.update(kwargs)
         return d
 
-
-    def load_meta(self, meta, params=['xlabel', 'ylabel', 'title', 'invertX', 'invertY']):
+    def load_meta(
+        self, meta, params=['xlabel', 'ylabel', 'title', 'invertX', 'invertY']
+    ):
         for key in params:
             if key in meta and hasattr(self, key):
                 setattr(self, key, meta[key])
 
 
 class HeatmapPlotWidget(BasePlotWidget):
-
     def __init__(self, parent=None, cmap=None):
         plot_item = pg.PlotItem(enableMouse=False)
         w = pg.ImageView(view=plot_item)
@@ -171,35 +176,44 @@ class HeatmapPlotWidget(BasePlotWidget):
         return
 
     def _set_roi_pos(self):
-        #Tries to place the ROI in a good spot when clicking the button
+        # Tries to place the ROI in a good spot when clicking the button
         r = np.array(self.plot_item.getViewBox().viewRange())
         pos = r.mean(axis=1)
-        size = np.diff(r, axis=1)[:,0]
-        if any(abs(pos-self.w.roi.pos())>abs(size)):
+        size = np.diff(r, axis=1)[:, 0]
+        if any(abs(pos - self.w.roi.pos()) > abs(size)):
             self.w.roi.setPos(pos)
-        if any(2*size<self.w.roi.size()):
-            self.w.roi.setSize(size/2)
-
+        if any(2 * size < self.w.roi.size()):
+            self.w.roi.setSize(size / 2)
 
     def add_plotting_options(self):
         layout = QtWidgets.QVBoxLayout()
         self.plot_opts_checkboxes = dict()
-        for k,val in [('autoHistogramRange',False), ('autoLevels',True), ('autoRange',True)]:
+        for k, val in [
+            ('autoHistogramRange', False),
+            ('autoLevels', True),
+            ('autoRange', True),
+        ]:
             self.plot_opts_checkboxes[k] = w = QtWidgets.QCheckBox(k)
             w.setChecked(val)
             layout.addWidget(w)
-        
-        #Add aspect lock option
-        self.plot_opts_checkboxes['aspectLocked'] = w = QtWidgets.QCheckBox('aspectLocked')
+
+        # Add aspect lock option
+        self.plot_opts_checkboxes['aspectLocked'] = w = QtWidgets.QCheckBox(
+            'aspectLocked'
+        )
         w.setChecked(True)
         layout.addWidget(w)
-        w.stateChanged.connect(lambda x: setattr(self, 'aspectLocked', self.plot_opts_checkboxes['aspectLocked'].isChecked()))
-
+        w.stateChanged.connect(
+            lambda x: setattr(
+                self,
+                'aspectLocked',
+                self.plot_opts_checkboxes['aspectLocked'].isChecked(),
+            )
+        )
 
         tool_w = QtWidgets.QWidget()
         tool_w.setLayout(layout)
         self.toolbox.addItem(tool_w, "Plotting Options")
-
 
     def grid(self, toggle, alpha=0.4):
         self.plot_item.showGrid(x=toggle, y=toggle, alpha=alpha)
@@ -230,10 +244,16 @@ class HeatmapPlotWidget(BasePlotWidget):
         self._scale = scale
 
     def set(self, im):
-        self.w.setImage(im, pos=self._pos, scale=self._scale,
-                        autoRange=self.plot_opts_checkboxes['autoRange'].isChecked(),
-                        autoLevels=self.plot_opts_checkboxes['autoLevels'].isChecked(),
-                        autoHistogramRange=self.plot_opts_checkboxes['autoHistogramRange'].isChecked(),)
+        self.w.setImage(
+            im,
+            pos=self._pos,
+            scale=self._scale,
+            autoRange=self.plot_opts_checkboxes['autoRange'].isChecked(),
+            autoLevels=self.plot_opts_checkboxes['autoLevels'].isChecked(),
+            autoHistogramRange=self.plot_opts_checkboxes[
+                'autoHistogramRange'
+            ].isChecked(),
+        )
         return
 
     def get(self):
@@ -264,7 +284,9 @@ class LinePlotWidget(BasePlotWidget):
 
     def plot(self, tracename, **kwargs):
         symbol_pen = kwargs.get('symbol_pen', pg.mkPen(color=(255, 255, 255, 100)))
-        symbol_brush = kwargs.get('symbol_brush', pg.mkBrush(color=(255, 255, 255, 100)))
+        symbol_brush = kwargs.get(
+            'symbol_brush', pg.mkBrush(color=(255, 255, 255, 100))
+        )
         symbol_size = kwargs.get('symbol_size', 5)
         symbol = kwargs.get('symbol', 's')
         pen = kwargs.get('pen', pg.mkPen(color=(next(self._colors) + (200,)), width=1))
@@ -305,7 +327,9 @@ class LinePlotWidget(BasePlotWidget):
         ys = kwargs.pop('ys', None)
         yerrs = kwargs.pop('yerrs', None)
         if not any(item is None for item in [data, xs, ys]):
-            raise ValueError('No plot points supplied (either data or xs and ys must be given)')
+            raise ValueError(
+                'No plot points supplied (either data or xs and ys must be given)'
+            )
         if data is not None:
             xs, ys = list(zip(*data))
         if isinstance(xs, list):
@@ -331,7 +355,14 @@ class LinePlotWidget(BasePlotWidget):
                 trace_err.setZValue(-999)
                 self.w.addItem(trace_err)
                 self.traces[tracename] = trace, trace_err
-            ylines = list(zip(*[(yerr / 2, yerr / 2) if not np.isnan(yerr) else (0, 0) for y, yerr in zip(ys, yerrs)]))
+            ylines = list(
+                zip(
+                    *[
+                        (yerr / 2, yerr / 2) if not np.isnan(yerr) else (0, 0)
+                        for y, yerr in zip(ys, yerrs)
+                    ]
+                )
+            )
             if ylines:
                 ybottoms, ytops = ylines
                 trace_err.setData(x=xs, y=ys, top=ytops, bottom=ybottoms, beam=0.0)
@@ -352,8 +383,8 @@ class LinePlotWidget(BasePlotWidget):
     def __getitem__(self, tracename):
         return self.get(tracename)
 
-class FastImageWidget(BasePlotWidget):
 
+class FastImageWidget(BasePlotWidget):
     def __init__(self, parent=None):
         graphic_view = pg.GraphicsView()
         plot_item = pg.PlotItem(enableMouse=False)
@@ -381,11 +412,23 @@ class Crosshair(QtCore.QObject):
 
         pen = fn.mkPen((255, 255, 0, 127))
         self.vLine = pg.InfiniteLine(angle=90, pen=pen, movable=False)
-        self.hLine = pg.InfiniteLine(angle=0,  pen=pen, movable=False)
-        self.vLine.hoverEvent, self.hLine.hoverEvent = self.hoverEvent, self.hoverEvent
-        self.vLine.mouseDragEvent, self.hLine.mouseDragEvent = self.mouseDragEvent, self.mouseDragEvent
+        self.hLine = pg.InfiniteLine(angle=0, pen=pen, movable=False)
+        self.vLine.hoverEvent, self.hLine.hoverEvent = (
+            self.hoverEvent,
+            self.hoverEvent,
+        )
+        self.vLine.mouseDragEvent, self.hLine.mouseDragEvent = (
+            self.mouseDragEvent,
+            self.mouseDragEvent,
+        )
 
-        self.center_dot = pg.ScatterPlotItem(pos=[pos], pen=fn.mkPen((255,0,0, 127)), brush=(255,0,0), symbol='o', size=3)
+        self.center_dot = pg.ScatterPlotItem(
+            pos=[pos],
+            pen=fn.mkPen((255, 0, 0, 127)),
+            brush=(255, 0, 0),
+            symbol='o',
+            size=3,
+        )
 
         plot_item.addItem(self.vLine, ignoreBounds=True)
         plot_item.addItem(self.hLine, ignoreBounds=True)
@@ -401,7 +444,8 @@ class Crosshair(QtCore.QObject):
         self.vLine.setPos(self.pos[0])
         self.hLine.setPos(self.pos[1])
         self.center_dot.setData(pos=[pos])
-        if emit_sig: self.sigPositionChanged.emit(self.get_pos())
+        if emit_sig:
+            self.sigPositionChanged.emit(self.get_pos())
 
     def mouseDragEvent(self, ev):
         if ev.button() == QtCore.Qt.LeftButton:
@@ -419,10 +463,12 @@ class Crosshair(QtCore.QObject):
     def hoverEvent(self, ev):
         if (not ev.isExit()) and ev.acceptDrags(QtCore.Qt.LeftButton):
             self.hovering = True
-            for line in [self.vLine, self.hLine]: line.currentPen = fn.mkPen(255, 0,0)
+            for line in [self.vLine, self.hLine]:
+                line.currentPen = fn.mkPen(255, 0, 0)
         else:
             self.hovering = False
-            for line in [self.vLine, self.hLine]: line.currentPen = line.pen
+            for line in [self.vLine, self.hLine]:
+                line.currentPen = line.pen
         for line in [self.vLine, self.hLine]:
             line.update()
 
@@ -438,6 +484,7 @@ class Crosshair(QtCore.QObject):
 class CrosshairAddon(QtWidgets.QWidget):
     sigCrosshairAdded = QtCore.pyqtSignal(object)
     sigCrosshairRemoved = QtCore.pyqtSignal(object)
+
     def __init__(self, plot_item, **kwargs):
         super().__init__(**kwargs)
         self.plot_item = plot_item
@@ -445,7 +492,6 @@ class CrosshairAddon(QtWidgets.QWidget):
         self._spinbox_decimals = 4
 
         self.build_ui()
-
 
     @property
     def spinbox_decimals(self):
@@ -455,32 +501,42 @@ class CrosshairAddon(QtWidgets.QWidget):
     def spinbox_decimals(self, val):
         if self._spinbox_decimals != val:
             for r in range(self.table.rowCount()):
-                self.table.cellWidget(r,0).setDecimals(val)
-                self.table.cellWidget(r,1).setDecimals(val)
+                self.table.cellWidget(r, 0).setDecimals(val)
+                self.table.cellWidget(r, 1).setDecimals(val)
             self._spinbox_decimals = val
 
     def build_ui(self):
         self.table = QtWidgets.QTableWidget()
         self.table.setColumnCount(3)
-        self.table.setHorizontalHeaderLabels(['x','y','Delete'])
+        self.table.setHorizontalHeaderLabels(['x', 'y', 'Delete'])
 
-        #Add control (for now just an add button)
+        # Add control (for now just an add button)
         add_btn = QtWidgets.QPushButton('+ Add')
+
         def add():
             r = np.array(self.plot_item.getViewBox().viewRange())
             self.add_crosshair(r.mean(axis=1))
+
         add_btn.clicked.connect(lambda: add())
 
-        #Add a decimal precision box
-        decimal_input = SpinBox(value=self.spinbox_decimals, minStep=1, dec=False, int=True, bounds=(0, None), step=1)
-        decimal_input.valueChanged.connect(lambda x: setattr(self, 'spinbox_decimals', decimal_input.value()))
+        # Add a decimal precision box
+        decimal_input = SpinBox(
+            value=self.spinbox_decimals,
+            minStep=1,
+            dec=False,
+            int=True,
+            bounds=(0, None),
+            step=1,
+        )
+        decimal_input.valueChanged.connect(
+            lambda x: setattr(self, 'spinbox_decimals', decimal_input.value())
+        )
 
         ctrl_layout = QtWidgets.QFormLayout()
         ctrl_layout.addRow('Add Crosshair', add_btn)
         ctrl_layout.addRow('Floating point precision', decimal_input)
         ctrl_widget = QtWidgets.QWidget()
         ctrl_widget.setLayout(ctrl_layout)
-
 
         layout = QtWidgets.QGridLayout()
         layout.addWidget(ctrl_widget)
@@ -494,7 +550,7 @@ class CrosshairAddon(QtWidgets.QWidget):
         self.cross_list.append(cross)
 
         # Add the table entry
-        row = len(self.cross_list)-1
+        row = len(self.cross_list) - 1
         self.table.insertRow(row)
 
         # Add the x,y widgets
@@ -502,18 +558,18 @@ class CrosshairAddon(QtWidgets.QWidget):
             if cross.moving:
                 return
             cur = cross.get_pos()
-            if axis==0:
+            if axis == 0:
                 cross.set_pos([value, cur[1]], emit_sig=False)
-            elif axis==1:
+            elif axis == 1:
                 cross.set_pos([cur[0], value], emit_sig=False)
+
         def lambda_gen(axis):
             return lambda obj: update_pos(axis, obj.value())
 
         for i in range(2):
-            w = SpinBox(value = pos[i], dec=True, decimals=self.spinbox_decimals)
+            w = SpinBox(value=pos[i], dec=True, decimals=self.spinbox_decimals)
             self.table.setCellWidget(row, i, w)
             w.sigValueChanged.connect(lambda_gen(i))
-
 
         # Add a remove button
         btn = QtWidgets.QPushButton('X')
@@ -523,7 +579,6 @@ class CrosshairAddon(QtWidgets.QWidget):
         # Link the position of the cross to the numbers in the table
         cross.sigPositionChanged.connect(lambda: self.update_table_entry(cross))
         self.sigCrosshairAdded.emit(cross)
-
 
     def _find_index(self, cross):
         for i in range(len(self.cross_list)):
@@ -541,7 +596,6 @@ class CrosshairAddon(QtWidgets.QWidget):
         cross.delete()
         self.cross_list.pop(index)
         self.sigCrosshairRemoved.emit(index)
-
 
     def __getitem__(self, k):
         return self.cross_list[k].get_pos()
@@ -568,22 +622,22 @@ import numpy as np
 """
 
     DEFAULT_FUNCTIONS = {
-        'laurentzian':"""
+        'laurentzian': """
 # Laurentzian
 def fit_func(xs, A=1, gamma=1, x0=0, y0=0):
     return A/(1+(2*(xs-x0)/gamma)**2)+y0
     """,
-        'gaussian':"""
+        'gaussian': """
 # Gaussian
 def fit_func(xs, A=1, sigma=1, x0=0, y0=0):
     return A*np.exp(-0.5*((xs-x0)/sigma)**2)+y0
     """,
-        'cos':"""
+        'cos': """
 # Cosine
 def fit_func(xs, A=1, T=50, phi=0, y0=1):
     return A*np.cos(np.pi*xs/T+phi)+y0
     """,
-        'linear':"""
+        'linear': """
 # Linear
 def fit_func(xs, m=1, y0=0):
     return m*xs + y0
@@ -606,11 +660,15 @@ def fit_func(xs, m=1, y0=0):
         self.editor.setLexer(lexer)
 
         self.func_list = QtWidgets.QComboBox()
-        self.func_list.addItems([func_name for func_name in sorted(self.DEFAULT_FUNCTIONS.keys())])
+        self.func_list.addItems(
+            [func_name for func_name in sorted(self.DEFAULT_FUNCTIONS.keys())]
+        )
+
         def update_text(*args):
             selected_func = self.func_list.currentText()
             txt = self.EXTRA_TEXT + self.DEFAULT_FUNCTIONS[selected_func]
             self.editor.setText(txt)
+
         self.func_list.currentIndexChanged.connect(update_text)
         update_text()
 
@@ -645,12 +703,16 @@ def fit_func(xs, m=1, y0=0):
             self.results_table.setRowCount(len(params))
 
             for i, name in enumerate(params.keys()):
-                self.results_table.setItem(i,0, QtWidgets.QTableWidgetItem(name))
-                self.results_table.setItem(i,1, QtWidgets.QTableWidgetItem(str(params[name])))
+                self.results_table.setItem(i, 0, QtWidgets.QTableWidgetItem(name))
+                self.results_table.setItem(
+                    i, 1, QtWidgets.QTableWidgetItem(str(params[name]))
+                )
 
     def update_traces(self):
         self.traces_list.clear()
-        self.traces_list.addItems([plot_name for plot_name in sorted(self.traces.keys())])
+        self.traces_list.addItems(
+            [plot_name for plot_name in sorted(self.traces.keys())]
+        )
         return
 
     def update_fits(self):
@@ -659,7 +721,10 @@ def fit_func(xs, m=1, y0=0):
             ys = data['ys']
             curve = data['curve']
             if curve is None:
-                curve = self.w.plot(pen=pg.mkPen(color=colors['yellow'], width=1), antialias=True)
+                curve = self.w.plot(
+                    pen=pg.mkPen(color=colors['yellow'], width=1),
+                    antialias=True,
+                )
                 data['curve'] = curve
             curve.setData(x=xs, y=ys)
         return
@@ -676,7 +741,9 @@ def fit_func(xs, m=1, y0=0):
         return
 
     def remove_all_fits(self):
-        for name in (self.traces_list.itemText(idx) for idx in range(self.traces_list.count())):
+        for name in (
+            self.traces_list.itemText(idx) for idx in range(self.traces_list.count())
+        ):
             try:
                 fit_data = self.fits[name]
                 fit = fit_data['curve']
@@ -701,7 +768,7 @@ def fit_func(xs, m=1, y0=0):
         p0 = list()
         for i, p in enumerate(sig.parameters.values()):
             if i == 0:
-                pass # To remove the xs parametter
+                pass  # To remove the xs parametter
             elif p.default is inspect._empty:
                 p0.append(1)
             else:
@@ -712,14 +779,14 @@ def fit_func(xs, m=1, y0=0):
         fit_ys = fit_func(plot_xs, *popt)
 
         names = list(sig.parameters.keys())
-        params = OrderedDict([(names[i+1], popt[i]) for i in range(len(popt))])
+        params = OrderedDict([(names[i + 1], popt[i]) for i in range(len(popt))])
 
         self.fits[selected_trace_name] = {
             'xs': plot_xs,
             'ys': fit_ys,
             'curve': self.fits.get(selected_trace_name, dict()).get('curve'),
             'params': params,
-            'pcov': pcov
+            'pcov': pcov,
         }
         self.update_fits()
         self.update_results()

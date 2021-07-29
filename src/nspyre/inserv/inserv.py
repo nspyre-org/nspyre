@@ -1,6 +1,5 @@
 """
-This module starts a process running an RPyC server. Clients may connect and 
-access devices, or command the server to add, remove, or restart devices.
+This module starts a process running an RPyC server. Clients may connect and access devices, or command the server to add, remove, or restart devices.
 
 Copyright (c) 2021, Michael Solomon, Jacob Feder
 All rights reserved.
@@ -35,8 +34,10 @@ RPYC_SYNC_TIMEOUT = None
 # event used for waiting until the rpyc server thread has finished
 RPYC_SERVER_STOP_EVENT = threading.Event()
 
+
 class InstrumentServerError(Exception):
     """Raised for failures related to the Instrument Server."""
+
 
 class InstrumentServer(ClassicService):
     """RPyC service that loads devices and exposes them to the client"""
@@ -106,11 +107,11 @@ class InstrumentServer(ClassicService):
         elif import_or_file == 'import':
             # load the class from a python module
             try:
-                dev_class_path = f'{class_path}.{class_name}'
-                dev_class = load_class_from_str(dev_class_path)
+                dev_class_mod = f'{class_path}.{class_name}'
+                dev_class = load_class_from_str(dev_class_mod)
             except Exception as exc:
                 raise InstrumentServerError(
-                    f'The specified class "{dev_class_path}" for device "{name}" couldn\'t be loaded',
+                    f'The specified class "{dev_class_mod}" for device "{name}" couldn\'t be loaded',
                 ) from exc
         else:
             raise InstrumentServerError(
@@ -144,9 +145,7 @@ class InstrumentServer(ClassicService):
         try:
             self.devs.pop(name)
         except Exception as exc:
-            raise InstrumentServerError(
-                f'Failed deleting device "{name}"'
-            ) from exc
+            raise InstrumentServerError(f'Failed deleting device "{name}"') from exc
         logger.info(f'deleted device "{name}"')
 
     def restart(self, device: str) -> None:
@@ -177,8 +176,9 @@ class InstrumentServer(ClassicService):
     def start(self):
         """Start the RPyC server"""
         if self._rpyc_server:
-            logger.warning('can\'t start the rpyc server because one '
-                            'is already running')
+            logger.warning(
+                'can\'t start the rpyc server because one ' 'is already running'
+            )
             return
         thread = threading.Thread(target=self._rpyc_server_thread)
         thread.start()
@@ -189,12 +189,17 @@ class InstrumentServer(ClassicService):
     def _rpyc_server_thread(self):
         """Thread for running the RPyC server asynchronously"""
         logger.info('starting RPyC server...')
-        self._rpyc_server = ThreadedServer(self, port=self.port,
-                        protocol_config={'allow_pickle' : True,
-                                    'allow_all_attrs' : True,
-                                    'allow_setattr' : True,
-                                    'allow_delattr' : True,
-                                    'sync_request_timeout' : RPYC_SYNC_TIMEOUT})
+        self._rpyc_server = ThreadedServer(
+            self,
+            port=self.port,
+            protocol_config={
+                'allow_pickle': True,
+                'allow_all_attrs': True,
+                'allow_setattr': True,
+                'allow_delattr': True,
+                'sync_request_timeout': RPYC_SYNC_TIMEOUT,
+            },
+        )
         self._rpyc_server.start()
         logger.info('RPyC server stopped')
         RPYC_SERVER_STOP_EVENT.set()
@@ -202,7 +207,9 @@ class InstrumentServer(ClassicService):
     def stop(self):
         """Stop the RPyC server"""
         if not self._rpyc_server:
-            logger.warning('can\'t stop the rpyc server because there isn\'t one running')
+            logger.warning(
+                'can\'t stop the rpyc server because there isn\'t one running'
+            )
             return
         logger.info('stopping RPyC server...')
         self._rpyc_server.close()

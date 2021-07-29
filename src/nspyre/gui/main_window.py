@@ -71,22 +71,26 @@ class NSpyreMainWindow(QMainWindow):
         inserv_manager_button = QPushButton('Instrument Manager', self)
         inserv_manager_button.setFont(QFont('Helvetica [Cronyx]', 16))
         inserv_manager_button.clicked.connect(
-            functools.partial(self._launch_window, window_name='inserv_manager'))
+            functools.partial(self._launch_window, window_name='inserv_manager')
+        )
 
         view_manager_button = QPushButton('View Manager', self)
         view_manager_button.setFont(QFont('Helvetica [Cronyx]', 16))
         view_manager_button.clicked.connect(
-            functools.partial(self._launch_window, window_name='view_manager'))
+            functools.partial(self._launch_window, window_name='view_manager')
+        )
 
         spyrelet_startup_button = QPushButton('Startup Spyrelet(s)', self)
         spyrelet_startup_button.setFont(QFont('Helvetica [Cronyx]', 16))
         spyrelet_startup_button.clicked.connect(
-            functools.partial(self._launch_window, window_name='spyrelet_startup'))
+            functools.partial(self._launch_window, window_name='spyrelet_startup')
+        )
 
         data_explorer_button = QPushButton('Data Explorer', self)
         data_explorer_button.setFont(QFont('Helvetica [Cronyx]', 16))
         data_explorer_button.clicked.connect(
-            functools.partial(self._launch_window, window_name='data_explorer'))
+            functools.partial(self._launch_window, window_name='data_explorer')
+        )
 
         # add each button to the box layout as a widget
         layout.addWidget(inserv_manager_button)

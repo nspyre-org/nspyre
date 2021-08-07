@@ -11,7 +11,7 @@ it can run independently from any computer connected to the network.
 
 We can manually activate the view manager from our cmd window by loading the view_manager.py file in nspyre\nspyre\widgets:
 
-.. code-block:: console
+.. code-block:: bash
    
    $ conda activate nspyre
    (nspyre) $ cd C:\root\nspyre\nspyre\widgets
@@ -21,7 +21,7 @@ Loading the file successfully should prompt a view manager window to open. In th
 
 .. image:: images/s2-experiment.png
 
-Notice that the code for each predefined plot function is given in an editable form at the bottom of the View Manager window.  Pressing ``‘Ctrl + c’`` will generate a new, custom plot (named Custom 0) in-which you can define a different plot function. This is very useful if you want to slightly tweak one of the predefined plots, but in order to make a plot function automatically available upon running an experiment, you should add it in your spyrelet file (here test_spyrelets.py). For example, you can plot the square mean random value by simply copy-paste the avg_rand code into the Custom 0 box while adding **2 appropriately and pressing ``‘Shift + Enter’``.
+Notice that the code for each predefined plot function is given in an editable form at the bottom of the View Manager window.  Pressing ``‘Ctrl + c’`` will generate a new, custom plot (named Custom 0) in-which you can define a different plot function. This is very useful if you want to slightly tweak one of the predefined plots, but in order to make a plot function automatically available upon running an experiment, you should add it in your spyrelet file (here test_spyrelets.py). For example, you can plot the square mean random value by simply copy-paste the avg_rand code into the Custom 0 box while adding \*\*2 appropriately and pressing ``‘Shift + Enter’``.
    
 The plot functions within the spyrelet file can be defined as 1D or 2D plots. 1D plots return a dictionary with the name of the parameter as a keyword with the associated value being an array of x-arrays and y-arrays. 2D plots similarly return a 2D array.
    
@@ -47,7 +47,7 @@ Let’s run two s2 experiments with 300 iterations, stop them at any time while 
 
 Once the GUI appears, you can view, open, and even manipulate the saved data, similarly to a MATLAB figure.
 
-.. code-block:: console
+.. code-block:: bash
    
    (nspyre) $ python data_explorer.py
    Loading C:/Jupyter Scripts/Alex’s tutorial/test1.json
@@ -66,11 +66,8 @@ Now that we are familiar with the direct execution of each part of the NSpyre fr
 
 Close all your running cmd windows except your lantz-sim and your editor (if applicable) window. You should now be disconnected from the instrument server. Use your cmd to run the file main.py from the nspyre\nspyre\widgets folder.
 
-.. code-block:: console
+.. code-block:: bash
    
    (nspyre) $ python main.py
 
 The main GUI should open, featuring 5 buttons. Pressing the ‘Start Instrument Server’ button would be equivalent to loading instrument_server.py and would connect to the instruments specific in the config.yaml file. The instrument manager opens a list of the instruments and their parameters, with the option to set the read/write attributes. We already discussed the View Manager, the Spyrelet Launcher, and the Data Explorer. These specific GUIs would pop-up upon pressing the relevant button. Once your config.yaml and spyrelets are complete, you can essentially operate everything from this GUI. However, you should still take time to learn the code itself. This will come in handy for debugging or when changes need to be made.
-
-
-

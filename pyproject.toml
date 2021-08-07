@@ -4,12 +4,9 @@
 requires = ['setuptools>=40.8.0', 'wheel']
 build-backend = 'setuptools.build_meta'
 
-# Not necessary for packaging but every self-respecting Python
-# package should a) use black and b) fix the WRONG default.
 [tool.black]
-# line-length = 79
 line-length = 88
-target-version = ['py38']
+target-version = ['py39']
 include = '\.pyi?$'
 skip-string-normalization = true
 exclude = '''

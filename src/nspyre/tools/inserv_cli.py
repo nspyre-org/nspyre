@@ -9,20 +9,18 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
-
 import argparse
 import cmd
-from pathlib import Path
-import pdb
 import logging
+import pdb
 import signal
+from pathlib import Path
 
-from nspyre import (
-    InstrumentServer,
-    InstrumentServerError,
-    InstrumentGateway,
-    nspyre_init_logger,
-)
+from nspyre import InstrumentGateway
+from nspyre import InstrumentGatewayError
+from nspyre import InstrumentServer
+from nspyre import InstrumentServerError
+from nspyre import nspyre_init_logger
 from nspyre.misc.logging import LOG_FILE_MAX_SIZE
 
 logger = logging.getLogger(__name__)
@@ -180,9 +178,11 @@ def main():
         try:
             if cmd_args.port:
                 inserv = InstrumentGateway(port=cmd_args.port)
+                inserv.connect()
             else:
                 inserv = InstrumentGateway()
-        except Exception as exc:
+                inserv.connect()
+        except InstrumentGatewayError as exc:
             logger.exception(exc)
             answer = input(
                 'Failed connecting to the Instrument Server. Create one? [Y/n] '
@@ -199,8 +199,10 @@ def main():
         # start a new instrument server
         if cmd_args.port:
             inserv = InstrumentServer(port=cmd_args.port)
+            inserv.start()
         else:
             inserv = InstrumentServer()
+            inserv.start()
 
         # properly stop the server when a kill signal is received
         def stop_server(signum, frame):

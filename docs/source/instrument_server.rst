@@ -10,13 +10,13 @@ The Instrument Server (inserv for short) connects to and controls all of the phy
 
 .. _RPyC: https://rpyc.readthedocs.io/en/latest/
 
-The inserv can be started using the ``nspyre-inserv`` command. Details about its operation can be found by typing ``nspyre-inserv --help``. On startup, the server will attempt connection to the MongoDB database, as well as all of the instruments specified in its config file. Once it has successfully started, the inserv will serve a shell prompt:
+The inserv can be started using the ``nspyre-inserv`` command. Details about its operation can be found by typing ``nspyre-inserv --help``. Once it has successfully started, the inserv will serve a shell prompt:
    
 .. code-block:: console
    
    inserv > 
 
-This shell prompt allows runtime control of the instrument server. The server can be started (``server_start``) and stopped (``server_stop``), the config file reloaded (``config``), and individual devices can be reloaded (``dev``). For a list of all available commands, type ``help``, or for documentation on specific commands type ``help <command>`` e.g.
+This shell prompt allows runtime control of the instrument server. For a list of all available commands, type ``help``, or for documentation on specific commands type ``help <command>`` e.g.
 
 .. code-block:: console
    
@@ -24,10 +24,9 @@ This shell prompt allows runtime control of the instrument server. The server ca
 
    Documented commands (type help <topic>):
    ========================================
-   config  dev      help  quit     server_restart  server_stop
-   debug   dev_all  list  restart  server_start  
+   debug  del  help  list  quit  restart  restart_device
 
-   inserv > help dev
-   Restart the connection with a device
-   <string> the device name
+   inserv > help del
+   Delete a device
+   arg 1: <string> the device name
    inserv > 

@@ -4,16 +4,16 @@ This file tests the functionality of the instrument server and gateway.
 Author: Jacob Feder
 Date: 11/12/2020
 """
-
-import logging
 import atexit
+import logging
 import subprocess
 import time
 
 import pytest
+from nspyre import InstrumentGateway
+from nspyre import InstrumentGatewayError
+from nspyre import Q_
 from rpyc.core.vinegar import GenericException
-
-from nspyre import InstrumentGateway, InstrumentGatewayError, Q_
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,8 @@ class TestInserv:
     def test_connect_fail(self, inserv):
         """Test the gateway returns an error if the ip is wrong"""
         with pytest.raises(InstrumentGatewayError):
-            InstrumentGateway(addr='an invalid ip!')
+            with InstrumentGateway(addr='an invalid ip!'):
+                pass
 
     def test_device_add_from_file(self, gateway_with_devs):
         """Test the gateway fixture contains drivers that were loaded from files"""

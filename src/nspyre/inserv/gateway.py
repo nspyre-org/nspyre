@@ -7,13 +7,14 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
-
 import logging
 
 import rpyc
 
-from .inserv import INSERV_DEFAULT_PORT, RPYC_SYNC_TIMEOUT
-from ..misc.pint import register_quantity_brining, Q_
+from ..misc.pint import Q_
+from ..misc.pint import register_quantity_brining
+from .inserv import INSERV_DEFAULT_PORT
+from .inserv import RPYC_SYNC_TIMEOUT
 
 # monkey-patch fix for pint module
 register_quantity_brining(Q_)
@@ -29,21 +30,59 @@ class InstrumentGatewayError(Exception):
 
 
 class InstrumentGateway:
-    """This class is a wrapper around an RPyC server connection"""
+    """Create a connection to an InstrumentServer and access it's devices.
+
+    Typical usage example:
+
+        First start the instrument server from the console on machine A:
+
+        .. code-block:: console
+
+            $ nspyre-inserv
+
+        Then run the python program on machine B:
+
+        .. code-block:: python
+
+            from nspyre import InstrumentGateway
+
+            # machine A ip address = '192.168.1.20'
+            with InstrumentGateway(addr='192.168.1.20') as gw:
+                try:
+                    inserv.add('sg', '~/my_project/drivers/siggen.py', 'SigGen')
+                except InstrumentServerDeviceExistsError:
+                    pass
+                try:
+                    inserv.add('multimeter', '~/my_project/drivers/meter.py', 'MultiMeter')
+                except InstrumentServerDeviceExistsError:
+                    pass
+
+                gw.sg.amplitude = 1.0
+                print(gw.multimeter.voltage)
+
+    """
 
     def __init__(self, addr: str = 'localhost', port: int = INSERV_DEFAULT_PORT):
-        """Initialize a connection to an Instrument Server
-        :param addr: network address of the Instrument Server
-        :param port: port number of the Instrument Server
+        """Initialize with the address and port of the InstrumentServer.
+
+        Args:
+            addr: Network address of the Instrument Server.
+            port: Port number of the Instrument Server.
+
+        Raises:
+            InstrumentGatewayError: Connection to the InstrumentServer failed.
         """
         self.addr = addr
         self.port = port
         self._connection = None
         self._thread = None
-        self.connect()
 
     def connect(self):
-        """Attempt connection to an instrument server"""
+        """Attempt connection to an InstrumentServer.
+
+        Raises:
+            InstrumentGatewayError: Connection to the InstrumentServer failed.
+        """
         try:
             # connect to the rpyc server running on the instrument server
             self._connection = rpyc.connect(
@@ -55,14 +94,12 @@ class InstrumentGateway:
                     'sync_request_timeout': RPYC_SYNC_TIMEOUT,
                 },
             )
-            # start up a background thread to fullfill requests on the
-            # client side
+            # start up a background thread to fullfill requests on the client side
             self._thread = rpyc.BgServingThread(self._connection)
 
-            # this allows the instrument server to have full access to this
-            # client's object dictionaries - appears necessary for lantz
+            # this allows the instrument server to have full access to this client's object dictionaries - appears necessary for lantz
             self._connection._config['allow_all_attrs'] = True
-        except Exception as exc:
+        except OSError as exc:
             raise InstrumentGatewayError(
                 f'Failed to connect to instrument server at "{self.addr}:{self.port}"'
             ) from exc
@@ -71,7 +108,7 @@ class InstrumentGateway:
         )
 
     def disconnect(self):
-        """Disconnect from the instrument server"""
+        """Disconnect from the instrument server."""
         self._thread.stop()
         self._thread = None
         self._connection.close()
@@ -79,13 +116,16 @@ class InstrumentGateway:
         logger.info(f'Gateway disconnected from server at {self.addr}:{self.port}')
 
     def reconnect(self):
-        """Disconnect then connect to the instrument server"""
+        """Disconnect then connect to the instrument server
+
+        Raises:
+            InstrumentGatewayError: Connection to the InstrumentServer failed.
+        """
         self.disconnect()
         self.connect()
 
     def __getattr__(self, attr: str):
-        """Allow the user to access the server objects directly using gateway.device notation
-        e.g. gateway.sg.amplitude"""
+        """Allow the user to access the server objects directly using gateway.device notation, e.g. gateway.sg.amplitude"""
         if self._connection:
             return getattr(self._connection.root, attr)
         else:
@@ -94,6 +134,7 @@ class InstrumentGateway:
 
     def __enter__(self):
         """Python context manager setup"""
+        self.connect()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):

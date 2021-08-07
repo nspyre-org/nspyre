@@ -1,21 +1,19 @@
 #!/usr/bin/env python
-
 import inspect
+import logging
 import textwrap
 import time
 import traceback
-import logging
 
 import numpy as np
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QMainWindow
 
-from nspyre.config import load_config, load_meta_config
-from nspyre.definitions import join_nspyre_path
-from nspyre.misc import custom_decode
-from nspyre.mongodb import Synched_Mongo_Database
-from nspyre.spyrelet import load_spyrelet_class
+from ..misc.misc import join_nspyre_path
 
 __package__ = 'nspyre.gui'
 

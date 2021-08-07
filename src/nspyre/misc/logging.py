@@ -1,5 +1,4 @@
 import datetime
-import logging
 import logging.handlers
 import sys
 from pathlib import Path
@@ -42,15 +41,15 @@ class StreamToLog(object):
 def nspyre_init_logger(
     log_level, log_path=None, log_path_level=None, prefix=None, file_size=None
 ):
-    """Initialize system-wide logging to stdout/err and, optionally, a file
-    log_level: log messages of lower severity than this will not be sent to stdout/err (e.g. logging.INFO)
-    log_path: if a file, log to that file; if a directory, generate a log file
-                name and create a new log file in that directory; if None, only log to stdout/err
-    log_path_level: logging level for the log file - leave as None for same as log_level
-    prefix: if a directory was specified for log_path, prepend this string
-                to the log file name
-    file_size: maximum log file size; if this size is exceeded, the log file is rotated according
-                to RotatingFileHandler - https://docs.python.org/3/library/logging.handlers.html"""
+    """Initialize system-wide logging to stdout/err and, optionally, a file.
+
+    Args:
+        log_level: Log messages of lower severity than this will not be sent to stdout/err (e.g. logging.INFO).
+        log_path: If a file, log to that file. If a directory, generate a log file name and create a new log file in that directory. If None, only log to stdout/err.
+        log_path_level: Logging level for the log file. Leave as None for same as log_level.
+        prefix: If a directory was specified for log_path, prepend this string to the log file name.
+        file_size: Maximum log file size. If this size is exceeded, the log file is rotated according to RotatingFileHandler (https://docs.python.org/3/library/logging.handlers.html).
+    """
 
     root_logger = logging.getLogger()
     # the root logger will accept all messages

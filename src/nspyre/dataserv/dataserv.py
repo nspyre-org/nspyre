@@ -8,62 +8,21 @@ Example usage:
 # run the command-line tool for starting up the data server, specifying the port
 nspyre-dataserv -p 12345
 
-----------------------------------
-
-# data "source" code
-# running on the same machine as the data server, in the same or a different
-# process
-
-from nspyre import DataSource
-import numpy as np
-
-# connect to the data server and create a data set, or connect to an
-# existing one with the same name if it was created earlier
-source = DataSource('my_dataset', 12345)
-
-# do an experiment where we measure voltage of something as a function of frequency
-n = 100
-frequencies = np.linspace(1e6, 100e6, n)
-voltages = np.zeros(n)
-
-# add objects to the data set
-source.add('freq', x)
-source.add('volts', y)
-
-for f in frequencies:
-    some_instrument.set_frequency(f)
-    voltages[i] = other_instrument.get_voltage()
-    source.update()
-
-----------------------------------
-
-# data "sink" code
-# running on the same or a different machine as the source / data server
-
-from nspyre import DataSink
-
-# connect the data set on the data server
-sink = DataSink('my_dataset', '192.168.1.50', 12345)
-
-while True:
-    # block until an updated version of the data set is available
-    sink.update()
-    # sink.freq and sink.volts have been modified
-    # replot the data to show the new values
-    my_plot_update(sink.freq, sink.volts)
+# see DataSink.update()
 
 Author: Jacob Feder
 Date: 11/29/2020
 """
-
 import asyncio
-import socket
-from threading import Thread
+import concurrent.futures
 import logging
 import pickle
-import concurrent.futures
+import socket
+from threading import Thread
+from typing import Any
+from typing import Dict
+
 import xdelta3
-from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
@@ -664,6 +623,15 @@ class DataSource:
     """For sourcing data to a DataServer"""
 
     def __init__(self, name: str, addr: str = 'localhost', port: int = DATASERV_PORT):
+        """Initialize connection to the data set on the server.
+
+        See DataSink.update() for typical usage example.
+
+        Args:
+            name: Name of the data set.
+            addr: Network address of the data server.
+            port: Port of the data server.
+        """
         # name of the dataset
         self.name = name
         # dict mapping the object name to the watched object itself
@@ -850,6 +818,14 @@ class DataSink:
         port: int = DATASERV_PORT,
         data_type_override: bytes = SINK_DATA_TYPE_DEFAULT,
     ):
+        """Initialize connection to the data set on the server.
+
+        Args:
+            name: Name of the data set.
+            addr: Network address of the data server.
+            port: Port of the data server.
+            data_type_override: Specify SINK_DATA_TYPE_PICKLE to force the data server to only send pickled data over the network, SINK_DATA_TYPE_DELTA to send delta objects, or SINK_DATA_TYPE_DEFAULT to choose automatically.
+        """
         # name of the dataset
         self.name = name
         # dict mapping the object name to the watched object
@@ -1034,7 +1010,70 @@ class DataSink:
         return pickle.loads(obj)
 
     def update(self, timeout=None):
-        """User-facing function for popping new data from the server"""
+        """Block waiting for an updated version of the data from the data server. Once the data is received, the internal data instance variable will be updated and the function will return.
+
+        Typical usage example:
+
+            First start the data server from the console on machine A:
+
+            .. code-block:: console
+
+                $ nspyre-dataserv
+
+            Run the python program on machine A implementing the experimental logic:
+
+            .. code-block:: python
+
+                # machine A: "source"-side code
+                # running on the same machine as the data server, in the same or a different process
+
+                from nspyre import DataSource
+                import numpy as np
+
+                # connect to the data server and create a data set, or connect to an
+                # existing one with the same name if it was created earlier
+                source = DataSource('my_dataset')
+
+                # do an experiment where we measure voltage of something as a function of frequency
+                n = 100
+                frequencies = np.linspace(1e6, 100e6, n)
+                voltages = np.zeros(n)
+
+                # add objects to the data set
+                source.add('freq', frequencies)
+                source.add('volts', voltages)
+
+                for f in frequencies:
+                    signal_generator.set_frequency(f)
+                    voltages[i] = daq.get_voltage()
+                    source.update()
+
+            Then run the python program on machine B implementing the data plotting:
+
+            .. code-block:: python
+
+                # machine B: "sink"-side code
+                # running on the same or a different machine as the source / data server
+
+                from nspyre import DataSink
+
+                # connect to the data set on the data server
+                sink = DataSink('my_dataset', '192.168.1.50', 12345)
+
+                while True:
+                    # block until an updated version of the data set is available
+                    sink.update()
+                    # sink.freq and sink.volts have been modified
+                    # replot the data to show the new values
+                    my_plot_update(sink.freq, sink.volts)
+
+        Args:
+            timeout: Time to wait for an update in seconds. Set to None to wait forever.
+
+        Raises:
+            TimeoutError: A timeout occured.
+
+        """
         # get the most recent pickle from the queue
         future = asyncio.run_coroutine_threadsafe(self._pop(timeout), self.event_loop)
         try:

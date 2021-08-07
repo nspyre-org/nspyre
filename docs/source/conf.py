@@ -1,60 +1,56 @@
 # Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
-
-# -- Path setup --------------------------------------------------------------
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-
 import codecs
-import os
-import pathlib
 import re
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.abspath('.'))
+# location of the source code root directory relative to this directory
+source_root = '../../src/nspyre/'
+# location of the file containing the '__version__' string relative to this directory
+source_version_file = '../../src/nspyre/__init__.py'
+
+# resolve the source absolute path
+HERE = Path(__file__).parent
+source_path = (HERE / source_root).resolve()
+
+# add the source to sys path so autodoc can import it
+sys.path.insert(0, str(source_path))
 
 
-def read(*parts):
+def find_version(file_path):
     """
-    Build an absolute path from *parts* and and return the contents of the
-    resulting file.  Assume UTF-8 encoding.
+    Search for a ``__version__`` string.
     """
-    here = pathlib.Path(__file__).parent.resolve()
-    with codecs.open(os.path.join(here, *parts), "rb", "utf-8") as f:
-        return f.read()
+    with codecs.open(file_path, 'rb', 'utf-8') as f:
+        version_file = f.read()
+        version_match = re.search(
+            r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M
+        )
+        if version_match:
+            return version_match.group(1)
+        raise RuntimeError('Unable to find version string.')
 
 
-def find_version(*file_paths):
-    """
-    Build a path from *file_paths* and search for a ``__version__``
-    string inside.
-    """
-    version_file = read(*file_paths)
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
+def skip(app, what, name, obj, would_skip, options):
+    if name == '__init__':
+        return False
+    return would_skip
+
+
+def setup(app):
+    app.connect('autodoc-skip-member', skip)
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'nspyre'
-copyright = '2020, Alexandre Bourassa'
-author = 'Alexandre Bourassa'
+copyright = '2021, Alexandre Bourassa, Michael Solomon, Jacob Feder'
+author = 'Alexandre Bourassa, Michael Solomon, Jacob Feder'
 
-# The full version, including alpha/beta/rc tags
-meta_path = os.path.join('..', 'src', 'nspyre', '__init__.py')
-release = find_version(meta_path)
-
+# The source version
+release = find_version(source_version_file)
 
 # -- General configuration ---------------------------------------------------
-
-# If your documentation needs a minimal Sphinx version, state it here.
 
 needs_sphinx = '3.1.2'
 
@@ -62,19 +58,9 @@ needs_sphinx = '3.1.2'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
+    'sphinx.ext.autodoc',  # for generating API from docstrings
     'sphinx.ext.mathjax',  # for math formulas
     'sphinx.ext.napoleon',  # for numpy and google style docstrings
-    # 'sphinx_autodoc_typehints',
-    # 'sphinx.ext.viewcode',
-    # 'sphinx.ext.extlinks',
-    # 'sphinx_tabs.tabs',
-    # 'sphinx_automodapi.automodapi',
-    # 'jupyter_sphinx',
-    'nbsphinx',  # for .ipynb file support (i.e. jupyter notebooks)
-    # 'sphinxcontrib.bibtex', # for bibliographic references
-    'sphinx.ext.imgconverter',
-    'sphinxcontrib.rsvgconverter',  # for SVG->PDF conversion in LaTeX output
     'sphinx_copybutton',  # for adding 'copy to clipboard' buttons to all text/code boxes
 ]
 
@@ -86,6 +72,9 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+# Configure copybutton to ignore console prompts
+copybutton_prompt_text = r">>> |\.\.\. |\$ "
+copybutton_prompt_is_regexp = True
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -103,7 +92,7 @@ html_theme_options = {
     # 'analytics_id': 'UA-XXXXXXX-1',  #  Provided by Google in your dashboard
     'logo_only': False,
     'display_version': True,
-    'prev_next_buttons_location': 'bottom',
+    'prev_next_buttons_location': 'top',
     'style_external_links': False,
     # 'vcs_pageview_mode': '',
     'style_nav_header_background': '#2b2b2b',

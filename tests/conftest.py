@@ -7,19 +7,18 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
-
-from pathlib import Path
-import subprocess
 import atexit
-import time
 import logging
 import socket
+import subprocess
+import time
 from contextlib import closing
+from pathlib import Path
 
-import pytest
 import psutil
-
-from nspyre import InstrumentGateway, InstrumentGatewayError
+import pytest
+from nspyre import InstrumentGateway
+from nspyre import InstrumentGatewayError
 
 HERE = Path(__file__).parent
 DRIVERS = HERE / 'fixtures/drivers'
@@ -41,10 +40,10 @@ def free_port():
 @pytest.fixture
 def dataserv():
     """An unresolved bug currently prevents nspyre-dataserv from being started
-    automatically, so for now just throw an error if it isn't running"""
+    automatically by pytest, so for now just throw an error if it isn't running"""
     if 'nspyre-dataserv' not in [p.name() for p in psutil.process_iter()]:
         raise Exception(
-            "nspyre-dataserv doesn't seem to be running and must be started manually"
+            "The data server isn't running and must be started manually with 'nspyre-dataserv'"
         )
 
 

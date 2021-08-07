@@ -1,5 +1,5 @@
-from pathlib import Path
 import logging
+from pathlib import Path
 
 from nspyre import nspyre_init_logger
 
@@ -46,9 +46,6 @@ class TestErrors:
             gateway.nonexistent_device
         except AttributeError:
             pass
-        inserv_messages.append(
-            "AttributeError: 'InstrumentServer' object has no attribute 'nonexistent_device'"
-        )
 
         # open the log files
         with open(log_path) as main_reader, open(inserv['log']) as inserv_reader:

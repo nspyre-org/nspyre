@@ -1,29 +1,21 @@
 import logging
 import sys
 
+from nspyre.misc import nspyre_init_logger
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 
-from nspyre.misc import nspyre_init_logger
-
 from .app import NSpyreApp
-from .main_window import NSpyreMainWindow
-
 from .colors import colors
 from .data_handling import save_data
-from .widgets.plotting import HeatmapPlotWidget, LinePlotWidget
-from .widgets.views import Plot1D, Plot2D, PlotFormatInit, PlotFormatUpdate
+from .main_window import NSpyreMainWindow
+from .widgets.plotting import HeatmapPlotWidget
+from .widgets.plotting import LinePlotWidget
+from .widgets.views import Plot1D
+from .widgets.views import Plot2D
+from .widgets.views import PlotFormatInit
+from .widgets.views import PlotFormatUpdate
 
-__all__ = [
-    'HeatmapPlotWidget',
-    'LinePlotWidget',
-    'Plot1D',
-    'Plot2D',
-    'PlotFormatInit',
-    'PlotFormatUpdate',
-    'colors',
-    'save_data',
-]
 
 logger = logging.getLogger(__name__)
 

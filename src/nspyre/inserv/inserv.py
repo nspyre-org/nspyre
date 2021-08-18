@@ -87,7 +87,7 @@ class InstrumentServer(ClassicService):
             pass
 
         while True:
-            time.sleep()
+            time.sleep(1)
 
     """
 

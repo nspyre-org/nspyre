@@ -95,7 +95,8 @@ class InstrumentGateway:
                 },
             )
             # start up a background thread to fullfill requests on the client side
-            self._thread = rpyc.BgServingThread(self._connection)
+            # TODO - not sure if we want a background thread or not
+            # self._thread = rpyc.BgServingThread(self._connection)
 
             # this allows the instrument server to have full access to this client's object dictionaries - appears necessary for lantz
             self._connection._config['allow_all_attrs'] = True
@@ -109,7 +110,8 @@ class InstrumentGateway:
 
     def disconnect(self):
         """Disconnect from the instrument server."""
-        self._thread.stop()
+        # TODO - not sure if we want a background thread or not
+        # self._thread.stop()
         self._thread = None
         self._connection.close()
         self._connection = None
@@ -127,7 +129,12 @@ class InstrumentGateway:
     def __getattr__(self, attr: str):
         """Allow the user to access the server objects directly using gateway.device notation, e.g. gateway.sg.amplitude"""
         if self._connection:
-            return getattr(self._connection.root, attr)
+            try:
+                return getattr(self._connection.root, attr)
+            except EOFError:
+                # the server might have disconnected - try reconnecting
+                self.reconnect()
+                return getattr(self._connection.root, attr)
         else:
             # raise the default python error when an attribute isn't found
             return self.__getattribute__(attr)

@@ -21,8 +21,8 @@ register_quantity_brining(Q_)
 
 logger = logging.getLogger(__name__)
 
-# rpyc connection timeout in s
-RPYC_CONN_TIMEOUT = None
+# rpyc connection timeout in s (None for no timeout)
+RPYC_CONN_TIMEOUT = 30
 
 
 class InstrumentGatewayError(Exception):

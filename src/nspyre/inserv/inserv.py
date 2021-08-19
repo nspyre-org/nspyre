@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 # default instrument server port
 INSERV_DEFAULT_PORT = 42068
 
-# rpyc send/receive timeout in s
-RPYC_SYNC_TIMEOUT = None
+# rpyc send/receive timeout in s (don't set to None)
+RPYC_SYNC_TIMEOUT = 30
 
 # event used for waiting until the rpyc server thread has finished
 RPYC_SERVER_STOP_EVENT = threading.Event()

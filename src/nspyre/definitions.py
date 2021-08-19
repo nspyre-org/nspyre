@@ -51,10 +51,10 @@ MONGO_SERVERS_SETTINGS_KEY = '_settings'
 MONGO_SERVERS_KEY = 'inserv[{}]'
 # in ms
 MONGO_CONNECT_TIMEOUT = 5000
-# rpyc connection timeout in s
-RPYC_CONN_TIMEOUT = None
-# rpyc send/receive timeout in s
-RPYC_SYNC_TIMEOUT = None
+# rpyc connection timeout in s (None for no timeout)
+RPYC_CONN_TIMEOUT = 30
+# rpyc send/receive timeout in s (don't set to None)
+RPYC_SYNC_TIMEOUT = 30
 
 # config file key for mongodb address
 CONFIG_MONGO_ADDR_KEY = 'mongodb_addr'

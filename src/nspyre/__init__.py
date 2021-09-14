@@ -10,4 +10,4 @@
 #            'load_data', 'instrument_manager', 'load_all_spyrelets', 
 #            'unload_all_spyrelets']
 
-__version__ = '0.4.7'
+__version__ = '0.4.8'

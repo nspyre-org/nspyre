@@ -11,11 +11,13 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 
 from pathlib import Path
 
-from pint import UnitRegistry
+from pint import get_application_registry
 
 
 # create a pint registry universal to nspyre
-ureg = UnitRegistry()
+# uses get_application_registry to check if one
+# already exists before creating a new instance
+ureg = get_application_registry()
 Q_ = ureg.Quantity
 
 # root directory of nspyre

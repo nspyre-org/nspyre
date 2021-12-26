@@ -85,8 +85,8 @@ class InservCmdPrompt(cmd.Cmd):
             print('Failed to reload all devices')
             return
 
-    def do_debug(self, arg_string):
-        """Drop into the pdb debugging console"""
+    def do_py(self, arg_string):
+        """Drop into the pdb (python debugger) console. From there, arbitrary Python commands can be executed and/or the instrument server can be debugged. Enter "c" or "continue" to return to the main inserv console. The instrument gateway/server object can be accessed via "self.inserv". If the instrument server was created in this session, self.inserv will be an InstrumentServer object. If a server was connected to, it will be an InstrumentGateway. See instrument gateway/server documentation for details on how to add/manipulate drivers."""
         if arg_string:
             print('Expected 0 args')
             return
@@ -111,20 +111,26 @@ def main():
 
     # parse command-line arguments
     arg_parser = argparse.ArgumentParser(
-        prog='nspyre-inserv', description='Start an nspyre instrument server'
+        prog='nspyre-inserv', description='Start or connect to an nspyre instrument server. By default, an attempt will be made to connect to an existing server. To create a new server, use the -s option.'
+    )
+    arg_parser.add_argument(
+        '-a',
+        '--address',
+        default=None,
+        help='address of an existing instrument server to connect to',
     )
     arg_parser.add_argument(
         '-l',
         '--log',
         default=None,
-        help='log to the provided file / directory',
+        help='log to the provided file/directory',
     )
     arg_parser.add_argument(
         '-p',
         '--port',
         default=None,
         type=int,
-        help='port to start the server on',
+        help='port of the instrument server',
     )
     arg_parser.add_argument(
         '-q', '--quiet', action='store_true', help='disable logging'
@@ -133,7 +139,7 @@ def main():
         '-s',
         '--start',
         action='store_true',
-        help='start the instrument server without trying to connect',
+        help='start a new instrument server',
     )
     arg_parser.add_argument(
         '-v',
@@ -171,17 +177,22 @@ def main():
             # the user asked for no log file
             nspyre_init_logger(log_level)
 
+    # keyword args to pass to the inserv / gateway instantiation
+    inserv_kwargs = {}
+    if cmd_args.address:
+        inserv_kwargs['addr'] = cmd_args.address
+    if cmd_args.port:
+        inserv_kwargs['port'] = cmd_args.port
+
     # whether a new instrument server should be started
     new_server = False
-    if not cmd_args.start:
+    if cmd_args.start:
+        new_server = True
+    else:
         # try connecting to a running instrument server
         try:
-            if cmd_args.port:
-                inserv = InstrumentGateway(port=cmd_args.port)
-                inserv.connect()
-            else:
-                inserv = InstrumentGateway()
-                inserv.connect()
+            inserv = InstrumentGateway(**inserv_kwargs)
+            inserv.connect()
         except InstrumentGatewayError as exc:
             logger.exception(exc)
             answer = input(
@@ -192,17 +203,11 @@ def main():
             else:
                 logger.info('exiting...')
                 return
-    else:
-        new_server = True
 
     if new_server:
         # start a new instrument server
-        if cmd_args.port:
-            inserv = InstrumentServer(port=cmd_args.port)
-            inserv.start()
-        else:
-            inserv = InstrumentServer()
-            inserv.start()
+        inserv = InstrumentServer(**inserv_kwargs)
+        inserv.start()
 
         # properly stop the server when a kill signal is received
         def stop_server(signum, frame):

@@ -238,8 +238,8 @@ class InstrumentServer(ClassicService):
         Raises:
             InstrumentServerError: Deleting a device failed.
         """
-        for d in self.devs:
-            self.restart_device(d)
+        for d in list(self.devs):
+            self.restart(d)
 
     def start(self):
         """Start the RPyC server.

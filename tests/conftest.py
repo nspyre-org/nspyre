@@ -21,7 +21,7 @@ from nspyre import InstrumentGateway
 from nspyre import InstrumentGatewayError
 
 HERE = Path(__file__).parent
-DRIVERS = HERE / 'fixtures/drivers'
+DRIVERS = HERE / 'fixtures' / 'drivers'
 
 
 def _free_port():
@@ -39,8 +39,9 @@ def free_port():
 
 @pytest.fixture
 def dataserv():
-    """An unresolved bug currently prevents nspyre-dataserv from being started
-    automatically by pytest, so for now just throw an error if it isn't running"""
+    """Start a data server if one isn't running"""
+    # An unresolved bug currently prevents nspyre-dataserv from being started
+    # automatically by pytest, so for now just throw an error if it isn't running
     if 'nspyre-dataserv' not in [p.name() for p in psutil.process_iter()]:
         raise Exception(
             "The data server isn't running and must be started manually with 'nspyre-dataserv'"

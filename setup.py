@@ -79,17 +79,14 @@ setup(
         'pyqt5>=5.12.3',
         'pyqtgraph>=0.11.0',
         'numpy>=1.19.1',
-        'scipy>=1.5.2',
         # misc
         'pint>=0.18' # TODO make this optional
     ],
-    extras_require={'dev': ['pytest', 'pytest-cov', 'psutil']},
-    test_requires=[
-        'pytest',
-        'pytest-cov',
-        'psutil',
-        'lantz>=0.6.2'
-    ],
+    extras_require={
+        'dev': ['pytest', 'pytest-cov', 'psutil'],
+        'docs': ['sphinx', 'sphinx-copybutton', 'docutils'],
+        'tests': ['pytest', 'pytest-cov', 'psutil', 'lantz>=0.6.2'],
+    },
     test_suite='tests',
     entry_points={
         'console_scripts': [

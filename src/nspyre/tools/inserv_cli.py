@@ -207,7 +207,6 @@ def main():
     if new_server:
         # start a new instrument server
         inserv = InstrumentServer(**inserv_kwargs)
-        inserv.start()
 
         # properly stop the server when a kill signal is received
         def stop_server(signum, frame):
@@ -216,6 +215,9 @@ def main():
 
         signal.signal(signal.SIGINT, stop_server)
         signal.signal(signal.SIGTERM, stop_server)
+
+        inserv.start()
+
 
     # start the shell prompt event loop
     cmd_prompt = InservCmdPrompt(inserv)

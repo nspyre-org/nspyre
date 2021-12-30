@@ -153,9 +153,7 @@ def cleanup_event_loop(loop):
     for task in pending_tasks:
         task.cancel()
     # wait for all tasks to exit (and suppress any errors with return_exceptions=True)
-    grouped_pending_tasks = asyncio.gather(
-        *pending_tasks, return_exceptions=True
-    )
+    grouped_pending_tasks = asyncio.gather(*pending_tasks, return_exceptions=True)
     loop.run_until_complete(grouped_pending_tasks)
     loop.run_until_complete(loop.shutdown_asyncgens())
     # shut down the event loop
@@ -220,13 +218,13 @@ class DataSet:
                     new_pickle, _ = await asyncio.wait_for(
                         sock.recv_msg(), timeout=TIMEOUT
                     )
-                except (asyncio.IncompleteReadError, asyncio.TimeoutError):
+                except (asyncio.IncompleteReadError, asyncio.TimeoutError) as exc:
                     # if there was a timeout / problem receiving the message
                     # the source client is dead and will be terminated
                     logger.info(
                         f'source [{sock.addr}] disconnected or hasn\'t sent a keepalive message - dropping connection'
                     )
-                    raise asyncio.CancelledError
+                    raise asyncio.CancelledError from exc
 
                 if len(new_pickle):
                     logger.debug(
@@ -359,11 +357,11 @@ class DataSet:
                         timeout=OPS_TIMEOUT / 4,
                     )
                     logger.debug(f'sink [{sock.addr}] sent [{len(data_to_send)}] bytes')
-                except (ConnectionError, asyncio.TimeoutError):
+                except (ConnectionError, asyncio.TimeoutError) as exc:
                     logger.info(
                         f'sink [{sock.addr}] disconnected or isn\'t accepting data - dropping connection'
                     )
-                    raise asyncio.CancelledError
+                    raise asyncio.CancelledError from exc
         except asyncio.CancelledError:
             raise
         finally:
@@ -1078,9 +1076,9 @@ class DataSink:
         try:
             # wait for the coroutine to return
             new_pickle = future.result()
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as exc:
             # raise TimeoutError if no pickle is available
-            raise TimeoutError
+            raise TimeoutError from exc
         logger.debug(f'pop returning [{len(new_pickle)}] bytes unpickled')
         # update objects
         self.data = self._deserialize(new_pickle)

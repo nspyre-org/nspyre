@@ -12,7 +12,3 @@ __pycache__/
 # due to using tox and pytest
 .tox
 .cache
-
-# due to db config and backups stored internally
-src/nspyre/mongodb/db_files/
-src/nspyre/mongodb/db_files_backup/

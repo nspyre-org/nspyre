@@ -5,14 +5,13 @@ A CLI for the DataServer
 Author: Jacob Feder
 Date: 11/28/2020
 """
-
 import argparse
-from cmd import Cmd
-import pdb
 import logging
-from threading import Thread
+import pdb
 import signal
+from cmd import Cmd
 from pathlib import Path
+from threading import Thread
 
 from nspyre import nspyre_init_logger
 from nspyre.dataserv import DataServer

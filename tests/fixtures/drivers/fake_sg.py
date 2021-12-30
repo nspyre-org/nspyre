@@ -1,4 +1,6 @@
-from lantz.core import Action, Driver, Feat
+from lantz.core import Action
+from lantz.core import Driver
+from lantz.core import Feat
 
 
 class FakeSigGen(Driver):

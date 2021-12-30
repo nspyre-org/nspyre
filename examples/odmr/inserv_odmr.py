@@ -9,9 +9,12 @@ import logging
 import signal
 from pathlib import Path
 
-from nspyre import InstrumentServer, InservCmdPrompt, nspyre_init_logger
+from nspyre import InservCmdPrompt
+from nspyre import InstrumentServer
+from nspyre import nspyre_init_logger
 
 HERE = Path(__file__).parent
+
 
 def init_inserv():
     """Create and return a running instrument server."""
@@ -23,6 +26,7 @@ def init_inserv():
     def stop_server(signum, frame):
         inserv.stop()
         raise SystemExit
+
     signal.signal(signal.SIGINT, stop_server)
     signal.signal(signal.SIGTERM, stop_server)
 
@@ -31,14 +35,16 @@ def init_inserv():
 
     return inserv
 
+
 def init_odmr_instruments(inserv):
     """Add the instruments required for an ODMR experiment to the instrument server."""
     # signal generator
-    inserv.add('sg', HERE / 'drivers' / 'fake_sg.py', 'FakeSigGen')
+    inserv.add('sg', HERE / 'drivers' / 'sg.py', 'SigGen')
     # data acquisition instrument
-    inserv.add('daq', HERE / 'drivers' / 'fake_daq.py', 'FakeDAQ')
+    inserv.add('daq', HERE / 'drivers' / 'daq.py', 'DAQ')
 
-if __name__ ==  '__main__':
+
+if __name__ == '__main__':
     # enable logging
     nspyre_init_logger(logging.INFO)
 

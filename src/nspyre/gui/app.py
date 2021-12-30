@@ -9,13 +9,18 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 from pathlib import Path
 
-from PyQt5.QtCore import Qt
 from PyQt5.QtCore import QCoreApplication
-from PyQt5.QtGui import QColor, QFont, QIcon, QPalette
-from PyQt5.QtWidgets import QApplication, QStyleFactory
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QPalette
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QStyleFactory
 from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
 
 HERE = Path(__file__).parent
+
 
 def nspyre_app(argv: list[str], app_name: str = 'NSpyre'):
     """Apply default nspyre settings to a Qt application object.
@@ -27,6 +32,7 @@ def nspyre_app(argv: list[str], app_name: str = 'NSpyre'):
     Typical usage example:
 
     .. code-block:: python
+
         from nspyre import nspyre_app
         app = QApplication(sys.argv)
         nspyre_app(app)

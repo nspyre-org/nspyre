@@ -11,8 +11,11 @@ import logging
 import threading
 import time
 from pathlib import Path
+from typing import Any
+from typing import Dict
 
 from rpyc import ClassicService
+from rpyc.core.protocol import Connection
 from rpyc.utils.classic import obtain
 from rpyc.utils.server import ThreadedServer
 
@@ -91,7 +94,7 @@ class InstrumentServer(ClassicService):
 
     """
 
-    def __init__(self, port=INSERV_DEFAULT_PORT):
+    def __init__(self, port: int = INSERV_DEFAULT_PORT):
         """Initialize an instrument server.
 
         Args:
@@ -101,7 +104,7 @@ class InstrumentServer(ClassicService):
         super().__init__()
         # dictionary where keys are the device names, values are tuples:
         # (device object, device configuration settings dictionary)
-        self.devs = {}
+        self.devs: Dict[str, Any] = {}
         # rpyc server port
         self.port = port
         # rpyc server
@@ -192,7 +195,7 @@ class InstrumentServer(ClassicService):
 
         logger.info(f'added device "{name}" with args: {args} kwargs: {kwargs}')
 
-    def remove(self, name):
+    def remove(self, name: str):
         """Remove a device from the instrument server.
 
         Args:
@@ -305,11 +308,11 @@ class InstrumentServer(ClassicService):
             # raise the default python error when an attribute isn't found
             return self.__getattribute__(attr)
 
-    def on_connect(self, conn):
+    def on_connect(self, conn: Connection):
         """Called when a client connects to the RPyC server"""
         logger.info(f'client {conn} connected')
 
-    def on_disconnect(self, conn):
+    def on_disconnect(self, conn: Connection):
         """Called when a client disconnects from the RPyC server"""
         logger.info(f'client {conn} disconnected')
 

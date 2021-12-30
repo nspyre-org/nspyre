@@ -1,18 +1,18 @@
 """
-Fake data acquisition system driver.
+Fake data acquisition system driver for demonstration purposes.
 
 Author: Jacob Feder
 Date: 12/27/2021
 """
-
-import random
 import logging
+import random
 
 logger = logging.getLogger(__name__)
 
 COUNTER_KEYS = range(1, 4)
 
-class FakeDAQ():
+
+class DAQ:
     def __init__(self):
         # digital counters
         self.reset_cnts()

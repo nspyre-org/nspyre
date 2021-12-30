@@ -6,36 +6,35 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
-
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5.QtWidgets import QLabel
-
+from PyQt5.QtWidgets import QVBoxLayout
+from PyQt5.QtWidgets import QWidget
 from pyqtgraph import SpinBox
+
 
 class ParamsWidget(QWidget):
     """Create a simple GUI widget containing a list of parameters.
-    
+
     Typical usage example:
 
     .. code-block:: python
+
         self.params_widget = ParamsWidget({
                             'pulse_power': {'suffix': 'V', 'siPrefix': True},
                             'pulse_length': {'suffix': 's', 'siPrefix': True},
                             })
-        
+
         def doSomething(self):
             print(f'Making a pulse with power = {self.params_widget.pulse_power} V, length = {self.params_widget.pulse_length} V'
 
     """
-    def __init__(self, params, *args, **kwargs):
+
+    def __init__(self, params: dict, *args, **kwargs):
         """Initialize params widget.
 
         Args:
-            params: dictionary mapping parameter names to options, which are passed 
-            as arguments to their corresponding pyqtgraph spinbox. The options are 
-            documented at https://pyqtgraph.readthedocs.io/en/latest/widgets/spinbox.html.
+            params: dictionary mapping parameter names to options, which are passed as arguments to their corresponding pyqtgraph spinbox. The options are documented at https://pyqtgraph.readthedocs.io/en/latest/widgets/spinbox.html.
         """
         super().__init__(*args, **kwargs)
         self.params = params

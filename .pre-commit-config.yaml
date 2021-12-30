@@ -38,7 +38,7 @@ repos:
     hooks:
     -   id: mypy
         name: MyPy (type-checking)
-        exclude: ^tests/fixtures/drivers/
+        exclude: ^tests/fixtures/drivers/|^src/nspyre/gui/instrument_manager.py
 
 # build docs
 - repo: local

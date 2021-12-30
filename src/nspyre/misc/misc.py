@@ -4,19 +4,24 @@ import inspect
 import sys
 import warnings
 from pathlib import Path
-from typing import Type
 from pdb import set_trace
+from typing import Type
+
+from PyQt5.QtCore import pyqtRemoveInputHook
 
 # root directory of nspyre
 NSPYRE_ROOT = Path(__file__).parent.parent
+
 
 def join_nspyre_path(path):
     """Return a full path from a path given relative to the nspyre root
     directory"""
     return NSPYRE_ROOT / path
 
+
 # images
 LOGO_PATH = str(join_nspyre_path('gui/images/spyre.png'))
+
 
 def deprecated(reason):
     """

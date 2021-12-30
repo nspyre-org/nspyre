@@ -15,6 +15,7 @@ import logging
 import pdb
 import signal
 from pathlib import Path
+from typing import Union
 
 from nspyre import InstrumentGateway
 from nspyre import InstrumentGatewayError
@@ -29,7 +30,7 @@ logger = logging.getLogger(__name__)
 class InservCmdPrompt(cmd.Cmd):
     """Instrument Server shell prompt processor"""
 
-    def __init__(self, inserv):
+    def __init__(self, inserv: Union[InstrumentServer, InstrumentGateway]):
         super().__init__()
         self.inserv = inserv
 
@@ -37,7 +38,7 @@ class InservCmdPrompt(cmd.Cmd):
         """When no command is entered"""
         pass
 
-    def do_list(self, arg_string):
+    def do_list(self, arg_string: str):
         """List all the available devices"""
         if arg_string:
             print('Expected 0 args')
@@ -45,7 +46,7 @@ class InservCmdPrompt(cmd.Cmd):
         for d in self.inserv.devs.keys():
             print(d)
 
-    def do_del(self, arg_string):
+    def do_del(self, arg_string: str):
         """Delete a device\narg 1: <string> the device name"""
         args = arg_string.split(' ')
         if not arg_string or len(args) > 1:
@@ -59,7 +60,7 @@ class InservCmdPrompt(cmd.Cmd):
             print(f'Failed to delete device [{dev_name}]')
             return
 
-    def do_restart_device(self, arg_string):
+    def do_restart(self, arg_string: str):
         """Restart a device\narg 1: <string> the device name"""
         args = arg_string.split(' ')
         if not arg_string or len(args) > 1:
@@ -73,7 +74,7 @@ class InservCmdPrompt(cmd.Cmd):
             print(f'Failed to reload device [{dev_name}]')
             return
 
-    def do_restart(self, arg_string):
+    def do_restart_all(self, arg_string: str):
         """Restart all devices"""
         if arg_string:
             print('Expected 0 args')
@@ -85,14 +86,14 @@ class InservCmdPrompt(cmd.Cmd):
             print('Failed to reload all devices')
             return
 
-    def do_py(self, arg_string):
+    def do_py(self, arg_string: str):
         """Drop into the pdb (python debugger) console. From there, arbitrary Python commands can be executed and/or the instrument server can be debugged. Enter "c" or "continue" to return to the main inserv console. The instrument gateway/server object can be accessed via "self.inserv". If the instrument server was created in this session, self.inserv will be an InstrumentServer object. If a server was connected to, it will be an InstrumentGateway. See instrument gateway/server documentation for details on how to add/manipulate drivers."""
         if arg_string:
             print('Expected 0 args')
             return
         pdb.set_trace()
 
-    def do_quit(self, arg_string):
+    def do_quit(self, arg_string: str):
         """Quit the program"""
         if arg_string:
             print('Expected 0 args')
@@ -111,7 +112,8 @@ def main():
 
     # parse command-line arguments
     arg_parser = argparse.ArgumentParser(
-        prog='nspyre-inserv', description='Start or connect to an nspyre instrument server. By default, an attempt will be made to connect to an existing server. To create a new server, use the -s option.'
+        prog='nspyre-inserv',
+        description='Start or connect to an nspyre instrument server. By default, an attempt will be made to connect to an existing server. To create a new server, use the -s option.',
     )
     arg_parser.add_argument(
         '-a',
@@ -217,7 +219,6 @@ def main():
         signal.signal(signal.SIGTERM, stop_server)
 
         inserv.start()
-
 
     # start the shell prompt event loop
     cmd_prompt = InservCmdPrompt(inserv)

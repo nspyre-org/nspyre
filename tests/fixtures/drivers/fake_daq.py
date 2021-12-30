@@ -1,4 +1,5 @@
-from lantz.core import Driver, DictFeat
+from lantz.core import DictFeat
+from lantz.core import Driver
 
 DIN_KEYS = range(1, 10)
 DOUT_KEYS = range(1, 10)

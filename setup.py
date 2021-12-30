@@ -1,7 +1,9 @@
-from setuptools import setup, find_packages
 import codecs
-from pathlib import Path
 import re
+from pathlib import Path
+
+from setuptools import find_packages
+from setuptools import setup
 
 
 here = Path(__file__).parent.resolve()
@@ -80,11 +82,11 @@ setup(
         'pyqtgraph>=0.11.0',
         'numpy>=1.19.1',
         # misc
-        'pint>=0.18' # TODO make this optional
+        'pint>=0.18',  # TODO make this optional
     ],
     extras_require={
         'dev': ['pre-commit'],
-        'docs': ['sphinx', 'sphinx-copybutton', 'docutils'],
+        'docs': ['sphinx', 'sphinx-copybutton', 'sphinx_rtd_theme', 'docutils'],
         'tests': ['pytest', 'pytest-cov', 'psutil', 'lantz>=0.6.2'],
     },
     test_suite='tests',

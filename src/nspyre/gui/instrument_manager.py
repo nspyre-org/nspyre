@@ -36,42 +36,35 @@ import functools
 import inspect
 import logging
 
+from nspyre import InstrumentGateway
+from nspyre import Q_
 from pimpmyclass.helpers import DictPropertyNameKey
-from PyQt5.QtCore import (
-    QEvent,
-    QObject,
-    QSize,
-    QThread,
-    QTimer,
-    pyqtSignal,
-    pyqtSlot,
-)
-from PyQt5.QtGui import QColor, QCursor, QFont
-from PyQt5.QtWidgets import (
-    QApplication,
-    QComboBox,
-    QHBoxLayout,
-    QHeaderView,
-    QLabel,
-    QLineEdit,
-    QMainWindow,
-    QPushButton,
-    QToolTip,
-    QTreeWidget,
-    QTreeWidgetItem,
-    QVBoxLayout,
-    QWidget,
-)
-from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
-from pyqtgraph import (
-    SpinBox as pyqtgraph_SpinBox,
-    ValueLabel as pyqtgraph_ValueLabel,
-)
 from pint.util import infer_base_unit
-
-from nspyre import InstrumentGateway, Q_
-
-__all__ = []
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import QEvent
+from PyQt5.QtCore import QObject
+from PyQt5.QtCore import QSize
+from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QTimer
+from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QCursor
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QComboBox
+from PyQt5.QtWidgets import QHBoxLayout
+from PyQt5.QtWidgets import QHeaderView
+from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QLineEdit
+from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QPushButton
+from PyQt5.QtWidgets import QToolTip
+from PyQt5.QtWidgets import QTreeWidget
+from PyQt5.QtWidgets import QTreeWidgetItem
+from PyQt5.QtWidgets import QVBoxLayout
+from PyQt5.QtWidgets import QWidget
+from pyqtgraph import SpinBox as pyqtgraph_SpinBox
+from pyqtgraph import ValueLabel as pyqtgraph_ValueLabel
 
 logger = logging.getLogger(__name__)
 
@@ -175,14 +168,14 @@ class InstrumentManagerWindow(QMainWindow):
      # the next level is the devices
      # the bottom level is attributes of the devices
 
-     e.g.               ----------self.gui----------
-                       /                            \
-                   server1                        server2
-                  /       \                      /       \
-          sig-gen1         scope1        sig-gen2         laser
-          /      \        /      \      /        \       /     \
-       freq     ampl    trig    din[] freq      ampl  lambda  power
-     """
+     e.g.               -------self.gui--------
+                       |                       |
+                   server1                 server2
+                  |     |                  |     |
+            sig-gen1   scope1        sig-gen2    laser
+            |      |   |    |        |      |    |   |
+          freq   ampl trig din[]   freq  ampl lambda power
+    """
 
     def __init__(self, gateway, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -491,7 +484,7 @@ class InstrumentManagerWindow(QMainWindow):
         """Generate a Qt GUI element for a lantz feat/dictfeat"""
 
         if dictfeat_key:
-            ## val = dictfeat.subproperty(getattr(device, feat_name).instance, dictfeat_key)
+            # val = dictfeat.subproperty(getattr(device, feat_name).instance, dictfeat_key)
             # val = getattr(device, feat_name)[dictfeat_key]  # .__getitem__(dictfeat_key)
             feat_value = getattr(device, feat_name)[dictfeat_key]
             # if lantz has a function pointer in df.fset, then it is writeable
@@ -813,10 +806,9 @@ class InstrumentManagerWindow(QMainWindow):
 
         return action_button
 
+
 def main():
-    import logging
     import sys
-    from PyQt5.QtCore import Qt
     from nspyre.misc import nspyre_init_logger, nspyre_app
 
     nspyre_init_logger(logging.INFO)
@@ -825,9 +817,10 @@ def main():
     app = nspyre_app(sys.argv)
 
     with InstrumentGateway() as isg:
-        inserv_window = InstrumentManagerWindow(isg)
+        InstrumentManagerWindow(isg)
         app.exec()
     sys.exit()
+
 
 if __name__ == '__main__':
     main()

@@ -1,14 +1,12 @@
-import numpy as np
-import time
 import logging
+import time
 
-from nspyre import (
-    DataSource,
-    DataSink,
-    SINK_DATA_TYPE_DEFAULT,
-    SINK_DATA_TYPE_DELTA,
-    SINK_DATA_TYPE_PICKLE,
-)
+import numpy as np
+from nspyre import DataSink
+from nspyre import DataSource
+from nspyre import SINK_DATA_TYPE_DEFAULT
+from nspyre import SINK_DATA_TYPE_DELTA
+from nspyre import SINK_DATA_TYPE_PICKLE
 
 logger = logging.getLogger(__name__)
 

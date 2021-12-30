@@ -41,7 +41,7 @@ class ODMR:
             odmr_data.add('counts', counts)
 
             # sig gen amplitude for the scan (dBm)
-            self.sg.amplitude = 6.5
+            self.sg.set_amplitude = 6.5
 
             # sweep counts vs frequency
             for i, f in enumerate(frequencies):

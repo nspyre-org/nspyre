@@ -83,14 +83,14 @@ setup(
         'pint>=0.18' # TODO make this optional
     ],
     extras_require={
-        'dev': ['pytest', 'pytest-cov', 'psutil'],
+        'dev': ['pre-commit'],
         'docs': ['sphinx', 'sphinx-copybutton', 'docutils'],
         'tests': ['pytest', 'pytest-cov', 'psutil', 'lantz>=0.6.2'],
     },
     test_suite='tests',
     entry_points={
         'console_scripts': [
-            'nspyre=nspyre.gui:main',
+            'nspyre-insmgr=nspyre.gui.instrument_manager:main',
             'nspyre-inserv=nspyre.tools.inserv_cli:main',
             'nspyre-dataserv=nspyre.tools.dataserv_cli:main',
         ],

@@ -11,5 +11,9 @@ from .inserv import InstrumentServerError
 from .misc import nspyre_init_logger
 from .misc import Q_
 from .misc import qt_set_trace
+from .tools import InservCmdPrompt
+from .gui import nspyre_app
+from .gui import ParamsWidget
+
 
 __version__ = '0.5.0'

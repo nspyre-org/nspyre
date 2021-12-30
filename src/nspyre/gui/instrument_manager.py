@@ -21,8 +21,7 @@ create the slots that are called when the user clicks menu items or toolbar butt
 
   Typical usage example:
 
-  app = app.NSpyreApp([sys.argv])
-  pyqtgraph._connectCleanup()
+  app = nspyre_app(sys.argv)
   with InstrumentGateway() as isg:
       window = main_window.InstrumentManagerWindow(isg)
       sys.exit(app.exec())
@@ -814,24 +813,21 @@ class InstrumentManagerWindow(QMainWindow):
 
         return action_button
 
-
-if __name__ == '__main__':
+def main():
     import logging
     import sys
     from PyQt5.QtCore import Qt
-    from nspyre.gui import NSpyreApp
-    from nspyre.misc import nspyre_init_logger
+    from nspyre.misc import nspyre_init_logger, nspyre_app
 
     nspyre_init_logger(logging.INFO)
 
     logger.info('starting Instrument Manager...')
-    if hasattr(Qt, 'AA_EnableHighDpiScaling'):
-        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-    if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
-        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-    app = NSpyreApp([sys.argv])
-    pyqtgraph_connectCleanup()
+    app = nspyre_app(sys.argv)
+
     with InstrumentGateway() as isg:
         inserv_window = InstrumentManagerWindow(isg)
         app.exec()
     sys.exit()
+
+if __name__ == '__main__':
+    main()

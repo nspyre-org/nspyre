@@ -5,22 +5,18 @@ import sys
 import warnings
 from pathlib import Path
 from typing import Type
-
-string_types = (type(b''), type(u''))
+from pdb import set_trace
 
 # root directory of nspyre
 NSPYRE_ROOT = Path(__file__).parent.parent
-
 
 def join_nspyre_path(path):
     """Return a full path from a path given relative to the nspyre root
     directory"""
     return NSPYRE_ROOT / path
 
-
 # images
 LOGO_PATH = str(join_nspyre_path('gui/images/spyre.png'))
-
 
 def deprecated(reason):
     """
@@ -29,6 +25,7 @@ def deprecated(reason):
     when the function is used.
     """
 
+    string_types = (type(b''), type(u''))
     if isinstance(reason, string_types):
 
         # The @deprecated is used with a 'reason'.
@@ -135,8 +132,5 @@ def load_class_from_file(file_path: Path, class_name: str) -> Type:
 
 def qt_set_trace():
     """Set a tracepoint in the Python debugger (pdb) that works with Qt."""
-    from PyQt5.QtCore import pyqtRemoveInputHook
-    from pdb import set_trace
-
     pyqtRemoveInputHook()
     set_trace()

@@ -56,6 +56,8 @@ concrete = (
     166,
 )
 
+blackish = (24, 24, 24)
+
 colors = OrderedDict(
     [
         ('r', pomegranate),
@@ -74,7 +76,7 @@ colors = OrderedDict(
         ('cyan', green_sea),
         ('magenta', amethyst),
         ('yellow', sun_flower),
-        ('black', wet_asphalt),
+        ('black', blackish),
         ('white', clouds),
         ('orange', orange),
         ('gray', concrete),

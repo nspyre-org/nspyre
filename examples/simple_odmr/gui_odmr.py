@@ -10,15 +10,21 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 import logging
 import sys
+from pathlib import Path
 
+import numpy as np
 from nspyre import InstrumentGateway
+from nspyre import LinePlotWidget
 from nspyre import nspyre_app
 from nspyre import nspyre_init_logger
 from nspyre import ParamsWidget
 from odmr import ODMR
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
+
+HERE = Path(__file__).parent
 
 
 class ODMRWidget(QWidget):
@@ -30,16 +36,15 @@ class ODMRWidget(QWidget):
     def __init__(self, sg, daq, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.setWindowTitle('ODMR Scan')
+        self.setWindowTitle('ODMR')
 
-        # create an instance of the ODMR class implements the logic of the experiment
+        # create an instance of the ODMR class that implements the experimental logic
         self.odmr = ODMR(sg, daq)
 
         # Qt layout that arranges the params and button vertically
         layout = QVBoxLayout()
 
-        # we just want a generic spyrelet UI, so tell nspyre the parameters needed
-        # to create the Qt widgets as a dictionary
+        # stacked layout of spinboxes that allow the user to enter experimental parameters
         self.params_widget = ParamsWidget(
             {
                 'start': {
@@ -73,17 +78,66 @@ class ODMRWidget(QWidget):
         self.setLayout(layout)
 
 
+class ODMRPlotWidget(QWidget):
+    """Qt widget subclass that plots ODMR scans."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.setWindowTitle('ODMR')
+
+        # Qt layout that arranges the params and button vertically
+        layout = QVBoxLayout()
+
+        self.plot_widget = LinePlotWidget(
+            title='ODMR Scan',
+            xlabel='Frequency (s)',
+            ylabel='PL (counts)',
+            font=QFont('Arial', 18),
+        )
+        self.plot_widget.new_plot('ODMR+')
+        self.plot_widget.new_plot('ODMR-')
+        layout.addWidget(self.plot_widget)
+
+        self.plot_widget.plot_widget.setYRange(-3, 3)
+
+        # buttons
+        zoom_button = QPushButton('Zoom')
+        zoom_button.clicked.connect(lambda: self.plot_widget.addZoomRegion())
+        layout.addWidget(zoom_button)
+
+        update_button = QPushButton('Update')
+        update_button.clicked.connect(self.run)
+        layout.addWidget(update_button)
+
+        self.setLayout(layout)
+
+    def run(self):
+        f = np.linspace(0, 1000, num=100)
+        c1 = np.random.normal(size=len(f))
+        c2 = np.random.normal(size=len(f))
+        self.plot_widget.update('ODMR+', f, c1)
+        self.plot_widget.update('ODMR-', f, c2)
+
+
 if __name__ == '__main__':
-    # init logging
-    nspyre_init_logger(logging.INFO)
+    # log to the console as well as a file inside the logs folder
+    nspyre_init_logger(
+        logging.INFO,
+        log_path=HERE / 'logs',
+        log_path_level=logging.DEBUG,
+        prefix='odmr-gui',
+        file_size=10_000_000,
+    )
 
     # create Qt application and apply nspyre visual settings
-    app = nspyre_app(sys.argv)  # TODO name
+    app = nspyre_app(sys.argv)
 
     # connect to the instrument server
     with InstrumentGateway() as isg:
         # create the GUI
-        ODMR_widget = ODMRWidget(isg.sg, isg.daq)
+        # ODMR_widget = ODMRWidget(isg.sg, isg.daq)
+        ODMR_widget = ODMRPlotWidget()
         ODMR_widget.show()
         # run the GUI event loop
         app.exec()

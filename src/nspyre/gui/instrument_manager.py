@@ -36,8 +36,6 @@ import functools
 import inspect
 import logging
 
-from nspyre import InstrumentGateway
-from nspyre import Q_
 from pimpmyclass.helpers import DictPropertyNameKey
 from pint.util import infer_base_unit
 from PyQt5.QtCore import pyqtSignal
@@ -65,6 +63,9 @@ from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 from pyqtgraph import SpinBox as pyqtgraph_SpinBox
 from pyqtgraph import ValueLabel as pyqtgraph_ValueLabel
+
+from ..inserv.gateway import InstrumentGateway
+from ..misc.pint import Q_
 
 logger = logging.getLogger(__name__)
 

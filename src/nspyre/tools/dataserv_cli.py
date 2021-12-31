@@ -13,9 +13,9 @@ from cmd import Cmd
 from pathlib import Path
 from threading import Thread
 
-from nspyre import nspyre_init_logger
-from nspyre.dataserv import DataServer
-from nspyre.misc.logging import LOG_FILE_MAX_SIZE
+from ..dataserv.dataserv import DataServer
+from ..misc.logging import LOG_FILE_MAX_SIZE
+from ..misc.logging import nspyre_init_logger
 
 logger = logging.getLogger(__name__)
 

@@ -3,7 +3,13 @@ from .dataserv import DataSource
 from .dataserv import SINK_DATA_TYPE_DEFAULT
 from .dataserv import SINK_DATA_TYPE_DELTA
 from .dataserv import SINK_DATA_TYPE_PICKLE
+from .gui import colors
+from .gui import cyclic_colors
+from .gui import LinePlotWidget
 from .gui import nspyre_app
+from .gui import nspyre_font
+from .gui import nspyre_palette
+from .gui import nspyre_style_sheet
 from .gui import ParamsWidget
 from .inserv import InstrumentGateway
 from .inserv import InstrumentGatewayError
@@ -16,4 +22,4 @@ from .misc import qt_set_trace
 from .tools import InservCmdPrompt
 
 
-__version__ = '0.5.0'
+__version__ = '1.0.0'

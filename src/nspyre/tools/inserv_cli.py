@@ -17,12 +17,12 @@ import signal
 from pathlib import Path
 from typing import Union
 
-from nspyre import InstrumentGateway
-from nspyre import InstrumentGatewayError
-from nspyre import InstrumentServer
-from nspyre import InstrumentServerError
-from nspyre import nspyre_init_logger
-from nspyre.misc.logging import LOG_FILE_MAX_SIZE
+from ..inserv.gateway import InstrumentGateway
+from ..inserv.gateway import InstrumentGatewayError
+from ..inserv.inserv import InstrumentServer
+from ..inserv.inserv import InstrumentServerError
+from ..misc.logging import LOG_FILE_MAX_SIZE
+from ..misc.logging import nspyre_init_logger
 
 logger = logging.getLogger(__name__)
 

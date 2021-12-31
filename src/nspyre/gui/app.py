@@ -9,15 +9,17 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 from pathlib import Path
 
+import pyqtgraph as pg
 from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor
-from PyQt5.QtGui import QFont
 from PyQt5.QtGui import QIcon
-from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QStyleFactory
-from pyqtgraph import _connectCleanup as pyqtgraph_connectCleanup
+
+from .style.style import nspyre_font
+from .style.style import nspyre_palette
+from .style.style import nspyre_style_sheet
+
 
 HERE = Path(__file__).parent
 
@@ -51,28 +53,16 @@ def nspyre_app(argv: list[str], app_name: str = 'NSpyre'):
     icon_path = HERE / 'images' / 'favicon.ico'
     app.setWindowIcon(QIcon(str(icon_path)))
 
-    pyqtgraph_connectCleanup()
+    pg._connectCleanup()
+    # enable antialiasing
+    pg.setConfigOptions(antialias=True)
 
     # appearance settings for nspyre
     fusion = QStyleFactory.create('Fusion')
     app.setStyle(fusion)
-    dark = QColor(53, 53, 53)  # (61, 64, 62) (196,201,201)
-    palette = QPalette()
-    palette.setColor(QPalette.Window, dark)
-    palette.setColor(QPalette.WindowText, Qt.white)
-    palette.setColor(QPalette.Base, QColor(25, 25, 25))
-    palette.setColor(QPalette.AlternateBase, dark)
-    palette.setColor(QPalette.ToolTipText, Qt.white)
-    palette.setColor(QPalette.Text, Qt.white)
-    palette.setColor(QPalette.Button, dark)
-    palette.setColor(QPalette.ButtonText, Qt.white)
-    palette.setColor(QPalette.BrightText, Qt.red)
-    palette.setColor(QPalette.Link, QColor(42, 130, 218))
-    palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-    palette.setColor(QPalette.HighlightedText, Qt.black)
-    app.setPalette(palette)
-    style_sheet = (HERE / 'style' / 'style.qss').read_text()
-    app.setStyleSheet(style_sheet)
-    app.setFont(QFont('Helvetica [Cronyx]'))
+
+    app.setPalette(nspyre_palette)
+    app.setStyleSheet(nspyre_style_sheet)
+    app.setFont(nspyre_font)
 
     return app

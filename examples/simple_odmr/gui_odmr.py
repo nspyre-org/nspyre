@@ -10,6 +10,7 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 import logging
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -78,52 +79,25 @@ class ODMRWidget(QWidget):
         self.setLayout(layout)
 
 
-class ODMRPlotWidget(QWidget):
-    """Qt widget subclass that plots ODMR scans."""
+class ODMRPlotWidget(LinePlotWidget):
+    def setup(self):
+        self.new_plot('ODMR+')
+        self.new_plot('ODMR-')
+        self.plot_widget.setYRange(-3, 3)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.setWindowTitle('ODMR')
-
-        # Qt layout that arranges the params and button vertically
-        layout = QVBoxLayout()
-
-        self.plot_widget = LinePlotWidget(
-            title='ODMR Scan',
-            xlabel='Frequency (s)',
-            ylabel='PL (counts)',
-            font=QFont('Arial', 18),
-        )
-        self.plot_widget.new_plot('ODMR+')
-        self.plot_widget.new_plot('ODMR-')
-        layout.addWidget(self.plot_widget)
-
-        self.plot_widget.plot_widget.setYRange(-3, 3)
-
-        # buttons
-        zoom_button = QPushButton('Zoom')
-        zoom_button.clicked.connect(lambda: self.plot_widget.addZoomRegion())
-        layout.addWidget(zoom_button)
-
-        update_button = QPushButton('Update')
-        update_button.clicked.connect(self.run)
-        layout.addWidget(update_button)
-
-        self.setLayout(layout)
-
-    def run(self):
+    def update(self):
+        time.sleep(0.001)
         f = np.linspace(0, 1000, num=100)
         c1 = np.random.normal(size=len(f))
         c2 = np.random.normal(size=len(f))
-        self.plot_widget.update('ODMR+', f, c1)
-        self.plot_widget.update('ODMR-', f, c2)
+        self.set_data('ODMR+', f, c1)
+        self.set_data('ODMR-', f, c2)
 
 
 if __name__ == '__main__':
     # log to the console as well as a file inside the logs folder
     nspyre_init_logger(
-        logging.INFO,
+        logging.DEBUG,
         log_path=HERE / 'logs',
         log_path_level=logging.DEBUG,
         prefix='odmr-gui',
@@ -137,7 +111,12 @@ if __name__ == '__main__':
     with InstrumentGateway() as isg:
         # create the GUI
         # ODMR_widget = ODMRWidget(isg.sg, isg.daq)
-        ODMR_widget = ODMRPlotWidget()
+        ODMR_widget = ODMRPlotWidget(
+            title='ODMR Scan',
+            xlabel='Frequency (s)',
+            ylabel='PL (counts)',
+            font=QFont('Arial', 18),
+        )
         ODMR_widget.show()
         # run the GUI event loop
         app.exec()

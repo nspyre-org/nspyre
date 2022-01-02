@@ -419,7 +419,7 @@ class DataServer:
             logger.info('data server closed')
 
     def stop(self):
-        """Stop the event loop"""
+        """Stop the asyncio event loop."""
         if self.event_loop.is_running():
             self.event_loop.call_soon_threadsafe(self.event_loop.stop)
         else:
@@ -666,7 +666,7 @@ class DataSource:
             logger.info(f'source [{(self.addr, self.port)}] closed')
 
     def stop(self):
-        """Stop the event loop"""
+        """Stop the asyncio event loop."""
         if self.event_loop.is_running():
             self.event_loop.call_soon_threadsafe(self.event_loop.stop)
         else:
@@ -856,7 +856,7 @@ class DataSink:
             logger.info(f'sink [{(self.addr, self.port)}] closed')
 
     def stop(self):
-        """Stop the event loop"""
+        """Stop the asyncio event loop."""
         if self.event_loop.is_running():
             self.event_loop.call_soon_threadsafe(self.event_loop.stop)
         else:

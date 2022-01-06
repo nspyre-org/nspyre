@@ -10,7 +10,6 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 import logging
 import sys
-import time
 from pathlib import Path
 
 import numpy as np
@@ -86,8 +85,7 @@ class ODMRPlotWidget(LinePlotWidget):
         self.plot_widget.setYRange(-3, 3)
 
     def update(self):
-        time.sleep(0.001)
-        f = np.linspace(0, 1000, num=100)
+        f = np.linspace(0, 1000, num=1000)
         c1 = np.random.normal(size=len(f))
         c2 = np.random.normal(size=len(f))
         self.set_data('ODMR+', f, c1)

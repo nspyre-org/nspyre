@@ -7,6 +7,7 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
+import sys
 from pathlib import Path
 
 import pyqtgraph as pg
@@ -24,11 +25,10 @@ from .style.style import nspyre_style_sheet
 HERE = Path(__file__).parent
 
 
-def nspyre_app(argv: list[str], app_name: str = 'NSpyre'):
-    """Apply default nspyre settings to a Qt application object.
+def nspyre_app(app_name: str = 'NSpyre'):
+    """Create a Qt application object with the default nspyre settings.
 
     Args:
-        argv: pass sys.argv.
         app_name: display name of the application.
 
     Typical usage example:
@@ -36,8 +36,12 @@ def nspyre_app(argv: list[str], app_name: str = 'NSpyre'):
     .. code-block:: python
 
         from nspyre import nspyre_app
-        app = QApplication(sys.argv)
-        nspyre_app(app)
+
+        app = nspyre_app(app)
+        some_widget = SomeWidget()
+        some_widget.show()
+        # run the GUI event loop
+        app.exec()
 
     """
 
@@ -47,12 +51,13 @@ def nspyre_app(argv: list[str], app_name: str = 'NSpyre'):
     if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
         QCoreApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
-    app = QApplication(argv)
+    app = QApplication(sys.argv)
 
     app.setApplicationName(app_name)
     icon_path = HERE / 'images' / 'favicon.ico'
     app.setWindowIcon(QIcon(str(icon_path)))
 
+    # make sure pyqtgraph gets cleaned up properly
     pg._connectCleanup()
     # enable antialiasing
     pg.setConfigOptions(antialias=True)

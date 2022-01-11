@@ -6,3 +6,5 @@ from .style import colors
 from .style import cyclic_colors
 from .widgets import LinePlotWidget
 from .widgets import ParamsWidget
+from .widgets import SplitterOrientation
+from .widgets import SplitterWidget

@@ -11,6 +11,7 @@ import time
 
 import numpy as np
 from nspyre import DataSource
+from nspyre import LinePlotWidget
 
 
 class ODMR:
@@ -48,7 +49,7 @@ class ODMR:
                 # access the signal generator driver on the instrument server and set its frequency
                 self.sg.set_frequency(f)
                 # wait for counts to accumulate
-                time.sleep(0.1)
+                time.sleep(1)
                 # read the number of photon counts received by the DAQ
                 counts[i] = self.daq.cnts(1)
                 # save the current data to the data server
@@ -56,8 +57,16 @@ class ODMR:
 
     # TODO save()
 
-    # TODO plot()
-    # @nspyre.plotting('2D')
-    # def plot_function(self, *args, **kwargs):
-    #     """Defines the plotting function to use for displaying the ODMR data."""
-    #     return (self.frequencies, self.counts)
+
+class ODMRPlotWidget(LinePlotWidget):
+    def setup(self):
+        self.new_plot('ODMR+')
+        self.new_plot('ODMR-')
+        self.plot_widget.setYRange(-3, 3)
+
+    def update(self):
+        f = np.linspace(0, 1000, num=1000)
+        c1 = np.random.normal(size=len(f))
+        c2 = np.random.normal(size=len(f))
+        self.set_data('ODMR+', f, c1)
+        self.set_data('ODMR-', f, c2)

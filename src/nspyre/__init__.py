@@ -11,6 +11,8 @@ from .gui import nspyre_font
 from .gui import nspyre_palette
 from .gui import nspyre_style_sheet
 from .gui import ParamsWidget
+from .gui import SplitterOrientation
+from .gui import SplitterWidget
 from .inserv import InstrumentGateway
 from .inserv import InstrumentGatewayError
 from .inserv import InstrumentServer

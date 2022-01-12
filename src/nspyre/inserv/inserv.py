@@ -21,11 +21,15 @@ from rpyc.utils.server import ThreadedServer
 
 from ..misc.misc import load_class_from_file
 from ..misc.misc import load_class_from_str
-from ..misc.pint import Q_
-from ..misc.pint import register_quantity_brining
 
-# monkey-patch fix for pint module
-register_quantity_brining(Q_)
+try:
+    from ..misc.pint import Q_
+    from ..misc.pint import register_quantity_brining
+except ImportError:
+    pass
+else:
+    # monkey-patch fix for pint module
+    register_quantity_brining(Q_)
 
 logger = logging.getLogger(__name__)
 

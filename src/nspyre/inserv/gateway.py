@@ -11,13 +11,16 @@ import logging
 
 import rpyc
 
-from ..misc.pint import Q_
-from ..misc.pint import register_quantity_brining
+try:
+    from ..misc.pint import Q_
+    from ..misc.pint import register_quantity_brining
+except ImportError:
+    pass
+else:
+    # monkey-patch fix for pint module
+    register_quantity_brining(Q_)
 from .inserv import INSERV_DEFAULT_PORT
 from .inserv import RPYC_SYNC_TIMEOUT
-
-# monkey-patch fix for pint module
-register_quantity_brining(Q_)
 
 logger = logging.getLogger(__name__)
 

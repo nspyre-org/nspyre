@@ -80,14 +80,23 @@ setup(
         # Qt / GUI
         'pyqt5>=5.12.3',
         'pyqtgraph>=0.11.0',
-        'numpy>=1.19.1',
-        # misc
-        'pint>=0.18',  # TODO make this optional
     ],
     extras_require={
-        'dev': ['pre-commit'],
-        'docs': ['sphinx', 'sphinx-copybutton', 'sphinx_rtd_theme', 'docutils'],
-        'tests': ['pytest', 'pytest-cov', 'psutil', 'lantz>=0.6.2'],
+        'dev': [
+            'pre-commit',
+            'sphinx',
+            'sphinx-copybutton',
+            'sphinx_rtd_theme',
+            'docutils',
+        ],
+        'tests': [
+            'pytest',
+            'pytest-cov',
+            'psutil',
+            'numpy',
+            'lantz>=0.6.2',
+            'pint>=0.18',
+        ],
     },
     test_suite='tests',
     entry_points={

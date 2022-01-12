@@ -40,7 +40,7 @@ class InstrumentGateway:
 
             $ nspyre-inserv
 
-        Then run the python program on machine B:
+        Then run the following python program on machine B:
 
         .. code-block:: python
 
@@ -49,12 +49,16 @@ class InstrumentGateway:
             # machine A ip address = '192.168.1.20'
             with InstrumentGateway(addr='192.168.1.20') as gw:
                 try:
-                    inserv.add('sg', '~/my_project/drivers/siggen.py', 'SigGen')
+                    # machine A must contain a python file at this location containing a class with the name "SigGen"
+                    gw.add('sg', '~/my_project/drivers/sig_gen.py', 'SigGen')
                 except InstrumentServerDeviceExistsError:
+                    # the device has already been added to the instrument server
                     pass
                 try:
-                    inserv.add('multimeter', '~/my_project/drivers/meter.py', 'MultiMeter')
+                    # machine A must contain a python file at this location containing a class with the name "Multimeter"
+                    gw.add('multimeter', '~/my_project/drivers/meter.py', 'Multimeter')
                 except InstrumentServerDeviceExistsError:
+                    # the device has already been added to the instrument server
                     pass
 
                 gw.sg.amplitude = 1.0

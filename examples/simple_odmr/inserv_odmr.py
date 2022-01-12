@@ -50,7 +50,7 @@ if __name__ == '__main__':
         logging.INFO,
         log_path=HERE / 'logs',
         log_path_level=logging.DEBUG,
-        prefix='odmr-inserv',
+        prefix='odmr_inserv',
         file_size=10_000_000,
     )
 

@@ -37,7 +37,7 @@ def nspyre_app(app_name: str = 'NSpyre'):
 
         from nspyre import nspyre_app
 
-        app = nspyre_app(app)
+        app = nspyre_app()
         some_widget = SomeWidget()
         some_widget.show()
         # run the GUI event loop
@@ -59,13 +59,12 @@ def nspyre_app(app_name: str = 'NSpyre'):
 
     # make sure pyqtgraph gets cleaned up properly
     pg._connectCleanup()
-    # enable antialiasing
+    # enable plot antialiasing
     pg.setConfigOptions(antialias=True)
 
     # appearance settings for nspyre
     fusion = QStyleFactory.create('Fusion')
     app.setStyle(fusion)
-
     app.setPalette(nspyre_palette)
     app.setStyleSheet(nspyre_style_sheet)
     app.setFont(nspyre_font)

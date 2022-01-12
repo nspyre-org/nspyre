@@ -10,6 +10,7 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 import time
 
 import numpy as np
+from nspyre import DataSink
 from nspyre import DataSource
 from nspyre import LinePlotWidget
 
@@ -60,13 +61,16 @@ class ODMR:
 
 class ODMRPlotWidget(LinePlotWidget):
     def setup(self):
-        self.new_plot('ODMR+')
-        self.new_plot('ODMR-')
+        self.new_plot('ODMR')
         self.plot_widget.setYRange(-3, 3)
+        self.sink = DataSink('ODMR')
 
     def update(self):
-        f = np.linspace(0, 1000, num=1000)
-        c1 = np.random.normal(size=len(f))
-        c2 = np.random.normal(size=len(f))
-        self.set_data('ODMR+', f, c1)
-        self.set_data('ODMR-', f, c2)
+        self.sink.update()
+        print(f'f: {self.sink.freqs} c: {self.sink.counts}')
+        self.set_data('ODMR', self.sink.freqs, self.sink.counts)
+        # f = np.linspace(0, 1000, num=1000)
+        # c1 = np.random.normal(size=len(f))
+        # c2 = np.random.normal(size=len(f))
+        # self.set_data('ODMR+', f, c1)
+        # self.set_data('ODMR-', f, c2)

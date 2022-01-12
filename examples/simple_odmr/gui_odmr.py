@@ -45,18 +45,25 @@ class ODMRWidget(QWidget):
         self.params_widget = ParamsWidget(
             {
                 'start_freq': {
+                    'value': 2.5e9,
                     'suffix': 'Hz',
                     'siPrefix': True,
                     'bounds': (100e3, 10e9),
                     'dec': True,
                 },
                 'stop_freq': {
+                    'value': 3e9,
                     'suffix': 'Hz',
                     'siPrefix': True,
                     'bounds': (100e3, 10e9),
                     'dec': True,
                 },
-                'num_points': {'int': True, 'bounds': (1, None), 'dec': True},
+                'num_points': {
+                    'value': 50,
+                    'int': True,
+                    'bounds': (1, None),
+                    'dec': True,
+                },
             }
         )
 
@@ -107,7 +114,7 @@ if __name__ == '__main__':
         log_level=logging.INFO,
         log_path=HERE / 'logs',
         log_path_level=logging.DEBUG,
-        prefix='odmr-gui',
+        prefix='odmr',
         file_size=10_000_000,
     )
 

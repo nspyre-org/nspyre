@@ -45,20 +45,22 @@ class ParamsWidget(QWidget):
 
         # add parameter spinbox widgets to the layout
         for p in self.params:
-            # small spinbox containing a label and spinbox
+            # small layout containing a label and spinbox
             label_spinbox_layout = QHBoxLayout()
             # create parameter label
             label = QLabel()
             label.setText(p)
             label_spinbox_layout.addWidget(label)
             # create spinbox
-            spinbox = SpinBox()
-            spinbox.setOpts(**self.params[p])
+            spinbox = SpinBox(**self.params[p])
             # store the spinboxes
             self.spinboxes[p] = spinbox
             label_spinbox_layout.addWidget(spinbox)
 
             total_layout.addLayout(label_spinbox_layout)
+
+        # add stretch element to take up any extra space below the spinboxes
+        total_layout.addStretch()
 
         self.setLayout(total_layout)
 

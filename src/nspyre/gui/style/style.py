@@ -33,4 +33,4 @@ nspyre_palette.setColor(QPalette.HighlightedText, Qt.black)
 
 nspyre_style_sheet = (HERE / 'style.qss').read_text()
 
-nspyre_font = QFont('Helvetica [Cronyx]', 12)
+nspyre_font = QFont('Helvetica [Cronyx]', 14)

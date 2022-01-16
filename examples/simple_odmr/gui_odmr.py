@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-This is an example script that demonstrates most of the basic functionality of nspyre.
+This is an example script that demonstrates the basic functionality of nspyre.
 
 Copyright (c) 2021, Jacob Feder
 All rights reserved.
@@ -11,20 +11,23 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 import logging
 from pathlib import Path
 
-from nspyre import InstrumentGateway
+from nspyre import DataSink
+from nspyre import LinePlotWidget
 from nspyre import nspyre_app
 from nspyre import nspyre_init_logger
 from nspyre import ParamsWidget
+from nspyre import QThreadRunner
 from nspyre import SplitterOrientation
 from nspyre import SplitterWidget
 from odmr import ODMR
-from odmr import ODMRPlotWidget
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 
 HERE = Path(__file__).parent
+
+logger = logging.getLogger(__name__)
 
 
 class ODMRWidget(QWidget):
@@ -33,19 +36,16 @@ class ODMRWidget(QWidget):
     and a button to start the scan.
     """
 
-    def __init__(self, sg, daq, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # create an instance of the ODMR class that implements the experimental logic
-        self.odmr = ODMR(sg, daq)
 
         self.setWindowTitle('ODMR')
 
-        # stacked layout of spinboxes that allow the user to enter experimental parameters
+        # Stacked layout of spinboxes that allow the user to enter experimental parameters
         self.params_widget = ParamsWidget(
             {
                 'start_freq': {
-                    'value': 2.5e9,
+                    'value': 2e9,
                     'suffix': 'Hz',
                     'siPrefix': True,
                     'bounds': (100e3, 10e9),
@@ -59,7 +59,7 @@ class ODMRWidget(QWidget):
                     'dec': True,
                 },
                 'num_points': {
-                    'value': 50,
+                    'value': 10,
                     'int': True,
                     'bounds': (1, None),
                     'dec': True,
@@ -68,48 +68,71 @@ class ODMRWidget(QWidget):
         )
 
         # Qt button widget that takes an ODMR scan when clicked
-        run_button = QPushButton('Sweep')
-        run_button.clicked.connect(
-            lambda: self.odmr.sweep(
-                self.params_widget.start_freq,
-                self.params_widget.stop_freq,
-                self.params_widget.num_points,
-            )
-        )
+        sweep_button = QPushButton('Sweep')
+        # The process running the sweep function
+        self.sweep_thread = QThreadRunner()
+        # Start run sweep_clicked on button press
+        sweep_button.clicked.connect(self.sweep_clicked)
 
-        # data plotter
-        self.ODMR_plot_widget = ODMRPlotWidget(
+        # Data plotter widget
+        self.plot_widget = ODMRPlotWidget(
             title='ODMR Scan',
-            xlabel='Frequency (s)',
+            xlabel='Frequency (GHz)',
             ylabel='PL (counts)',
-            font=QFont('Arial', 18),
+            font=QFont('Arial', 14),
         )
 
         # Qt layout that arranges the params and button vertically
         params_layout = QVBoxLayout()
         params_layout.addWidget(self.params_widget)
-        params_layout.addWidget(run_button)
-        # widget containing the params and run button
+        params_layout.addWidget(sweep_button)
+        # Dummy widget containing the params and run button
         params_container = QWidget()
         params_container.setLayout(params_layout)
 
-        # splitter that displays the params interface on the left and data viewer on the right
+        # Splitter that displays the params interface on the left and data viewer on the right
         self.splitter = SplitterWidget(
             main_w=params_container,
-            side_w=self.ODMR_plot_widget,
+            side_w=self.plot_widget,
             orientation=SplitterOrientation.vertical_right_button,
         )
         self.splitter.setSizes([1, 400])
-        self.splitter.setHandleWidth(10)
 
         # Qt dummy layout that contains the splitter
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.splitter)
         self.setLayout(main_layout)
 
+    def sweep_clicked(self):
+        """Runs when the 'sweep' button is pressed."""
+
+        # Create an instance of the ODMR class that implements the experimental logic.
+        self.odmr = ODMR()
+
+        # Run the sweep function in a new thread.
+        self.sweep_thread.run(
+            self.odmr.sweep,
+            self.params_widget.start_freq,
+            self.params_widget.stop_freq,
+            self.params_widget.num_points,
+        )
+
+
+class ODMRPlotWidget(LinePlotWidget):
+    def setup(self):
+        self.new_plot('ODMR')
+        self.sink = DataSink('ODMR')
+
+    def update(self):
+        # TODO
+        # print('updating plot...')
+        # time.sleep(10)
+        self.sink.update()
+        self.set_data('ODMR', self.sink.freqs / 1e9, self.sink.counts)
+
 
 if __name__ == '__main__':
-    # log to the console as well as a file inside the logs folder
+    # Log to the console as well as a file inside the logs folder.
     nspyre_init_logger(
         log_level=logging.INFO,
         log_path=HERE / 'logs',
@@ -118,13 +141,11 @@ if __name__ == '__main__':
         file_size=10_000_000,
     )
 
-    # create Qt application and apply nspyre visual settings
+    # Create Qt application and apply nspyre visual settings.
     app = nspyre_app()
 
-    # connect to the instrument server
-    with InstrumentGateway() as isg:
-        # create the GUI
-        ODMR_widget = ODMRWidget(isg.sg, isg.daq)
-        ODMR_widget.show()
-        # run the GUI event loop
-        app.exec()
+    # Create the GUI.
+    ODMR_widget = ODMRWidget()
+    ODMR_widget.show()
+    # Run the GUI event loop.
+    app.exec()

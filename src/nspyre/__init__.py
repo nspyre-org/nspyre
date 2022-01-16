@@ -19,8 +19,10 @@ from .inserv import InstrumentServer
 from .inserv import InstrumentServerDeviceExistsError
 from .inserv import InstrumentServerError
 from .misc import nspyre_init_logger
+from .misc import ProcessRunner
 from .misc import Q_
 from .misc import qt_set_trace
+from .misc import QThreadRunner
 from .tools import InservCmdPrompt
 
 

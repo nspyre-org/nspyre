@@ -13,6 +13,7 @@ from pathlib import Path
 import pyqtgraph as pg
 from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QStyleFactory
@@ -25,7 +26,7 @@ from .style.style import nspyre_style_sheet
 HERE = Path(__file__).parent
 
 
-def nspyre_app(app_name: str = 'NSpyre'):
+def nspyre_app(app_name: str = 'NSpyre', font: QFont = nspyre_font):
     """Create a Qt application object with the default nspyre settings.
 
     Args:
@@ -67,6 +68,6 @@ def nspyre_app(app_name: str = 'NSpyre'):
     app.setStyle(fusion)
     app.setPalette(nspyre_palette)
     app.setStyleSheet(nspyre_style_sheet)
-    app.setFont(nspyre_font)
+    app.setFont(font)
 
     return app

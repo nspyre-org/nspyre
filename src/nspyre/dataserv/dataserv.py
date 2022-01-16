@@ -153,7 +153,9 @@ def cleanup_event_loop(loop):
     for task in pending_tasks:
         task.cancel()
     # wait for all tasks to exit (and suppress any errors with return_exceptions=True)
-    grouped_pending_tasks = asyncio.gather(*pending_tasks, return_exceptions=True)
+    grouped_pending_tasks = asyncio.gather(
+        *pending_tasks, loop=loop, return_exceptions=True
+    )
     loop.run_until_complete(grouped_pending_tasks)
     loop.run_until_complete(loop.shutdown_asyncgens())
     # shut down the event loop
@@ -312,6 +314,7 @@ class DataSet:
                                 delta = await asyncio.wait_for(
                                     delta_future,
                                     timeout=3 / 4 * OPS_TIMEOUT,
+                                    loop=event_loop,
                                 )
                             except concurrent.futures.process.BrokenProcessPool:
                                 # the process was somehow killed

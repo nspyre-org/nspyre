@@ -148,12 +148,14 @@ def queue_flush_and_put(queue, item):
 
 def cleanup_event_loop(loop):
     """End all tasks in an event loop and exit"""
-    pending_tasks = asyncio.all_tasks()
+    pending_tasks = asyncio.all_tasks(loop=loop)
     # cancel each pending task
     for task in pending_tasks:
         task.cancel()
     # wait for all tasks to exit (and suppress any errors with return_exceptions=True)
-    grouped_pending_tasks = asyncio.gather(*pending_tasks, return_exceptions=True)
+    grouped_pending_tasks = asyncio.gather(
+        *pending_tasks, loop=loop, return_exceptions=True
+    )
     loop.run_until_complete(grouped_pending_tasks)
     loop.run_until_complete(loop.shutdown_asyncgens())
     # shut down the event loop
@@ -310,7 +312,9 @@ class DataSet:
                                     new_pickle,
                                 )  # TODO fast/no compression? xdelta3.Flags.COMPLEVEL_1
                                 delta = await asyncio.wait_for(
-                                    delta_future, timeout=3 / 4 * OPS_TIMEOUT
+                                    delta_future,
+                                    timeout=3 / 4 * OPS_TIMEOUT,
+                                    loop=event_loop,
                                 )
                             except concurrent.futures.process.BrokenProcessPool:
                                 # the process was somehow killed

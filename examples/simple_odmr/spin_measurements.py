@@ -14,11 +14,11 @@ from nspyre import DataSource
 from nspyre import InstrumentGateway
 
 
-class ODMR:
-    """For running an ODMR (optically detected magnetic resonance) PL (photoluminescence) scan"""
+class SpinMeasurements:
+    """Perform spin measurements."""
 
-    def sweep(self, start: float, stop: float, num_points: int):
-        """Run an ODMR sweep over a set of frequencies.
+    def odmr_sweep(self, start: float, stop: float, num_points: int):
+        """Run an ODMR (optically detected magnetic resonance) PL (photoluminescence) sweep over a set of microwave frequencies.
         Args:
             start (float): start frequency
             stop (float): stop frequency
@@ -29,26 +29,26 @@ class ODMR:
         # Connect to the data server and create a data set, or connect to an
         # existing one with the same name if it was created earlier.
         with InstrumentGateway() as gw, DataSource('ODMR') as odmr_data:
-            # frequencies that will be swept over in the ODMR measurement
+            # Frequencies that will be swept over in the ODMR measurement
             frequencies = np.linspace(start, stop, num_points)
             odmr_data.add('freqs', frequencies)
 
-            # photon counts corresponding to each frequency
+            # Photon counts corresponding to each frequency
             counts = np.zeros(num_points)
             odmr_data.add('counts', counts)
 
-            # sig gen amplitude for the scan (dBm)
+            # Set the signal generator amplitude for the scan (dBm).
             gw.sg.set_amplitude(6.5)
 
-            # sweep counts vs frequency
+            # Sweep counts vs. frequency.
             for i, f in enumerate(frequencies):
-                # access the signal generator driver on the instrument server and set its frequency
+                # Access the signal generator driver on the instrument server and set its frequency.
                 gw.sg.set_frequency(f)
-                # wait for counts to accumulate
+                # Wait for counts to accumulate.
                 time.sleep(0.5)
-                # read the number of photon counts received by the DAQ
+                # Read the number of photon counts received by the DAQ.
                 counts[i] = gw.daq.cnts(1)
-                # save the current data to the data server
+                # Save the current data to the data server.
                 odmr_data.update()
 
     # TODO save()

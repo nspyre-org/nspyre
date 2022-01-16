@@ -19,11 +19,11 @@ from nspyre import ParamsWidget
 from nspyre import QThreadRunner
 from nspyre import SplitterOrientation
 from nspyre import SplitterWidget
-from odmr import ODMR
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
+from spin_measurements import SpinMeasurements
 
 HERE = Path(__file__).parent
 
@@ -107,11 +107,11 @@ class ODMRWidget(QWidget):
         """Runs when the 'sweep' button is pressed."""
 
         # Create an instance of the ODMR class that implements the experimental logic.
-        self.odmr = ODMR()
+        spin_meas = SpinMeasurements()
 
         # Run the sweep function in a new thread.
         self.sweep_thread.run(
-            self.odmr.sweep,
+            spin_meas.odmr_sweep,
             self.params_widget.start_freq,
             self.params_widget.stop_freq,
             self.params_widget.num_points,

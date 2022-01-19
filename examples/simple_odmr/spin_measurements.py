@@ -49,6 +49,6 @@ class SpinMeasurements:
                 # Read the number of photon counts received by the DAQ.
                 counts[i] = gw.daq.cnts(1)
                 # Save the current data to the data server.
-                odmr_data.update()
+                odmr_data.update({'freqs': frequencies, 'counts': counts})
 
     # TODO save()

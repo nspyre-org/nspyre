@@ -14,68 +14,6 @@ from PyQt5.QtCore import QThread
 
 logger = logging.getLogger(__name__)
 
-# TODO
-# class QThreadWorker(QObject):
-#     """Helper class for QThreadRunner."""
-#     finished = pyqtSignal()
-
-#     def __init__(self, fun, *args, **kwargs):
-#         """
-#         Args:
-#             fun: Function to run.
-#             args: arguments to pass to fun.
-#             kwargs: keyword arguments to pass to fun.
-#         """
-#         super().__init__()
-#         self.fun = fun
-#         self.args = args
-#         self.kwargs = kwargs
-#         self.kill.connect(self.kill)
-
-#     def run(self):
-#         """Run self.fun"""
-#         logger.debug(f'Running thread {self.fun} args: {self.args} kwargs: {self.kwargs}')
-#         self.fun(*self.args, **self.kwargs)
-#         logger.debug(f'Thread {self.fun} finished. Exiting...')
-#         self.finished.emit()
-
-
-# class QThreadRunner:
-#     """Wrapper for a QThread. Input a function and arguments to be run in a separate QThread."""
-
-#     def __init__(self):
-#         # Thread to run the function
-#         self.thread = QThread()
-
-#     def go(self, fun, *args, **kwargs):
-#         """Run the provided function in a separate thread.
-
-#         Args:
-#             fun: Function to run.
-#             args: arguments to pass to fun.
-#             kwargs: keyword arguments to pass to fun.
-
-#         Raises:
-#             RuntimeError: The function from a previous call is still running.
-
-#         """
-
-#         # Dummy object to contain the function
-#         self.worker = QThreadWorker(fun, *args, **kwargs)
-
-#         # Check if any previous function is still running
-#         if self.thread.isRunning():
-#             raise RuntimeError('Previous function is still running.')
-
-#         # Connect the thread to the dummy object
-#         self.worker.moveToThread(self.thread)
-#         # Run the worker when the thread starts
-#         self.thread.started.connect(self.worker.run)
-#         # Make sure the thread and worker object are cleaned up once the function finishes
-#         self.worker.finished.connect(self.thread.quit)
-#         # Start the thread
-#         self.thread.start()
-
 
 class ContainerThread(QThread):
     """Runs a function in a new QThread."""
@@ -135,7 +73,7 @@ class QThreadRunner:
 
 
 class ProcessRunner:
-    """Run a function in a new process"""
+    """Run a function in a new process."""
 
     def __init__(self, kill=True):
         """

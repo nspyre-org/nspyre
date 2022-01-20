@@ -11,6 +11,9 @@ from nspyre import SINK_DATA_TYPE_PICKLE
 logger = logging.getLogger(__name__)
 
 
+ITERATIONS = 10
+
+
 def dataserv_push_pop(
     name: str = 'push_pop', data_type_override: bytes = SINK_DATA_TYPE_DEFAULT
 ):
@@ -28,11 +31,9 @@ def dataserv_push_pop(
             # array size
             n = 1000
             watched_var = np.zeros((n, n))
-            source.add('watched_var', watched_var)
 
-            iterations = 100
             total_time = 0.0
-            for i in range(iterations):
+            for i in range(ITERATIONS):
                 # pick a number of changes to make to the data set
                 nchanges = np.random.randint(1, 10)
                 for _ in range(nchanges):
@@ -45,15 +46,15 @@ def dataserv_push_pop(
                 # time the data server operations
                 start_time = time.time()
                 # push the new value to the data server
-                source.update()
+                source.push({'watched_var': watched_var})
                 # wait for the new data to be available from the data server
-                sink.update()
+                sink.pop()
                 end_time = time.time()
                 total_time += end_time - start_time
                 # make sure the data is identical
                 assert watched_var.all() == sink.watched_var.all()
-                logger.info(f'completed [{100*(i+1)/iterations:>5.1f}]%')
-            avg_time = total_time / iterations
+                logger.info(f'completed [{100*(i+1)/ITERATIONS:>5.1f}]%')
+            avg_time = total_time / ITERATIONS
 
     logger.info(
         f'completed run [{name}] - total time [{total_time:.3f}]s average time per push/pop [{avg_time:.3f}]s'
@@ -94,11 +95,9 @@ def dataserv_push_multipop(
             # array size
             n = 1000
             watched_var = np.zeros((n, n))
-            source.add('watched_var', watched_var)
 
-            iterations = 100
             total_time = 0.0
-            for i in range(iterations):
+            for i in range(ITERATIONS):
                 # pick a number of changes to make to the data set
                 nchanges = np.random.randint(1, 10)
                 for _ in range(nchanges):
@@ -111,17 +110,17 @@ def dataserv_push_multipop(
                 # time the data server operations
                 start_time = time.time()
                 # push the new value to the data server
-                source.update()
+                source.push({'watched_var': watched_var})
                 # wait for the new data to be available from the data server
-                sink1.update()
-                sink2.update()
+                sink1.pop()
+                sink2.pop()
                 end_time = time.time()
                 total_time += end_time - start_time
                 # make sure the data is identical
                 assert watched_var.all() == sink1.watched_var.all()
                 assert watched_var.all() == sink2.watched_var.all()
-                logger.info(f'completed [{100*(i+1)/iterations:>5.1f}]%')
-            avg_time = total_time / iterations
+                logger.info(f'completed [{100*(i+1)/ITERATIONS:>5.1f}]%')
+            avg_time = total_time / ITERATIONS
 
     logger.info(
         f'completed run [{name}] - total time [{total_time:.3f}]s average time per push/pop [{avg_time:.3f}]s'
@@ -146,16 +145,29 @@ def test_dataserv_push_multipop_pickle(dataserv):
     )
 
 
-# def test_dataserv_push_late_pop():
+def test_dataserv_push_no_pop(dataserv):
+    """Test pushing objects but not popping them"""
 
-#     # test object
-#     obj_n = 5
-#     obj = np.ones((obj_n, obj_n))
+    n = 5
+    obj = np.ones((n, n))
 
-#     # connection to the data server that we can push objects to
-#     source = DataSource('data1', 'localhost', DATASERV_PORT)
+    for i in range(ITERATIONS):
+        # connect to the data server
+        with DataSource('push_no_pop') as source:
+            for _ in range(10):
+                source.push(obj)
+        time.sleep(0.1)
 
-#     for i in range(obj_n):
-#         source.push(obj)
+        # make sure the DataSource event loop closed properly
+        assert not source.thread.is_alive()
 
-#     source.stop()
+        logger.info(f'completed [{100*(i+1)/ITERATIONS:>5.1f}]%')
+
+    # TODO remove data source
+
+
+if __name__ == '__main__':
+    from nspyre import nspyre_init_logger
+
+    nspyre_init_logger(log_level=logging.DEBUG)
+    test_dataserv_push_no_pop(None)

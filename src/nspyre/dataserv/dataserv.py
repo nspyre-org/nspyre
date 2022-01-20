@@ -8,7 +8,7 @@ Example usage:
 # run the command-line tool for starting up the data server, specifying the port
 nspyre-dataserv -p 12345
 
-# see DataSink.update()
+# see DataSink.pop()
 
 Author: Jacob Feder
 Date: 11/29/2020
@@ -22,7 +22,12 @@ from threading import Thread
 from typing import Any
 from typing import Dict
 
+import wait_for2
 import xdelta3
+
+# There is a bug in the python asyncio package that causes wait_for() to not respond correctly to task cancellation. This package is used as a patch until the problem is fixed in python.
+# wait_for2 https://github.com/Traktormaster/wait-for2
+# python bug https://bugs.python.org/issue42130
 
 logger = logging.getLogger(__name__)
 
@@ -80,10 +85,6 @@ SINK_DATA_TYPE_DEFAULT_UNPADDED = b'\xCD'
 SINK_DATA_TYPE_DEFAULT = SINK_DATA_TYPE_DEFAULT_UNPADDED + b'\x00' * (
     HEADER_METADATA_LEN - len(SINK_DATA_TYPE_DEFAULT_UNPADDED)
 )
-
-
-class DataServerError(Exception):
-    """Raised for failures with the data server"""
 
 
 class CustomSock:
@@ -146,20 +147,27 @@ def queue_flush_and_put(queue, item):
     queue.put_nowait(item)
 
 
-def cleanup_event_loop(loop):
+async def cleanup_event_loop(loop):
     """End all tasks in an event loop and exit"""
-    pending_tasks = asyncio.all_tasks(loop=loop)
+
+    if not loop.is_running():
+        logger.warning('Ignoring loop cleanup request because the loop isn\'t running.')
+        return
+
+    # gather all of the tasks except this one
+    pending_tasks = []
+    for task in asyncio.all_tasks(loop=loop):
+        if task is not asyncio.current_task():
+            pending_tasks.append(task)
+
     # cancel each pending task
     for task in pending_tasks:
         task.cancel()
-    # wait for all tasks to exit (and suppress any errors with return_exceptions=True)
-    grouped_pending_tasks = asyncio.gather(
-        *pending_tasks, loop=loop, return_exceptions=True
-    )
-    loop.run_until_complete(grouped_pending_tasks)
-    loop.run_until_complete(loop.shutdown_asyncgens())
+    # wait for all tasks to exit
+    await asyncio.gather(*pending_tasks, return_exceptions=True)
+
     # shut down the event loop
-    loop.close()
+    loop.stop()
 
 
 class DataSet:
@@ -217,13 +225,13 @@ class DataSet:
         try:
             while True:
                 try:
-                    new_pickle, _ = await asyncio.wait_for(
+                    new_pickle, _ = await wait_for2.wait_for(
                         sock.recv_msg(), timeout=TIMEOUT
                     )
                 except (asyncio.IncompleteReadError, asyncio.TimeoutError) as exc:
                     # if there was a timeout / problem receiving the message
                     # the source client is dead and will be terminated
-                    logger.info(
+                    logger.debug(
                         f'source [{sock.addr}] disconnected or hasn\'t sent a keepalive message - dropping connection'
                     )
                     raise asyncio.CancelledError from exc
@@ -252,8 +260,8 @@ class DataSet:
                 else:
                     # the server just sent a keepalive signal
                     logger.debug(f'source [{sock.addr}] received keepalive')
-        except asyncio.CancelledError:
-            raise
+        except (asyncio.CancelledError, wait_for2.CancelledWithResultError) as exc:
+            raise asyncio.CancelledError from exc
         finally:
             logger.info(f'dropped source [{sock.addr}]')
             self.source = None
@@ -272,7 +280,7 @@ class DataSet:
             while True:
                 try:
                     # get pickle data from the queue
-                    new_pickle = await asyncio.wait_for(
+                    new_pickle = await wait_for2.wait_for(
                         queue.get(), timeout=KEEPALIVE_TIMEOUT
                     )
                     queue.task_done()
@@ -311,7 +319,7 @@ class DataSet:
                                     last_pickle,
                                     new_pickle,
                                 )  # TODO fast/no compression? xdelta3.Flags.COMPLEVEL_1
-                                delta = await asyncio.wait_for(
+                                delta = await wait_for2.wait_for(
                                     delta_future,
                                     timeout=3 / 4 * OPS_TIMEOUT,
                                     loop=event_loop,
@@ -355,7 +363,7 @@ class DataSet:
                     data_type = SINK_DATA_TYPE_PICKLE
 
                 try:
-                    await asyncio.wait_for(
+                    await wait_for2.wait_for(
                         sock.send_msg(data_to_send, meta_data=data_type),
                         timeout=OPS_TIMEOUT / 4,
                     )
@@ -365,8 +373,8 @@ class DataSet:
                         f'sink [{sock.addr}] disconnected or isn\'t accepting data - dropping connection'
                     )
                     raise asyncio.CancelledError from exc
-        except asyncio.CancelledError:
-            raise
+        except (asyncio.CancelledError, wait_for2.CancelledWithResultError) as exc:
+            raise asyncio.CancelledError from exc
         finally:
             self.sinks.pop(sink_id)
             logger.debug(f'dropped sink [{sock.addr}]')
@@ -409,26 +417,28 @@ class DataServer:
 
     def serve_forever(self):
         """Run the asyncio event loop - ayncio requires this be run in the main thread if
-        processes are to be spawned from the event loop
-        https://docs.python.org/3/library/asyncio-dev.html"""
+        processes are to be spawned from the event loop. See https://docs.python.org/3/library/asyncio-dev.html."""
         self.event_loop.set_debug(True)
+        asyncio.set_event_loop(self.event_loop)
         try:
-            self.event_loop.run_until_complete(self._main())
-        except RuntimeError:
-            # event loop was stopped
-            pass
+            self.event_loop.call_soon(self._main_helper)
+            self.event_loop.run_forever()
         finally:
-            cleanup_event_loop(self.event_loop)
+            self.event_loop.close()
             logger.info('data server closed')
 
     def stop(self):
         """Stop the asyncio event loop."""
         if self.event_loop.is_running():
-            self.event_loop.call_soon_threadsafe(self.event_loop.stop)
-        else:
-            raise DataServerError(
-                'tried stopping the data server but it isn\'t running!'
+            asyncio.run_coroutine_threadsafe(
+                cleanup_event_loop(self.event_loop), self.event_loop
             )
+        else:
+            raise RuntimeError('tried stopping the data server but it isn\'t running!')
+
+    def _main_helper(self):
+        """Callback function to start _main"""
+        asyncio.create_task(self._main())
 
     async def _main(self):
         """Socket server listening coroutine"""
@@ -458,7 +468,7 @@ class DataServer:
             try:
                 # the first message we receive from the client should identify
                 # what kind of client it is
-                client_type, client_type_metadata = await asyncio.wait_for(
+                client_type, client_type_metadata = await wait_for2.wait_for(
                     sock.recv_msg(), timeout=NEGOTIATION_TIMEOUT
                 )
             except (asyncio.IncompleteReadError, asyncio.TimeoutError):
@@ -479,7 +489,7 @@ class DataServer:
                 # tell the client which datasets are available
                 data = ','.join(list(self.datasets.keys())).encode()
                 try:
-                    await asyncio.wait_for(
+                    await wait_for2.wait_for(
                         sock.send_msg(data), timeout=NEGOTIATION_TIMEOUT
                     )
                 except (ConnectionError, asyncio.TimeoutError):
@@ -498,7 +508,7 @@ class DataServer:
                 # the client will be a data source for a dataset on the server
                 # first we need know which dataset it will provide data for
                 try:
-                    dataset_name_bytes, _ = await asyncio.wait_for(
+                    dataset_name_bytes, _ = await wait_for2.wait_for(
                         sock.recv_msg(), timeout=NEGOTIATION_TIMEOUT
                     )
                 except (asyncio.IncompleteReadError, asyncio.TimeoutError):
@@ -542,7 +552,7 @@ class DataServer:
                 logger.info(f'client [{sock.addr}] is type [sink]')
                 # get the dataset name
                 try:
-                    dataset_name_bytes, _ = await asyncio.wait_for(
+                    dataset_name_bytes, _ = await wait_for2.wait_for(
                         sock.recv_msg(), timeout=NEGOTIATION_TIMEOUT
                     )
                 except (asyncio.IncompleteReadError, asyncio.TimeoutError):
@@ -600,7 +610,7 @@ class DataServer:
                 except IOError:
                     pass
                 return
-        except asyncio.CancelledError:
+        except (asyncio.CancelledError, wait_for2.CancelledWithResultError) as exc:
             logger.debug(
                 f'communication with client [{sock.addr}] cancelled - closing connection'
             )
@@ -608,7 +618,7 @@ class DataServer:
                 await sock.close()
             except IOError:
                 pass
-            raise
+            raise asyncio.CancelledError from exc
 
     def __enter__(self):
         """Python context manager setup"""
@@ -625,65 +635,73 @@ class DataSource:
     def __init__(self, name: str, addr: str = 'localhost', port: int = DATASERV_PORT):
         """Initialize connection to the data set on the server.
 
-        See DataSink.update() for typical usage example.
+        See DataSink.pop() for typical usage example.
 
         Args:
             name: Name of the data set.
             addr: Network address of the data server.
             port: Port of the data server.
         """
+
         # name of the dataset
         self.name = name
-        # dict mapping the object name to the watched object itself
-        self.data: Dict[str, Any] = {}
+
         # IP address of the data server to connect to
         self.addr = addr
+
         # port of the data server to connect to
         self.port = port
+
         # asyncio event loop for sending/receiving data to/from the socket
         self.event_loop = asyncio.new_event_loop()
+
         # thread for running self.event_loop
         self.thread = Thread(target=self._event_loop_thread)
         self.thread.start()
 
-    def add(self, name, obj):
-        """Add a new object to the data set"""
-        if name not in self.data:
-            self.data[name] = obj
-        else:
-            raise DataServerError(
-                f'An object with the name "{name}" already exists in the data set'
-            )
+        # kinda sketchy way to wait for the thread to start
+        while True:
+            try:
+                self.queue
+            except AttributeError:
+                pass
+            else:
+                break
 
     def _event_loop_thread(self):
         """Run the asyncio event loop - this may be run in a separate thread because
         we aren't starting any subprocesses or responding to signals"""
         self.event_loop.set_debug(True)
+        asyncio.set_event_loop(self.event_loop)
         try:
-            self.event_loop.run_until_complete(self._main())
-        except RuntimeError:
-            # event loop was stopped
-            logger.debug(f'source [{(self.addr, self.port)}] stopping...')
+            self.event_loop.call_soon(self._main_helper)
+            self.event_loop.run_forever()
         finally:
-            cleanup_event_loop(self.event_loop)
+            self.event_loop.close()
             logger.info(f'source [{(self.addr, self.port)}] closed')
 
     def stop(self):
         """Stop the asyncio event loop."""
         if self.event_loop.is_running():
-            self.event_loop.call_soon_threadsafe(self.event_loop.stop)
+            asyncio.run_coroutine_threadsafe(
+                cleanup_event_loop(self.event_loop), self.event_loop
+            )
         else:
-            raise DataServerError('tried stopping the source but it isn\'t running!')
+            raise RuntimeError('tried stopping the source but it isn\'t running!')
+
+    def _main_helper(self):
+        """Callback function to start _main"""
+        asyncio.create_task(self._main())
 
     async def _main(self):
         """asyncio main loop"""
-        # asyncio queue for buffering pickles to send to the server
-        self.queue = asyncio.Queue(maxsize=QUEUE_SIZE)
         try:
+            # asyncio queue for buffering pickles to send to the server
+            self.queue = asyncio.Queue(maxsize=QUEUE_SIZE)
             while True:
                 try:
                     # connect to the data server
-                    sock_reader, sock_writer = await asyncio.wait_for(
+                    sock_reader, sock_writer = await wait_for2.wait_for(
                         asyncio.open_connection(self.addr, self.port),
                         timeout=NEGOTIATION_TIMEOUT,
                     )
@@ -699,12 +717,12 @@ class DataSource:
 
                 try:
                     # notify the server that this is a data source client
-                    await asyncio.wait_for(
+                    await wait_for2.wait_for(
                         sock.send_msg(NEGOTIATION_SOURCE),
                         timeout=NEGOTIATION_TIMEOUT,
                     )
                     # send the dataset name
-                    await asyncio.wait_for(
+                    await wait_for2.wait_for(
                         sock.send_msg(self.name.encode()),
                         timeout=NEGOTIATION_TIMEOUT,
                     )
@@ -726,7 +744,7 @@ class DataSource:
                 while True:
                     try:
                         # get pickle data from the queue
-                        new_data = await asyncio.wait_for(
+                        new_data = await wait_for2.wait_for(
                             self.queue.get(), timeout=KEEPALIVE_TIMEOUT
                         )
                         self.queue.task_done()
@@ -739,7 +757,7 @@ class DataSource:
                         logger.debug('source sending keepalive to data server')
                     # send the data to the server
                     try:
-                        await asyncio.wait_for(
+                        await wait_for2.wait_for(
                             sock.send_msg(new_data), timeout=OPS_TIMEOUT
                         )
                         logger.debug(
@@ -754,15 +772,16 @@ class DataSource:
                         except IOError:
                             pass
                         break
-        except asyncio.CancelledError:
+        except (asyncio.CancelledError, wait_for2.CancelledWithResultError) as exc:
             logger.debug(
                 f'source stopped, closing connection with data server [{sock.addr}]'
             )
             try:
                 await sock.close()
-            except IOError:
+            except (IOError, NameError):
+                # socket is broken or hasn't been created yet
                 pass
-            raise
+            raise asyncio.CancelledError from exc
 
     async def _push(self, new_pickle):
         """Coroutine that puts a pickle onto the queue"""
@@ -787,17 +806,27 @@ class DataSource:
         """Serialize a python object into a byte stream"""
         return pickle.dumps(obj)
 
-    def update(self):
+    def push(self, data):
         """User-facing function for pushing new data to the server"""
         # serialize the objects
-        new_pickle = self._serialize(self.data)
+        new_pickle = self._serialize(data)
         logger.debug(f'source pushing object of [{len(new_pickle)}] bytes pickled')
         # put it on the queue
         future = asyncio.run_coroutine_threadsafe(
             self._push(new_pickle), self.event_loop
         )
         # wait for the coroutine to return
-        future.result()
+        try:
+            future.result()
+        except concurrent.futures.TimeoutError:
+            logger.error(
+                '_push timed out (this shouldn\'t happen since timeout is handled by _push itself)'
+            )
+            future.cancel()
+            return
+        except concurrent.futures.CancelledError:
+            logging.debug('_push was cancelled')
+            return
 
     def __enter__(self):
         """Python context manager setup"""
@@ -806,6 +835,12 @@ class DataSource:
     def __exit__(self, exc_type, exc_value, traceback):
         """Python context manager teardown"""
         self.stop()
+
+    def __del__(self):
+        if self.event_loop.is_running():
+            logger.warning(
+                f'DataSource {self} event loop is still running. Did you forget to call stop()?'
+            )
 
 
 class DataSink:
@@ -826,54 +861,79 @@ class DataSink:
             port: Port of the data server.
             data_type_override: Specify SINK_DATA_TYPE_PICKLE to force the data server to only send pickled data over the network, SINK_DATA_TYPE_DELTA to send delta objects, or SINK_DATA_TYPE_DEFAULT to choose automatically.
         """
+
         # name of the dataset
         self.name = name
+
         # dict mapping the object name to the watched object
         self.data: Dict[str, Any] = {}
+
         # IP address of the data server to connect to
         self.addr = addr
+
         # port of the data server to connect to
         self.port = port
+
         # asyncio event loop for sending/receiving data to/from the socket
         self.event_loop = asyncio.new_event_loop()
+
         # request that, whenever possible, the server send data as a specific type - set to:
         # SINK_DATA_TYPE_DEFAULT for the server to decide whether diffs should be performed
         # SINK_DATA_TYPE_PICKLE to always use pickle data (no diff)
         # SINK_DATA_TYPE_DELTA to always generate a diff
         self.data_type_override = data_type_override
+
         # thread for running self.event_loop
         self.thread = Thread(target=self._event_loop_thread)
         self.thread.start()
 
+        # kinda sketchy way to wait for the thread to start
+        while True:
+            try:
+                self.queue
+            except AttributeError:
+                pass
+            else:
+                break
+
     def _event_loop_thread(self):
         """Run the asyncio event loop - this may be run in a separate thread because
         we aren't starting any subprocesses or responding to signals"""
+
         self.event_loop.set_debug(True)
+        asyncio.set_event_loop(self.event_loop)
         try:
-            self.event_loop.run_until_complete(self._main())
-        except RuntimeError:
-            # event loop was stopped
-            logger.debug(f'sink [{(self.addr, self.port)}] stopping...')
+            self.event_loop.call_soon(self._main_helper)
+            self.event_loop.run_forever()
+        except asyncio.CancelledError:
+            logging.info('TEST closing...')
         finally:
-            cleanup_event_loop(self.event_loop)
+            self.event_loop.close()
             logger.info(f'sink [{(self.addr, self.port)}] closed')
 
     def stop(self):
         """Stop the asyncio event loop."""
         if self.event_loop.is_running():
-            self.event_loop.call_soon_threadsafe(self.event_loop.stop)
+            asyncio.run_coroutine_threadsafe(
+                cleanup_event_loop(self.event_loop), self.event_loop
+            )
         else:
-            raise DataServerError('tried stopping the data sink but it isn\'t running!')
+            raise RuntimeError('tried stopping the data sink but it isn\'t running!')
+
+    def _main_helper(self):
+        """Callback function to start _main"""
+        asyncio.create_task(self._main())
 
     async def _main(self):
         """asyncio main loop"""
-        # asyncio queue for buffering data from the server
-        self.queue = asyncio.Queue(maxsize=QUEUE_SIZE)
         try:
+            # asyncio queue for buffering data from the server
+            self.queue = asyncio.Queue(maxsize=QUEUE_SIZE)
+
             while True:
                 try:
                     # connect to the data server
-                    sock_reader, sock_writer = await asyncio.wait_for(
+                    sock_reader, sock_writer = await wait_for2.wait_for(
                         asyncio.open_connection(self.addr, self.port),
                         timeout=NEGOTIATION_TIMEOUT,
                     )
@@ -889,14 +949,14 @@ class DataSink:
 
                 try:
                     # notify the server that this is a data sink client
-                    await asyncio.wait_for(
+                    await wait_for2.wait_for(
                         sock.send_msg(
                             NEGOTIATION_SINK, meta_data=self.data_type_override
                         ),
                         timeout=NEGOTIATION_TIMEOUT,
                     )
                     # send the dataset name
-                    await asyncio.wait_for(
+                    await wait_for2.wait_for(
                         sock.send_msg(self.name.encode()),
                         timeout=NEGOTIATION_TIMEOUT,
                     )
@@ -919,12 +979,12 @@ class DataSink:
                 while True:
                     try:
                         # get data from the server
-                        new_data, data_type = await asyncio.wait_for(
+                        new_data, data_type = await wait_for2.wait_for(
                             sock.recv_msg(), timeout=TIMEOUT
                         )
                     except (asyncio.IncompleteReadError, asyncio.TimeoutError):
                         # if there was a timeout / problem receiving the message the dataserver / connection is dead
-                        logger.warning(
+                        logger.info(
                             f'sink data server [{sock.addr}] disconnected or hasn\'t sent a keepalive message - dropping connection'
                         )
                         try:
@@ -983,24 +1043,25 @@ class DataSink:
                     logger.debug(f'sink queued pickle of [{len(new_pickle)}] bytes')
                 await asyncio.sleep(FAST_TIMEOUT)
 
-        except asyncio.CancelledError:
+        except (asyncio.CancelledError, wait_for2.CancelledWithResultError) as exc:
             logger.debug(
                 f'sink stopped, closing connection with data server [{sock.addr}]'
             )
             try:
                 await sock.close()
-            except IOError:
+            except (IOError, NameError):
+                # socket is broken or hasn't been created yet
                 pass
-            raise
+            raise asyncio.CancelledError from exc
 
     async def _pop(self, timeout) -> bytes:
         """Coroutine that gets data from the queue"""
         try:
             # get pickle data from the queue
-            new_pickle = await asyncio.wait_for(self.queue.get(), timeout=timeout)
-        except asyncio.CancelledError:
+            new_pickle = await wait_for2.wait_for(self.queue.get(), timeout=timeout)
+        except (asyncio.CancelledError, wait_for2.CancelledWithResultError) as exc:
             logger.debug('pop cancelled')
-            raise
+            raise asyncio.CancelledError from exc
         else:
             self.queue.task_done()
             return new_pickle
@@ -1009,7 +1070,7 @@ class DataSink:
         """Deserialize a python object from a byte stream"""
         return pickle.loads(obj)
 
-    def update(self, timeout=None):
+    def pop(self, timeout=None):
         """Block waiting for an updated version of the data from the data server. Once the data is received, the internal data instance variable will be updated and the function will return.
 
         Typical usage example:
@@ -1039,30 +1100,28 @@ class DataSink:
                 frequencies = np.linspace(1e6, 100e6, n)
                 voltages = np.zeros(n)
 
-                # add objects to the data set
-                source.add('freq', frequencies)
-                source.add('volts', voltages)
-
                 for f in frequencies:
                     signal_generator.set_frequency(f)
                     voltages[i] = daq.get_voltage()
-                    source.update()
+                    # push most up-to-date data to the server
+                    source.push({'freq': frequencies, 'volts': voltages})
 
             Then run the python program on machine B implementing the data plotting:
 
             .. code-block:: python
 
                 # machine B: "sink"-side code
-                # running on the same or a different machine as the source / data server
+                # running on a different machine as the source / data server
 
                 from nspyre import DataSink
 
                 # connect to the data set on the data server
-                sink = DataSink('my_dataset', '192.168.1.50', 12345)
+                # IP of data server computer = '192.168.1.50'
+                sink = DataSink('my_dataset', '192.168.1.50')
 
                 while True:
                     # block until an updated version of the data set is available
-                    sink.update()
+                    sink.pop()
                     # sink.freq and sink.volts have been modified
                     # replot the data to show the new values
                     my_plot_update(sink.freq, sink.volts)
@@ -1074,17 +1133,32 @@ class DataSink:
             TimeoutError: A timeout occured.
 
         """
+
         # get the most recent pickle from the queue
-        future = asyncio.run_coroutine_threadsafe(self._pop(timeout), self.event_loop)
+        try:
+            future = asyncio.run_coroutine_threadsafe(
+                self._pop(timeout), self.event_loop
+            )
+        except RuntimeError:
+            logger.debug('pop called but the sink is closed')
+            return
+
         try:
             # wait for the coroutine to return
             new_pickle = future.result()
-        except asyncio.TimeoutError as exc:
-            # raise TimeoutError if no pickle is available
-            raise TimeoutError from exc
-        logger.debug(f'pop returning [{len(new_pickle)}] bytes unpickled')
-        # update objects
-        self.data = self._deserialize(new_pickle)
+        except concurrent.futures.TimeoutError:
+            logger.error(
+                '_pop timed out (this shouldn\'t happen since timeout is handled by _pop itself), cancelling the task...'
+            )
+            future.cancel()
+            return
+        except concurrent.futures.CancelledError:
+            logging.debug('_pop was cancelled')
+            return
+        else:
+            logger.debug(f'pop returning [{len(new_pickle)}] bytes unpickled')
+            # update data object
+            self.data = self._deserialize(new_pickle)
 
     def __getattr__(self, attr: str):
         """Allow the user to access the data objects using sink.obj notation"""
@@ -1101,3 +1175,9 @@ class DataSink:
     def __exit__(self, exc_type, exc_value, traceback):
         """Python context manager teardown"""
         self.stop()
+
+    def __del__(self):
+        if self.event_loop.is_running():
+            logger.warning(
+                f'DataSink {self} event loop is still running. Did you forget to call stop()?'
+            )

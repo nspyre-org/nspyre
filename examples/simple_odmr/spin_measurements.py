@@ -31,11 +31,9 @@ class SpinMeasurements:
         with InstrumentGateway() as gw, DataSource('ODMR') as odmr_data:
             # Frequencies that will be swept over in the ODMR measurement
             frequencies = np.linspace(start, stop, num_points)
-            odmr_data.add('freqs', frequencies)
 
             # Photon counts corresponding to each frequency
             counts = np.zeros(num_points)
-            odmr_data.add('counts', counts)
 
             # Set the signal generator amplitude for the scan (dBm).
             gw.sg.set_amplitude(6.5)
@@ -49,6 +47,6 @@ class SpinMeasurements:
                 # Read the number of photon counts received by the DAQ.
                 counts[i] = gw.daq.cnts(1)
                 # Save the current data to the data server.
-                odmr_data.update({'freqs': frequencies, 'counts': counts})
+                odmr_data.push({'freqs': frequencies, 'counts': counts})
 
     # TODO save()

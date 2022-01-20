@@ -139,6 +139,10 @@ class LinePlotWidget(QWidget):
         """Subclasses should override this function to update the plot. This function will be run in a separate Thread."""
         time.sleep(1)
 
+    def teardown(self):
+        """Subclasses should override this function to perform any teardown code"""
+        pass
+
     def _next_color(self):
         """Cycle through a set of colors"""
         idx = self.current_color_idx % len(cyclic_colors)
@@ -241,7 +245,5 @@ class LinePlotWidget(QWidget):
         # updatePlot()
 
     def stop(self):
+        self.teardown()
         self.update_thread.update_func = None
-
-    def __del__(self):
-        self.stop()

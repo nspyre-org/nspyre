@@ -117,18 +117,26 @@ class ODMRWidget(QWidget):
             self.params_widget.num_points,
         )
 
+    def closeEvent(self, event):
+        event.accept()
+        self.plot_widget.stop()
+
 
 class ODMRPlotWidget(LinePlotWidget):
     def setup(self):
         self.new_plot('ODMR')
         self.sink = DataSink('ODMR')
 
+    def teardown(self):
+        self.sink.stop()
+
     def update(self):
-        # TODO
-        # print('updating plot...')
-        # time.sleep(10)
-        self.sink.update()
-        self.set_data('ODMR', self.sink.freqs / 1e9, self.sink.counts)
+        self.sink.pop()
+        try:
+            self.set_data('ODMR', self.sink.freqs / 1e9, self.sink.counts)
+        except AttributeError:
+            # this can happen if the sink has never received data, so freqs / counts don't exist
+            pass
 
 
 if __name__ == '__main__':
@@ -140,6 +148,7 @@ if __name__ == '__main__':
         prefix='odmr',
         file_size=10_000_000,
     )
+    # logging.basicConfig(level=logging.DEBUG)
 
     # Create Qt application and apply nspyre visual settings.
     app = nspyre_app()

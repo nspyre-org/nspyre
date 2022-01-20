@@ -33,14 +33,8 @@ class ContainerThread(QThread):
 class QThreadRunner:
     """Wrapper for a QThread. Input a function and arguments to be run in a separate QThread."""
 
-    def __init__(self, kill=True):
-        """
-        Args:
-            kill: Whether to kill a previously running thread that hasn't completed.
-
-        """
+    def __init__(self):
         self.thread = None
-        self.should_kill = kill
 
     def run(self, fun, *args, **kwargs):
         """Run the provided function in a separate thread.
@@ -55,21 +49,11 @@ class QThreadRunner:
 
         """
         if self.thread and not self.thread.isFinished():
-            if self.should_kill:
-                logger.debug('Previous function is still running. Killing it...')
-                self.kill()
-            else:
-                raise RuntimeError('Previous function is still running.')
+            raise RuntimeError('Previous function is still running.')
 
         logger.debug(f'Running {fun} args: {args} kwargs: {kwargs} in a new thread.')
         # creates and starts the wrapper thread
         self.thread = ContainerThread(fun, *args, **kwargs)
-
-    def kill(self):
-        """Kill the thread."""
-        if self.thread:
-            self.thread.terminate()
-            self.thread.wait()
 
 
 class ProcessRunner:

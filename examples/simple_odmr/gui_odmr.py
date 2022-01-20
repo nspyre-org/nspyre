@@ -16,7 +16,7 @@ from nspyre import LinePlotWidget
 from nspyre import nspyre_app
 from nspyre import nspyre_init_logger
 from nspyre import ParamsWidget
-from nspyre import QThreadRunner
+from nspyre import ProcessRunner
 from nspyre import SplitterOrientation
 from nspyre import SplitterWidget
 from PyQt5.QtGui import QFont
@@ -70,7 +70,7 @@ class ODMRWidget(QWidget):
         # Qt button widget that takes an ODMR scan when clicked
         sweep_button = QPushButton('Sweep')
         # The process running the sweep function
-        self.sweep_thread = QThreadRunner()
+        self.sweep_proc = ProcessRunner()
         # Start run sweep_clicked on button press
         sweep_button.clicked.connect(self.sweep_clicked)
 
@@ -110,7 +110,7 @@ class ODMRWidget(QWidget):
         spin_meas = SpinMeasurements()
 
         # Run the sweep function in a new thread.
-        self.sweep_thread.run(
+        self.sweep_proc.run(
             spin_meas.odmr_sweep,
             self.params_widget.start_freq,
             self.params_widget.stop_freq,
@@ -125,15 +125,14 @@ class ODMRWidget(QWidget):
 class ODMRPlotWidget(LinePlotWidget):
     def setup(self):
         self.new_plot('ODMR')
-        self.plot_widget.setYRange(0, 5000)
+        self.plot_widget.setYRange(-100, 5100)
         self.sink = DataSink('ODMR')
 
     def teardown(self):
         self.sink.stop()
 
     def update(self):
-        self.sink.pop()
-        try:
+        if self.sink.pop():
             # scrolling behavior
             # index of last point to plot
             end_idx = self.sink.idx
@@ -150,9 +149,6 @@ class ODMRPlotWidget(LinePlotWidget):
                 self.sink.freqs[start_idx : end_idx + 1] / 1e9,
                 self.sink.counts[start_idx : end_idx + 1],
             )
-        except AttributeError:
-            # this can happen if the sink has never received data, so freqs / counts don't exist
-            pass
 
 
 if __name__ == '__main__':
@@ -164,7 +160,6 @@ if __name__ == '__main__':
         prefix='odmr',
         file_size=10_000_000,
     )
-    # logging.basicConfig(level=logging.DEBUG)
 
     # Create Qt application and apply nspyre visual settings.
     app = nspyre_app()

@@ -671,6 +671,7 @@ class DataSource:
     def _event_loop_thread(self):
         """Run the asyncio event loop - this may be run in a separate thread because
         we aren't starting any subprocesses or responding to signals"""
+        logging.debug(f'started DataSource event loop thread {self.thread}')
         self.event_loop.set_debug(True)
         asyncio.set_event_loop(self.event_loop)
         try:
@@ -899,7 +900,7 @@ class DataSink:
     def _event_loop_thread(self):
         """Run the asyncio event loop - this may be run in a separate thread because
         we aren't starting any subprocesses or responding to signals"""
-
+        logging.debug(f'started DataSource event loop thread {self.thread}')
         self.event_loop.set_debug(True)
         asyncio.set_event_loop(self.event_loop)
         try:
@@ -922,6 +923,7 @@ class DataSink:
 
     def _main_helper(self):
         """Callback function to start _main"""
+        # TODO for some reason this takes a long time
         asyncio.create_task(self._main())
 
     async def _main(self):
@@ -1066,11 +1068,11 @@ class DataSink:
             self.queue.task_done()
             return new_pickle
 
-    def _deserialize(self, obj) -> bytes:
+    def _deserialize(self, obj) -> Dict:
         """Deserialize a python object from a byte stream"""
         return pickle.loads(obj)
 
-    def pop(self, timeout=None):
+    def pop(self, timeout=None) -> bool:
         """Block waiting for an updated version of the data from the data server. Once the data is received, the internal data instance variable will be updated and the function will return.
 
         Typical usage example:
@@ -1121,16 +1123,19 @@ class DataSink:
 
                 while True:
                     # block until an updated version of the data set is available
-                    sink.pop()
-                    # sink.freq and sink.volts have been modified
-                    # replot the data to show the new values
-                    my_plot_update(sink.freq, sink.volts)
+                    if sink.pop():
+                        # sink.freq and sink.volts have been modified
+                        # replot the data to show the new values
+                        my_plot_update(sink.freq, sink.volts)
 
         Args:
             timeout: Time to wait for an update in seconds. Set to None to wait forever.
 
         Raises:
             TimeoutError: A timeout occured.
+
+        Returns:
+            bool: True if successful, False otherwise.
 
         """
 
@@ -1141,7 +1146,7 @@ class DataSink:
             )
         except RuntimeError:
             logger.debug('pop called but the sink is closed')
-            return
+            return False
 
         try:
             # wait for the coroutine to return
@@ -1151,14 +1156,15 @@ class DataSink:
                 '_pop timed out (this shouldn\'t happen since timeout is handled by _pop itself), cancelling the task...'
             )
             future.cancel()
-            return
+            return False
         except concurrent.futures.CancelledError:
             logging.debug('_pop was cancelled')
-            return
+            return False
         else:
             logger.debug(f'pop returning [{len(new_pickle)}] bytes unpickled')
             # update data object
             self.data = self._deserialize(new_pickle)
+            return True
 
     def __getattr__(self, attr: str):
         """Allow the user to access the data objects using sink.obj notation"""

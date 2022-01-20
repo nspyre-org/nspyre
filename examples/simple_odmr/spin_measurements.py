@@ -43,10 +43,10 @@ class SpinMeasurements:
                 # Access the signal generator driver on the instrument server and set its frequency.
                 gw.sg.set_frequency(f)
                 # Wait for counts to accumulate.
-                time.sleep(0.5)
+                time.sleep(0.1)
                 # Read the number of photon counts received by the DAQ.
                 counts[i] = gw.daq.cnts(1)
                 # Save the current data to the data server.
-                odmr_data.push({'freqs': frequencies, 'counts': counts})
+                odmr_data.push({'freqs': frequencies, 'counts': counts, 'idx': i})
 
     # TODO save()

@@ -125,6 +125,7 @@ class ODMRWidget(QWidget):
 class ODMRPlotWidget(LinePlotWidget):
     def setup(self):
         self.new_plot('ODMR')
+        self.plot_widget.setYRange(0, 5000)
         self.sink = DataSink('ODMR')
 
     def teardown(self):
@@ -133,7 +134,22 @@ class ODMRPlotWidget(LinePlotWidget):
     def update(self):
         self.sink.pop()
         try:
-            self.set_data('ODMR', self.sink.freqs / 1e9, self.sink.counts)
+            # scrolling behavior
+            # index of last point to plot
+            end_idx = self.sink.idx
+            # max number of points to display simultaneously
+            npts = 10
+            if end_idx > npts:
+                # index of first point to plot
+                start_idx = end_idx - npts
+            else:
+                start_idx = 0
+            # update the plot
+            self.set_data(
+                'ODMR',
+                self.sink.freqs[start_idx : end_idx + 1] / 1e9,
+                self.sink.counts[start_idx : end_idx + 1],
+            )
         except AttributeError:
             # this can happen if the sink has never received data, so freqs / counts don't exist
             pass

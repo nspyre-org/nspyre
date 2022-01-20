@@ -656,7 +656,7 @@ class DataSource:
         self.event_loop = asyncio.new_event_loop()
 
         # thread for running self.event_loop
-        self.thread = Thread(target=self._event_loop_thread)
+        self.thread = Thread(target=self._event_loop_thread, daemon=True)
         self.thread.start()
 
         # kinda sketchy way to wait for the thread to start
@@ -885,7 +885,7 @@ class DataSink:
         self.data_type_override = data_type_override
 
         # thread for running self.event_loop
-        self.thread = Thread(target=self._event_loop_thread)
+        self.thread = Thread(target=self._event_loop_thread, daemon=True)
         self.thread.start()
 
         # kinda sketchy way to wait for the thread to start

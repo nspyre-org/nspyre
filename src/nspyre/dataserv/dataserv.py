@@ -681,9 +681,25 @@ class DataSource:
             self.event_loop.close()
             logger.info(f'source [{(self.addr, self.port)}] closed')
 
-    def stop(self):
+    def stop(self, timeout=3):
         """Stop the asyncio event loop."""
         if self.event_loop.is_running():
+            # wait for the queue to be empty (with timeout) to allow any pushes in the pipeline to be sent
+            future = asyncio.run_coroutine_threadsafe(
+                self.queue.join(), self.event_loop
+            )
+            # wait for the coroutine to return
+            try:
+                future.result(timeout=timeout)
+            except concurrent.futures.TimeoutError:
+                logger.info(
+                    'Timed out waiting for the DataSource queue to be empty. Stopping anyway...'
+                )
+                future.cancel()
+                return
+            except concurrent.futures.CancelledError:
+                logging.error('queue.join() was cancelled. This is shouldn\'t happen.')
+            # kill the event loop
             asyncio.run_coroutine_threadsafe(
                 cleanup_event_loop(self.event_loop), self.event_loop
             )
@@ -748,7 +764,6 @@ class DataSource:
                         new_data = await wait_for2.wait_for(
                             self.queue.get(), timeout=KEEPALIVE_TIMEOUT
                         )
-                        self.queue.task_done()
                         logger.debug(
                             f'source dequeued pickle of [{len(new_data)}] bytes - sending to data server [{sock.addr}]'
                         )
@@ -764,6 +779,9 @@ class DataSource:
                         logger.debug(
                             f'source sent pickle of [{len(new_data)}] bytes to data server [{sock.addr}]'
                         )
+                        if new_data:
+                            # mark that the queue data has been fully processed
+                            self.queue.task_done()
                     except (ConnectionError, asyncio.TimeoutError):
                         logger.warning(
                             f'source failed sending to data server [{sock.addr}] - attempting reconnect'

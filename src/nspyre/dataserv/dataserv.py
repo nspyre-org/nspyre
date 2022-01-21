@@ -170,6 +170,16 @@ async def cleanup_event_loop(loop):
     loop.stop()
 
 
+def deserialize(obj) -> Any:
+    """Deserialize a python object from a byte stream"""
+    return pickle.loads(obj)
+
+
+def serialize(obj) -> bytes:
+    """Serialize a python object into a byte stream"""
+    return pickle.dumps(obj)
+
+
 class DataSet:
     """Class that wraps a pipeline consisting of a data source and a list of data sinks"""
 
@@ -185,6 +195,8 @@ class DataSet:
         #           'queue': sink FIFO/queue},
         # ('192.168.1.5', 19859): ... }
         self.sinks = {}
+        # object to store the most up-to-date data for safekeeping
+        self.data = None
 
     async def run_sink(
         self,
@@ -237,6 +249,7 @@ class DataSet:
                     raise asyncio.CancelledError from exc
 
                 if len(new_pickle):
+                    self.data = new_pickle
                     logger.debug(
                         f'source [{sock.addr}] received pickle of [{len(new_pickle)}] bytes'
                     )
@@ -821,14 +834,10 @@ class DataSource:
             logger.debug('source push cancelled')
             raise
 
-    def _serialize(self, obj) -> bytes:
-        """Serialize a python object into a byte stream"""
-        return pickle.dumps(obj)
-
     def push(self, data):
         """User-facing function for pushing new data to the server"""
         # serialize the objects
-        new_pickle = self._serialize(data)
+        new_pickle = serialize(data)
         logger.debug(f'source pushing object of [{len(new_pickle)}] bytes pickled')
         # put it on the queue
         future = asyncio.run_coroutine_threadsafe(
@@ -1086,10 +1095,6 @@ class DataSink:
             self.queue.task_done()
             return new_pickle
 
-    def _deserialize(self, obj) -> Dict:
-        """Deserialize a python object from a byte stream"""
-        return pickle.loads(obj)
-
     def pop(self, timeout=None) -> bool:
         """Block waiting for an updated version of the data from the data server. Once the data is received, the internal data instance variable will be updated and the function will return.
 
@@ -1181,7 +1186,7 @@ class DataSink:
         else:
             logger.debug(f'pop returning [{len(new_pickle)}] bytes unpickled')
             # update data object
-            self.data = self._deserialize(new_pickle)
+            self.data = deserialize(new_pickle)
             return True
 
     def __getattr__(self, attr: str):

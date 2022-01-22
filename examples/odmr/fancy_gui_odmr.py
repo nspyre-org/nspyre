@@ -17,17 +17,92 @@ from nspyre import nspyre_app
 from nspyre import nspyre_init_logger
 from nspyre import ParamsWidget
 from nspyre import ProcessRunner
-from nspyre import SplitterOrientation
-from nspyre import SplitterWidget
-from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QHBoxLayout
+from PyQt5.QtWidgets import QListWidget
+from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
+from pyqtgraph.dockarea import Dock
+from pyqtgraph.dockarea import DockArea
 from spin_measurements import SpinMeasurements
 
 HERE = Path(__file__).parent
 
 logger = logging.getLogger(__name__)
+
+
+class MainWidget(QWidget):
+    """Qt widget that contains a list of widgets to run, and a pyqtgraph DockArea where they are displayed."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # window settings
+        self.setWindowTitle('My Experiment')
+        self.resize(1200, 700)
+
+        # list of available widgets
+        self.widgets = {
+            'ODMR': {'cls': ODMRWidget, 'args': (), 'kwargs': {}},
+            'ODMR_plot': {'cls': ODMRPlotWidget, 'args': (), 'kwargs': {}},
+            'ODMR_scroll_plot': {
+                'cls': ScrollingODMRPlotWidget,
+                'args': (),
+                'kwargs': {},
+            },
+        }
+
+        # dock area to view the widgets
+        self.dock_area = DockArea()
+        self.docks = []
+
+        # make a GUI element to show all the available widgets
+        self.list_widget = QListWidget()
+        for w in self.widgets:
+            QListWidgetItem(w, self.list_widget)
+
+        # Qt button that loads a widget from the widget list when clicked
+        load_button = QPushButton('Load')
+        # run the load widget method on button press
+        load_button.clicked.connect(self.load_widget_clicked)
+
+        # Qt layout that arranges the widget list and run button vertically
+        widget_list_layout = QVBoxLayout()
+        widget_list_layout.addWidget(self.list_widget)
+        widget_list_layout.addWidget(load_button)
+        # Dummy widget containing the list widget and run button
+        widget_list_container = QWidget()
+        widget_list_container.setLayout(widget_list_layout)
+
+        # add the widget list to the dock area
+        self.dock_widget(widget_list_container, 'Widgets', closable=False)
+
+        main_layout = QHBoxLayout()
+        main_layout.addWidget(self.dock_area)
+        self.setLayout(main_layout)
+
+    def load_widget_clicked(self):
+        """Runs when the 'run' button is pressed. Loads the relevant widget and adds it to the dock area."""
+        widget_name = self.list_widget.currentItem().text()
+        widget_cls = self.widgets[widget_name]['cls']
+        widget_args = self.widgets[widget_name]['args']
+        widget_kwargs = self.widgets[widget_name]['kwargs']
+        widget = widget_cls(*widget_args, **widget_kwargs)
+        self.dock_widget(widget, widget_name)
+
+    def dock_widget(self, widget, title, closable=True, fontSize='14px'):
+        dock = Dock(
+            title,
+            size=(500, 200),
+            autoOrientation=False,
+            closable=closable,
+            fontSize=fontSize,
+        )
+        dock.setOrientation(o='vertical', force=True)
+        self.dock_area.addDock(dock, 'right')
+        dock.addWidget(widget)
+        self.docks.append(dock)
 
 
 class ODMRWidget(QWidget):
@@ -59,7 +134,7 @@ class ODMRWidget(QWidget):
                     'dec': True,
                 },
                 'num_points': {
-                    'value': 10,
+                    'value': 100,
                     'int': True,
                     'bounds': (1, None),
                     'dec': True,
@@ -74,37 +149,17 @@ class ODMRWidget(QWidget):
         # Start run sweep_clicked on button press
         sweep_button.clicked.connect(self.sweep_clicked)
 
-        # Data plotter widget
-        self.plot_widget = ODMRPlotWidget(
-            title='ODMR Scan',
-            xlabel='Frequency (GHz)',
-            ylabel='PL (counts)',
-            font=QFont('Arial', 14),
-        )
-
         # Qt layout that arranges the params and button vertically
         params_layout = QVBoxLayout()
         params_layout.addWidget(self.params_widget)
         params_layout.addWidget(sweep_button)
-        # Dummy widget containing the params and run button
-        params_container = QWidget()
-        params_container.setLayout(params_layout)
 
-        # Splitter that displays the params interface on the left and data viewer on the right
-        self.splitter = SplitterWidget(
-            main_w=params_container,
-            side_w=self.plot_widget,
-            orientation=SplitterOrientation.vertical_right_button,
-        )
-        self.splitter.setSizes([1, 400])
-
-        # Qt dummy layout that contains the splitter
-        main_layout = QVBoxLayout()
-        main_layout.addWidget(self.splitter)
-        self.setLayout(main_layout)
+        self.setLayout(params_layout)
 
     def sweep_clicked(self):
         """Runs when the 'sweep' button is pressed."""
+
+        # TODO runtime code reloading
 
         # Create an instance of the ODMR class that implements the experimental logic.
         spin_meas = SpinMeasurements()
@@ -133,6 +188,17 @@ class ODMRPlotWidget(LinePlotWidget):
 
     def update(self):
         if self.sink.pop():
+            # update the plot
+            self.set_data(
+                'ODMR',
+                self.sink.freqs[0 : self.sink.idx + 1] / 1e9,
+                self.sink.counts[0 : self.sink.idx + 1],
+            )
+
+
+class ScrollingODMRPlotWidget(ODMRPlotWidget):
+    def update(self):
+        if self.sink.pop():
             # scrolling behavior
             # index of last point to plot
             end_idx = self.sink.idx
@@ -157,7 +223,7 @@ if __name__ == '__main__':
         log_level=logging.INFO,
         log_path=HERE / 'logs',
         log_path_level=logging.DEBUG,
-        prefix='odmr',
+        prefix='fancy_odmr',
         file_size=10_000_000,
     )
 
@@ -165,7 +231,7 @@ if __name__ == '__main__':
     app = nspyre_app()
 
     # Create the GUI.
-    ODMR_widget = ODMRWidget()
+    ODMR_widget = MainWidget()
     ODMR_widget.show()
     # Run the GUI event loop.
     app.exec()

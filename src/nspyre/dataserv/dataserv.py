@@ -1118,18 +1118,17 @@ class DataSink:
 
                 # connect to the data server and create a data set, or connect to an
                 # existing one with the same name if it was created earlier
-                source = DataSource('my_dataset')
+                with DataSource('my_dataset') as source:
+                    # do an experiment where we measure voltage of something as a function of frequency
+                    n = 100
+                    frequencies = np.linspace(1e6, 100e6, n)
+                    voltages = np.zeros(n)
 
-                # do an experiment where we measure voltage of something as a function of frequency
-                n = 100
-                frequencies = np.linspace(1e6, 100e6, n)
-                voltages = np.zeros(n)
-
-                for f in frequencies:
-                    signal_generator.set_frequency(f)
-                    voltages[i] = daq.get_voltage()
-                    # push most up-to-date data to the server
-                    source.push({'freq': frequencies, 'volts': voltages})
+                    for f in frequencies:
+                        signal_generator.set_frequency(f)
+                        voltages[i] = daq.get_voltage()
+                        # push most up-to-date data to the server
+                        source.push({'freq': frequencies, 'volts': voltages})
 
             Then run the python program on machine B implementing the data plotting:
 
@@ -1142,14 +1141,13 @@ class DataSink:
 
                 # connect to the data set on the data server
                 # IP of data server computer = '192.168.1.50'
-                sink = DataSink('my_dataset', '192.168.1.50')
-
-                while True:
-                    # block until an updated version of the data set is available
-                    if sink.pop():
-                        # sink.freq and sink.volts have been modified
-                        # replot the data to show the new values
-                        my_plot_update(sink.freq, sink.volts)
+                with DataSink('my_dataset', '192.168.1.50') as sink:
+                    while True:
+                        # block until an updated version of the data set is available
+                        if sink.pop():
+                            # sink.freq and sink.volts have been modified
+                            # replot the data to show the new values
+                            my_plot_update(sink.freq, sink.volts)
 
         Args:
             timeout: Time to wait for an update in seconds. Set to None to wait forever.

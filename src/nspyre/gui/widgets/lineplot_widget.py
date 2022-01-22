@@ -245,5 +245,5 @@ class LinePlotWidget(QWidget):
         # updatePlot()
 
     def stop(self):
-        self.teardown()
         self.update_thread.update_func = None
+        self.teardown()

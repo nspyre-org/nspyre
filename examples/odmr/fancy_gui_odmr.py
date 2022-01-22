@@ -9,8 +9,10 @@ This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 import logging
+from importlib import reload
 from pathlib import Path
 
+import spin_measurements
 from nspyre import DataSink
 from nspyre import LinePlotWidget
 from nspyre import nspyre_app
@@ -25,7 +27,6 @@ from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 from pyqtgraph.dockarea import Dock
 from pyqtgraph.dockarea import DockArea
-from spin_measurements import SpinMeasurements
 
 HERE = Path(__file__).parent
 
@@ -159,10 +160,11 @@ class ODMRWidget(QWidget):
     def sweep_clicked(self):
         """Runs when the 'sweep' button is pressed."""
 
-        # TODO runtime code reloading
+        # reload the spin measurements module at runtime in case any changes were made to the code
+        reload(spin_measurements)
 
         # Create an instance of the ODMR class that implements the experimental logic.
-        spin_meas = SpinMeasurements()
+        spin_meas = spin_measurements.SpinMeasurements()
 
         # Run the sweep function in a new thread.
         self.sweep_proc.run(

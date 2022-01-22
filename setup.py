@@ -77,6 +77,7 @@ setup(
         'rpyc>=4.1.5',
         # data server
         'xdelta3>=0.0.5',
+        'wait_for2',  # TODO temporary until asyncio is fixed
         # Qt / GUI
         'pyqt5>=5.12.3',
         'pyqtgraph>=0.11.0',

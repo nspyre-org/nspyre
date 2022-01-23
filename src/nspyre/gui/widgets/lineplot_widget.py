@@ -209,7 +209,14 @@ class LinePlotWidget(QWidget):
         self.plots[name]['x'] = xdata
         self.plots[name]['y'] = ydata
         # notify the watcher
-        self.new_data.emit(name)
+        try:
+            self.parent()
+        except RuntimeError:
+            # this Qt object has already been deleted
+            return
+        else:
+            # notify that new data is available
+            self.new_data.emit(name)
 
     def _process_data(self, name):
         """Update a line plot triggered by set_data."""

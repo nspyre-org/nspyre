@@ -8,6 +8,7 @@ from .dataserv import SINK_DATA_TYPE_PICKLE
 from .gui import colors
 from .gui import cyclic_colors
 from .gui import LinePlotWidget
+from .gui import MainWidget
 from .gui import nspyre_app
 from .gui import nspyre_font
 from .gui import nspyre_palette
@@ -16,6 +17,7 @@ from .gui import ParamsWidget
 from .gui import SaveWidget
 from .gui import SplitterOrientation
 from .gui import SplitterWidget
+from .gui import sssss
 from .inserv import InstrumentGateway
 from .inserv import InstrumentGatewayError
 from .inserv import InstrumentServer

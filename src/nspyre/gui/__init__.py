@@ -5,7 +5,9 @@ from .app import nspyre_style_sheet
 from .style import colors
 from .style import cyclic_colors
 from .widgets import LinePlotWidget
+from .widgets import MainWidget
 from .widgets import ParamsWidget
 from .widgets import SaveWidget
 from .widgets import SplitterOrientation
 from .widgets import SplitterWidget
+from .widgets import sssss

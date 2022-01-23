@@ -1045,7 +1045,7 @@ class DataSink:
                             new_pickle = xdelta3.decode(last_pickle, new_data)
                         else:
                             logger.error(
-                                f'sink received delta data from the data server [{sock.addr}] but hasn\'t received a pickle yet'
+                                f'sink received delta data from the data server [{sock.addr}] but hasn\'t previously received a pickle'
                             )
                             try:
                                 await sock.close()

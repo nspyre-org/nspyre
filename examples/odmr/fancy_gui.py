@@ -13,6 +13,7 @@ from importlib import reload
 from pathlib import Path
 
 import gui_elements
+import nspyre
 from nspyre import nspyre_app
 from nspyre import nspyre_init_logger
 from PyQt5.QtWidgets import QHBoxLayout
@@ -41,6 +42,12 @@ class MainWidget(QWidget):
 
         # list of available widgets
         self.widgets = {
+            'Save_File': {
+                'module': nspyre,
+                'class': 'SaveWidget',
+                'args': (),
+                'kwargs': {},
+            },
             'ODMR': {
                 'module': gui_elements,
                 'class': 'ODMRWidget',
@@ -99,14 +106,14 @@ class MainWidget(QWidget):
         widget_kwargs = self.widgets[widget_name]['kwargs']
 
         # reload the module at runtime in case any changes were made to the code
-        reload(widget_module)
+        widget_module = reload(widget_module)
         widget_class = getattr(widget_module, widget_class_name)
         # create an instance of the widget class
         widget = widget_class(*widget_args, **widget_kwargs)
         # add the widget to the GUI
         self.dock_widget(widget, widget_name)
 
-    def dock_widget(self, widget, title, closable=True, fontSize='14px'):
+    def dock_widget(self, widget, title, closable=True, fontSize='16px'):
         """Create a new dock for the given widget and add it to the dock area."""
         dock = Dock(
             title,

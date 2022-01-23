@@ -100,10 +100,6 @@ class InservCmdPrompt(cmd.Cmd):
             return
         logger.info('exiting...')
 
-        if isinstance(self.inserv, InstrumentServer):
-            # if the instrument server is local, stop it
-            self.inserv.stop()
-
         raise SystemExit
 
 

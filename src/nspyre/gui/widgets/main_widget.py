@@ -21,41 +21,43 @@ from .sssss import sssss
 
 
 class MainWidget(QWidget):
-    """Qt widget that contains a list of widgets to run, and a pyqtgraph DockArea where they are displayed."""
+    """Qt widget that contains a list of widgets to run, and a pyqtgraph DockArea where they are displayed.
+
+    Typical usage example:
+
+                .. code-block:: python
+
+                    import my_module
+                    import nspyre
+                    from nspyre import nspyre_app
+                    from nspyre import MainWidget
+
+                    # Create Qt application and apply nspyre visual settings.
+                    app = nspyre_app()
+
+                    # Create the GUI.
+                    main_widget = MainWidget({
+                        'Save_File': {
+                            'module': nspyre,
+                            'class': 'SaveWidget',
+                            'args': (),
+                            'kwargs': {},
+                        },
+                        'ODMR': {
+                            'module': my_module,
+                            'class': 'ODMRWidget',
+                            'args': (),
+                            'kwargs': {},
+                        },
+                    })
+                    main_widget.show()
+                    # Run the GUI event loop.
+                    app.exec()
+
+    """
 
     def __init__(self, widgets, font_size='18px'):
         """
-        Typical usage example:
-
-            .. code-block:: python
-
-                import my_module
-                import nspyre
-                from nspyre import nspyre_app
-                from nspyre import MainWidget
-
-                # Create Qt application and apply nspyre visual settings.
-                app = nspyre_app()
-
-                # Create the GUI.
-                main_widget = MainWidget({
-                    'Save_File': {
-                        'module': nspyre,
-                        'class': 'SaveWidget',
-                        'args': (),
-                        'kwargs': {},
-                    },
-                    'ODMR': {
-                        'module': my_module,
-                        'class': 'ODMRWidget',
-                        'args': (),
-                        'kwargs': {},
-                    },
-                })
-                main_widget.show()
-                # Run the GUI event loop.
-                app.exec()
-
         Args:
             widgets: Dictionary - see example usage for the required form.
             font_size: Dock label font size as a string (e.g. '14px').

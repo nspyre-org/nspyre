@@ -171,17 +171,17 @@ async def cleanup_event_loop(loop):
 
 
 def deserialize(obj) -> Any:
-    """Deserialize a python object from a byte stream"""
+    """Deserialize a python object from a byte stream."""
     return pickle.loads(obj)
 
 
 def serialize(obj) -> bytes:
-    """Serialize a python object into a byte stream"""
+    """Serialize a python object into a byte stream."""
     return pickle.dumps(obj)
 
 
 class DataSet:
-    """Class that wraps a pipeline consisting of a data source and a list of data sinks"""
+    """Class that wraps a pipeline consisting of a data source and a list of data sinks."""
 
     def __init__(self):
         # dict of the form
@@ -216,13 +216,18 @@ class DataSet:
         task = asyncio.create_task(
             self._sink_coro(event_loop, sink_id, data_type_override=data_type_override)
         )
+        # create a queue for the sink
+        queue: asyncio.Queue = asyncio.Queue(maxsize=QUEUE_SIZE)
         # add the sink data to the DataSet
         sink_dict = {
             'task': task,
             'sock': sock,
-            'queue': asyncio.Queue(maxsize=QUEUE_SIZE),
+            'queue': queue,
         }
         self.sinks[sink_id] = sink_dict
+        if self.data:
+            # push the current data to the sink so it has a starting point
+            queue.put_nowait(self.data)
         await task
 
     async def run_source(self, sock: CustomSock):

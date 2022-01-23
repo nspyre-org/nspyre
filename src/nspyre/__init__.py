@@ -28,7 +28,7 @@ from .misc import ProcessRunner
 from .misc import Q_
 from .misc import qt_set_trace
 from .misc import QThreadRunner
-from .tools import InservCmdPrompt
+from .tools import inserv_cli
 
 
 __version__ = '1.0.0'

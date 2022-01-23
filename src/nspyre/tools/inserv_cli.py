@@ -27,6 +27,21 @@ from ..misc.logging import nspyre_init_logger
 logger = logging.getLogger(__name__)
 
 
+def inserv_cli(inserv):
+    """Run a command-line interface to allow user interaction with the instrument server.
+
+    Args:
+        inserv: InstrumentServer or InstrumentGateway object.
+    """
+    # start the shell prompt event loop
+    cmd_prompt = InservCmdPrompt(inserv)
+    cmd_prompt.prompt = 'inserv > '
+    try:
+        cmd_prompt.cmdloop('')
+    except KeyboardInterrupt:
+        pass
+
+
 class InservCmdPrompt(cmd.Cmd):
     """Instrument Server shell prompt processor"""
 
@@ -217,9 +232,7 @@ def main():
         inserv.start()
 
     # start the shell prompt event loop
-    cmd_prompt = InservCmdPrompt(inserv)
-    cmd_prompt.prompt = 'inserv > '
-    cmd_prompt.cmdloop('')
+    inserv_cli(inserv)
 
 
 if __name__ == '__main__':

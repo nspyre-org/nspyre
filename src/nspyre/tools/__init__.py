@@ -1,1 +1,1 @@
-from .inserv_cli import InservCmdPrompt
+from .inserv_cli import inserv_cli

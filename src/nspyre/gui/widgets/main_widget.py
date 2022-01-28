@@ -9,6 +9,7 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 from importlib import reload
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QListWidget
 from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.QtWidgets import QPushButton
@@ -25,34 +26,34 @@ class MainWidget(QWidget):
 
     Typical usage example:
 
-                .. code-block:: python
+    .. code-block:: python
 
-                    import my_module
-                    import nspyre
-                    from nspyre import nspyre_app
-                    from nspyre import MainWidget
+        import my_module
+        import nspyre
+        from nspyre import NspyreApp
+        from nspyre import MainWidget
 
-                    # Create Qt application and apply nspyre visual settings.
-                    app = nspyre_app()
+        # Create Qt application and apply nspyre visual settings.
+        app = NspyreApp()
 
-                    # Create the GUI.
-                    main_widget = MainWidget({
-                        'Save_File': {
-                            'module': nspyre,
-                            'class': 'SaveWidget',
-                            'args': (),
-                            'kwargs': {},
-                        },
-                        'ODMR': {
-                            'module': my_module,
-                            'class': 'ODMRWidget',
-                            'args': (),
-                            'kwargs': {},
-                        },
-                    })
-                    main_widget.show()
-                    # Run the GUI event loop.
-                    app.exec()
+        # Create the GUI.
+        main_widget = MainWidget({
+            'Save_File': {
+                'module': nspyre,
+                'class': 'SaveWidget',
+                'args': (),
+                'kwargs': {},
+            },
+            'ODMR': {
+                'module': my_module,
+                'class': 'ODMRWidget',
+                'args': (),
+                'kwargs': {},
+            },
+        })
+        main_widget.show()
+        # Run the GUI event loop.
+        app.exec()
 
     """
 
@@ -64,6 +65,8 @@ class MainWidget(QWidget):
         """
         super().__init__()
 
+        # delete any children Qt widgets when this widget is closed
+        self.setAttribute(Qt.WA_DeleteOnClose, True)
         # window settings
         self.setWindowTitle('nspyre')
         self.resize(1200, 700)
@@ -85,19 +88,20 @@ class MainWidget(QWidget):
         # run the load widget method on button press
         load_button.clicked.connect(self.load_widget_clicked)
 
-        # Qt layout that arranges the widget list and run button vertically
+        # Qt layout that arranges the widget list and load button vertically
         widget_list_layout = QVBoxLayout()
         widget_list_layout.addWidget(self.list_widget)
         widget_list_layout.addWidget(load_button)
-        # Dummy widget containing the list widget and run button
+        # Dummy widget containing the layout
         widget_list_container = QWidget()
         widget_list_container.setLayout(widget_list_layout)
+
         # add the widget list to the dock area
         widget_list_dock = self.dock_widget(widget_list_container, name='Widgets')
         # set size relative to other docks
         widget_list_dock.setStretch(20, 1)
 
-        # add the snake logo
+        # add the snake logo to the dock area
         logo_widget = sssss()
         self.logo_dock = self.dock_widget(logo_widget, name='snake')
         self.logo_dock.hideTitleBar()
@@ -128,8 +132,11 @@ class MainWidget(QWidget):
         """Create a new dock for the given widget and add it to the dock area."""
         # if the logo dock is there, remove it
         try:
-            self.logo_dock.close()
+            if self.logo_dock:
+                self.logo_dock.close()
+                self.logo_dock = None
         except AttributeError:
+            # if logo_dock hasn't been defined yet
             pass
 
         if 'fontSize' not in kwargs:
@@ -141,6 +148,8 @@ class MainWidget(QWidget):
         dock = Dock(*args, **kwargs)
         dock.setOrientation(o='vertical', force=True)
         dock.addWidget(widget)
+        # make sure the widget gets deleted when the dock is closed by the user
+        dock.sigClosed.connect(widget.deleteLater)
         self.dock_area.addDock(dock, 'right')
 
         return dock

@@ -7,6 +7,7 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
+from functools import partial
 from importlib import reload
 
 import spin_measurements
@@ -63,9 +64,17 @@ class ODMRWidget(QWidget):
         # Start run sweep_clicked on button press
         sweep_button.clicked.connect(self.sweep_clicked)
 
+        # Qt button widget that takes an ODMR scan when clicked
+        stop_button = QPushButton('Stop')
+        # Start run sweep_clicked on button press
+        stop_button.clicked.connect(self.stop)
+        # stop the process if the widget is destroyed
+        self.destroyed.connect(partial(self.stop))
+
         # Qt layout that arranges the params and button vertically
         params_layout = QVBoxLayout()
         params_layout.addWidget(self.params_widget)
+        params_layout.addWidget(stop_button)
         params_layout.addWidget(sweep_button)
 
         self.setLayout(params_layout)
@@ -86,6 +95,10 @@ class ODMRWidget(QWidget):
             self.params_widget.stop_freq,
             self.params_widget.num_points,
         )
+
+    def stop(self):
+        """Stop the sweep process."""
+        self.sweep_proc.kill()
 
 
 class ODMRPlotWidget(LinePlotWidget):

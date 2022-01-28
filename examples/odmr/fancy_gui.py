@@ -14,8 +14,8 @@ from pathlib import Path
 import gui_elements
 import nspyre
 from nspyre import MainWidget
-from nspyre import nspyre_app
 from nspyre import nspyre_init_logger
+from nspyre import NspyreApp
 
 HERE = Path(__file__).parent
 
@@ -29,7 +29,7 @@ nspyre_init_logger(
 )
 
 # Create Qt application and apply nspyre visual settings.
-app = nspyre_app()
+app = NspyreApp()
 
 # Create the GUI.
 main_widget = MainWidget(

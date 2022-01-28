@@ -9,10 +9,10 @@ from .gui import colors
 from .gui import cyclic_colors
 from .gui import LinePlotWidget
 from .gui import MainWidget
-from .gui import nspyre_app
 from .gui import nspyre_font
 from .gui import nspyre_palette
 from .gui import nspyre_style_sheet
+from .gui import NspyreApp
 from .gui import ParamsWidget
 from .gui import SaveWidget
 from .gui import SplitterOrientation

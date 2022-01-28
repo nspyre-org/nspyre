@@ -94,5 +94,7 @@ class ProcessRunner:
 
     def kill(self):
         """Kill the process."""
-        self.proc.terminate()
-        self.proc.join()
+        if self.proc:
+            self.proc.terminate()
+            self.proc.join()
+            self.proc = None

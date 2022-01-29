@@ -21,7 +21,7 @@ HERE = Path(__file__).parent
 
 # Log to the console as well as a file inside the logs folder.
 nspyre_init_logger(
-    log_level=logging.INFO,
+    log_level=logging.DEBUG,
     log_path=HERE / 'logs',
     log_path_level=logging.DEBUG,
     prefix='fancy_odmr',

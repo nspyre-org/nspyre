@@ -10,11 +10,13 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 from functools import partial
 from importlib import reload
 
+import numpy as np
 import spin_measurements
 from nspyre import DataSink
 from nspyre import LinePlotWidget
 from nspyre import ParamsWidget
 from nspyre import ProcessRunner
+from nspyre import SaveWidget
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
@@ -101,7 +103,21 @@ class ODMRWidget(QWidget):
         self.sweep_proc.kill()
 
 
+def save_ODMR(filename, data):
+    np.savez(filename, freqs=data['freqs'], counts=data['counts'])
+
+
+class ODMRSaveWidget(SaveWidget):
+    def __init__(self):
+        super().__init__(additional_filetypes={'ODMR': save_ODMR})
+
+
 class ODMRPlotWidget(LinePlotWidget):
+    def __init__(self):
+        super().__init__(
+            title='ODMR @ B = 15mT', xlabel='Frequency (GHz)', ylabel='PL (counts)'
+        )
+
     def setup(self):
         self.new_plot('ODMR')
         self.plot_widget.setYRange(-100, 5100)

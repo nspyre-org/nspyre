@@ -12,7 +12,6 @@ import logging
 from pathlib import Path
 
 import gui_elements
-import nspyre
 from nspyre import MainWidget
 from nspyre import nspyre_init_logger
 from nspyre import NspyreApp
@@ -21,7 +20,7 @@ HERE = Path(__file__).parent
 
 # Log to the console as well as a file inside the logs folder.
 nspyre_init_logger(
-    log_level=logging.DEBUG,
+    log_level=logging.INFO,
     log_path=HERE / 'logs',
     log_path_level=logging.DEBUG,
     prefix='fancy_odmr',
@@ -34,9 +33,9 @@ app = NspyreApp()
 # Create the GUI.
 main_widget = MainWidget(
     {
-        'Save_File': {
-            'module': nspyre,
-            'class': 'SaveWidget',
+        'SaveODMR': {
+            'module': gui_elements,
+            'class': 'ODMRSaveWidget',
             'args': (),
             'kwargs': {},
         },

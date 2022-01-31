@@ -26,13 +26,13 @@ HOME = Path.home()
 
 
 def save_json(filename, data):
-    """Save data a json file."""
+    """Save data to a json file."""
     with open(filename, 'w') as f:
         json.dump(data, f)
 
 
 def save_pickle(filename, data):
-    """Save data a python pickle file."""
+    """Save data to a python pickle file."""
     with open(filename, 'wb') as f:
         pickle.dump(data, f)
 

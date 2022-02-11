@@ -33,18 +33,18 @@ class ODMRWidget(QWidget):
 
         self.setWindowTitle('ODMR')
 
-        # Stacked layout of spinboxes that allow the user to enter experimental parameters
+        # stacked layout of spinboxes that allow the user to enter experimental parameters
         self.params_widget = ParamsWidget(
             {
                 'start_freq': {
-                    'value': 2e9,
+                    'value': 3e9,
                     'suffix': 'Hz',
                     'siPrefix': True,
                     'bounds': (100e3, 10e9),
                     'dec': True,
                 },
                 'stop_freq': {
-                    'value': 3e9,
+                    'value': 4e9,
                     'suffix': 'Hz',
                     'siPrefix': True,
                     'bounds': (100e3, 10e9),
@@ -61,14 +61,14 @@ class ODMRWidget(QWidget):
 
         # Qt button widget that takes an ODMR scan when clicked
         sweep_button = QPushButton('Sweep')
-        # The process running the sweep function
+        # the process running the sweep function
         self.sweep_proc = ProcessRunner()
-        # Start run sweep_clicked on button press
+        # start run sweep_clicked on button press
         sweep_button.clicked.connect(self.sweep_clicked)
 
         # Qt button widget that takes an ODMR scan when clicked
         stop_button = QPushButton('Stop')
-        # Start run sweep_clicked on button press
+        # start run sweep_clicked on button press
         stop_button.clicked.connect(self.stop)
         # stop the process if the widget is destroyed
         self.destroyed.connect(partial(self.stop))
@@ -87,10 +87,10 @@ class ODMRWidget(QWidget):
         # reload the spin measurements module at runtime in case any changes were made to the code
         reload(spin_measurements)
 
-        # Create an instance of the ODMR class that implements the experimental logic.
+        # create an instance of the ODMR class that implements the experimental logic.
         spin_meas = spin_measurements.SpinMeasurements()
 
-        # Run the sweep function in a new thread.
+        # run the sweep function in a new thread.
         self.sweep_proc.run(
             spin_meas.odmr_sweep,
             self.params_widget.start_freq,

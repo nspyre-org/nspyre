@@ -11,7 +11,7 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 try:
     from pint import get_application_registry
 except ImportError:
-    pass
+    Q_ = None
 else:
     import rpyc
 

@@ -40,9 +40,10 @@ def free_port():
 @pytest.fixture
 def dataserv():
     """Start a data server if one isn't running"""
-    # An unresolved bug currently prevents nspyre-dataserv from being started
+    # TODO: An unresolved bug currently prevents nspyre-dataserv from being started
     # automatically by pytest, so for now just throw an error if it isn't running
-    if 'nspyre-dataserv' not in [p.name() for p in psutil.process_iter()]:
+    running_procs = [p.name() for p in psutil.process_iter()]
+    if 'nspyre-dataserv' not in running_procs and 'nspyre-dataserv.exe' not in running_procs:
         raise Exception(
             "The data server isn't running and must be started manually with 'nspyre-dataserv'"
         )

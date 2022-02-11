@@ -71,18 +71,20 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
     zip_safe=False,
-    python_requires='>=3.9, <4',
+    python_requires='>=3.9, <3.10',
     install_requires=[
         # instrument server
-        'rpyc>=4.1.5',
+        'rpyc',
         # data server
-        'xdelta3>=0.0.5',
         'wait_for2',  # TODO temporary until asyncio is fixed
         # Qt / GUI
-        'pyqt5>=5.12.3',
-        'pyqtgraph>=0.11.0',
+        'pyqt5',
+        'pyqtgraph',
     ],
     extras_require={
+        'extras': [
+            'xdelta3',  # dataserver delta compression for remote clients
+        ],
         'dev': [
             'pre-commit',
             'sphinx',
@@ -95,8 +97,8 @@ setup(
             'pytest-cov',
             'psutil',
             'numpy',
-            'lantz>=0.6.2',
-            'pint>=0.18',
+            'lantz',
+            'pint',
         ],
     },
     test_suite='tests',

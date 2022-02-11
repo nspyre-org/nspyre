@@ -23,7 +23,12 @@ from typing import Any
 from typing import Dict
 
 import wait_for2
-import xdelta3
+
+# lazy import xdelta3
+try:
+    import xdelta3
+except ModuleNotFoundError:
+    xdelta3 = None
 
 # There is a bug in the python asyncio package that causes wait_for() to not respond correctly to task cancellation. This package is used as a patch until the problem is fixed in python.
 # wait_for2 https://github.com/Traktormaster/wait-for2
@@ -319,8 +324,13 @@ class DataSet:
                         or (
                             data_type_override == SINK_DATA_TYPE_DEFAULT
                             and sock.addr[0] != '127.0.0.1'
+                            and xdelta3
                         )
                     ):
+                        if not xdelta3:
+                            raise ModuleNotFoundError(
+                                'The data server was requested to use the xdelta3 protocol but the xdelta3 module isn\'t installed.'
+                            )
                         # create a new process for running the xdelta algorithm and await it
                         with concurrent.futures.ProcessPoolExecutor(
                             max_workers=1
@@ -1037,6 +1047,10 @@ class DataSink:
                         )
                         new_pickle = new_data
                     elif data_type == SINK_DATA_TYPE_DELTA:
+                        if not xdelta3:
+                            raise ModuleNotFoundError(
+                                'The data server sent a packet using the xdelta3 protocol but the xdelta3 module isn\'t installed.'
+                            )
                         # if the server sent a delta, we will first reconstruct the pickle
                         logger.debug(
                             f'sink received delta of [{len(new_data)}] bytes from data server [{sock.addr}]'

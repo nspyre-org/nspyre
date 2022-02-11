@@ -1,4 +1,5 @@
 import logging
+import sys
 import time
 
 import numpy as np
@@ -65,7 +66,15 @@ def test_dataserv_push_pop_delta(dataserv):
     """Test the base functionality of the data server by synchronously
     pushing then popping an object repeatedly, but force the server to use
     deltas"""
-    dataserv_push_pop(name='push_pop_delta', data_type_override=SINK_DATA_TYPE_DELTA)
+
+    if 'xdelta3' in sys.modules:
+        dataserv_push_pop(
+            name='push_pop_delta', data_type_override=SINK_DATA_TYPE_DELTA
+        )
+    else:
+        logger.info(
+            'Skipping test_dataserv_push_pop_delta because xdelta3 is not installed.'
+        )
 
 
 def test_dataserv_push_pop_pickle(dataserv):
@@ -131,9 +140,15 @@ def test_dataserv_push_multipop_delta(dataserv):
     """Test the base functionality of the data server by synchronously
     pushing an object, then popping it from two different sinks, but force the
     server to use deltas"""
-    dataserv_push_multipop(
-        name='push_pop_delta', data_type_override=SINK_DATA_TYPE_DELTA
-    )
+
+    if 'xdelta3' in sys.modules:
+        dataserv_push_multipop(
+            name='push_pop_delta', data_type_override=SINK_DATA_TYPE_DELTA
+        )
+    else:
+        logger.info(
+            'Skipping test_dataserv_push_multipop_delta because xdelta3 is not installed.'
+        )
 
 
 def test_dataserv_push_multipop_pickle(dataserv):

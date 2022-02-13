@@ -12,7 +12,7 @@ from nspyre import SINK_DATA_TYPE_PICKLE
 logger = logging.getLogger(__name__)
 
 
-ITERATIONS = 10
+NPUSHES = 100
 
 
 def dataserv_push_pop(
@@ -34,7 +34,7 @@ def dataserv_push_pop(
             watched_var = np.zeros((n, n))
 
             total_time = 0.0
-            for i in range(ITERATIONS):
+            for i in range(NPUSHES):
                 # pick a number of changes to make to the data set
                 nchanges = np.random.randint(1, 10)
                 for _ in range(nchanges):
@@ -54,8 +54,8 @@ def dataserv_push_pop(
                 total_time += end_time - start_time
                 # make sure the data is identical
                 assert watched_var.all() == sink.watched_var.all()
-                logger.info(f'completed [{100*(i+1)/ITERATIONS:>5.1f}]%')
-            avg_time = total_time / ITERATIONS
+                logger.info(f'completed [{100*(i+1)/NPUSHES:>5.1f}]%')
+            avg_time = total_time / NPUSHES
 
     logger.info(
         f'completed run [{name}] - total time [{total_time:.3f}]s average time per push/pop [{avg_time:.3f}]s'
@@ -106,7 +106,7 @@ def dataserv_push_multipop(
             watched_var = np.zeros((n, n))
 
             total_time = 0.0
-            for i in range(ITERATIONS):
+            for i in range(NPUSHES):
                 # pick a number of changes to make to the data set
                 nchanges = np.random.randint(1, 10)
                 for _ in range(nchanges):
@@ -128,8 +128,8 @@ def dataserv_push_multipop(
                 # make sure the data is identical
                 assert watched_var.all() == sink1.watched_var.all()
                 assert watched_var.all() == sink2.watched_var.all()
-                logger.info(f'completed [{100*(i+1)/ITERATIONS:>5.1f}]%')
-            avg_time = total_time / ITERATIONS
+                logger.info(f'completed [{100*(i+1)/NPUSHES:>5.1f}]%')
+            avg_time = total_time / NPUSHES
 
     logger.info(
         f'completed run [{name}] - total time [{total_time:.3f}]s average time per push/pop [{avg_time:.3f}]s'
@@ -166,19 +166,20 @@ def test_dataserv_push_no_pop(dataserv):
     n = 5
     obj = np.ones((n, n))
 
-    for i in range(ITERATIONS):
+    nconnects = 3
+    for i in range(nconnects):
         # connect to the data server
         with DataSource('push_no_pop') as source:
-            for _ in range(10):
+            for _ in range(NPUSHES):
                 source.push(obj)
         time.sleep(0.1)
 
         # make sure the DataSource event loop closed properly
         assert not source.thread.is_alive()
 
-        logger.info(f'completed [{100*(i+1)/ITERATIONS:>5.1f}]%')
+        logger.info(f'completed [{100*(i+1)/nconnects:>5.1f}]%')
 
-    # TODO remove data source
+        # TODO remove data source
 
 
 if __name__ == '__main__':

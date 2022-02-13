@@ -45,7 +45,7 @@ repos:
   hooks:
     -   id: sphinx
         name: Sphinx (docs)
-        entry: bash -c 'make -C docs clean && make -C docs html'
+        entry: python docs/make.py
         language: system
         types: [python]
         pass_filenames: false

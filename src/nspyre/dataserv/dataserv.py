@@ -17,6 +17,7 @@ import asyncio
 import concurrent.futures
 import logging
 import pickle
+import selectors
 import socket
 from threading import Thread
 from typing import Any
@@ -441,7 +442,9 @@ class DataServer:
         # a dictionary with string identifiers mapping to DataSet objects
         self.datasets: Dict[str, DataSet] = {}
         # asyncio event loop for running all the server tasks
-        self.event_loop = asyncio.new_event_loop()
+        # TODO for some reason there are performance issues on windows when using the ProactorEventLoop
+        selector = selectors.SelectSelector()
+        self.event_loop = asyncio.SelectorEventLoop(selector)
 
     def serve_forever(self):
         """Run the asyncio event loop - ayncio requires this be run in the main thread if
@@ -638,6 +641,8 @@ class DataServer:
                 except IOError:
                     pass
                 return
+        except ConnectionResetError:
+            logger.debug(f'client [{sock.addr}] forcibly closed - closing connection')
         except (asyncio.CancelledError, wait_for2.CancelledWithResultError) as exc:
             logger.debug(
                 f'communication with client [{sock.addr}] cancelled - closing connection'
@@ -681,7 +686,8 @@ class DataSource:
         self.port = port
 
         # asyncio event loop for sending/receiving data to/from the socket
-        self.event_loop = asyncio.new_event_loop()
+        selector = selectors.SelectSelector()
+        self.event_loop = asyncio.SelectorEventLoop(selector)
 
         # thread for running self.event_loop
         self.thread = Thread(target=self._event_loop_thread, daemon=True)
@@ -918,7 +924,8 @@ class DataSink:
         self.port = port
 
         # asyncio event loop for sending/receiving data to/from the socket
-        self.event_loop = asyncio.new_event_loop()
+        selector = selectors.SelectSelector()
+        self.event_loop = asyncio.SelectorEventLoop(selector)
 
         # request that, whenever possible, the server send data as a specific type - set to:
         # SINK_DATA_TYPE_DEFAULT for the server to decide whether diffs should be performed

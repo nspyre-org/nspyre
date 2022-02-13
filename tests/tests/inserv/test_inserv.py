@@ -23,7 +23,7 @@ class TestInserv:
         """Test the gateway can connect and have an empty dict of devices"""
         assert not gateway.devs
 
-    def test_connect_fail(self, inserv):
+    def test_connect_fail(self):
         """Test the gateway returns an error if the ip is wrong"""
         with pytest.raises(InstrumentGatewayError):
             with InstrumentGateway(addr='an invalid ip!'):

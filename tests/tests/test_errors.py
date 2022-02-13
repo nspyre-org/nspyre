@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 
 from nspyre import nspyre_init_logger
+import pytest
 
 logger_name = 'test_errors'
 logger = logging.getLogger(logger_name)
@@ -9,7 +10,7 @@ HERE = Path(__file__).parent
 
 
 class TestErrors:
-    def test_output(self, inserv, gateway):
+    def test_output(self, gateway):
         """Test that the log files are working properly and receiving all the stdout / stderr messages as well"""
 
         # Generate a temporary log file that can be analyzed by the test
@@ -21,38 +22,29 @@ class TestErrors:
         )
 
         # messages logged in the main / client python instance
-        main_messages = []
-        # messages logged in the instrument server
-        inserv_messages = []
+        log_messages = []
 
         logger.debug('debug test')
-        main_messages.append('debug test')
+        log_messages.append('debug test')
         logger.info('info test')
-        main_messages.append('info test')
+        log_messages.append('info test')
         logger.warning('warning test')
-        main_messages.append('warning test')
+        log_messages.append('warning test')
         logger.error('error test')
-        main_messages.append('error test')
+        log_messages.append('error test')
         # TODO for some reason nspyre_init_logger() doesn't seem able to
         # permanently overwrite sys.stdout/err in pytest
         # print('stderr test')
-        # main_messages.append('[stderr] stderr test')
+        # log_messages.append('[stderr] stderr test')
         # print('stdout test')
-        # main_messages.append('stdout test')
-
-        # purposefully throw an error on the instrument server
-        try:
-            # the instrument server should log this error
-            gateway.nonexistent_device
-        except AttributeError:
-            pass
+        # log_messages.append('stdout test')
 
         # open the log files
-        with open(log_path) as main_reader, open(inserv['log']) as inserv_reader:
-            main_log = main_reader.read()
-            inserv_log = inserv_reader.read()
+        with open(log_path) as log_reader:
+            log = log_reader.read()
             # make sure each message was logged to the file
-            for m in main_messages:
-                assert m in main_log
-            for m in inserv_messages:
-                assert m in inserv_log
+            for m in log_messages:
+                assert m in log
+
+        with pytest.raises(AttributeError):
+            gateway.nonexistent_device

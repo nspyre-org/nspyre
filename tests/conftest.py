@@ -18,6 +18,7 @@ from pathlib import Path
 import psutil
 import pytest
 from nspyre import InstrumentGateway
+from nspyre import InstrumentServer
 from nspyre import InstrumentGatewayError
 
 HERE = Path(__file__).parent
@@ -53,34 +54,14 @@ def dataserv():
 def inserv():
     """Create an instrument server"""
     port = _free_port()
-    inserv_log_path = Path(HERE / 'tmp/inserv.log')
-    # delete the log file if it already exists
-    inserv_log_path.unlink(missing_ok=True)
-    # start the instrument server in a new process
-    inserv_proc = subprocess.Popen(
-        [
-            'nspyre-inserv',
-            '-s',
-            '-v',
-            'debug',
-            '-l',
-            inserv_log_path,
-            '-p',
-            str(port),
-        ],
-        stdin=subprocess.PIPE,
-    )
 
-    # make sure the inserv gets killed on exit even if there's an error
-    def cleanup():
-        inserv_proc.kill()
+    inserv = InstrumentServer(port=port)
+    inserv.start()
 
-    atexit.register(cleanup)
+    yield inserv
 
-    yield {'port': port, 'log': inserv_log_path}
-
-    # stop the instrument server process
-    inserv_proc.kill()
+    # stop the instrument server
+    inserv.stop()
 
 
 # depend on inserv to make sure it gets started first
@@ -96,7 +77,7 @@ def gateway(inserv):
     while True:
         # wait until the instrument server is online
         try:
-            with InstrumentGateway(port=inserv['port']) as gw:
+            with InstrumentGateway(port=inserv.port) as gw:
                 # connection succeeded, so re-enable logging
                 logging.disable(logging.NOTSET)
 

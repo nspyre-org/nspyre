@@ -6,17 +6,22 @@ HERE = Path(__file__).parent
 
 
 def main():
-    if sys.platform == 'win32':
-        # cmd = (f'make -C clean {HERE} && make -C {HERE} html',)
-        cmd = ['make', '-C', str(HERE), 'clean']
-        ret = subprocess.call(cmd)
-        if ret:
-            return ret
-        cmd = ['make', '-C', str(HERE), 'html']
-        return subprocess.call(cmd)
-    else:
-        cmd = (f'bash -c \'make -C {HERE} clean && make -C {HERE} html\'',)
-        return subprocess.call(cmd)
+    cmd = ['make', '-C', str(HERE), 'clean']
+    ret = subprocess.run(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+    )
+    if ret.returncode:
+        return ret.returncode
+    print(ret.stdout, file=sys.stdout)
+    print(ret.stderr, file=sys.stderr)
+    cmd = ['make', '-C', str(HERE), 'html']
+    ret = subprocess.run(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+    )
+    if ret.returncode:
+        return ret.returncode
+    print(ret.stdout, file=sys.stdout)
+    print(ret.stderr, file=sys.stderr)
 
 
 if __name__ == '__main__':

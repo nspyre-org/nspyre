@@ -64,6 +64,13 @@ class ParamsWidget(QWidget):
 
         self.setLayout(total_layout)
 
+    def all_params(self):
+        """Return the current value of all user parameters as a dictionary."""
+        all_params = {}
+        for p in self.params:
+            all_params[p] = self.spinboxes[p].value()
+        return all_params
+
     def __getattr__(self, attr: str):
         """Allow easy access to the parameter values."""
         if attr in self.params:

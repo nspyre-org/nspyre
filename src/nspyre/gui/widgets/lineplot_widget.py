@@ -15,7 +15,6 @@ from typing import Dict
 import pyqtgraph as pg
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import QSemaphore
-from PyQt5.QtCore import QThread
 from PyQt5.QtGui import QColor
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QVBoxLayout
@@ -24,39 +23,9 @@ from PyQt5.QtWidgets import QWidget
 from ..style.colors import colors
 from ..style.colors import cyclic_colors
 from ..style.style import nspyre_font
+from .widget_update_thread import WidgetUpdateThread
 
 logger = logging.getLogger(__name__)
-
-
-class WidgetUpdateThread(QThread):
-    """Run update_func() repeatedly in a thread."""
-
-    def __init__(self, update_func, report_fps=False, fps_period=1):
-        """TODO"""
-        super().__init__()
-        self.update_func = update_func
-        self.report_fps = report_fps
-        self.fps_period = fps_period
-
-    def run(self):
-        """Thread entry point"""
-        # keep track of how frequently update_func is called in the fps_period
-        fps_counter = 0
-        # time since the last reporting of the plot update FPS
-        last_fps = time.time()
-        while self.update_func:
-            self.update_func()
-            # calculate how many times per second update_func is being called
-            if self.report_fps:
-                fps_counter += 1
-                now = time.time()
-                # time difference since last FPS report
-                td = now - last_fps
-                if td > self.fps_period:
-                    fps = fps_counter / td
-                    logger.debug(f'plotting FPS: {fps:0.3f}')
-                    last_fps = now
-                    fps_counter = 0
 
 
 class LinePlotWidget(QWidget):

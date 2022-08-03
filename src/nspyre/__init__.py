@@ -5,6 +5,7 @@ from .dataserv import serialize
 from .dataserv import SINK_DATA_TYPE_DEFAULT
 from .dataserv import SINK_DATA_TYPE_DELTA
 from .dataserv import SINK_DATA_TYPE_PICKLE
+from .gui import ColorMapWidget
 from .gui import colors
 from .gui import cyclic_colors
 from .gui import LinePlotWidget

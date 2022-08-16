@@ -1,13 +1,25 @@
+"""
+A collection of functionality that doesn't fit anywhere else.
+
+Copyright (c) 2022, Jacob Feder
+All rights reserved.
+
+This work is licensed under the terms of the 3-Clause BSD license.
+For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
+"""
 import functools
 import importlib
 import inspect
+import logging
 import sys
 import warnings
+from multiprocessing import Process
 from pathlib import Path
-from pdb import set_trace
 from typing import Type
 
-from PyQt5.QtCore import pyqtRemoveInputHook
+
+logger = logging.getLogger(__name__)
+
 
 # root directory of nspyre
 NSPYRE_ROOT = Path(__file__).parent.parent
@@ -135,7 +147,45 @@ def load_class_from_file(file_path: Path, class_name: str) -> Type:
     return loaded_class
 
 
-def qt_set_trace():
-    """Set a tracepoint in the Python debugger (pdb) that works with Qt."""
-    pyqtRemoveInputHook()
-    set_trace()
+class ProcessRunner:
+    """Run a function in a new process."""
+
+    def __init__(self, kill=True):
+        """
+        Args:
+            kill: Whether to kill a previously running process that hasn't completed.
+
+        """
+        self.proc = None
+        self.should_kill = kill
+
+    def run(self, fun, *args, **kwargs):
+        """Run the provided function in a separate process.
+
+        Args:
+            fun: Function to run.
+            args: arguments to pass to fun.
+            kwargs: keyword arguments to pass to fun.
+
+        Raises:
+            RuntimeError: The function from a previous call is still running.
+
+        """
+
+        if self.proc and self.proc.is_alive():
+            if self.should_kill:
+                logger.debug('Previous function is still running. Killing it...')
+                self.kill()
+            else:
+                raise RuntimeError('Previous function is still running.')
+
+        logger.debug(f'Running process {fun} args: {args} kwargs: {kwargs}.')
+        self.proc = Process(target=fun, args=args, kwargs=kwargs, daemon=True)
+        self.proc.start()
+
+    def kill(self):
+        """Kill the process."""
+        if self.proc:
+            self.proc.terminate()
+            self.proc.join()
+            self.proc = None

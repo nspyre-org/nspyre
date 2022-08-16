@@ -14,7 +14,7 @@ def read(*parts):
     Build an absolute path from *parts* and and return the contents of the
     resulting file.  Assume UTF-8 encoding.
     """
-    with codecs.open(Path(here, *parts), "rb", "utf-8") as f:
+    with codecs.open(Path(here, *parts), 'rb', 'utf-8') as f:
         return f.read()
 
 
@@ -27,7 +27,7 @@ def find_version(*file_paths):
     version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M)
     if version_match:
         return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
+    raise RuntimeError('Unable to find version string.')
 
 
 meta_path = Path('src', 'nspyre', '__init__.py')
@@ -48,7 +48,6 @@ setup(
     maintainer='Michael Solomon, Jacob Feder',
     maintainer_email='msolo@uchicago.edu, jfed@uchicago.edu',
     classifiers=[
-        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
@@ -76,10 +75,10 @@ setup(
         # instrument server
         'rpyc',
         # data server
-        'wait_for2',  # TODO temporary until asyncio is fixed
+        'wait_for2;platform_machine!="aarch64" and platform_machine!="armv7l"',  # TODO temporary until asyncio is fixed
         # Qt / GUI
-        'pyqt5',
-        'pyqtgraph',
+        'pyqt5;platform_machine!="aarch64" and platform_machine!="armv7l"',
+        'pyqtgraph;platform_machine!="aarch64" and platform_machine!="armv7l"',
     ],
     extras_require={
         'extras': [

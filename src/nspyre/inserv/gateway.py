@@ -8,6 +8,7 @@ This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 import logging
+import time
 
 import rpyc
 
@@ -69,18 +70,25 @@ class InstrumentGateway:
 
     """
 
-    def __init__(self, addr: str = 'localhost', port: int = INSERV_DEFAULT_PORT):
+    def __init__(
+        self,
+        addr: str = 'localhost',
+        port: int = INSERV_DEFAULT_PORT,
+        timeout: float = 0.0,
+    ):
         """Initialize with the address and port of the InstrumentServer.
 
         Args:
             addr: Network address of the Instrument Server.
             port: Port number of the Instrument Server.
+            conn_timeout: Lower bound on the time to wait for the connection to be established.
 
         Raises:
             InstrumentGatewayError: Connection to the InstrumentServer failed.
         """
         self.addr = addr
         self.port = port
+        self.conn_timeout = timeout
         self._connection = None
         self._thread = None
 
@@ -90,30 +98,40 @@ class InstrumentGateway:
         Raises:
             InstrumentGatewayError: Connection to the InstrumentServer failed.
         """
-        try:
-            # connect to the rpyc server running on the instrument server
-            self._connection = rpyc.connect(
-                self.addr,
-                self.port,
-                config={
-                    'allow_pickle': True,
-                    'timeout': RPYC_CONN_TIMEOUT,
-                    'sync_request_timeout': RPYC_SYNC_TIMEOUT,
-                },
-            )
-            # start up a background thread to fullfill requests on the client side
-            # TODO - not sure if we want a background thread or not
-            # self._thread = rpyc.BgServingThread(self._connection)
+        timeout = time.time() + self.conn_timeout
+        while True:
+            try:
+                # connect to the rpyc server running on the instrument server
+                self._connection = rpyc.connect(
+                    self.addr,
+                    self.port,
+                    config={
+                        'allow_pickle': True,
+                        'timeout': RPYC_CONN_TIMEOUT,
+                        'sync_request_timeout': RPYC_SYNC_TIMEOUT,
+                    },
+                )
+                # start up a background thread to fullfill requests on the client side
+                # TODO - not sure if we want a background thread or not
+                # self._thread = rpyc.BgServingThread(self._connection)
 
-            # this allows the instrument server to have full access to this client's object dictionaries - appears necessary for lantz
-            self._connection._config['allow_all_attrs'] = True
-        except OSError as exc:
-            raise InstrumentGatewayError(
-                f'Failed to connect to instrument server at "{self.addr}:{self.port}"'
-            ) from exc
-        logger.info(
-            f'Gateway connected to instrument server at "{self.addr}:{self.port}"'
-        )
+                # this allows the instrument server to have full access to this client's object dictionaries - appears necessary for lantz
+                self._connection._config['allow_all_attrs'] = True
+            except OSError as exc:
+                logger.debug(
+                    f'Gateway couldn\'t connect to instrument server at "{self.addr}:{self.port}"- retrying...'
+                )
+                if time.time() > timeout:
+                    raise InstrumentGatewayError(
+                        f'Failed to connect to instrument server at "{self.addr}:{self.port}"'
+                    ) from exc
+                # rate limit retrying connection
+                time.sleep(0.5)
+            else:
+                logger.info(
+                    f'Gateway connected to instrument server at "{self.addr}:{self.port}"'
+                )
+                break
 
     def disconnect(self):
         """Disconnect from the instrument server."""

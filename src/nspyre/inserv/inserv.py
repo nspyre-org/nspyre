@@ -269,6 +269,7 @@ class InstrumentServer(ClassicService):
         logger.info('starting InstrumentServer RPyC server...')
         self._rpyc_server = ThreadedServer(
             self,
+            hostname='127.0.0.1',
             port=self.port,
             protocol_config={
                 'allow_pickle': True,

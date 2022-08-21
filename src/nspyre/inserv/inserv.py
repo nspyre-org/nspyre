@@ -495,7 +495,8 @@ class InstrumentServer(InstrumentService):
     def _rpyc_server_thread(self):
         """Thread for running the RPyC server asynchronously"""
         logger.info('starting RPyC server...')
-        self._rpyc_server = ThreadedServer(self, port=self.port,
+        self._rpyc_server = ThreadedServer(self,
+                        hostname='127.0.0.1', port=self.port,
                         protocol_config={'allow_pickle' : True,
                                     'allow_all_attrs' : True,
                                     'allow_setattr' : True,

@@ -84,6 +84,7 @@ setup(
         'scipy>=1.5.2',
         'pandas>=1.1.2',
         # MongoDB
+        'mongodb<6.0.0',
         'pymongo>=3.10.1',
         # Qt
         'pyqt5>=5.12.3',

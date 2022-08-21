@@ -5,7 +5,6 @@ repos:
       - id: check-added-large-files
       - id: check-yaml
       - id: end-of-file-fixer
-        exclude:
       - id: trailing-whitespace
 
   - repo: https://github.com/psf/black

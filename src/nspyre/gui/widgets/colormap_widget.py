@@ -94,12 +94,6 @@ class ColorMapWidget(QWidget):
         # start the thread
         self.update_thread.start()
 
-    # def config_plot(self):
-    # get the PlotDataItem
-    # plt = self.image_view.getView().plot()
-    # TODO: add functionality for specifying the color map and other
-    # plot properties
-
     def _process_data(self):
         """Update the color map triggered by set_data."""
         try:
@@ -169,6 +163,3 @@ class ColorMapWidget(QWidget):
         else:
             # notify that new data is available
             self.new_data.emit()
-
-
-# self.image_view.getView().plot() to get the PlotDataItem that we need to store in the 'plot' entry in the dictionary

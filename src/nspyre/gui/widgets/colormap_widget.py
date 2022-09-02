@@ -38,7 +38,8 @@ class ColorMapWidget(QWidget):
             title: Plot title.
             btm_label: Plot bottom axis label.
             lft_label: Plot left axis label.
-            font: Font to use in the plot title, axis labels, etc., although the font type may not be fully honored.
+            font: Font to use in the plot title, axis labels, etc., although
+                the font type may not be fully honored.
         """
         super().__init__(*args, **kwargs)
 
@@ -73,7 +74,9 @@ class ColorMapWidget(QWidget):
         self.lft_axis.setTickFont(font)
         self.lft_axis.enableAutoSIPrefix(False)
 
-        # we keep a dict containing the x-axis, y-axis, z-axis (optional, only for 3D images), data, semaphore, and pyqtgraph PlotDataItem associated with each line plot
+        # we keep a dict containing the x-axis, y-axis, z-axis (optional, only
+        # for 3D images), data, semaphore, and pyqtgraph PlotDataItem
+        # associated with each line plot
         self.image: Dict[str, Any] = {
             'x': [],
             'y': [],
@@ -84,7 +87,7 @@ class ColorMapWidget(QWidget):
 
         self.setLayout(self.layout)
 
-        # plot setup code
+        # Plot setup code
         self.setup()
 
         # thread for updating the plot data
@@ -123,15 +126,18 @@ class ColorMapWidget(QWidget):
             self.image['sem'].release()
 
     def setup(self):
-        """Subclasses should override this function to perform any setup code"""
+        """Subclasses should override this function to perform any setup
+        code"""
         pass
 
     def update(self):
-        """Subclasses should override this function to update the plot. This function will be run in a separate Thread."""
+        """Subclasses should override this function to update the plot. This
+        function will be run in a separate Thread."""
         time.sleep(1)
 
     def teardown(self):
-        """Subclasses should override this function to perform any teardown code"""
+        """Subclasses should override this function to perform any teardown
+        code"""
         pass
 
     def set_data(self, xs, ys, data, zs=None):

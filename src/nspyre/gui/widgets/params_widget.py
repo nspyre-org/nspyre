@@ -8,6 +8,7 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QLineEdit
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 from pyqtgraph import SpinBox
@@ -34,11 +35,12 @@ class ParamsWidget(QWidget):
         """Initialize params widget.
 
         Args:
-            params: dictionary mapping parameter names to options, which are passed as arguments to their corresponding pyqtgraph spinbox. The options are documented at https://pyqtgraph.readthedocs.io/en/latest/widgets/spinbox.html.
+            params: dictionary mapping parameter names to options, which are passed as arguments to their corresponding pyqtgraph spinbox, or to strings. The spinbox options are documented at https://pyqtgraph.readthedocs.io/en/latest/widgets/spinbox.html.
         """
         super().__init__(*args, **kwargs)
         self.params = params
         self.spinboxes = {}
+        self.textboxes = {}
 
         # vertical layout
         total_layout = QVBoxLayout()
@@ -46,18 +48,24 @@ class ParamsWidget(QWidget):
         # add parameter spinbox widgets to the layout
         for p in self.params:
             # small layout containing a label and spinbox
-            label_spinbox_layout = QHBoxLayout()
+            label_param_layout = QHBoxLayout()
             # create parameter label
             label = QLabel()
             label.setText(p)
-            label_spinbox_layout.addWidget(label)
-            # create spinbox
-            spinbox = SpinBox(**self.params[p])
-            # store the spinboxes
-            self.spinboxes[p] = spinbox
-            label_spinbox_layout.addWidget(spinbox)
-
-            total_layout.addLayout(label_spinbox_layout)
+            label_param_layout.addWidget(label)
+            if isinstance(self.params[p], str):
+                # create textbox (QLineEdit widget)
+                textbox = QLineEdit(self.params[p])
+                # store the textboxes
+                self.textboxes[p] = textbox
+                label_param_layout.addWidget(textbox)
+            else:
+                # create spinbox
+                spinbox = SpinBox(**self.params[p])
+                # store the spinboxes
+                self.spinboxes[p] = spinbox
+                label_param_layout.addWidget(spinbox)
+            total_layout.addLayout(label_param_layout)
 
         # add stretch element to take up any extra space below the spinboxes
         total_layout.addStretch()
@@ -68,13 +76,19 @@ class ParamsWidget(QWidget):
         """Return the current value of all user parameters as a dictionary."""
         all_params = {}
         for p in self.params:
-            all_params[p] = self.spinboxes[p].value()
+            if isinstance(self.params[p], str):
+                all_params[p] = self.textboxes[p].text()
+            else:
+                all_params[p] = self.spinboxes[p].value()
         return all_params
 
     def __getattr__(self, attr: str):
         """Allow easy access to the parameter values."""
         if attr in self.params:
-            return self.spinboxes[attr].value()
+            if isinstance(self.params[attr], str):
+                return self.textboxes[attr].text()
+            else:
+                return self.spinboxes[attr].value()
         else:
             # raise the default python error when an attribute isn't found
             return self.__getattribute__(attr)

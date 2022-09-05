@@ -149,7 +149,7 @@ When it’s finished, you’ll be taken to your copy of the NSpyre repository, w
    # push changes to github
    git push --set-upstream origin descriptive-branch-title
 
-You will notice the addition of two new terms -- *branch* and *push*. Each repository can have multiple versions of its codebase that are under development. The ``master`` *branch* is the main version of the code on the repository and is the root branch from which all others originate. This is the official working version that is used out in the wild and the one you eventually want your changes to appear on. When forking a repo, you also get all the different branches at the time of copying. When contributing on an issue, you first want to search existing *branches* to check if someone has already started a branch for work on that issue. If not, start a new one and make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc). Then you need to *checkout* the branch to which you want to make changes, making sure to *add* and *commit* them so they are reflected locally.
+You will notice the addition of two new terms -- *branch* and *push*. Each repository can have multiple versions of its codebase that are under development. The ``main`` *branch* is the main version of the code on the repository and is the root branch from which all others originate. This is the official working version that is used out in the wild and the one you eventually want your changes to appear on. When forking a repo, you also get all the different branches at the time of copying. When contributing on an issue, you first want to search existing *branches* to check if someone has already started a branch for work on that issue. If not, start a new one and make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc). Then you need to *checkout* the branch to which you want to make changes, making sure to *add* and *commit* them so they are reflected locally.
 
 Finally, the *push* command updates files from one location to another, but in the opposite direction as *pull*. ``git pull`` brings any changes from the target repo on the servers and updates them into the version/branch that you currently have checked out on your local copy. ``git push`` does the opposite. It takes any changes on your local copy of the branch you have checked out and reflects those changes on the repository. If you don't ``git push`` your commits then they will not be uploaded to the repo; this also means they won't be backed up. So it's good practice to push your progress at least daily so it is uploaded to the repository.
 
@@ -166,7 +166,7 @@ Once you've vetted your code for errors, checked to make sure you've followed al
    
 In the main repository you want to merge into, either click the Pull Request tab, then from the Pull Request page, click the green New pull request button, or, navigate to the branch (to which you made edits) in the drop-down box on the repository homepage, and click the green Compare & pull request button. Then, look over your changes in the diffs on the Compare page, make sure they’re what you want to submit. Give your pull request a title and write a brief description of your changes. When you’re satisfied, click the big green Create pull request button. Congrats, you've submitted your first contribution ready for merging!
 
-All that's left is to officially merge your changes into ``master`` and delete the development branch you were working off of, if the associated issues have been closed and the branch is no longer needed. This is something the maintainers of the project will do once it's been confirmed that all the project guidelines have been followed and, in particular, checking your code works!
+All that's left is to officially merge your changes into ``main`` and delete the development branch you were working off of, if the associated issues have been closed and the branch is no longer needed. This is something the maintainers of the project will do once it's been confirmed that all the project guidelines have been followed and, in particular, checking your code works!
 
 .. figure:: images/merge-button.png
    :align: center
@@ -269,9 +269,10 @@ The reasons for using a markup language are straight-forward:
 Commits & Testing
 ^^^^^^^^^^^^^^^^^
 
-The ``documentation-deploy`` branch is used specifically for making documentation commits and staging the documentation before adding to ``master``. If you are only making documentation edits (anything in ``docs/``) or writing docstrings for the api, then make those changes here. Otherwise, add the documentation commits and its associated source code to an appropriate branch for the issues being fixed.
 
-Whenever a commit is make to this branch, it will trigger a rebuild of the documentation viewable at the unlisted site ``https://nspyre.readthedocs.io/en/documentation-deploy`` for you to confirm formatting. It takes about 60 seconds to build once triggered, so be patient. If you make too many commits too quickly, the rebuild may error out (and lots of small commits are bad anyways). You can use the revision number (i.e. ``Revision 760a94f0.``) at the bottom of the webpage to confirm the rebuild has completed.
+The ``documentation-deploy`` branch is used specifically for making documentation commits and staging the documentation before adding to ``main``. If you are only making documentation edits (anything in ``docs/``) or writing docstrings for the api, then make those changes here. Otherwise, add the documentation commits and its associated source code to an appropriate branch for the issues being fixed.
+
+Whenever a commit is made to this branch, it will trigger a rebuild of the documentation viewable at the unlisted site ``https://nspyre.readthedocs.io/en/documentation-deploy`` for you to confirm formatting. It takes about 60 seconds to build once triggered, so be patient. If you make too many commits too quickly, the rebuild may error out (and lots of small commits are bad anyways). You can use the revision number (i.e. ``Revision 760a94f0.``) at the bottom of the webpage to confirm the rebuild has completed.
 
 .. _references:
 .. _references with whitespace:
@@ -432,7 +433,7 @@ resources already available online and you should avail yourself of them:
 * `Detailed guide from the LSST project <https://developer.lsst.io/restructuredtext/style.html>`_
 
 Resources
----------
+=========
 
 There’s a lot of online resources available covering every imaginable aspect of
 software development. Below is a collection of the most useful as they pertain

@@ -7,18 +7,27 @@ If you’re reading this, you probably want to contribute to NSpyre — great! A
 ..
    TODO: *(Need link/contact info)*
 
-The guide is split into sections based on the type of contribution you’re thinking of making, with a section that covers general guidelines for all contributors.
-
 Quick Facts
 ===========
 
 * For this project, we use a standard *fork & pull* model to collaborate, a common practice for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard.
+
+* We like to run some automated tools to maintain style throughout the repo using :ref:`pre-commit <precommit>`.
+
+* Wherever possible, we use :ref:`pytest <testing>` to ensure propery functionality of new code.
 
 * Our code generally follows the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`_, with standard `PEP 8 <https://pep8.org>`__ formatting, and some of our own caveats as detailed :ref:`here <Code Style>`.
 
 * For documentation, we write in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, using `Sphinx <https://www.sphinx-doc.org/en/master/>`__ to generate files and `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`__ for site hosting.
 
 * We follow the philosophy of `WriteTheDocs <https://www.writethedocs.org>`__ -- that is, we subscribe to *Docs as Code*.
+
+To install the tools necessary for development:
+
+.. code-block:: bash
+
+   $ pip install nspyre[dev]
+   $ pip install nspyre[tests]
 
 If the above remarks don’t make sense to you, or you simply want a more detailed description of how to do things, continue reading below.
 
@@ -50,10 +59,13 @@ First thing’s first — *Git*. `Git <https://git-scm.com>`__ is an example of 
 
 Git grew out of the needs of the developers of the Linux kernel and is one of the most widely-used VCS tools available. `GitHub <https://github.com>`__ is a Git hosting repository that builds collaboration directly into the development process by providing developers with tools to ship better code through command line features, issues (threaded discussions), pull requests, code review, and more. If all this information is new, then please read this: `Understanding the GitHub flow <https://guides.github.com/introduction/flow/>`__  — it’s a 5 minute read and it will make your life a lot easier going forward. (If you want a much deeper explanation and a good reference source to get up to speed on the basics of using Git and GitHub, go to the `Git Handbook <https://guides.github.com/introduction/git-handbook/>`__.)
 
+
+.. _testing:
+
 Testing
 -------
 
-We use `pytest <https://pytest.org/>`__ to run tests on nspyre. Proper testing insures that when you make a code change, nspyre still works as advertised. Run pytest and ensure all tests pass before making any commits:
+We use `pytest <https://pytest.org/>`__ to run tests on NSpyre. Proper testing insures that when you make a code change, nspyre still works as advertised. Run pytest and ensure all tests pass before making any commits:
 
 .. code-block:: bash
 
@@ -70,8 +82,10 @@ We use `pytest <https://pytest.org/>`__ to run tests on nspyre. Proper testing i
 
 If you are writing any new nspyre functionality, make sure to write test cases to ensure your code will be tested!
 
-Pre-commit hooks
-----------------
+.. _precommit:
+
+Pre-commit
+----------
 
 In order to ensure consistent style throughout nspyre, several automated tools 
 can be run automatically by git when attempting to commit. To enable these 
@@ -79,7 +93,7 @@ pre-commit hooks:
 
 .. code-block:: bash
 
-   pre-commit install
+   $ pre-commit install
 
 Then, when creating a commit, the checks will be run:
 
@@ -123,31 +137,31 @@ When it’s finished, you’ll be taken to your copy of the NSpyre repository, w
 .. code-block:: bash
 
    # navigate to the directory you want to store your local copy of the repo
-   cd ~/SourceCode
+   $ cd ~/SourceCode
 
    # download the repository on GitHub.com to your machine
-   git clone https://github.com/[your-username]/nspyre.git
+   $ git clone https://github.com/[your-username]/nspyre.git
 
    # change into the nspyre directory that was created for you
-   cd nspyre
+   $ cd nspyre
 
    # create a new branch to store any new changes
-   git branch descriptive-branch-title
+   $ git branch descriptive-branch-title
 
    # switch to that branch (line of development)
-   git checkout descriptive-branch-title
+   $ git checkout descriptive-branch-title
 
    # make changes, for example, edit contributors.md and create my-spyrelet.py
 
    # stage the changed files
-   git add contributors.md my-spyrelet.py
+   $ git add contributors.md my-spyrelet.py
 
    # take a snapshot of the staging area (anything that has been added)
    # the -m flag adds a comment to the commmit
-   git commit -m "my snapshot"
+   $ git commit -m "my snapshot"
 
    # push changes to github
-   git push --set-upstream origin descriptive-branch-title
+   $ git push --set-upstream origin descriptive-branch-title
 
 You will notice the addition of two new terms -- *branch* and *push*. Each repository can have multiple versions of its codebase that are under development. The ``main`` *branch* is the main version of the code on the repository and is the root branch from which all others originate. This is the official working version that is used out in the wild and the one you eventually want your changes to appear on. When forking a repo, you also get all the different branches at the time of copying. When contributing on an issue, you first want to search existing *branches* to check if someone has already started a branch for work on that issue. If not, start a new one and make sure to give it a descriptive title so people easily understand what's being worked on (e.g. refactoring-pep8, awg-spyrelet, driver-gui-bug, etc). Then you need to *checkout* the branch to which you want to make changes, making sure to *add* and *commit* them so they are reflected locally.
 
@@ -180,7 +194,7 @@ All that's left is to officially merge your changes into ``main`` and delete the
 
 (For more detailed information on creating a pull request from a fork, see `here <https://docs.github.com/en/enterprise/2.16/user/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork>`_.)
 
-* Virual Enivronments
+* Virtual Enivronments
   
   .. note::
      
@@ -197,13 +211,13 @@ All that's left is to officially merge your changes into ``main`` and delete the
   .. code-block:: bash
      
      # check out an existing branch:
-     git checkout <branch>
+     $ git checkout <branch>
      
      # create a new branch:
-     git branch <branchname> [<start point>]
+     $ git branch <branchname> [<start point>]
      
      # create a new branch and check it out in one command:
-     git checkout -b <newbranch> [<start point>]
+     $ git checkout -b <newbranch> [<start point>]
 
 .. _Code Style:
 
@@ -266,13 +280,17 @@ The reasons for using a markup language are straight-forward:
 | (The .rst file for this webpage is also an excellent source to get familiar
   with the markup syntax and as a reference for how to write documentation too.)
 
-Commits & Testing
-^^^^^^^^^^^^^^^^^
+Building
+--------
 
+To build the documentation locally, navigate to ``docs`` and run
 
-The ``documentation-deploy`` branch is used specifically for making documentation commits and staging the documentation before adding to ``main``. If you are only making documentation edits (anything in ``docs/``) or writing docstrings for the api, then make those changes here. Otherwise, add the documentation commits and its associated source code to an appropriate branch for the issues being fixed.
+.. code-block:: bash
 
-Whenever a commit is made to this branch, it will trigger a rebuild of the documentation viewable at the unlisted site ``https://nspyre.readthedocs.io/en/documentation-deploy`` for you to confirm formatting. It takes about 60 seconds to build once triggered, so be patient. If you make too many commits too quickly, the rebuild may error out (and lots of small commits are bad anyways). You can use the revision number (i.e. ``Revision 760a94f0.``) at the bottom of the webpage to confirm the rebuild has completed.
+   $ make html
+
+You can then view it by opening the root html file ``docs/build/html/index.html`` 
+with a web browser.
 
 .. _references:
 .. _references with whitespace:

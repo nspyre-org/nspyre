@@ -73,10 +73,17 @@ If you are writing any new nspyre functionality, make sure to write test cases t
 Pre-commit hooks
 ----------------
 
-In order to ensure consistent style throughout nspyre, several tools are automatically run
-by git when attempting to commit:
+In order to ensure consistent style throughout nspyre, several automated tools 
+can be run automatically by git when attempting to commit. To enable these 
+pre-commit hooks:
 
 .. code-block:: bash
+
+   pre-commit install
+
+Then, when creating a commit, the checks will be run:
+
+.. code-block::
 
    $ git commit -m "a descriptive commit message"
    Check for added large files..............................................Passed
@@ -90,12 +97,9 @@ by git when attempting to commit:
    flake8...................................................................Passed
    mypy.....................................................................Passed
 
-If any checks fail, be sure to fix the issues. If you want to run the checks without actually committing, simply run:
-
-.. code-block:: bash
-
-   $ .git/hooks/pre-commit
-
+If any checks fail, be sure to fix the issues. If you want to run the checks 
+without actually committing, simply ``pre-commit run``. To force it to run on 
+all files, ``pre-commit run --all-files``.
 
 Forking & Pull Requests
 ------------------------------------------

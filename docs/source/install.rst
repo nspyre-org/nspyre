@@ -8,16 +8,16 @@ The recommended way to install NSpyre is to **install the latest stable release*
    
    $ conda install -c conda-forge nspyre
 
+NSpyre is also available from PyPI:
+
+.. code-block:: bash
+
+   $ pip install nspyre
+
 Conda
 =====
 
-If you do not already have conda installed, we recommend using the Miniconda distribution (instead of the Anaconda distribution) because it contains fewer default packages, many of which are unnecessary for the vast majority of users. The latest release of Miniconda for your platform is available here: `Miniconda installers <https://docs.conda.io/en/latest/miniconda.html>`__. The default installation options are appropriate for most users:
-
-* Install for *Just Me* (gives full control over install and doesn't require admin privileges)
-* Default file location (e.g. C:\\Users\\<UserName>\\Miniconda3)
-* **DO** *Register Anaconda as my default Python*. This will make conda available
-  to other programs for integration, such as setting up a development environment
-  in **PyCharm**.
+If you do not already have conda installed, we recommend using the Miniconda distribution (instead of the Anaconda distribution) because it contains fewer default packages, many of which are unnecessary for the vast majority of users. The latest release of Miniconda for your platform is available here: `Miniconda installers <https://docs.conda.io/en/latest/miniconda.html>`__. The default installation options are appropriate for most users.
 
 Once conda is installed, you'll want to add the conda-forge channel as a repository and rebuild/update conda with the latest packages from conda-forge:
 
@@ -56,8 +56,6 @@ Finally, by default the base environment will always be active upon opening the 
 
    $ conda config --set auto_activate_base false
 
-If you already have conda installed and/or you use conda for managing environments for other projects in which the above configuration settings aren't ideal, then simply make sure to add the *conda-forge* channel to whatever environments you want to install nspyre in.
-
 Once you have conda setup, it's trivial to install nspyre. Make sure to create and activate a new conda environment for running nspyre so you don't mess with your base environment:
 
 .. code-block:: bash
@@ -65,12 +63,3 @@ Once you have conda setup, it's trivial to install nspyre. Make sure to create a
    (base) $ conda env create --name nspyre-env
    (base) $ conda activate nspyre-env
    ([nspyre-env]) $ conda install nspyre
-
-PyPI (aka using pip)
-====================
-
-NSpyre is also available from PyPI:
-
-.. code-block:: bash
-
-   $ pip install nspyre

@@ -123,23 +123,6 @@ Run your experiment:
 
 .. code-block:: python
 
-   import numpy as np
-   from nspyre import InstrumentGateway, Q_
-
-   # connect to the instrument server
-   with InstrumentGateway() as gw:
-      # microwave drive amplitude
-      gw.sig_gen.amplitude = 0.5
-      # frequency range to sweep over
-      frequencies = np.linspace(2.5e9, 3.5e9, 100)
-      # photoluminescence reading
-      pl = np.zeros(len(frequencies))
-      for i, f in enumerate(frequencies):
-         gw.sig_gen.frequency = f
-         pl[i] = gw.photodiode.read()
-
-
-
    import time
 
    import numpy as np
@@ -169,9 +152,6 @@ Run your experiment:
          counts[i] = gw.daq.cnts(1)
          # save the current data to the data server.
          odmr_data.push({'freqs': frequencies, 'counts': counts, 'idx': i})
-
-
-
 
 Who uses it? (And who are we)
 =============================

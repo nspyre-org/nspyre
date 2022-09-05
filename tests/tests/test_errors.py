@@ -1,8 +1,8 @@
 import logging
 from pathlib import Path
 
-from nspyre import nspyre_init_logger
 import pytest
+from nspyre import nspyre_init_logger
 
 logger_name = 'test_errors'
 logger = logging.getLogger(logger_name)

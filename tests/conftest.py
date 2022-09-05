@@ -7,10 +7,8 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
-import atexit
 import logging
 import socket
-import subprocess
 import time
 from contextlib import closing
 from pathlib import Path
@@ -18,8 +16,8 @@ from pathlib import Path
 import psutil
 import pytest
 from nspyre import InstrumentGateway
-from nspyre import InstrumentServer
 from nspyre import InstrumentGatewayError
+from nspyre import InstrumentServer
 
 HERE = Path(__file__).parent
 DRIVERS = HERE / 'fixtures' / 'drivers'
@@ -44,7 +42,10 @@ def dataserv():
     # TODO: An unresolved bug currently prevents nspyre-dataserv from being started
     # automatically by pytest, so for now just throw an error if it isn't running
     running_procs = [p.name() for p in psutil.process_iter()]
-    if 'nspyre-dataserv' not in running_procs and 'nspyre-dataserv.exe' not in running_procs:
+    if (
+        'nspyre-dataserv' not in running_procs
+        and 'nspyre-dataserv.exe' not in running_procs
+    ):
         raise Exception(
             "The data server isn't running and must be started manually with 'nspyre-dataserv'"
         )

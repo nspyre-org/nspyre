@@ -18,7 +18,7 @@ repos:
 
 # consistent code formatting
 -   repo: https://github.com/psf/black
-    rev: 21.7b0 # https://github.com/psf/black/tags
+    rev: 22.3.0 # https://github.com/psf/black/tags
     hooks:
     -   id: black
         name: Black (code formatting)

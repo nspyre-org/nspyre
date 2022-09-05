@@ -123,11 +123,24 @@ Run your experiment:
 
 .. code-block:: python
 
+   import logging
+   from pathlib import Path
    import time
 
    import numpy as np
    from nspyre import DataSource
    from nspyre import InstrumentGateway
+
+   HERE = Path(__file__).parent
+
+   # log to the console as well as a file inside the logs folder
+   nspyre_init_logger(
+      log_level=logging.INFO,
+      log_path=HERE / 'logs',
+      log_path_level=logging.DEBUG,
+      prefix='odmr',
+      file_size=10_000_000,
+   )
 
    # connect to the instrument server
    # connect to the data server and create a data set, or connect to an

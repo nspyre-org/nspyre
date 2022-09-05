@@ -70,7 +70,7 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
     zip_safe=False,
-    python_requires='>=3.9, <3.10',
+    python_requires='>=3.9',
     install_requires=[
         # instrument server
         'rpyc',

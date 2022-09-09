@@ -39,25 +39,25 @@ if __name__ == '__main__':
             'SaveODMR': {
                 'module': gui_elements,
                 'class': 'ODMRSaveWidget',
-                'args': (),
+                'args': [],
                 'kwargs': {},
             },
             'ODMR': {
                 'module': gui_elements,
                 'class': 'ODMRWidget',
-                'args': (),
+                'args': [],
                 'kwargs': {},
             },
             'ODMR_plot': {
                 'module': gui_elements,
                 'class': 'ODMRPlotWidget',
-                'args': (),
+                'args': [],
                 'kwargs': {},
             },
             'ODMR_scroll_plot': {
                 'module': gui_elements,
                 'class': 'ScrollingODMRPlotWidget',
-                'args': (),
+                'args': [],
                 'kwargs': {},
             },
         }

@@ -73,12 +73,12 @@ setup(
     python_requires='>=3.9',
     install_requires=[
         # instrument server
-        'rpyc',
+        'rpyc==5.0.1',
         # data server
-        'wait_for2;platform_machine!="aarch64" and platform_machine!="armv7l"',  # TODO temporary until asyncio is fixed
+        'wait_for2==0.3.1;platform_machine!="aarch64" and platform_machine!="armv7l"',  # TODO temporary until asyncio is fixed
         # Qt / GUI
-        'pyqt5;platform_machine!="aarch64" and platform_machine!="armv7l"',
-        'pyqtgraph;platform_machine!="aarch64" and platform_machine!="armv7l"',
+        'pyqt5==5.12.3;platform_machine!="aarch64" and platform_machine!="armv7l"',
+        'pyqtgraph==0.12.3;platform_machine!="aarch64" and platform_machine!="armv7l"',
     ],
     extras_require={
         'extras': [

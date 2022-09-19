@@ -37,6 +37,7 @@ class ODMRWidget(QWidget):
         self.params_widget = ParamsWidget(
             {
                 'start_freq': {
+                    'display_text': 'Start Frequency',
                     'value': 3e9,
                     'suffix': 'Hz',
                     'siPrefix': True,
@@ -44,6 +45,7 @@ class ODMRWidget(QWidget):
                     'dec': True,
                 },
                 'stop_freq': {
+                    'display_text': 'Stop Frequency',
                     'value': 4e9,
                     'suffix': 'Hz',
                     'siPrefix': True,
@@ -51,6 +53,7 @@ class ODMRWidget(QWidget):
                     'dec': True,
                 },
                 'num_points': {
+                    'display_text': 'Number of points',
                     'value': 100,
                     'int': True,
                     'bounds': (1, None),

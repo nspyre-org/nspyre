@@ -35,7 +35,12 @@ class ParamsWidget(QWidget):
         """Initialize params widget.
 
         Args:
-            params: dictionary mapping parameter names to options, which are passed as arguments to their corresponding pyqtgraph spinbox, or to strings. The spinbox options are documented at https://pyqtgraph.readthedocs.io/en/latest/widgets/spinbox.html.
+            params: dictionary mapping parameter names to options, which are 
+                    passed as arguments to their corresponding pyqtgraph 
+                    spinbox, or to strings. The spinbox options are documented 
+                    at https://pyqtgraph.readthedocs.io/en/latest/widgets/spinbox.html. 
+                    Additional configuration parameters than be passed are:
+                        - display_text: parameter text label
         """
         super().__init__(*args, **kwargs)
         self.params = params
@@ -51,7 +56,12 @@ class ParamsWidget(QWidget):
             label_param_layout = QHBoxLayout()
             # create parameter label
             label = QLabel()
-            label.setText(p)
+            try:
+                display_text = self.params[p].pop('display_text')
+            except KeyError:
+                label.setText(p) 
+            else:
+                label.setText(display_text)
             label_param_layout.addWidget(label)
             if isinstance(self.params[p], str):
                 # create textbox (QLineEdit widget)

@@ -172,7 +172,7 @@ class ProcessRunner:
 
         """
 
-        if self.proc and self.proc.is_alive():
+        if self.running():
             if self.should_kill:
                 logger.debug('Previous function is still running. Killing it...')
                 self.kill()
@@ -182,6 +182,10 @@ class ProcessRunner:
         logger.debug(f'Running process {fun} args: {args} kwargs: {kwargs}.')
         self.proc = Process(target=fun, args=args, kwargs=kwargs, daemon=True)
         self.proc.start()
+
+    def running(self):
+        """Return True if the process is running."""
+        return self.proc is not None and self.proc.is_alive()
 
     def kill(self):
         """Kill the process."""

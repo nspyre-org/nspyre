@@ -42,6 +42,7 @@ class LinePlotWidget(QWidget):
         xlabel: str = '',
         ylabel: str = '',
         font: QFont = nspyre_font,
+        legend: bool = True,
         **kwargs,
     ):
         """Initialize a LinePlotWidget.
@@ -54,6 +55,8 @@ class LinePlotWidget(QWidget):
         """
         super().__init__(*args, **kwargs)
 
+        self.font = font
+
         # layout for storing plot
         self.layout = QVBoxLayout()
 
@@ -63,27 +66,28 @@ class LinePlotWidget(QWidget):
         self.layout.addWidget(self.plot_widget)
 
         # plot settings
-        self.plot_widget.setTitle(title, size=f'{font.pointSize()}pt')
+        self.set_title(title)
         self.plot_widget.enableAutoRange(True)
         # colors
         self.current_color_idx = 0
         self.plot_widget.setBackground(colors['black'])
         self.plot_widget.showGrid(x=True, y=True, alpha=0.3)
 
-        # axes
+        # x axis
         self.xaxis = self.plot_widget.getAxis('bottom')
         self.xaxis.setLabel(text=xlabel)
         self.xaxis.label.setFont(font)
         self.xaxis.setTickFont(font)
         self.xaxis.enableAutoSIPrefix(False)
+        # y axis
         self.yaxis = self.plot_widget.getAxis('left')
         self.yaxis.setLabel(text=ylabel)
         self.yaxis.label.setFont(font)
         self.yaxis.setTickFont(font)
         self.yaxis.enableAutoSIPrefix(False)
 
-        # legend
-        self.plot_widget.addLegend(labelTextSize=f'{font.pointSize()}pt')
+        if legend:
+            self.plot_widget.addLegend(labelTextSize=f'{font.pointSize()}pt')
 
         # a dict mapping data set names (str) and a sub-dict containing the x data, y data, semaphore, and pyqtgraph PlotDataItem associated with each line plot
         self.plots: Dict[str, Dict[str, Any]] = {}
@@ -100,12 +104,15 @@ class LinePlotWidget(QWidget):
         # start the thread
         self.update_thread.start()
 
+    def set_title(self, title):
+        self.plot_widget.setTitle(title, size=f'{self.font.pointSize()}pt')
+
     def setup(self):
         """Subclasses should override this function to perform any setup code"""
         pass
 
     def update(self):
-        """Subclasses should override this function to update the plot. This function will be run in a separate Thread."""
+        """Subclasses should override this function to update the plot. This function will be run in a separate QThread."""
         time.sleep(1)
 
     def teardown(self):

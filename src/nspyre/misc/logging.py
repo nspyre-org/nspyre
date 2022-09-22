@@ -66,7 +66,7 @@ def nspyre_init_logger(
 
     # log format for stdout messages
     stdout_formatter = logging.Formatter(
-        '%(asctime)s.%(msecs)03d [%(levelname)8s] %(message)s',
+        '%(asctime)s.%(msecs)03d [%(levelname)s] (%(filename)s:%(lineno)s) %(message)s',
         '%Y-%m-%d %H:%M:%S',
     )
     # create stdout log handler
@@ -111,7 +111,7 @@ def nspyre_init_logger(
         else:
             file_handler = logging.FileHandler(log_path)
         file_formatter = logging.Formatter(
-            '%(asctime)s.%(msecs)03d [%(levelname)s] (%(filename)s:%(lineno)s) %(message)s',
+            '%(asctime)s.%(msecs)03d [%(levelname)8s] (%(filename)20s:%(lineno)4s) %(message)s',
             '%Y-%m-%d %H:%M:%S',
         )
         file_handler.setFormatter(file_formatter)

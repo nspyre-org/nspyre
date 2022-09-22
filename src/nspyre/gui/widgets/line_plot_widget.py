@@ -1,7 +1,7 @@
 """
 A wrapper for pyqtgraph PlotWidget.
 
-Copyright (c) 2021, Jacob Feder
+Copyright (c) 2022, Jacob Feder
 All rights reserved.
 
 This work is licensed under the terms of the 3-Clause BSD license.
@@ -9,16 +9,22 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 import logging
 import time
+from threading import Lock
 from typing import Any
 from typing import Dict
 
+import numpy as np
 import pyqtgraph as pg
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import QSemaphore
 from PyQt5.QtGui import QColor
 from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QLineEdit
+from PyQt5.QtWidgets import QPushButton
+from nspyre import DataSink
 
 from ..style.colors import colors
 from ..style.colors import cyclic_colors
@@ -230,3 +236,122 @@ class LinePlotWidget(QWidget):
     def stop(self):
         self.update_thread.update_func = None
         self.teardown()
+
+
+class FlexSinkLinePlotWidget(QWidget):
+    """QWidget that allows the user to connect to an arbitrary nspyre DataSource and plot its data. 
+    The DataSource should contain the following attributes:
+        title: plot title string
+        xlabel: x label string
+        ylabel: y label string
+        datasets: dictionary where keys are a dataset name to display in the 
+            legend, and values are data as a 2D numpy array like 
+            np.array([[xdata0, xdata1, ...], [ydata0, ydata1, ...]]), or a 
+            list of a such numpy arrays which will be concatenated
+    """
+    def __init__(self):
+        super().__init__()
+
+        layout = QVBoxLayout()
+
+        # lineedit and button for selecting the data source
+        datasource_layout = QHBoxLayout()
+        self.datasource_lineedit = QLineEdit()
+        self.update_button = QPushButton('Connect')
+        self.update_button.clicked.connect(self.update_source)
+        datasource_layout.addWidget(self.update_button)
+        datasource_layout.addWidget(self.datasource_lineedit)
+
+        # lineplot widget
+        self.lineplot = _FlexSinkLinePlotWidget()
+
+        layout.addLayout(datasource_layout)
+        layout.addWidget(self.lineplot)
+        self.setLayout(layout)
+
+    def update_source(self):
+        self.lineplot.new_source(self.datasource_lineedit.text())
+
+
+class _FlexSinkLinePlotWidget(LinePlotWidget):
+    def __init__(self):
+        super().__init__()
+        self.sink = None
+        # mutex for protecting access to the data sink
+        self.mutex = Lock()
+
+    def new_source(self, data_source_name, timeout=1):
+        with self.mutex:
+            self.teardown()
+            self.data_source_name = data_source_name
+            self.sink = DataSink(data_source_name)
+
+            # TODO
+            # # clear previous plots
+            # for p in self.plots:
+            #     self.plots[p]['plot'].clear
+            # self.plots = {}
+
+            # try to get the plot title and x/y labels
+            try:
+                if self.sink.pop(timeout=timeout):
+                    # set title
+                    try:
+                        title = self.sink.title
+                    except AttributeError:
+                        logger.info(f'Data source [{data_source_name}] has no "title" attribute - skipping')
+                    else:
+                        self.set_title(title)
+                    # set xlabel
+                    try:
+                        xlabel = self.sink.xlabel
+                    except AttributeError:
+                        logger.info(f'Data source [{data_source_name}] has no "xlabel" attribute - skipping')
+                    else:
+                        self.xaxis.setLabel(text=xlabel)
+                    # set ylabel
+                    try:
+                        ylabel = self.sink.ylabel
+                    except AttributeError:
+                        logger.info(f'Data source [{data_source_name}] has no "ylabel" attribute - skipping')
+                    else:
+                        self.yaxis.setLabel(text=ylabel)
+                    try:
+                        dsets = self.sink.datasets
+                    except AttributeError:
+                        logger.error(f'Data source [{data_source_name}] has no "datasets" attribute - exitting...')
+                        raise RuntimeError
+                    else:
+                        if not isinstance(dsets, dict):
+                            logger.error(f'Data source [{data_source_name}] "datasets" attribute is not a dictionary - exitting...')
+                            raise RuntimeError
+                        for d in dsets:
+                            # make a new plot for each data set
+                            self.new_plot(d)
+                else:
+                    # some other pop error occured
+                    raise RuntimeError
+            except (TimeoutError, RuntimeError):
+                logger.error(f'Could not connect to new data source [{data_source_name}]')
+                self.teardown()
+
+    def teardown(self):
+        if self.sink is not None:
+            self.sink.stop()
+            self.sink = None
+
+    def update(self):
+        with self.mutex:
+            if self.sink is not None:
+                if self.sink.pop():
+                    for d in self.sink.datasets:
+                        data = self.sink.datasets[d]
+                        if isinstance(data, np.ndarray):
+                            pass
+                        elif isinstance(data, list) or isinstance(data, tuple):
+                            # if the sink data is an array of numpy arrays, concatenate them
+                            data = np.concatenate(data, axis=1)
+                        # update the plot
+                        self.set_data(d, data[0], data[1])
+            else:
+                time.sleep(0.1)

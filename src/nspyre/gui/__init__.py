@@ -7,6 +7,7 @@ from .misc import qt_set_trace
 from .style import colors
 from .style import cyclic_colors
 from .widgets import ColorMapWidget
+from .widgets import FlexSinkLinePlotWidget
 from .widgets import LinePlotWidget
 from .widgets import MainWidget
 from .widgets import ParamsWidget

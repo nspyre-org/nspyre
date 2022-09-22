@@ -18,6 +18,7 @@ try:
     from .gui import ColorMapWidget
     from .gui import colors
     from .gui import cyclic_colors
+    from .gui import FlexSinkLinePlotWidget
     from .gui import LinePlotWidget
     from .gui import MainWidget
     from .gui import nspyre_font

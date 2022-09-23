@@ -113,10 +113,10 @@ class InstrumentServer(ClassicService):
         super().__init__()
         # dictionary where keys are the device names, values are tuples:
         # (device object, device configuration settings dictionary)
-        self.devs: Dict[str, Any] = {}
+        self._devs: Dict[str, Any] = {}
         # rpyc server port
-        self.port = port
-        self.sync_timeout = sync_timeout
+        self._port = port
+        self._sync_timeout = sync_timeout
         # rpyc server
         self._rpyc_server = None
 
@@ -147,7 +147,7 @@ class InstrumentServer(ClassicService):
 
         # make sure that the arguments actually exist on the local machine
         # and are not netrefs - otherwise there could be dangling references left over
-        # in the self.devs dictionary after the client disconnects
+        # in the self._devs dictionary after the client disconnects
         name = obtain(name)
         class_path = obtain(class_path)
         class_name = obtain(class_name)
@@ -155,7 +155,7 @@ class InstrumentServer(ClassicService):
         args = obtain(args)
         kwargs = obtain(kwargs)
 
-        if name in self.devs:
+        if name in self._devs:
             raise InstrumentServerDeviceExistsError(f'device "{name}" already exists')
 
         if import_or_file == 'file':
@@ -207,7 +207,7 @@ class InstrumentServer(ClassicService):
             'args': args,
             'kwargs': kwargs,
         }
-        self.devs[name] = (instance, config)
+        self._devs[name] = (instance, config)
 
         logger.info(f'added device "{name}" with args: {args} kwargs: {kwargs}')
 
@@ -221,7 +221,7 @@ class InstrumentServer(ClassicService):
             InstrumentServerError: Deleting the device failed.
         """
         try:
-            dev,_ = self.devs.pop(name)
+            dev,_ = self._devs.pop(name)
         except Exception as exc:
             raise InstrumentServerError(f'Failed deleting device "{name}"') from exc
 
@@ -242,7 +242,7 @@ class InstrumentServer(ClassicService):
         Raises:
             InstrumentServerError: Deleting the device failed.
         """
-        config_dict = self.devs[name][1]
+        config_dict = self._devs[name][1]
         class_path = config_dict['class_path']
         class_name = config_dict['class_name']
         args = config_dict['args']
@@ -264,7 +264,7 @@ class InstrumentServer(ClassicService):
         Raises:
             InstrumentServerError: Deleting a device failed.
         """
-        for d in list(self.devs):
+        for d in list(self._devs):
             self.restart(d)
 
     def start(self):
@@ -289,13 +289,13 @@ class InstrumentServer(ClassicService):
         self._rpyc_server = ThreadedServer(
             self,
             hostname='127.0.0.1',
-            port=self.port,
+            port=self._port,
             protocol_config={
                 'allow_pickle': True,
                 'allow_all_attrs': True,
                 'allow_setattr': True,
                 'allow_delattr': True,
-                'sync_request_timeout': self.sync_timeout,
+                'sync_request_timeout': self._sync_timeout,
             },
         )
         self._rpyc_server.start()
@@ -314,7 +314,7 @@ class InstrumentServer(ClassicService):
             )
 
         logger.info('removing devices...')
-        for d in list(self.devs):
+        for d in list(self._devs):
             self.remove(d)
 
         logger.info('stopping RPyC server...')
@@ -330,8 +330,8 @@ class InstrumentServer(ClassicService):
         Args:
             attr: Alias for the device.
         """
-        if attr in self.devs:
-            return self.devs[attr][0]
+        if attr in self._devs:
+            return self._devs[attr][0]
         else:
             # raise the default python error when an attribute isn't found
             return self.__getattribute__(attr)

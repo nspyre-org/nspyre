@@ -74,7 +74,8 @@ class InstrumentGateway:
         self,
         addr: str = 'localhost',
         port: int = INSERV_DEFAULT_PORT,
-        timeout: float = 0.0,
+        conn_timeout: float = 0.0,
+        sync_timeout: float = RPYC_SYNC_TIMEOUT
     ):
         """Initialize with the address and port of the InstrumentServer.
 
@@ -82,13 +83,14 @@ class InstrumentGateway:
             addr: Network address of the Instrument Server.
             port: Port number of the Instrument Server.
             conn_timeout: Lower bound on the time to wait for the connection to be established.
-
+            sync_timeout: Time to wait for requests / function calls to finish
         Raises:
             InstrumentGatewayError: Connection to the InstrumentServer failed.
         """
         self.addr = addr
         self.port = port
-        self.conn_timeout = timeout
+        self.conn_timeout = conn_timeout
+        self.sync_timeout = sync_timeout
         self._connection = None
         self._thread = None
 
@@ -108,7 +110,7 @@ class InstrumentGateway:
                     config={
                         'allow_pickle': True,
                         'timeout': RPYC_CONN_TIMEOUT,
-                        'sync_request_timeout': RPYC_SYNC_TIMEOUT,
+                        'sync_request_timeout': self.sync_timeout,
                     },
                 )
                 # start up a background thread to fullfill requests on the client side

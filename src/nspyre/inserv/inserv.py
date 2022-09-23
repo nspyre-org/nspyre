@@ -98,11 +98,16 @@ class InstrumentServer(ClassicService):
 
     """
 
-    def __init__(self, port: int = INSERV_DEFAULT_PORT):
+    def __init__(
+        self,
+        port: int = INSERV_DEFAULT_PORT,
+        sync_timeout: float = RPYC_SYNC_TIMEOUT
+    ):
         """Initialize an instrument server.
 
         Args:
             port: port number to use for the RPyC server
+            sync_timeout: Time to wait for requests / function calls to finish
         """
 
         super().__init__()
@@ -111,6 +116,7 @@ class InstrumentServer(ClassicService):
         self.devs: Dict[str, Any] = {}
         # rpyc server port
         self.port = port
+        self.sync_timeout = sync_timeout
         # rpyc server
         self._rpyc_server = None
 
@@ -187,6 +193,12 @@ class InstrumentServer(ClassicService):
                 f' "{dev_class}"',
             ) from exc
 
+        # initialize the driver if it implements an __enter__ function
+        try:
+            instance.__enter__()
+        except AttributeError:
+            pass
+
         # save the device and config info
         config = {
             'class_path': class_path,
@@ -209,9 +221,16 @@ class InstrumentServer(ClassicService):
             InstrumentServerError: Deleting the device failed.
         """
         try:
-            self.devs.pop(name)
+            dev,_ = self.devs.pop(name)
         except Exception as exc:
             raise InstrumentServerError(f'Failed deleting device "{name}"') from exc
+
+        # teardown the driver if it implements an __exit__ function
+        try:
+            dev.__exit__()
+        except AttributeError:
+            pass
+
         logger.info(f'deleted device "{name}"')
 
     def restart(self, name: str):
@@ -276,7 +295,7 @@ class InstrumentServer(ClassicService):
                 'allow_all_attrs': True,
                 'allow_setattr': True,
                 'allow_delattr': True,
-                'sync_request_timeout': RPYC_SYNC_TIMEOUT,
+                'sync_request_timeout': self.sync_timeout,
             },
         )
         self._rpyc_server.start()
@@ -293,6 +312,10 @@ class InstrumentServer(ClassicService):
             raise InstrumentServerError(
                 'Can\'t stop the rpyc server because there isn\'t one running.'
             )
+
+        logger.info('removing devices...')
+        for d in list(self.devs):
+            self.remove(d)
 
         logger.info('stopping RPyC server...')
         self._rpyc_server.close()

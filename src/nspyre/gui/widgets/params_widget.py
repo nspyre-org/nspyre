@@ -58,8 +58,8 @@ class ParamsWidget(QWidget):
             label = QLabel()
             try:
                 display_text = self.params[p].pop('display_text')
-            except KeyError:
-                label.setText(p) 
+            except (KeyError, AttributeError):
+                label.setText(p)
             else:
                 label.setText(display_text)
             label_param_layout.addWidget(label)

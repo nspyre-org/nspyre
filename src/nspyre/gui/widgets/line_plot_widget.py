@@ -14,7 +14,7 @@ from typing import Any
 from typing import Dict
 
 import numpy as np
-import pyqtgraph as pg
+from pyqtgraph import SpinBox, PlotWidget, mkColor, LinearRegionItem
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import QSemaphore
 from PyQt5.QtGui import QColor
@@ -24,6 +24,7 @@ from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QLineEdit
 from PyQt5.QtWidgets import QPushButton
+from PyQt5.QtWidgets import QLabel
 from nspyre import DataSink
 
 from ..style.colors import colors
@@ -68,7 +69,7 @@ class LinePlotWidget(QWidget):
 
         # pyqtgraph widget for displaying a plot and related
         # items like axes, legends, etc.
-        self.plot_widget = pg.PlotWidget()
+        self.plot_widget = PlotWidget()
         self.layout.addWidget(self.plot_widget)
 
         # plot settings
@@ -128,7 +129,7 @@ class LinePlotWidget(QWidget):
     def _next_color(self):
         """Cycle through a set of colors"""
         idx = self.current_color_idx % len(cyclic_colors)
-        color = pg.mkColor(cyclic_colors[idx])
+        color = mkColor(cyclic_colors[idx])
         self.current_color_idx += 1
         return color
 
@@ -219,7 +220,7 @@ class LinePlotWidget(QWidget):
         center = (xmax + xmin) / 2
         span = (xmax - xmin) / 20
         # create GUI element for subregion selection
-        linear_region = pg.LinearRegionItem(values=[center - span, center + span])
+        linear_region = LinearRegionItem(values=[center - span, center + span])
         self.plot_widget.addItem(linear_region)
 
         # TODO
@@ -265,8 +266,19 @@ class FlexSinkLinePlotWidget(QWidget):
         # lineplot widget
         self.lineplot = _FlexSinkLinePlotWidget()
 
+        npoints_layout = QHBoxLayout()
+        npoints_layout.addWidget(QLabel('Numer of Points'))
+        # spinbox for entering the number of points to plot
+        self.npoints_spinbox = SpinBox(value=0, int=True, bounds=(0, None))
+        def user_changed_npoints(spinbox):
+            self.lineplot.npoints = spinbox.value()
+        self.npoints_spinbox.sigValueChanged.connect(user_changed_npoints)
+        npoints_layout.addWidget(self.npoints_spinbox)
+
         layout.addLayout(datasource_layout)
         layout.addWidget(self.lineplot)
+        layout.addLayout(npoints_layout)
+
         self.setLayout(layout)
 
     def update_source(self):
@@ -279,6 +291,8 @@ class _FlexSinkLinePlotWidget(LinePlotWidget):
         self.sink = None
         # mutex for protecting access to the data sink
         self.mutex = Lock()
+        # number of points to plot
+        self.npoints = 0
 
     def new_source(self, data_source_name, timeout=1):
         with self.mutex:
@@ -352,6 +366,9 @@ class _FlexSinkLinePlotWidget(LinePlotWidget):
                             # if the sink data is an array of numpy arrays, concatenate them
                             data = np.concatenate(data, axis=1)
                         # update the plot
-                        self.set_data(d, data[0], data[1])
+                        if self.npoints != 0:
+                            self.set_data(d, data[0][-self.npoints:], data[1][-self.npoints:])
+                        else:
+                            self.set_data(d, data[0], data[1])
             else:
                 time.sleep(0.1)

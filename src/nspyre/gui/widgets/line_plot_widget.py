@@ -20,11 +20,13 @@ from PyQt5.QtCore import QSemaphore
 from PyQt5.QtGui import QColor
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QHBoxLayout
+from PyQt5.QtWidgets import QGridLayout
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QLineEdit
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QComboBox
 from nspyre import DataSink
 
 from ..style.colors import colors
@@ -241,16 +243,26 @@ class LinePlotWidget(QWidget):
 
 class FlexSinkLinePlotWidget(QWidget):
     """QWidget that allows the user to connect to an arbitrary nspyre DataSource and plot its data. 
-    The DataSource should contain the following attributes:
+    The DataSource may contain the following attributes:
         title: plot title string
         xlabel: x label string
         ylabel: y label string
         datasets: dictionary where keys are a dataset name to display in the 
             legend, and values are data as a 2D numpy array like 
             np.array([[xdata0, xdata1, ...], [ydata0, ydata1, ...]]), or a 
-            list of a such numpy arrays which will be concatenated
+            list of a such numpy arrays
+
     """
-    def __init__(self):
+    def __init__(self, data_processing: str = 'append'):
+        """Init FlexSinkLinePlotWidget.
+
+        Args:
+            data_processing: If a dataset's value is an array of numpy arrays, this 
+                parameter controls how the data is processed. If set to 'append' 
+                the numpy arrays are appended. If set to 'avg' the numpy arrays 
+                must all be the same length, and will be averaged.
+
+        """
         super().__init__()
 
         layout = QVBoxLayout()
@@ -264,47 +276,77 @@ class FlexSinkLinePlotWidget(QWidget):
         datasource_layout.addWidget(self.datasource_lineedit)
 
         # lineplot widget
-        self.lineplot = _FlexSinkLinePlotWidget()
+        self.lineplot = _FlexSinkLinePlotWidget(data_processing=data_processing)
 
-        npoints_layout = QHBoxLayout()
-        npoints_layout.addWidget(QLabel('Numer of Points'))
+        layout_row = 0
+        settings_layout = QGridLayout()
+
+        # number of points to display
+        settings_layout.addWidget(QLabel('Numer of Points'), layout_row, 0)
         # spinbox for entering the number of points to plot
         self.npoints_spinbox = SpinBox(value=0, int=True, bounds=(0, None))
         def user_changed_npoints(spinbox):
-            self.lineplot.npoints = spinbox.value()
+            self.lineplot.set_npoints(spinbox.value())
         self.npoints_spinbox.sigValueChanged.connect(user_changed_npoints)
-        npoints_layout.addWidget(self.npoints_spinbox)
+        settings_layout.addWidget(self.npoints_spinbox, layout_row, 1)
+        layout_row += 1
+
+        # average / append
+        settings_layout.addWidget(QLabel(f'Data Processing'), layout_row, 0)
+        self.data_processing_dropdown = QComboBox()
+        self.data_processing_dropdown.addItem('Append') # index 0
+        self.data_processing_dropdown.addItem('Average') # index 1
+        self.data_processing_dropdown.currentIndexChanged.connect(self.update_data_processing)
+        # default to append
+        self.data_processing_dropdown.setCurrentIndex(0)
+        settings_layout.addWidget(self.data_processing_dropdown, layout_row, 1)
+        layout_row += 1
 
         layout.addLayout(datasource_layout)
         layout.addWidget(self.lineplot)
-        layout.addLayout(npoints_layout)
+        layout.addLayout(settings_layout)
 
         self.setLayout(layout)
+
+    def update_data_processing(self, idx):
+        if idx == 0:
+            self.lineplot.set_data_processing('append')
+        elif idx == 1:
+            self.lineplot.set_data_processing('average')
+        else:
+            raise ValueError('Invalid data processing selection.')
 
     def update_source(self):
         self.lineplot.new_source(self.datasource_lineedit.text())
 
 
 class _FlexSinkLinePlotWidget(LinePlotWidget):
-    def __init__(self):
+    """See FlexSinkLinePlotWidget."""
+    def __init__(self, data_processing: str = 'append'):
         super().__init__()
         self.sink = None
         # mutex for protecting access to the data sink
         self.mutex = Lock()
         # number of points to plot
         self.npoints = 0
+        # data processing to perform on plot data
+        self.data_processing = data_processing
+
+    def set_npoints(self, npoints):
+        with self.mutex:
+            self.npoints = npoints
+
+    def set_data_processing(self, data_processing):
+        with self.mutex:
+            self.data_processing = data_processing
 
     def new_source(self, data_source_name, timeout=1):
+        # connect to a new data set
         with self.mutex:
             self.teardown()
             self.data_source_name = data_source_name
-            self.sink = DataSink(data_source_name)
-
-            # TODO
-            # # clear previous plots
-            # for p in self.plots:
-            #     self.plots[p]['plot'].clear
-            # self.plots = {}
+            self.sink = DataSink(self.data_source_name)
+            self.sink.__enter__()
 
             # try to get the plot title and x/y labels
             try:
@@ -313,21 +355,21 @@ class _FlexSinkLinePlotWidget(LinePlotWidget):
                     try:
                         title = self.sink.title
                     except AttributeError:
-                        logger.info(f'Data source [{data_source_name}] has no "title" attribute - skipping')
+                        logger.info(f'Data source [{data_source_name}] has no "title" attribute - skipping...')
                     else:
                         self.set_title(title)
                     # set xlabel
                     try:
                         xlabel = self.sink.xlabel
                     except AttributeError:
-                        logger.info(f'Data source [{data_source_name}] has no "xlabel" attribute - skipping')
+                        logger.info(f'Data source [{data_source_name}] has no "xlabel" attribute - skipping...')
                     else:
                         self.xaxis.setLabel(text=xlabel)
                     # set ylabel
                     try:
                         ylabel = self.sink.ylabel
                     except AttributeError:
-                        logger.info(f'Data source [{data_source_name}] has no "ylabel" attribute - skipping')
+                        logger.info(f'Data source [{data_source_name}] has no "ylabel" attribute - skipping...')
                     else:
                         self.yaxis.setLabel(text=ylabel)
                     try:
@@ -345,30 +387,54 @@ class _FlexSinkLinePlotWidget(LinePlotWidget):
                 else:
                     # some other pop error occured
                     raise RuntimeError
-            except (TimeoutError, RuntimeError):
-                logger.error(f'Could not connect to new data source [{data_source_name}]')
+            except (TimeoutError, RuntimeError) as err:
+                raise RuntimeError(f'Could not connect to new data source [{data_source_name}]') from err
                 self.teardown()
+
+            # TODO
+            # # clear previous plots
+            # for p in self.plots:
+            #     self.plots[p]['plot'].clear
+            # self.plots = {}
 
     def teardown(self):
         if self.sink is not None:
-            self.sink.stop()
+            self.sink.__exit__()
             self.sink = None
 
     def update(self):
-        with self.mutex:
-            if self.sink is not None:
-                if self.sink.pop():
+        # update the plot data
+        if self.sink is not None and self.sink.pop():
+            with self.mutex:
+                # check again to be sure
+                if self.sink is not None:
                     for d in self.sink.datasets:
                         data = self.sink.datasets[d]
                         if isinstance(data, np.ndarray):
-                            pass
-                        elif isinstance(data, list) or isinstance(data, tuple):
-                            # if the sink data is an array of numpy arrays, concatenate them
-                            data = np.concatenate(data, axis=1)
+                            # check numpy array shape
+                            if data.shape[0] != 2 or len(data.shape) != 2:
+                                raise ValueError(f'Dataset shape is {data.shape}, but should be (2, n).')
+                        elif isinstance(data, list):
+                            if len(data) == 0:
+                                continue
+                            elif len(data) == 1:
+                                data = data[0]
+                            else:
+                                if self.data_processing == 'append':
+                                    # concatenate the numpy arrays
+                                    data = np.concatenate(data, axis=1)
+                                elif self.data_processing == 'average':
+                                    # average the numpy arrays
+                                    data = np.average(np.stack(data), axis=0)
+                                else:
+                                    raise ValueError(f'data_processing has unsupported value [{self.data_processing}].')
+                        else:
+                            raise ValueError(f'Data set [{d}] is not a numpy array or list of numpy arrays.')
+
                         # update the plot
                         if self.npoints != 0:
                             self.set_data(d, data[0][-self.npoints:], data[1][-self.npoints:])
                         else:
                             self.set_data(d, data[0], data[1])
-            else:
-                time.sleep(0.1)
+        else:
+            time.sleep(0.1)

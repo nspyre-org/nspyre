@@ -2,6 +2,7 @@ from .colormap_widget import ColorMapWidget
 from .line_plot_widget import FlexSinkLinePlotWidget
 from .line_plot_widget import LinePlotWidget
 from .main_widget import MainWidget
+from .main_widget import MainWidgetItem
 from .params_widget import ParamsWidget
 from .save_widget import SaveWidget
 from .splitter_widget import SplitterOrientation

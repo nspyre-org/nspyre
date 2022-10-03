@@ -21,6 +21,7 @@ try:
     from .gui import FlexSinkLinePlotWidget
     from .gui import LinePlotWidget
     from .gui import MainWidget
+    from .gui import MainWidgetItem
     from .gui import nspyre_font
     from .gui import nspyre_palette
     from .gui import nspyre_style_sheet

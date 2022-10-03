@@ -8,6 +8,7 @@ This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 from importlib import reload
+import types
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QListWidget
@@ -15,11 +16,57 @@ from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QTreeView
+from PyQt5.Qt import QStandardItemModel
+from PyQt5.Qt import QStandardItem
 from pyqtgraph.dockarea import Dock
 from pyqtgraph.dockarea import DockArea
 
 from .sssss import sssss
 
+class MainWidgetItem:
+    """Represents a QWidget which can be loaded from the MainWidget."""
+    def __init__(self, module: types.ModuleType, cls: str,
+                    args: list=[], kwargs: dict={}):
+        """
+        Args:
+            name: display name for the widget
+            module: python module that contains cls
+            cls: python class name as a string (that descends from QWidget). 
+                An instance of this class will be created when the user tries 
+                to load the widget and it will be added to the DockArea.
+            args: list of arguments to pass to the __init__ function of cls
+            kwargs: dictionary of keyword arguments to pass to the __init__ 
+                function of cls
+        """
+        super().__init__()
+        self.module = module
+        self.cls = cls
+        self.args = args
+        self.kwargs = kwargs
+
+class _MainWidgetItem(QStandardItem):
+    """A leaf node in the QTreeView of the MainWidget which contains the 
+    information for launching the widget."""
+    def __init__(self, name: str, main_widget_item: MainWidgetItem):
+        """
+        Args:
+            name: display name for the widget
+            main_widget_item: instance of MainWidgetItem
+        """
+        super().__init__()
+        self.name = name
+        self.widget = main_widget_item
+        self.setEditable(False)
+        self.setText(name)
+
+class _MainWidgetItemContainer(QStandardItem):
+    """A non-leaf node in the QTreeView of the MainWidget"""
+    def __init__(self, name):
+        super().__init__()
+        self.name = name
+        self.setEditable(False)
+        self.setText(name)
 
 class MainWidget(QWidget):
     """Qt widget that contains a list of widgets to run, and a pyqtgraph DockArea where they are displayed.
@@ -38,18 +85,8 @@ class MainWidget(QWidget):
 
         # Create the GUI.
         main_widget = MainWidget({
-            'Save_File': {
-                'module': nspyre,
-                'class': 'SaveWidget',
-                'args': (),
-                'kwargs': {},
-            },
-            'ODMR': {
-                'module': my_module,
-                'class': 'ODMRWidget',
-                'args': (),
-                'kwargs': {},
-            },
+            'Save_File': MainWidgetItem(nspyre, 'SaveWidget'),
+            'ODMR': MainWidgetItem(my_module, 'ODMRWidget'),
         })
         main_widget.show()
         # Run the GUI event loop.
@@ -79,9 +116,28 @@ class MainWidget(QWidget):
         self.dock_area = DockArea()
 
         # make a GUI element to show all the available widgets
-        self.list_widget = QListWidget()
-        for w in self.widgets:
-            QListWidgetItem(w, self.list_widget)
+        self.tree_widget = QTreeView()
+        self.tree_widget.setHeaderHidden(True)
+        tree_model = QStandardItemModel()
+        tree_root_node = tree_model.invisibleRootItem()
+        # recursive function to parse through the user supplied widgets and add 
+        # them to the tree widget
+        def parse_widgets(w, parent):
+            for name, value in w.items():
+                if isinstance(value, MainWidgetItem):
+                    # leaf node
+                    parent.appendRow(_MainWidgetItem(name, value))
+                elif isinstance(value, dict):
+                    # non-leaf node
+                    node = _MainWidgetItemContainer(name)
+                    parent.appendRow(node)
+                    parse_widgets(value, node)
+                else:
+                    raise ValueError(f'Value in widgets dictionary must be a MainWidgetItem or another dictionary containing MainWidgetItem.')
+        parse_widgets(widgets, tree_root_node)
+        self.tree_widget.setModel(tree_model)
+        self.tree_widget.collapseAll()
+        self.tree_widget.doubleClicked.connect(self.tree_item_double_click)
 
         # Qt button that loads a widget from the widget list when clicked
         load_button = QPushButton('Load')
@@ -89,15 +145,15 @@ class MainWidget(QWidget):
         load_button.clicked.connect(self.load_widget_clicked)
 
         # Qt layout that arranges the widget list and load button vertically
-        widget_list_layout = QVBoxLayout()
-        widget_list_layout.addWidget(self.list_widget)
-        widget_list_layout.addWidget(load_button)
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(self.tree_widget)
+        main_layout.addWidget(load_button)
         # Dummy widget containing the layout
-        widget_list_container = QWidget()
-        widget_list_container.setLayout(widget_list_layout)
+        widget_tree_container = QWidget()
+        widget_tree_container.setLayout(main_layout)
 
         # add the widget list to the dock area
-        widget_list_dock = self.dock_widget(widget_list_container, name='Widgets')
+        widget_list_dock = self.dock_widget(widget_tree_container, name='Widgets')
         # set size relative to other docks
         widget_list_dock.setStretch(20, 1)
 
@@ -107,17 +163,33 @@ class MainWidget(QWidget):
         self.logo_dock.hideTitleBar()
         self.logo_dock.setStretch(80, 1)
 
-        main_layout = QVBoxLayout()
-        main_layout.addWidget(self.dock_area)
-        self.setLayout(main_layout)
+        layout = QVBoxLayout()
+        layout.addWidget(self.dock_area)
+        self.setLayout(layout)
+
+    def tree_item_double_click(self, model_index):
+        tree_widget_item = self.tree_widget.model().itemFromIndex(model_index)
+        self.load_widget(tree_widget_item)
 
     def load_widget_clicked(self):
-        """Runs when the 'load' button is pressed. Loads the relevant widget and adds it to the dock area."""
-        widget_name = self.list_widget.currentItem().text()
-        widget_module = self.widgets[widget_name]['module']
-        widget_class_name = self.widgets[widget_name]['class']
-        widget_args = self.widgets[widget_name]['args']
-        widget_kwargs = self.widgets[widget_name]['kwargs']
+        # get the currently selected tree index
+        selected_tree_index = self.tree_widget.selectedIndexes()[0]
+        # retrieve the item
+        tree_widget_item = self.tree_widget.model().itemFromIndex(selected_tree_index)
+        self.load_widget(tree_widget_item)
+
+    def load_widget(self, tree_widget_item):
+        """Loads the QWidget corresponding to the given tree item and add it to 
+        the dock area."""
+        if isinstance(tree_widget_item, _MainWidgetItemContainer):
+            # do nothing if the user tried to load a container class item
+            return
+
+        widget_name = tree_widget_item.name
+        widget_module = tree_widget_item.widget.module
+        widget_class_name = tree_widget_item.widget.cls
+        widget_args = tree_widget_item.widget.args
+        widget_kwargs = tree_widget_item.widget.kwargs
 
         # reload the module at runtime in case any changes were made to the code
         widget_module = reload(widget_module)
@@ -132,7 +204,7 @@ class MainWidget(QWidget):
         """Create a new dock for the given widget and add it to the dock area."""
         # if the logo dock is there, remove it
         try:
-            if self.logo_dock:
+            if self.logo_dock is not None:
                 self.logo_dock.close()
                 self.logo_dock = None
         except AttributeError:

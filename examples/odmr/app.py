@@ -10,17 +10,36 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 import logging
 from pathlib import Path
+import argparse
 
 import gui_elements
+import nspyre
 from nspyre import MainWidget
+from nspyre import MainWidgetItem
 from nspyre import nspyre_init_logger
 from nspyre import NspyreApp
 
 HERE = Path(__file__).parent
 
-# if using the nspyre ProcessRunner, the main code must be guarded with if __name__ == '__main__':
-# see https://docs.python.org/2/library/multiprocessing.html#windows
-if __name__ == '__main__':
+def main():
+    arg_parser = argparse.ArgumentParser(description='Run the Biosensing2 GUI.')
+    arg_parser.add_argument('-l', '--level',
+                            default='info',
+                            help='Log level: info, debug, warning, or error')
+
+    cmd_line_args = arg_parser.parse_args()
+    match cmd_line_args.level:
+        case 'debug':
+            log_level = logging.DEBUG
+        case 'info':
+            log_level = logging.INFO
+        case 'warning':
+            log_level = logging.WARNING
+        case 'error':
+            log_level = logging.ERROR
+        case _:
+            raise ValueError(f'log level [{cmd_line_args.level}] not supported')
+
     # Log to the console as well as a file inside the logs folder.
     nspyre_init_logger(
         log_level=logging.INFO,
@@ -34,34 +53,21 @@ if __name__ == '__main__':
     app = NspyreApp()
 
     # Create the GUI.
-    main_widget = MainWidget(
-        {
-            'SaveODMR': {
-                'module': gui_elements,
-                'class': 'ODMRSaveWidget',
-                'args': [],
-                'kwargs': {},
-            },
-            'ODMR': {
-                'module': gui_elements,
-                'class': 'ODMRWidget',
-                'args': [],
-                'kwargs': {},
-            },
-            'ODMR_plot': {
-                'module': gui_elements,
-                'class': 'ODMRPlotWidget',
-                'args': [],
-                'kwargs': {},
-            },
-            'ODMR_scroll_plot': {
-                'module': gui_elements,
-                'class': 'ScrollingODMRPlotWidget',
-                'args': [],
-                'kwargs': {},
-            },
+    main_widget = MainWidget({
+            'Save ODMR': MainWidgetItem(gui_elements, 'ODMRSaveWidget'),
+            'ODMR': MainWidgetItem(gui_elements, 'ODMRWidget'),
+            'Plots': {
+                'ODMR Plot': MainWidgetItem(gui_elements, 'ODMRPlotWidget'),            
+                'ODMR Scroll Plot': MainWidgetItem(gui_elements, 'ScrollingODMRPlotWidget'),            
+                'FlexSinkLinePlot': MainWidgetItem(nspyre, 'FlexSinkLinePlotWidget'),
+            }
         }
     )
     main_widget.show()
     # Run the GUI event loop.
     app.exec()
+
+# if using the nspyre ProcessRunner, the main code must be guarded with if __name__ == '__main__':
+# see https://docs.python.org/2/library/multiprocessing.html#windows
+if __name__ == '__main__':
+    main()

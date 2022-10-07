@@ -227,7 +227,7 @@ class InstrumentServer(ClassicService):
 
         # teardown the driver if it implements an __exit__ function
         try:
-            dev.__exit__()
+            dev.__exit__(None, None, None)
         except AttributeError:
             pass
 

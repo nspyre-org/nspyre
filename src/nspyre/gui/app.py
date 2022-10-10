@@ -13,12 +13,12 @@ import sys
 from pathlib import Path
 
 import pyqtgraph as pg
-from PyQt5.QtCore import QCoreApplication
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QStyleFactory
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QStyleFactory
 
 from .style.style import nspyre_font
 from .style.style import nspyre_palette

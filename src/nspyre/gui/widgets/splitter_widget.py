@@ -1,8 +1,8 @@
 import os
 from enum import Enum
 
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+from PySide6 import QtCore
+from PySide6 import QtWidgets
 
 __package__ = 'nspyre.gui.widgets'
 

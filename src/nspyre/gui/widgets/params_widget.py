@@ -6,11 +6,11 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
-from PyQt5.QtWidgets import QHBoxLayout
-from PyQt5.QtWidgets import QLabel
-from PyQt5.QtWidgets import QLineEdit
-from PyQt5.QtWidgets import QVBoxLayout
-from PyQt5.QtWidgets import QWidget
+from PySide6.QtWidgets import QHBoxLayout
+from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QLineEdit
+from PySide6.QtWidgets import QVBoxLayout
+from PySide6.QtWidgets import QWidget
 from pyqtgraph import SpinBox
 
 

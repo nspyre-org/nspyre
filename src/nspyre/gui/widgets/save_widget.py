@@ -11,14 +11,14 @@ import json
 import pickle
 from pathlib import Path
 
-from PyQt5.QtWidgets import QComboBox
-from PyQt5.QtWidgets import QFileDialog
-from PyQt5.QtWidgets import QHBoxLayout
-from PyQt5.QtWidgets import QLabel
-from PyQt5.QtWidgets import QLineEdit
-from PyQt5.QtWidgets import QPushButton
-from PyQt5.QtWidgets import QVBoxLayout
-from PyQt5.QtWidgets import QWidget
+from PySide6.QtWidgets import QComboBox
+from PySide6.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QHBoxLayout
+from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QLineEdit
+from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QVBoxLayout
+from PySide6.QtWidgets import QWidget
 
 from ...dataserv.dataserv import DataSink
 

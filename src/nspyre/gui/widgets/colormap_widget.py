@@ -5,11 +5,11 @@ from typing import Dict
 
 import numpy as np
 import pyqtgraph as pg
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtCore import QSemaphore
-from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QVBoxLayout
-from PyQt5.QtWidgets import QWidget
+from PySide6.QtCore import Signal
+from PySide6.QtCore import QSemaphore
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QVBoxLayout
+from PySide6.QtWidgets import QWidget
 
 from ..style.colormap import viridis
 from ..style.style import nspyre_font
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class ColorMapWidget(QWidget):
 
-    new_data = pyqtSignal()
+    new_data = Signal()
 
     def __init__(
         self,

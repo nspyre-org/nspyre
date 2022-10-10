@@ -54,7 +54,6 @@ setup(
         'Natural Language :: English',
         'Operating System :: Microsoft :: Windows',
         'Operating System :: MacOS',
-        'Operating System :: POSIX',
         'Operating System :: Unix',
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering',
@@ -73,12 +72,12 @@ setup(
     python_requires='>=3.9',
     install_requires=[
         # instrument server
-        'rpyc==5.0.1',
+        'rpyc==5.2.3',
         # data server
         'wait_for2==0.3.1;platform_machine!="aarch64" and platform_machine!="armv7l"',  # TODO temporary until asyncio is fixed
         # Qt / GUI
-        'pyqt5==5.12.3;platform_machine!="aarch64" and platform_machine!="armv7l"',
-        'pyqtgraph==0.12.3;platform_machine!="aarch64" and platform_machine!="armv7l"',
+        'pyside6==6.3.2;platform_machine!="aarch64" and platform_machine!="armv7l"',
+        'pyqtgraph==0.13.1;platform_machine!="aarch64" and platform_machine!="armv7l"',
     ],
     extras_require={
         'extras': [

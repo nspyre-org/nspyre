@@ -9,10 +9,7 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 from pdb import set_trace
 
-from PyQt5.QtCore import pyqtRemoveInputHook
-
 
 def qt_set_trace():
     """Set a tracepoint in the Python debugger (pdb) that works with Qt."""
-    pyqtRemoveInputHook()
     set_trace()

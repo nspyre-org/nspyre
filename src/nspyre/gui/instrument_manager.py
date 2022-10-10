@@ -38,29 +38,29 @@ import logging
 
 from pimpmyclass.helpers import DictPropertyNameKey
 from pint.util import infer_base_unit
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtCore import QEvent
-from PyQt5.QtCore import QObject
-from PyQt5.QtCore import QSize
-from PyQt5.QtCore import Qt
-from PyQt5.QtCore import QThread
-from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QColor
-from PyQt5.QtGui import QCursor
-from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QComboBox
-from PyQt5.QtWidgets import QHBoxLayout
-from PyQt5.QtWidgets import QHeaderView
-from PyQt5.QtWidgets import QLabel
-from PyQt5.QtWidgets import QLineEdit
-from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtWidgets import QPushButton
-from PyQt5.QtWidgets import QToolTip
-from PyQt5.QtWidgets import QTreeWidget
-from PyQt5.QtWidgets import QTreeWidgetItem
-from PyQt5.QtWidgets import QVBoxLayout
-from PyQt5.QtWidgets import QWidget
+from PySide6.QtCore import Signal
+from PySide6.QtCore import pyqtSlot
+from PySide6.QtCore import QEvent
+from PySide6.QtCore import QObject
+from PySide6.QtCore import QSize
+from PySide6.QtCore import Qt
+from PySide6.QtCore import QThread
+from PySide6.QtCore import QTimer
+from PySide6.QtGui import QColor
+from PySide6.QtGui import QCursor
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QComboBox
+from PySide6.QtWidgets import QHBoxLayout
+from PySide6.QtWidgets import QHeaderView
+from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QLineEdit
+from PySide6.QtWidgets import QMainWindow
+from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QToolTip
+from PySide6.QtWidgets import QTreeWidget
+from PySide6.QtWidgets import QTreeWidgetItem
+from PySide6.QtWidgets import QVBoxLayout
+from PySide6.QtWidgets import QWidget
 from pyqtgraph import SpinBox as pyqtgraph_SpinBox
 from pyqtgraph import ValueLabel as pyqtgraph_ValueLabel
 
@@ -112,12 +112,12 @@ class RefreshValuesThread(QThread):
     all feat/dictfeat values in the GUI. It does the following:
     1. update the progress bar displayed while the QThread is running
     2. call each feat/dictfeat of every driver on every server to get an updated value
-    3. emit a pyqtSignal with the feat/dictfeat's tuple index in the parent GUI
+    3. emit a Signal with the feat/dictfeat's tuple index in the parent GUI
        getattr_func mapping list and its updated value
     """
 
-    refresh_progress = pyqtSignal(str, float)
-    value_update = pyqtSignal(int, object)
+    refresh_progress = Signal(str, float)
+    value_update = Signal(int, object)
 
     def __init__(self, parent: QObject):
         super().__init__(parent)

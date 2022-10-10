@@ -17,9 +17,9 @@ from nspyre import LinePlotWidget
 from nspyre import ParamsWidget
 from nspyre import ProcessRunner
 from nspyre import SaveWidget
-from PyQt5.QtWidgets import QPushButton
-from PyQt5.QtWidgets import QVBoxLayout
-from PyQt5.QtWidgets import QWidget
+from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QVBoxLayout
+from PySide6.QtWidgets import QWidget
 
 
 class ODMRWidget(QWidget):

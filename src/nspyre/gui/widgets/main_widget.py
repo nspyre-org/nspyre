@@ -10,15 +10,15 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 from importlib import reload
 import types
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QListWidget
-from PyQt5.QtWidgets import QListWidgetItem
-from PyQt5.QtWidgets import QPushButton
-from PyQt5.QtWidgets import QVBoxLayout
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtWidgets import QTreeView
-from PyQt5.Qt import QStandardItemModel
-from PyQt5.Qt import QStandardItem
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QListWidget
+from PySide6.QtWidgets import QListWidgetItem
+from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QVBoxLayout
+from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QTreeView
+from PySide6.QtGui import QStandardItemModel
+from PySide6.QtGui import QStandardItem
 from pyqtgraph.dockarea import Dock
 from pyqtgraph.dockarea import DockArea
 

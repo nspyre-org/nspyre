@@ -15,18 +15,18 @@ from typing import Dict
 
 import numpy as np
 from pyqtgraph import SpinBox, PlotWidget, mkColor, LinearRegionItem
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtCore import QSemaphore
-from PyQt5.QtGui import QColor
-from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QHBoxLayout
-from PyQt5.QtWidgets import QGridLayout
-from PyQt5.QtWidgets import QVBoxLayout
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtWidgets import QLineEdit
-from PyQt5.QtWidgets import QPushButton
-from PyQt5.QtWidgets import QLabel
-from PyQt5.QtWidgets import QComboBox
+from PySide6.QtCore import Signal
+from PySide6.QtCore import QSemaphore
+from PySide6.QtGui import QColor
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QHBoxLayout
+from PySide6.QtWidgets import QGridLayout
+from PySide6.QtWidgets import QVBoxLayout
+from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QLineEdit
+from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QComboBox
 from nspyre import DataSink
 
 from ..style.colors import colors
@@ -42,7 +42,7 @@ class LinePlotWidget(QWidget):
     TODO: example
     """
 
-    new_data = pyqtSignal(str)
+    new_data = Signal(str)
 
     def __init__(
         self,

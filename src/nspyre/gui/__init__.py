@@ -3,7 +3,6 @@ from .app import nspyre_palette
 from .app import nspyre_style_sheet
 from .app import NspyreApp
 from .concurrency import QThreadRunner
-from .misc import qt_set_trace
 from .style import colors
 from .style import cyclic_colors
 from .widgets import ColorMapWidget

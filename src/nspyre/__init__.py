@@ -27,7 +27,6 @@ try:
     from .gui import nspyre_style_sheet
     from .gui import NspyreApp
     from .gui import ParamsWidget
-    from .gui import qt_set_trace
     from .gui import QThreadRunner
     from .gui import SaveWidget
     from .gui import SplitterOrientation

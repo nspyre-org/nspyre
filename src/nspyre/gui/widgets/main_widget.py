@@ -8,7 +8,7 @@ This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 from importlib import reload
-import types
+from types import ModuleType
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QListWidget
@@ -26,7 +26,7 @@ from .sssss import sssss
 
 class MainWidgetItem:
     """Represents a QWidget which can be loaded from the MainWidget."""
-    def __init__(self, module: types.ModuleType, cls: str,
+    def __init__(self, module: ModuleType, cls: str,
                     args: list=[], kwargs: dict={}):
         """
         Args:

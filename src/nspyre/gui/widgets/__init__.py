@@ -1,4 +1,5 @@
 from .colormap_widget import ColorMapWidget
+from .experiment_widget import ExperimentWidget
 from .line_plot_widget import FlexSinkLinePlotWidget
 from .line_plot_widget import LinePlotWidget
 from .main_widget import MainWidget

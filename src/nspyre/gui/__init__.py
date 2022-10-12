@@ -6,6 +6,7 @@ from .concurrency import QThreadRunner
 from .style import colors
 from .style import cyclic_colors
 from .widgets import ColorMapWidget
+from .widgets import ExperimentWidget
 from .widgets import FlexSinkLinePlotWidget
 from .widgets import LinePlotWidget
 from .widgets import MainWidget

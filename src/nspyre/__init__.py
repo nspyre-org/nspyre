@@ -11,13 +11,14 @@ try:
 except ModuleNotFoundError as exc:
     logger = logging.getLogger(__name__)
     logger.warning(
-        f'Not importing data server functionality because the required packages are not installed.\n{exc}'
+        f'Not importing data server functionality because the required packages are not installed:\n{exc}'
     )
 
 try:
     from .gui import ColorMapWidget
     from .gui import colors
     from .gui import cyclic_colors
+    from .gui import ExperimentWidget
     from .gui import FlexSinkLinePlotWidget
     from .gui import LinePlotWidget
     from .gui import MainWidget
@@ -35,7 +36,7 @@ try:
 except ModuleNotFoundError as exc:
     logger = logging.getLogger(__name__)
     logger.warning(
-        f'Not importing GUI functionality because the required packages are not installed.\n{exc}'
+        f'Not importing GUI functionality because the required packages are not installed:\n{exc}'
     )
 
 try:
@@ -48,7 +49,7 @@ try:
 except ModuleNotFoundError as exc:
     logger = logging.getLogger(__name__)
     logger.warning(
-        f'Not importing instrument server functionality because the required packages are not installed.\n{exc}'
+        f'Not importing instrument server functionality because the required packages are not installed:\n{exc}'
     )
 
 from .misc import nspyre_init_logger

@@ -73,8 +73,6 @@ setup(
     install_requires=[
         # instrument server
         'rpyc==5.2.3',
-        # data server
-        'wait_for2==0.3.1;platform_machine!="aarch64" and platform_machine!="armv7l"',  # TODO temporary until asyncio is fixed
         # Qt / GUI
         'pyside6==6.3.2;platform_machine!="aarch64" and platform_machine!="armv7l"',
         'pyqtgraph==0.13.1;platform_machine!="aarch64" and platform_machine!="armv7l"',

@@ -52,6 +52,7 @@ class LinePlotWidget(QWidget):
         ylabel: str = '',
         font: QFont = nspyre_font,
         legend: bool = True,
+        downsample: bool = True,
         **kwargs,
     ):
         """Initialize a LinePlotWidget.
@@ -61,6 +62,8 @@ class LinePlotWidget(QWidget):
             xlabel: Plot x-axis label.
             ylabel: Plot y-axis label.
             font: Font to use in the plot title, axis labels, etc., although the font type may not be fully honored.
+            legend: If True, display a figure legend
+            downsample: If True, utilize the pyqtgraph 'auto' downsampling in the 'mean' mode (see https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/plotitem.html#pyqtgraph.PlotItem.setDownsampling)
         """
         super().__init__(*args, **kwargs)
 
@@ -72,6 +75,8 @@ class LinePlotWidget(QWidget):
         # pyqtgraph widget for displaying a plot and related
         # items like axes, legends, etc.
         self.plot_widget = PlotWidget()
+        if downsample:
+            self.plot_widget.getPlotItem().setDownsampling(ds=True, auto=True, mode='mean')
         self.layout.addWidget(self.plot_widget)
 
         # plot settings

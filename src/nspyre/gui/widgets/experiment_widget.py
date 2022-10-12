@@ -17,13 +17,12 @@ from types import ModuleType
 
 from .params_widget import ParamsWidget
 from ...misc.misc import ProcessRunner
-from PySide6.QtWidgets import QPushButton
-from PySide6.QtWidgets import QVBoxLayout
-from PySide6.QtWidgets import QWidget
+
+from pyqtgraph.Qt import QtWidgets
 
 logger = logging.getLogger(__name__)
 
-class ExperimentWidget(QWidget):
+class ExperimentWidget(QtWidgets.QWidget):
     """Qt widget generating a GUI for a simple experiment."""
     def __init__(self, params_config: dict, module: ModuleType, cls: str, fun_name: str, args: list=None, kwargs: dict=None, title: str=None):
         """Init ExperimentWidget.
@@ -61,7 +60,7 @@ class ExperimentWidget(QWidget):
         self.params_widget = ParamsWidget(params_config)
 
         # run button
-        run_button = QPushButton('Run')
+        run_button = QtWidgets.QPushButton('Run')
         self.run_proc = ProcessRunner()
         run_button.clicked.connect(self.run)
 
@@ -69,17 +68,17 @@ class ExperimentWidget(QWidget):
         self.queue = None
 
         # stop button
-        stop_button = QPushButton('Stop')
+        stop_button = QtWidgets.QPushButton('Stop')
         stop_button.clicked.connect(self.stop)
         # use a partial because the stop function may already be destroyed by the time this is called
         self.destroyed.connect(partial(self.stop))
 
         # kill button
-        kill_button = QPushButton('Kill')
+        kill_button = QtWidgets.QPushButton('Kill')
         kill_button.clicked.connect(self.kill)
 
         # Qt layout that arranges the params and button vertically
-        params_layout = QVBoxLayout()
+        params_layout = QtWidgets.QVBoxLayout()
         params_layout.addWidget(self.params_widget)
         params_layout.addWidget(run_button)
         params_layout.addWidget(stop_button)

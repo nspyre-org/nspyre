@@ -6,15 +6,11 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
-from PySide6.QtWidgets import QHBoxLayout
-from PySide6.QtWidgets import QLabel
-from PySide6.QtWidgets import QLineEdit
-from PySide6.QtWidgets import QVBoxLayout
-from PySide6.QtWidgets import QWidget
+from pyqtgraph.Qt import QtWidgets
 from pyqtgraph import SpinBox
 
 
-class ParamsWidget(QWidget):
+class ParamsWidget(QtWidgets.QWidget):
     """Create a simple GUI widget containing a list of parameters.
 
     Typical usage example:
@@ -48,14 +44,14 @@ class ParamsWidget(QWidget):
         self.textboxes = {}
 
         # vertical layout
-        total_layout = QVBoxLayout()
+        total_layout = QtWidgets.QVBoxLayout()
 
         # add parameter spinbox widgets to the layout
         for p in self.params:
             # small layout containing a label and spinbox
-            label_param_layout = QHBoxLayout()
+            label_param_layout = QtWidgets.QHBoxLayout()
             # create parameter label
-            label = QLabel()
+            label = QtWidgets.QLabel()
             try:
                 display_text = self.params[p].pop('display_text')
             except (KeyError, AttributeError):
@@ -65,7 +61,7 @@ class ParamsWidget(QWidget):
             label_param_layout.addWidget(label)
             if isinstance(self.params[p], str):
                 # create textbox (QLineEdit widget)
-                textbox = QLineEdit(self.params[p])
+                textbox = QtWidgets.QLineEdit(self.params[p])
                 # store the textboxes
                 self.textboxes[p] = textbox
                 label_param_layout.addWidget(textbox)

@@ -9,16 +9,14 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 from pathlib import Path
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QLabel
-from PySide6.QtWidgets import QVBoxLayout
-from PySide6.QtWidgets import QWidget
+from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtCore
+from pyqtgraph.Qt import QtWidgets
 
 HERE = Path(__file__).parent
 
 
-class sssss(QWidget):
+class sssss(QtWidgets.QWidget):
     """Image widget showing the nspyre logo."""
 
     def __init__(self, size=300):
@@ -29,14 +27,14 @@ class sssss(QWidget):
         super().__init__()
 
         # label to display the image
-        spin_snake_img_widget = QLabel(self)
+        spin_snake_img_widget = QtWidgets.QLabel(self)
         # logo image
-        pixmap = QPixmap(str(HERE / '../images/ssssspin.png'))
+        pixmap = QtGui.QPixmap(str(HERE / '../images/ssssspin.png'))
         # rescale the image
-        scaled_pixmap = pixmap.scaledToHeight(size, Qt.SmoothTransformation)
+        scaled_pixmap = pixmap.scaledToHeight(size, QtCore.Qt.TransformationMode.SmoothTransformation)
         spin_snake_img_widget.setPixmap(scaled_pixmap)
 
         # put the widget centered in a vertical layout
-        snake_layout = QVBoxLayout()
-        snake_layout.addWidget(spin_snake_img_widget, alignment=Qt.AlignCenter)
+        snake_layout = QtWidgets.QVBoxLayout()
+        snake_layout.addWidget(spin_snake_img_widget, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
         self.setLayout(snake_layout)

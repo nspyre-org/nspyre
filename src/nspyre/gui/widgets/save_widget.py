@@ -11,14 +11,7 @@ import json
 import pickle
 from pathlib import Path
 
-from PySide6.QtWidgets import QComboBox
-from PySide6.QtWidgets import QFileDialog
-from PySide6.QtWidgets import QHBoxLayout
-from PySide6.QtWidgets import QLabel
-from PySide6.QtWidgets import QLineEdit
-from PySide6.QtWidgets import QPushButton
-from PySide6.QtWidgets import QVBoxLayout
-from PySide6.QtWidgets import QWidget
+from pyqtgraph.Qt import QtWidgets
 
 from ...dataserv.dataserv import DataSink
 
@@ -37,7 +30,7 @@ def save_pickle(filename, data):
         pickle.dump(data, f)
 
 
-class SaveWidget(QWidget):
+class SaveWidget(QtWidgets.QWidget):
     """Qt widget that saves data from the dataserver."""
 
     def __init__(self, additional_filetypes=None, save_dialog_dir=HOME):
@@ -60,26 +53,26 @@ class SaveWidget(QWidget):
             self.filetypes.update(additional_filetypes)
 
         # label for data set lineedit
-        dataset_label = QLabel('Data Set')
+        dataset_label = QtWidgets.QLabel('Data Set')
         # text box for the user to enter the name of the desired data set in the dataserver
-        self.dataset_lineedit = QLineEdit()
-        dataset_layout = QHBoxLayout()
+        self.dataset_lineedit = QtWidgets.QLineEdit()
+        dataset_layout = QtWidgets.QHBoxLayout()
         dataset_layout.addWidget(dataset_label)
         dataset_layout.addWidget(self.dataset_lineedit)
         # dummy widget containing the data set lineedit and label
-        dataset_container = QWidget()
+        dataset_container = QtWidgets.QWidget()
         dataset_container.setLayout(dataset_layout)
 
         # dropdown menu for selecting the desired filetype
-        self.filetype_combobox = QComboBox()
+        self.filetype_combobox = QtWidgets.QComboBox()
         self.filetype_combobox.addItems(list(self.filetypes))
 
         # save button
-        save_button = QPushButton('Save')
+        save_button = QtWidgets.QPushButton('Save')
         # run the relevant save method on button press
         save_button.clicked.connect(self.save)
 
-        layout = QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(dataset_container)
         layout.addWidget(self.filetype_combobox)
         layout.addWidget(save_button)
@@ -92,7 +85,7 @@ class SaveWidget(QWidget):
             self.filetype_combobox.currentIndex()
         )
         # make a file browser dialog to get the desired file location from the user
-        filename, _ = QFileDialog.getSaveFileName(
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
             parent=self, directory=str(self.save_dialog_dir)
         )
         if filename:

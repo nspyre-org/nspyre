@@ -10,12 +10,13 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 import logging
 import time
 
-from PySide6.QtCore import QThread
+from pyqtgraph.Qt import QtCore
+
 
 logger = logging.getLogger(__name__)
 
 
-class WidgetUpdateThread(QThread):
+class WidgetUpdateThread(QtCore.QThread):
     """Run update_func() repeatedly in a thread."""
 
     def __init__(self, update_func, report_fps=False, fps_period=1):

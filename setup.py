@@ -74,7 +74,7 @@ setup(
         # instrument server
         'rpyc==5.2.3',
         # Qt / GUI
-        'pyside6==6.3.2;platform_machine!="aarch64" and platform_machine!="armv7l"',
+        'pyqt5==5.15;platform_machine!="aarch64" and platform_machine!="armv7l"',
         'pyqtgraph==0.13.1;platform_machine!="aarch64" and platform_machine!="armv7l"',
     ],
     extras_require={

@@ -9,12 +9,12 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 import logging
 
-from PySide6.QtCore import QThread
+from pyqtgraph.Qt import QtCore
 
 logger = logging.getLogger(__name__)
 
 
-class ContainerThread(QThread):
+class ContainerThread(QtCore.QThread):
     """Runs a function in a new QThread."""
 
     def __init__(self, fun, *args, **kwargs):

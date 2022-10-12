@@ -10,15 +10,9 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 from importlib import reload
 from types import ModuleType
 
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QListWidget
-from PySide6.QtWidgets import QListWidgetItem
-from PySide6.QtWidgets import QPushButton
-from PySide6.QtWidgets import QVBoxLayout
-from PySide6.QtWidgets import QWidget
-from PySide6.QtWidgets import QTreeView
-from PySide6.QtGui import QStandardItemModel
-from PySide6.QtGui import QStandardItem
+from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtCore
+from pyqtgraph.Qt import QtWidgets
 from pyqtgraph.dockarea import Dock
 from pyqtgraph.dockarea import DockArea
 
@@ -45,7 +39,7 @@ class MainWidgetItem:
         self.args = args
         self.kwargs = kwargs
 
-class _MainWidgetItem(QStandardItem):
+class _MainWidgetItem(QtGui.QStandardItem):
     """A leaf node in the QTreeView of the MainWidget which contains the 
     information for launching the widget."""
     def __init__(self, name: str, main_widget_item: MainWidgetItem):
@@ -60,7 +54,7 @@ class _MainWidgetItem(QStandardItem):
         self.setEditable(False)
         self.setText(name)
 
-class _MainWidgetItemContainer(QStandardItem):
+class _MainWidgetItemContainer(QtGui.QStandardItem):
     """A non-leaf node in the QTreeView of the MainWidget"""
     def __init__(self, name):
         super().__init__()
@@ -68,7 +62,7 @@ class _MainWidgetItemContainer(QStandardItem):
         self.setEditable(False)
         self.setText(name)
 
-class MainWidget(QWidget):
+class MainWidget(QtWidgets.QWidget):
     """Qt widget that contains a list of widgets to run, and a pyqtgraph DockArea where they are displayed.
 
     Typical usage example:
@@ -103,7 +97,8 @@ class MainWidget(QWidget):
         super().__init__()
 
         # delete any children Qt widgets when this widget is closed
-        self.setAttribute(Qt.WA_DeleteOnClose, True)
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose, True)
+
         # window settings
         self.setWindowTitle('nspyre')
         self.resize(1200, 700)
@@ -116,9 +111,9 @@ class MainWidget(QWidget):
         self.dock_area = DockArea()
 
         # make a GUI element to show all the available widgets
-        self.tree_widget = QTreeView()
+        self.tree_widget = QtWidgets.QTreeView()
         self.tree_widget.setHeaderHidden(True)
-        tree_model = QStandardItemModel()
+        tree_model = QtGui.QStandardItemModel()
         tree_root_node = tree_model.invisibleRootItem()
         # recursive function to parse through the user supplied widgets and add 
         # them to the tree widget
@@ -140,16 +135,16 @@ class MainWidget(QWidget):
         self.tree_widget.doubleClicked.connect(self.tree_item_double_click)
 
         # Qt button that loads a widget from the widget list when clicked
-        load_button = QPushButton('Load')
+        load_button = QtWidgets.QPushButton('Load')
         # run the load widget method on button press
         load_button.clicked.connect(self.load_widget_clicked)
 
         # Qt layout that arranges the widget list and load button vertically
-        main_layout = QVBoxLayout()
+        main_layout = QtWidgets.QVBoxLayout()
         main_layout.addWidget(self.tree_widget)
         main_layout.addWidget(load_button)
         # Dummy widget containing the layout
-        widget_tree_container = QWidget()
+        widget_tree_container = QtWidgets.QWidget()
         widget_tree_container.setLayout(main_layout)
 
         # add the widget list to the dock area
@@ -163,7 +158,7 @@ class MainWidget(QWidget):
         self.logo_dock.hideTitleBar()
         self.logo_dock.setStretch(80, 1)
 
-        layout = QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.dock_area)
         self.setLayout(layout)
 

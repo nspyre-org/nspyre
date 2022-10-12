@@ -15,18 +15,11 @@ from typing import Dict
 
 import numpy as np
 from pyqtgraph import SpinBox, PlotWidget, mkColor, LinearRegionItem
-from PySide6.QtCore import Signal
-from PySide6.QtCore import QSemaphore
-from PySide6.QtGui import QColor
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QHBoxLayout
-from PySide6.QtWidgets import QGridLayout
-from PySide6.QtWidgets import QVBoxLayout
-from PySide6.QtWidgets import QWidget
-from PySide6.QtWidgets import QLineEdit
-from PySide6.QtWidgets import QPushButton
-from PySide6.QtWidgets import QLabel
-from PySide6.QtWidgets import QComboBox
+
+from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtCore
+from pyqtgraph.Qt import QtWidgets
+
 from nspyre import DataSink
 
 from ..style.colors import colors
@@ -37,12 +30,12 @@ from .widget_update_thread import WidgetUpdateThread
 logger = logging.getLogger(__name__)
 
 
-class LinePlotWidget(QWidget):
+class LinePlotWidget(QtWidgets.QWidget):
     """Qt widget that generates a pyqtgraph 1D line plot with some reasonable default settings and a variety of added features.
     TODO: example
     """
 
-    new_data = Signal(str)
+    new_data = QtCore.Signal(str)
 
     def __init__(
         self,
@@ -50,7 +43,7 @@ class LinePlotWidget(QWidget):
         title: str = '',
         xlabel: str = '',
         ylabel: str = '',
-        font: QFont = nspyre_font,
+        font: QtGui.QFont = nspyre_font,
         legend: bool = True,
         downsample: bool = True,
         **kwargs,
@@ -70,7 +63,7 @@ class LinePlotWidget(QWidget):
         self.font = font
 
         # layout for storing plot
-        self.layout = QVBoxLayout()
+        self.layout = QtWidgets.QVBoxLayout()
 
         # pyqtgraph widget for displaying a plot and related
         # items like axes, legends, etc.
@@ -143,7 +136,7 @@ class LinePlotWidget(QWidget):
     def new_plot(
         self,
         name: str,
-        pen: QColor = None,
+        pen: QtGui.QColor = None,
         symbolBrush=(255, 255, 255, 100),
         symbolPen=(255, 255, 255, 100),
         symbol: str = 's',
@@ -177,7 +170,7 @@ class LinePlotWidget(QWidget):
             symbolSize=symbolSize,
             name=name,
         )
-        self.plots[name] = {'x': [], 'y': [], 'plot': plt, 'sem': QSemaphore(n=1)}
+        self.plots[name] = {'x': [], 'y': [], 'plot': plt, 'sem': QtCore.QSemaphore(n=1)}
 
     def set_data(self, name: str, xdata, ydata):
         """Queue up x/y data to update a line plot. Threadsafe.
@@ -246,7 +239,7 @@ class LinePlotWidget(QWidget):
         self.teardown()
 
 
-class FlexSinkLinePlotWidget(QWidget):
+class FlexSinkLinePlotWidget(QtWidgets.QWidget):
     """QWidget that allows the user to connect to an arbitrary nspyre DataSource and plot its data. 
     The DataSource may contain the following attributes:
         title: plot title string
@@ -270,12 +263,12 @@ class FlexSinkLinePlotWidget(QWidget):
         """
         super().__init__()
 
-        layout = QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
 
         # lineedit and button for selecting the data source
-        datasource_layout = QHBoxLayout()
-        self.datasource_lineedit = QLineEdit()
-        self.update_button = QPushButton('Connect')
+        datasource_layout = QtWidgets.QHBoxLayout()
+        self.datasource_lineedit = QtWidgets.QLineEdit()
+        self.update_button = QtWidgets.QPushButton('Connect')
         self.update_button.clicked.connect(self.update_source)
         datasource_layout.addWidget(self.update_button)
         datasource_layout.addWidget(self.datasource_lineedit)
@@ -284,10 +277,10 @@ class FlexSinkLinePlotWidget(QWidget):
         self.lineplot = _FlexSinkLinePlotWidget(data_processing=data_processing)
 
         layout_row = 0
-        settings_layout = QGridLayout()
+        settings_layout = QtWidgets.QGridLayout()
 
         # number of points to display
-        settings_layout.addWidget(QLabel('Numer of Points'), layout_row, 0)
+        settings_layout.addWidget(QtWidgets.QLabel('Numer of Points'), layout_row, 0)
         # spinbox for entering the number of points to plot
         self.npoints_spinbox = SpinBox(value=0, int=True, bounds=(0, None))
         def user_changed_npoints(spinbox):
@@ -297,8 +290,8 @@ class FlexSinkLinePlotWidget(QWidget):
         layout_row += 1
 
         # average / append
-        settings_layout.addWidget(QLabel(f'Data Processing'), layout_row, 0)
-        self.data_processing_dropdown = QComboBox()
+        settings_layout.addWidget(QtWidgets.QLabel(f'Data Processing'), layout_row, 0)
+        self.data_processing_dropdown = QtWidgets.QComboBox()
         self.data_processing_dropdown.addItem('Append') # index 0
         self.data_processing_dropdown.addItem('Average') # index 1
         self.data_processing_dropdown.currentIndexChanged.connect(self.update_data_processing)

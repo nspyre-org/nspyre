@@ -17,12 +17,10 @@ from nspyre import LinePlotWidget
 from nspyre import ParamsWidget
 from nspyre import ProcessRunner
 from nspyre import SaveWidget
-from PySide6.QtWidgets import QPushButton
-from PySide6.QtWidgets import QVBoxLayout
-from PySide6.QtWidgets import QWidget
+from pyqtgraph.Qt import QtWidgets
 
 
-class ODMRWidget(QWidget):
+class ODMRWidget(QtWidgets.QWidget):
     """Qt widget subclass that generates an interface for running ODMR scans.
     It contains a set of boxes for the user to enter the experimental parameters,
     and a button to start the scan.
@@ -63,21 +61,21 @@ class ODMRWidget(QWidget):
         )
 
         # Qt button widget that takes an ODMR scan when clicked
-        sweep_button = QPushButton('Sweep')
+        sweep_button = QtWidgets.QPushButton('Sweep')
         # the process running the sweep function
         self.sweep_proc = ProcessRunner()
         # start run sweep_clicked on button press
         sweep_button.clicked.connect(self.sweep_clicked)
 
         # Qt button widget that takes an ODMR scan when clicked
-        stop_button = QPushButton('Stop')
+        stop_button = QtWidgets.QPushButton('Stop')
         # start run sweep_clicked on button press
         stop_button.clicked.connect(self.stop)
         # stop the process if the widget is destroyed
         self.destroyed.connect(partial(self.stop))
 
         # Qt layout that arranges the params and button vertically
-        params_layout = QVBoxLayout()
+        params_layout = QtWidgets.QVBoxLayout()
         params_layout.addWidget(self.params_widget)
         params_layout.addWidget(stop_button)
         params_layout.addWidget(sweep_button)

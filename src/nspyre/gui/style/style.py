@@ -9,28 +9,26 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 from pathlib import Path
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor
-from PySide6.QtGui import QFont
-from PySide6.QtGui import QPalette
+from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtCore
 
 HERE = Path(__file__).parent
 
-dark = QColor(53, 53, 53)  # (61, 64, 62) (196,201,201)
-nspyre_palette = QPalette()
-nspyre_palette.setColor(QPalette.Window, dark)
-nspyre_palette.setColor(QPalette.WindowText, Qt.white)
-nspyre_palette.setColor(QPalette.Base, QColor(25, 25, 25))
-nspyre_palette.setColor(QPalette.AlternateBase, dark)
-nspyre_palette.setColor(QPalette.ToolTipText, Qt.white)
-nspyre_palette.setColor(QPalette.Text, Qt.white)
-nspyre_palette.setColor(QPalette.Button, dark)
-nspyre_palette.setColor(QPalette.ButtonText, Qt.white)
-nspyre_palette.setColor(QPalette.BrightText, Qt.red)
-nspyre_palette.setColor(QPalette.Link, QColor(42, 130, 218))
-nspyre_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-nspyre_palette.setColor(QPalette.HighlightedText, Qt.black)
+dark = QtGui.QColor(53, 53, 53)  # (61, 64, 62) (196,201,201)
+nspyre_palette = QtGui.QPalette()
+nspyre_palette.setColor(QtGui.QPalette.ColorRole.Window, dark)
+nspyre_palette.setColor(QtGui.QPalette.ColorRole.WindowText, QtCore.Qt.GlobalColor.white)
+nspyre_palette.setColor(QtGui.QPalette.ColorRole.Base, QtGui.QColor(25, 25, 25))
+nspyre_palette.setColor(QtGui.QPalette.ColorRole.AlternateBase, dark)
+nspyre_palette.setColor(QtGui.QPalette.ColorRole.ToolTipText, QtCore.Qt.GlobalColor.white)
+nspyre_palette.setColor(QtGui.QPalette.ColorRole.Text, QtCore.Qt.GlobalColor.white)
+nspyre_palette.setColor(QtGui.QPalette.ColorRole.Button, dark)
+nspyre_palette.setColor(QtGui.QPalette.ColorRole.ButtonText, QtCore.Qt.GlobalColor.white)
+nspyre_palette.setColor(QtGui.QPalette.ColorRole.BrightText, QtCore.Qt.GlobalColor.red)
+nspyre_palette.setColor(QtGui.QPalette.ColorRole.Link, QtGui.QColor(42, 130, 218))
+nspyre_palette.setColor(QtGui.QPalette.ColorRole.Highlight, QtGui.QColor(42, 130, 218))
+nspyre_palette.setColor(QtGui.QPalette.ColorRole.HighlightedText, QtCore.Qt.GlobalColor.black)
 
 nspyre_style_sheet = (HERE / 'style.qss').read_text()
 
-nspyre_font = QFont('Helvetica [Cronyx]', 14)
+nspyre_font = QtGui.QFont('Helvetica [Cronyx]', 14)

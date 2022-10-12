@@ -1,10 +1,8 @@
 import os
 from enum import Enum
 
-from PySide6 import QtCore
-from PySide6 import QtWidgets
-
-__package__ = 'nspyre.gui.widgets'
+from pyqtgraph.Qt import QtWidgets
+from pyqtgraph.Qt import QtCore
 
 
 class SplitterOrientation(Enum):
@@ -23,9 +21,9 @@ class SplitterWidget(QtWidgets.QSplitter):
             SplitterOrientation.vertical_left_button,
             SplitterOrientation.vertical_right_button,
         ]:
-            super().__init__(QtCore.Qt.Horizontal, parent=parent)
+            super().__init__(QtCore.Qt.AlignmentFlag.Horizontal, parent=parent)
         else:
-            super().__init__(QtCore.Qt.Vertical, parent=parent)
+            super().__init__(QtCore.Qt.AlignmentFlag.Vertical, parent=parent)
         if not orientation.value % 2:
             # main widget on container 1
             c1_hover = SplitterHoverArea(self, orientation=orientation)
@@ -199,7 +197,7 @@ class SplitterHoverButton(QtWidgets.QPushButton):
         self.style = self.button_style.format(**self.button_params)
         self.setStyleSheet(self.style)
         self.setFixedSize(self.width, self.height)
-        self.setCursor(QtCore.Qt.PointingHandCursor)
+        self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         self.splitter = splitter
         self.maximize = 400
         self.minimize = 1

@@ -4,12 +4,11 @@ from typing import Any
 from typing import Dict
 
 import numpy as np
-import pyqtgraph as pg
-from PySide6.QtCore import Signal
-from PySide6.QtCore import QSemaphore
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QVBoxLayout
-from PySide6.QtWidgets import QWidget
+from pyqtgraph import PlotItem
+from pyqtgraph import ImageView
+from pyqtgraph.Qt import QtCore
+from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtWidgets
 
 from ..style.colormap import viridis
 from ..style.style import nspyre_font
@@ -18,9 +17,9 @@ from .widget_update_thread import WidgetUpdateThread
 logger = logging.getLogger(__name__)
 
 
-class ColorMapWidget(QWidget):
+class ColorMapWidget(QtWidgets.QWidget):
 
-    new_data = Signal()
+    new_data = QtCore.Signal()
 
     def __init__(
         self,
@@ -29,7 +28,7 @@ class ColorMapWidget(QWidget):
         btm_label: str = '',
         lft_label: str = '',
         colormap=None,
-        font: QFont = nspyre_font,
+        font: QtGui.QFont = nspyre_font,
         **kwargs,
     ):
         """Initialize a LinePlotWidget.
@@ -47,7 +46,7 @@ class ColorMapWidget(QWidget):
             colormap = viridis
 
         # layout for storing plot
-        self.layout = QVBoxLayout()
+        self.layout = QtWidgets.QVBoxLayout()
 
         # pyqtgraph widget for displaying an Image (2d or 3d plot) and related
         # items like axes, legends, etc.
@@ -82,7 +81,7 @@ class ColorMapWidget(QWidget):
             'y': [],
             'z': None,
             'data': [],
-            'sem': QSemaphore(n=1),
+            'sem': QtCore.QSemaphore(n=1),
         }
 
         self.setLayout(self.layout)

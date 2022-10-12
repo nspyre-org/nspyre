@@ -38,38 +38,18 @@ import logging
 
 from pimpmyclass.helpers import DictPropertyNameKey
 from pint.util import infer_base_unit
-from PySide6.QtCore import Signal
-from PySide6.QtCore import pyqtSlot
-from PySide6.QtCore import QEvent
-from PySide6.QtCore import QObject
-from PySide6.QtCore import QSize
-from PySide6.QtCore import Qt
-from PySide6.QtCore import QThread
-from PySide6.QtCore import QTimer
-from PySide6.QtGui import QColor
-from PySide6.QtGui import QCursor
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QComboBox
-from PySide6.QtWidgets import QHBoxLayout
-from PySide6.QtWidgets import QHeaderView
-from PySide6.QtWidgets import QLabel
-from PySide6.QtWidgets import QLineEdit
-from PySide6.QtWidgets import QMainWindow
-from PySide6.QtWidgets import QPushButton
-from PySide6.QtWidgets import QToolTip
-from PySide6.QtWidgets import QTreeWidget
-from PySide6.QtWidgets import QTreeWidgetItem
-from PySide6.QtWidgets import QVBoxLayout
-from PySide6.QtWidgets import QWidget
 from pyqtgraph import SpinBox as pyqtgraph_SpinBox
 from pyqtgraph import ValueLabel as pyqtgraph_ValueLabel
+from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtCore
+from pyqtgraph.Qt import QtWidgets
 
 from ..inserv.gateway import InstrumentGateway
 from ..misc.pint import Q_
 
 logger = logging.getLogger(__name__)
 
-ROW_QSIZE = QSize(79, 23)
+ROW_QSIZE = QtCore.QSize(79, 23)
 UPDATE_HEX_COLOR = '#1CE33D'
 UPDATE_DISPLAY_TIME = 350
 REFRESH_PROGRESS_HEX_COLOR = '#2E5E9B'
@@ -79,16 +59,16 @@ class InstrumentManagerError(Exception):
     """Raised for failures related to the InstrumentManagerWindow QMainWindow."""
 
 
-def disable_widget_scroll_wheel_event(control: QWidget) -> None:
+def disable_widget_scroll_wheel_event(control: QtWidgets.QWidget) -> None:
     """Convenience function to prevent a scroll wheel event from affecting a widget unless:
     1. The widget has focus
     2. The cursor is on the widget
     """
-    control.setFocusPolicy(Qt.StrongFocus)
+    control.setFocusPolicy(QtCore.Qt.StrongFocus)
     control.installEventFilter(MouseWheelWidgetAdjustmentGuard(control))
 
 
-class MouseWheelWidgetAdjustmentGuard(QObject):
+class MouseWheelWidgetAdjustmentGuard(QtCore.QObject):
     """This QObject class contains a Qt eventFilter method to ignore mouse scroll
     wheel inputs. This is useful to apply on widgets for which:
     a) you don't want the scroll wheel to change values ever; or
@@ -96,18 +76,18 @@ class MouseWheelWidgetAdjustmentGuard(QObject):
     the area correctly (for this the FocusPolicy must additionally be changed to StrongFocus).
     """
 
-    def __init__(self, parent: QObject):
+    def __init__(self, parent: QtCore.QObject):
         super().__init__(parent)
 
-    def eventFilter(self, qobject: QObject, event: QEvent) -> bool:
-        widget: QWidget = qobject
-        if event.type() == QEvent.Wheel and not widget.hasFocus():
+    def eventFilter(self, qobject: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        widget: QtWidgets.QWidget = qobject
+        if event.type() == QtCore.QEvent.Wheel and not widget.hasFocus():
             event.ignore()
             return True
         return super().eventFilter(qobject, event)
 
 
-class RefreshValuesThread(QThread):
+class RefreshValuesThread(QtCore.QThread):
     """This QThread class contains a run method for use with the InstrumentManagerWindow 'refresh all' button to update
     all feat/dictfeat values in the GUI. It does the following:
     1. update the progress bar displayed while the QThread is running
@@ -116,10 +96,10 @@ class RefreshValuesThread(QThread):
        getattr_func mapping list and its updated value
     """
 
-    refresh_progress = Signal(str, float)
-    value_update = Signal(int, object)
+    refresh_progress = QtCore.Signal(str, float)
+    value_update = QtCore.Signal(int, object)
 
-    def __init__(self, parent: QObject):
+    def __init__(self, parent: QtCore.QObject):
         super().__init__(parent)
         self.mapping = parent.device_to_getattr_func_mapping
 
@@ -141,12 +121,12 @@ class RefreshValuesThread(QThread):
             self.value_update.emit(i, value)
 
 
-class pyqt_LineEdit(QLineEdit):
+class pyqt_LineEdit(QtWidgets.QLineEdit):
     """This QLineEdit class modifies the existing QLineEdit with a pyqtgraph ValueLabel so it can handle SI units in the
     same way as other pyqtgraph widgets because pyqtgraph does not have its own QLineEdit implementation.
     """
 
-    def __init__(self, suffix, siPrefix, contents: str = None, parent: QWidget = None):
+    def __init__(self, suffix, siPrefix, contents: str = None, parent: QtWidgets.QWidget = None):
         super().__init__((contents, parent) if contents else parent)
         self.valuelabel = pyqtgraph_ValueLabel(suffix=suffix, siPrefix=siPrefix)
         self.setReadOnly(True)
@@ -156,7 +136,7 @@ class pyqt_LineEdit(QLineEdit):
         self.setText(self.valuelabel.generateText())
 
 
-class InstrumentManagerWindow(QMainWindow):
+class InstrumentManagerWindow(QtWidgets.QMainWindow):
     """Creates a GUI interface for controlling instrument attributes
     based on a dropdown / tree structure
     the top level is the instrument servers
@@ -185,10 +165,10 @@ class InstrumentManagerWindow(QMainWindow):
         self.gateway = gateway
 
         # set main GUI layout
-        self.tree = QTreeWidget()
+        self.tree = QtWidgets.QTreeWidget()
         self.tree.setMouseTracking(True)
         self.tree.entered.connect(self.handleItemEntered)
-        self.tree.setFont(QFont('Helvetica [Cronyx]', 14))
+        self.tree.setFont(QtGui.QFont('Helvetica [Cronyx]', 14))
         self.tree.setColumnCount(2)
         self.tree.setMinimumHeight(self.tree.height())
         # set all rows to have the same height.
@@ -199,13 +179,13 @@ class InstrumentManagerWindow(QMainWindow):
         # configure the QTreeWidget Header
         header = self.tree.header()
         header.setHidden(True)
-        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
         # need to set to False to correctly calculate minimum width values
         header.setStretchLastSection(False)
 
         # add 'refresh all' button for manually triggering a driver feat update
         self.device_to_getattr_func_mapping = list()
-        self.refresh_all_button = QPushButton('Refresh All Values', self)
+        self.refresh_all_button = QtWidgets.QPushButton('Refresh All Values', self)
         self.refresh_button_color = (
             self.refresh_all_button.palette().button().color().name()
         )
@@ -228,10 +208,10 @@ class InstrumentManagerWindow(QMainWindow):
 
         # Set the main window layout to consist of vertical boxes.
         # The QVBoxLayout class lines up widgets vertically.
-        layout = QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.tree)
         layout.addWidget(self.refresh_all_button)
-        w = QWidget()
+        w = QtWidgets.QWidget()
         w.setLayout(layout)
         self.setCentralWidget(w)
         layout.setContentsMargins(0, 0, 0, layout.getContentsMargins()[3])
@@ -239,15 +219,14 @@ class InstrumentManagerWindow(QMainWindow):
 
     def handleItemEntered(self, index):
         """Manual cursor tracking so that QToolTips disappear after moving cursor off corresponding QLabel."""
-        if index.isValid() and index.data(Qt.ToolTipRole):
-            QToolTip.showText(
-                QCursor.pos(),
-                index.data(Qt.ToolTipRole),
+        if index.isValid() and index.data(QtCore.Qt.ToolTipRole):
+            QtWidgets.QToolTip.showText(
+                QtGui.QCursor.pos(),
+                index.data(QtCore.Qt.ToolTipRole),
                 self.tree.viewport(),
                 self.tree.visualRect(index),
             )
 
-    @pyqtSlot(str, float)
     def update_refresh_all_button(self, string: str, percent: float) -> None:
         """Slot for receiving Signals with QThread processing progress to update GUI progress bar."""
         self.refresh_all_button.setText(string)
@@ -268,7 +247,6 @@ class InstrumentManagerWindow(QMainWindow):
         )
         self.refresh_all_button.setStyleSheet(stylesheet)
 
-    @pyqtSlot(int, object)
     def update_treewidgetitem_widget(self, index, value) -> None:
         """Slot for receiving Signals with updated fict/dictfeat values to update the corresponding GUI element."""
         self.device_to_getattr_func_mapping[index][0](value, None)
@@ -280,14 +258,14 @@ class InstrumentManagerWindow(QMainWindow):
             'background-color: {};'.format(self.refresh_button_color)
         )
         for child in self.tree.children()[0].children():
-            child.setAttribute(Qt.WA_TransparentForMouseEvents, False)
+            child.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, False)
         self.refresh_all_button.setEnabled(True)
 
     def _refresh_all(self):
         """Spawn a QThread to get updated values for each feat/dictfeat when the 'refresh all' button is clicked."""
         self.refresh_all_button.setEnabled(False)
         for child in self.tree.children()[0].children():
-            child.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+            child.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, True)
         refresh_thread = RefreshValuesThread(self)
         refresh_thread.refresh_progress.connect(self.update_refresh_all_button)
         refresh_thread.value_update.connect(self.update_treewidgetitem_widget)
@@ -302,18 +280,18 @@ class InstrumentManagerWindow(QMainWindow):
 
         # iterate over servers
         for server_name, server in self.gateway.servers().items():
-            server_tree = QTreeWidgetItem(self.tree, [server_name, ''])
+            server_tree = QtWidgets.QTreeWidgetItem(self.tree, [server_name, ''])
             server_tree.setExpanded(True)
-            server_tree.setFont(0, QFont('Helvetica [Cronyx]', 15))
+            server_tree.setFont(0, QtGui.QFont('Helvetica [Cronyx]', 15))
             # set size hint as the first server is the first QTreeWidgetItem to be added to the tree;
             # needed to appropriately set the uniform row height.
             server_tree.setSizeHint(0, ROW_QSIZE)
 
             # iterate over devices
             for device_name, device in server.root._devs.items():
-                device_tree = QTreeWidgetItem(server_tree, [device_name, ''])
+                device_tree = QtWidgets.QTreeWidgetItem(server_tree, [device_name, ''])
                 device_tree.setExpanded(True)
-                device_tree.setFont(0, QFont('Helvetica [Cronyx]', 15))
+                device_tree.setFont(0, QtGui.QFont('Helvetica [Cronyx]', 15))
 
                 try:
                     # handle feats
@@ -342,8 +320,8 @@ class InstrumentManagerWindow(QMainWindow):
                         getattr(device, feat_name + '_changed').connect(getattr_partial)
 
                         # set formatting and add docstring information as a tooltip
-                        feat_widget.setFont(QFont('Helvetica [Cronyx]', 14))
-                        feat_item = QTreeWidgetItem(device_tree, [feat_name, ''])
+                        feat_widget.setFont(QtGui.QFont('Helvetica [Cronyx]', 14))
+                        feat_item = QtWidgets.QTreeWidgetItem(device_tree, [feat_name, ''])
                         tool_tip = (
                             feat.fget.__doc__.rstrip() if feat.fget.__doc__ else ''
                         ) + (
@@ -352,7 +330,7 @@ class InstrumentManagerWindow(QMainWindow):
                             else ''
                         )
                         if tool_tip != '':
-                            feat_item.setData(0, Qt.ToolTipRole, tool_tip)
+                            feat_item.setData(0, QtCore.Qt.ToolTipRole, tool_tip)
                         self.tree.setItemWidget(feat_item, 1, feat_widget)
 
                     # handle dictfeats
@@ -361,7 +339,7 @@ class InstrumentManagerWindow(QMainWindow):
                         dictfeat,
                     ) in device._lantz_dictfeats.items():
                         # Generate a Qt gui element for a lantz dictfeat and add docstring information as a tooltip
-                        dictfeat_tree = QTreeWidgetItem(
+                        dictfeat_tree = QtWidgets.QTreeWidgetItem(
                             device_tree, [dictfeat_name, '']
                         )
                         tool_tip = (
@@ -374,7 +352,7 @@ class InstrumentManagerWindow(QMainWindow):
                             else ''
                         )
                         if tool_tip != '':
-                            dictfeat_tree.setData(0, Qt.ToolTipRole, tool_tip)
+                            dictfeat_tree.setData(0, QtCore.Qt.ToolTipRole, tool_tip)
 
                         # dummy 'get' of dict feat value in order to force lantz to populate
                         # its 'subproperties' this is pretty hacky
@@ -401,8 +379,8 @@ class InstrumentManagerWindow(QMainWindow):
                                 )
                             )
 
-                            feat_widget.setFont(QFont('Helvetica [Cronyx]', 14))
-                            feat_item = QTreeWidgetItem(
+                            feat_widget.setFont(QtGui.QFont('Helvetica [Cronyx]', 14))
+                            feat_item = QtWidgets.QTreeWidgetItem(
                                 dictfeat_tree,
                                 ['{} {}'.format(dictfeat_name, feat_key), ''],
                             )
@@ -461,24 +439,24 @@ class InstrumentManagerWindow(QMainWindow):
                         ):
                             continue
                         if not action_tree:
-                            action_tree = QTreeWidgetItem(device_tree, ['Actions', ''])
+                            action_tree = QtWidgets.QTreeWidgetItem(device_tree, ['Actions', ''])
 
                         action_widget = self._generate_action_widget(
                             device, action, action_name
                         )
 
                         # set formatting and add docstring information as a tooltip
-                        action_widget.setFont(QFont('Helvetica [Cronyx]', 14))
-                        action_item = QTreeWidgetItem(action_tree, [action_name, ''])
+                        action_widget.setFont(QtGui.QFont('Helvetica [Cronyx]', 14))
+                        action_item = QtWidgets.QTreeWidgetItem(action_tree, [action_name, ''])
                         tool_tip = action.__doc__.rstrip() if action.__doc__ else None
                         if tool_tip:
-                            action_item.setData(0, Qt.ToolTipRole, tool_tip)
+                            action_item.setData(0, QtCore.Qt.ToolTipRole, tool_tip)
                         self.tree.setItemWidget(action_item, 1, action_widget)
                 except Exception as exc:
                     logger.error(exc)
                     # some error has occurred loading the device attributes
                     device_tree.setText(0, 'ERROR: {}'.format(device_name))
-                    device_tree.setBackground(0, QColor(255, 0, 0, 150))
+                    device_tree.setBackground(0, QtGui.QColor(255, 0, 0, 150))
                     pass
 
     def _generate_feat_widget(self, feat, feat_name, device, dictfeat_key=None):
@@ -499,7 +477,7 @@ class InstrumentManagerWindow(QMainWindow):
         if feat._config['values']:
             if read_only:
                 # use a lineedit instead of a combo box if it's read only
-                widget = QLineEdit()
+                widget = QtWidgets.QLineEdit()
                 widget.setText(str(feat_value))
                 widget.setReadOnly(True)
 
@@ -511,7 +489,7 @@ class InstrumentManagerWindow(QMainWindow):
                     widget.setStyleSheet(
                         'background-color: {}'.format(UPDATE_HEX_COLOR)
                     )
-                    QTimer.singleShot(
+                    QtCore.QTimer.singleShot(
                         UPDATE_DISPLAY_TIME,
                         lambda: widget.setStyleSheet(
                             'selection-background-color: {}'.format(widget_color)
@@ -519,7 +497,7 @@ class InstrumentManagerWindow(QMainWindow):
                     )
 
             else:
-                widget = QComboBox()
+                widget = QtWidgets.QComboBox()
                 disable_widget_scroll_wheel_event(widget)
                 # dictionary mapping the possible lantz values to str(values)
                 # e.g. {'True' : True, 'False' : False}
@@ -552,7 +530,7 @@ class InstrumentManagerWindow(QMainWindow):
                 def sizeHint(self):
                     return ROW_QSIZE
 
-                widget.sizeHint = sizeHint.__get__(widget, QComboBox)
+                widget.sizeHint = sizeHint.__get__(widget, QtWidgets.QComboBox)
 
                 # callback function to modify the GUI when the the feat is changed externally
                 def getattr_func(value, old_value, widget=widget):
@@ -565,7 +543,7 @@ class InstrumentManagerWindow(QMainWindow):
                     widget.setStyleSheet(
                         'background-color: {}'.format(UPDATE_HEX_COLOR)
                     )
-                    QTimer.singleShot(
+                    QtCore.QTimer.singleShot(
                         UPDATE_DISPLAY_TIME,
                         lambda: widget.setStyleSheet(
                             'selection-background-color: {}'.format(widget_color)
@@ -624,10 +602,10 @@ class InstrumentManagerWindow(QMainWindow):
                 disable_widget_scroll_wheel_event(pyqt_widget)
 
                 def sizeHint(self):
-                    return QSize(89, 23)
+                    return QtCore.QSize(89, 23)
 
                 pyqt_widget.sizeHint = sizeHint.__get__(pyqt_widget, pyqtgraph_SpinBox)
-                pyqt_widget.setFont(QFont('Helvetica [Cronyx]', 14))
+                pyqt_widget.setFont(QtGui.QFont('Helvetica [Cronyx]', 14))
 
             if isinstance(feat_value, Q_):
                 pyqt_widget.setValue(feat_value.to(base_units).m)
@@ -651,7 +629,7 @@ class InstrumentManagerWindow(QMainWindow):
                     pyqt_widget.setStyleSheet(
                         'background-color: {}'.format(UPDATE_HEX_COLOR)
                     )
-                    QTimer.singleShot(
+                    QtCore.QTimer.singleShot(
                         UPDATE_DISPLAY_TIME,
                         lambda: pyqt_widget.setStyleSheet(
                             'selection-background-color: {}'.format(widget_color)
@@ -671,7 +649,7 @@ class InstrumentManagerWindow(QMainWindow):
                     pyqt_widget.setStyleSheet(
                         'background-color: {}'.format(UPDATE_HEX_COLOR)
                     )
-                    QTimer.singleShot(
+                    QtCore.QTimer.singleShot(
                         UPDATE_DISPLAY_TIME,
                         lambda: pyqt_widget.setStyleSheet(
                             'selection-background-color: {}'.format(widget_color)
@@ -684,14 +662,14 @@ class InstrumentManagerWindow(QMainWindow):
                 pyqt_widget.sigValueChanged.connect(setattr_func)
 
                 # text that says 'step'
-                step_label = QLabel()
+                step_label = QtWidgets.QLabel()
                 step_label.setText('step:')
 
                 # editable text box where the user can enter how much the feat should step by when
                 # pressing the increment/decrement arrows
-                step_widget = QLineEdit()
+                step_widget = QtWidgets.QLineEdit()
                 step_widget.setFixedSize(73, 23)
-                step_widget.setFont(QFont('Helvetica [Cronyx]', 14))
+                step_widget.setFont(QtGui.QFont('Helvetica [Cronyx]', 14))
                 if isinstance(feat_value, Q_):
                     # set the default step units to be whatever the units are for the lantz feat
                     units_str = '{0.units:~}'.format(feat_value)
@@ -738,18 +716,18 @@ class InstrumentManagerWindow(QMainWindow):
 
                 # wrap widgets in a horizontal layout and widget to format column because
                 # a step_widget is being used to specify step size
-                layout = QHBoxLayout()
+                layout = QtWidgets.QHBoxLayout()
                 layout.setContentsMargins(0, 0, 0, 0)
                 layout.addWidget(pyqt_widget)
                 layout.addSpacing(29)
                 layout.addWidget(step_label)
                 layout.addWidget(step_widget)
-                widget = QWidget()
+                widget = QtWidgets.QWidget()
                 widget.setLayout(layout)
 
         # the lantz feat is a string, so we will just make a text box
         elif isinstance(feat_value, str):
-            widget = QLineEdit()
+            widget = QtWidgets.QLineEdit()
             widget.setText(feat_value)
 
             def setattr_func(value):
@@ -764,7 +742,7 @@ class InstrumentManagerWindow(QMainWindow):
                 widget.setText(value)
                 widget_color = widget.palette().base().color().name()  # 'base: #191919'
                 widget.setStyleSheet('background-color: {}'.format(UPDATE_HEX_COLOR))
-                QTimer.singleShot(
+                QtCore.QTimer.singleShot(
                     UPDATE_DISPLAY_TIME,
                     lambda: widget.setStyleSheet(
                         'selection-background-color: {}'.format(widget_color)
@@ -773,7 +751,7 @@ class InstrumentManagerWindow(QMainWindow):
 
         # some unknown type - make a readonly text box containing str(feat)
         else:
-            widget = QLineEdit()
+            widget = QtWidgets.QLineEdit()
             widget.setText(str(feat))
             widget.setReadOnly(True)
 
@@ -781,7 +759,7 @@ class InstrumentManagerWindow(QMainWindow):
                 widget.setText(str(value))
                 widget_color = widget.palette().base().color().name()  # 'base: #191919'
                 widget.setStyleSheet('background-color: {}'.format(UPDATE_HEX_COLOR))
-                QTimer.singleShot(
+                QtCore.QTimer.singleShot(
                     UPDATE_DISPLAY_TIME,
                     lambda: widget.setStyleSheet(
                         'selection-background-color: {}'.format(widget_color)
@@ -792,13 +770,13 @@ class InstrumentManagerWindow(QMainWindow):
 
     def _generate_action_widget(self, device, action, action_name):
         """Generate a Qt gui element for a lantz action."""
-        action_button = QPushButton(action_name, self.tree)
-        action_button.setFont(QFont('Helvetica [Cronyx]', 12))
+        action_button = QtWidgets.QPushButton(action_name, self.tree)
+        action_button.setFont(QtGui.QFont('Helvetica [Cronyx]', 12))
 
         def sizeHint(self):
             return ROW_QSIZE
 
-        action_button.sizeHint = sizeHint.__get__(action_button, QPushButton)
+        action_button.sizeHint = sizeHint.__get__(action_button, QtWidgets.QPushButton)
 
         def action_func():
             getattr(device, action_name)()

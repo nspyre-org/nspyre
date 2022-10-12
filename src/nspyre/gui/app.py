@@ -12,13 +12,11 @@ import logging
 import sys
 from pathlib import Path
 
-import pyqtgraph as pg
-from PySide6.QtCore import QCoreApplication
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication
-from PySide6.QtWidgets import QStyleFactory
+from pyqtgraph import _connectCleanup
+from pyqtgraph import setConfigOptions
+from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtCore
+from pyqtgraph.Qt import QtWidgets
 
 from .style.style import nspyre_font
 from .style.style import nspyre_palette
@@ -29,7 +27,7 @@ logger = logging.getLogger(__name__)
 HERE = Path(__file__).parent
 
 
-class NspyreApp(QApplication):
+class NspyreApp(QtWidgets.QApplication):
     """Create a Qt application object with the default nspyre settings.
 
     Typical usage example:
@@ -46,39 +44,42 @@ class NspyreApp(QApplication):
 
     """
 
-    def __init__(self, app_name: str = 'nspyre', font: QFont = nspyre_font):
+    def __init__(self, app_name: str = 'nspyre', font: QtGui.QFont = nspyre_font):
         """
         Args:
             app_name: display name of the application.
             font: QFont to use for the application.
         """
-        # for high DPI displays
-        if hasattr(Qt, 'AA_EnableHighDpiScaling'):
-            QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-        if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
-            QCoreApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+        # for high DPI displays in Qt5
+        if hasattr(QtCore.Qt, 'AA_EnableHighDpiScaling'):
+            QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+        if hasattr(QtCore.Qt, 'AA_UseHighDpiPixmaps'):
+            QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
         super().__init__(sys.argv)
 
         self.setApplicationName(app_name)
         # dock icon
         icon_path = HERE / 'images' / 'favicon.ico'
-        self.setWindowIcon(QIcon(str(icon_path)))
+        self.setWindowIcon(QtGui.QIcon(str(icon_path)))
 
         # make sure pyqtgraph gets cleaned up properly
-        pg._connectCleanup()
+        _connectCleanup()
         # enable plot antialiasing
-        pg.setConfigOptions(antialias=True)
+        setConfigOptions(antialias=True)
 
         # appearance settings for nspyre
-        fusion = QStyleFactory.create('Fusion')
+        fusion = QtWidgets.QStyleFactory.create('Fusion')
         self.setStyle(fusion)
         self.setPalette(nspyre_palette)
         self.setStyleSheet(nspyre_style_sheet)
         self.setFont(font)
 
     def exec(self, *args, **kwargs):
-        super().exec(*args, **kwargs)
+        try:
+            super().exec(*args, **kwargs)
+        except AttributeError:
+            super().exec_(*args, **kwargs)
         # invoke garbage collector to make sure we don't get any false leak reports
         gc.collect()
         # report Qt leaks

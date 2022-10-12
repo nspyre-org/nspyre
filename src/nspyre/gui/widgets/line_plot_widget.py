@@ -345,11 +345,15 @@ class _FlexSinkLinePlotWidget(LinePlotWidget):
         with self.mutex:
             self.teardown()
             self.data_source_name = data_source_name
-            self.sink = DataSink(self.data_source_name)
-            self.sink.__enter__()
+
+            # clear previous plots
+            self.plot_widget.getPlotItem().clear()
+            self.plots = {}
 
             # try to get the plot title and x/y labels
             try:
+                self.sink = DataSink(self.data_source_name)
+                self.sink.__enter__()
                 if self.sink.pop(timeout=timeout):
                     # set title
                     try:
@@ -388,18 +392,12 @@ class _FlexSinkLinePlotWidget(LinePlotWidget):
                     # some other pop error occured
                     raise RuntimeError
             except (TimeoutError, RuntimeError) as err:
-                raise RuntimeError(f'Could not connect to new data source [{data_source_name}]') from err
                 self.teardown()
-
-            # TODO
-            # # clear previous plots
-            # for p in self.plots:
-            #     self.plots[p]['plot'].clear
-            # self.plots = {}
+                raise RuntimeError(f'Could not connect to new data source [{data_source_name}]') from err
 
     def teardown(self):
         if self.sink is not None:
-            self.sink.__exit__()
+            self.sink.__exit__(None, None, None)
             self.sink = None
 
     def update(self):

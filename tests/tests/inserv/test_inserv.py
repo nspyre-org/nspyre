@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class TestInserv:
     def test_connect(self, gateway):
         """Test the gateway can connect and have an empty dict of devices"""
-        assert not gateway.devs
+        assert not gateway._devs
 
     def test_connect_fail(self):
         """Test the gateway returns an error if the ip is wrong"""
@@ -31,10 +31,10 @@ class TestInserv:
 
     def test_device_add_from_file(self, gateway_with_devs):
         """Test the gateway fixture contains drivers that were loaded from files"""
-        assert 'daq' in gateway_with_devs.devs
-        assert 'pel' in gateway_with_devs.devs
-        assert 'sg' in gateway_with_devs.devs
-        assert 'not_a_driver' not in gateway_with_devs.devs
+        assert 'daq' in gateway_with_devs._devs
+        assert 'pel' in gateway_with_devs._devs
+        assert 'sg' in gateway_with_devs._devs
+        assert 'not_a_driver' not in gateway_with_devs._devs
 
     def test_device_mgmt(self, gateway_with_devs):
         """Test the gateway can restart and remove devices"""

@@ -175,7 +175,7 @@ def test_dataserv_push_no_pop(dataserv):
         time.sleep(0.1)
 
         # make sure the DataSource event loop closed properly
-        assert not source.thread.is_alive()
+        assert not source._thread.is_alive()
 
         logger.info(f'completed [{100*(i+1)/nconnects:>5.1f}]%')
 

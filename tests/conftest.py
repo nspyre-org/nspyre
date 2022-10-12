@@ -78,7 +78,7 @@ def gateway(inserv):
     while True:
         # wait until the instrument server is online
         try:
-            with InstrumentGateway(port=inserv.port) as gw:
+            with InstrumentGateway(port=inserv._port) as gw:
                 # connection succeeded, so re-enable logging
                 logging.disable(logging.NOTSET)
 
@@ -104,5 +104,5 @@ def gateway_with_devs(gateway):
     yield gateway
 
     # remove drivers from instrument server
-    for d in list(gateway.devs):
+    for d in list(gateway._devs):
         gateway.remove(d)

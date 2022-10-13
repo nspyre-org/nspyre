@@ -18,7 +18,7 @@ from ...dataserv.dataserv import DataSink
 
 HOME = Path.home()
 
-# for convert numpy arrays to python lists so that they can be written to JSON
+# for converting numpy arrays to python lists so that they can be written to JSON
 # https://stackoverflow.com/questions/26646362/numpy-array-is-not-json-serializable
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):

@@ -99,6 +99,12 @@ class ExperimentWidget(QtWidgets.QWidget):
     def run(self):
         """Run the experiment function."""
 
+        if self.run_proc.running():
+            logging.info(
+                'Not starting the experiment process because it is still running.'
+            )
+            return
+
         self.queue = Queue()
 
         # reload the module at runtime in case any changes were made to the code

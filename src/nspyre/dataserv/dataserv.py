@@ -28,6 +28,7 @@ import logging
 import pickle
 import selectors
 import socket
+from threading import Semaphore
 from threading import Thread
 from typing import Any
 from typing import Dict
@@ -903,6 +904,7 @@ class DataSink:
         name: str,
         addr: str = 'localhost',
         port: int = DATASERV_PORT,
+        auto_reconnect: bool = False,
         data_type_override: bytes = SINK_DATA_TYPE_DEFAULT,
     ):
         """Initialize connection to the data set on the server.
@@ -911,6 +913,7 @@ class DataSink:
             name: Name of the data set.
             addr: Network address of the data server.
             port: Port of the data server.
+            auto_reconnect: If True, automatically reconnect to the data server if it is disconnected. Otherwise raise an error if connection fails.
             data_type_override: Specify SINK_DATA_TYPE_PICKLE to force the data server to only send pickled data over the network, SINK_DATA_TYPE_DELTA to send delta objects, or SINK_DATA_TYPE_DEFAULT to choose automatically.
         """
 
@@ -930,24 +933,32 @@ class DataSink:
         selector = selectors.SelectSelector()
         self._event_loop = asyncio.SelectorEventLoop(selector)
 
+        # whether the sink should try to reconnect to the data server
+        self._auto_reconnect = auto_reconnect
+
         # request that, whenever possible, the server send data as a specific type - set to:
         # SINK_DATA_TYPE_DEFAULT for the server to decide whether diffs should be performed
         # SINK_DATA_TYPE_PICKLE to always use pickle data (no diff)
         # SINK_DATA_TYPE_DELTA to always generate a diff
         self._data_type_override = data_type_override
 
+    def start(self):
+        """Start the asyncio event loop that connects to the data server and serves pop requests."""
         # thread for running self._event_loop
         self._thread = Thread(target=self._event_loop_thread, daemon=True)
         self._thread.start()
+        # semaphore to block until connection has occurred
+        self._sem = Semaphore(value=0)
+        self._sem.acquire()
 
-        # kinda sketchy way to wait for the thread to start
-        while True:
-            try:
-                self._queue
-            except AttributeError:
-                pass
-            else:
-                break
+    def stop(self):
+        """Stop the asyncio event loop."""
+        if self._event_loop.is_running():
+            asyncio.run_coroutine_threadsafe(
+                cleanup_event_loop(self._event_loop), self._event_loop
+            )
+        else:
+            raise RuntimeError('tried stopping the data sink but it isn\'t running!')
 
     def _event_loop_thread(self):
         """Run the asyncio event loop - this may be run in a separate thread because
@@ -963,15 +974,6 @@ class DataSink:
         finally:
             self._event_loop.close()
             logger.info(f'sink [{(self._addr, self._port)}] closed')
-
-    def stop(self):
-        """Stop the asyncio event loop."""
-        if self._event_loop.is_running():
-            asyncio.run_coroutine_threadsafe(
-                cleanup_event_loop(self._event_loop), self._event_loop
-            )
-        else:
-            raise RuntimeError('tried stopping the data sink but it isn\'t running!')
 
     def _main_helper(self):
         """Callback function to start _main"""
@@ -991,12 +993,17 @@ class DataSink:
                         asyncio.open_connection(self._addr, self._port),
                         timeout=NEGOTIATION_TIMEOUT,
                     )
-                except OSError:
+                except OSError as err:
                     logger.warning(
                         f'sink failed connecting to data server [{(self._addr, self._port)}]'
                     )
                     await asyncio.sleep(FAST_TIMEOUT)
-                    continue
+                    if self._auto_reconnect:
+                        continue
+                    else:
+                        raise ConnectionError(
+                            f'Failed connecting to data server [{(self._addr, self._port)}]'
+                        ) from err
 
                 sock = CustomSock(sock_reader, sock_writer)
                 logger.info(f'sink connected to data server [{sock.addr}]')
@@ -1014,7 +1021,7 @@ class DataSink:
                         sock.send_msg(self._name.encode()),
                         timeout=NEGOTIATION_TIMEOUT,
                     )
-                except (ConnectionError, asyncio.TimeoutError):
+                except (ConnectionError, asyncio.TimeoutError) as err:
                     logger.warning(
                         f'sink failed negotiation process with data server [{sock.addr}] - attempting reconnect'
                     )
@@ -1023,11 +1030,19 @@ class DataSink:
                     except IOError:
                         pass
                     await asyncio.sleep(FAST_TIMEOUT)
-                    continue
+                    if self._auto_reconnect:
+                        continue
+                    else:
+                        raise ConnectionError(
+                            f'Failed connecting to data server [{(self._addr, self._port)}]'
+                        ) from err
 
                 logger.debug(
                     f'sink finished negotiation with data server [{sock.addr}]'
                 )
+
+                # connection succeeded, so trigger the main thread to continue execution
+                self._sem.release()
 
                 last_pickle = None
                 while True:
@@ -1101,7 +1116,11 @@ class DataSink:
                     logger.debug(f'sink queued pickle of [{len(new_pickle)}] bytes')
                 await asyncio.sleep(FAST_TIMEOUT)
 
-        except asyncio.CancelledError as exc:
+        except ConnectionError as err:
+            # release the main thread if there's a connection error
+            self._sem.release()
+            raise err
+        except asyncio.CancelledError as err:
             logger.debug(
                 f'sink stopped, closing connection with data server [{sock.addr}]'
             )
@@ -1110,7 +1129,7 @@ class DataSink:
             except (IOError, NameError):
                 # socket is broken or hasn't been created yet
                 pass
-            raise asyncio.CancelledError from exc
+            raise err
 
     async def _pop(self, timeout) -> bytes:
         """Coroutine that gets data from the queue"""
@@ -1228,6 +1247,7 @@ class DataSink:
 
     def __enter__(self):
         """Python context manager setup"""
+        self.start()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):

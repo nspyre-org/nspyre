@@ -102,11 +102,16 @@ class SaveWidget(QtWidgets.QWidget):
             parent=self, directory=str(self.save_dialog_dir)
         )
         if filename:
-            # TODO exit gracefully if the sink doesn't immediately connect
+            dataset = self.dataset_lineedit.text()
             # connect to the dataserver
-            with DataSink(self.dataset_lineedit.text()) as sink:
-                # get the data from the dataserver
-                if sink.pop():
-                    # run the relevant save function
-                    save_fun = self.filetypes[filetype]
-                    save_fun(filename, sink.data)
+            try:
+                with DataSink(dataset) as sink:
+                    # get the data from the dataserver
+                    if sink.pop(timeout=0.1):
+                        # run the relevant save function
+                        save_fun = self.filetypes[filetype]
+                        save_fun(filename, sink.data)
+            except TimeoutError as err:
+                raise RuntimeError(
+                    f'Failed getting data set [{dataset}] from data server.'
+                ) from err

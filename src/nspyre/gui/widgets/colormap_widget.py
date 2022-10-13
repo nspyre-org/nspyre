@@ -4,8 +4,8 @@ from typing import Any
 from typing import Dict
 
 import numpy as np
-from pyqtgraph import PlotItem
 from pyqtgraph import ImageView
+from pyqtgraph import PlotItem
 from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
@@ -50,8 +50,8 @@ class ColorMapWidget(QtWidgets.QWidget):
 
         # pyqtgraph widget for displaying an Image (2d or 3d plot) and related
         # items like axes, legends, etc.
-        self.plot_item = pg.PlotItem()
-        self.image_view = pg.ImageView(view=self.plot_item)
+        self.plot_item = PlotItem()
+        self.image_view = ImageView(view=self.plot_item)
         self.layout.addWidget(self.image_view)
 
         # plot settings

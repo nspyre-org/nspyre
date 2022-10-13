@@ -14,13 +14,14 @@ from typing import Any
 from typing import Dict
 
 import numpy as np
-from pyqtgraph import SpinBox, PlotWidget, mkColor, LinearRegionItem
-
-from pyqtgraph.Qt import QtGui
-from pyqtgraph.Qt import QtCore
-from pyqtgraph.Qt import QtWidgets
-
 from nspyre import DataSink
+from pyqtgraph import LinearRegionItem
+from pyqtgraph import mkColor
+from pyqtgraph import PlotWidget
+from pyqtgraph import SpinBox
+from pyqtgraph.Qt import QtCore
+from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtWidgets
 
 from ..style.colors import colors
 from ..style.colors import cyclic_colors
@@ -69,7 +70,9 @@ class LinePlotWidget(QtWidgets.QWidget):
         # items like axes, legends, etc.
         self.plot_widget = PlotWidget()
         if downsample:
-            self.plot_widget.getPlotItem().setDownsampling(ds=True, auto=True, mode='mean')
+            self.plot_widget.getPlotItem().setDownsampling(
+                ds=True, auto=True, mode='mean'
+            )
         self.layout.addWidget(self.plot_widget)
 
         # plot settings
@@ -170,7 +173,12 @@ class LinePlotWidget(QtWidgets.QWidget):
             symbolSize=symbolSize,
             name=name,
         )
-        self.plots[name] = {'x': [], 'y': [], 'plot': plt, 'sem': QtCore.QSemaphore(n=1)}
+        self.plots[name] = {
+            'x': [],
+            'y': [],
+            'plot': plt,
+            'sem': QtCore.QSemaphore(n=1),
+        }
 
     def set_data(self, name: str, xdata, ydata):
         """Queue up x/y data to update a line plot. Threadsafe.
@@ -240,24 +248,26 @@ class LinePlotWidget(QtWidgets.QWidget):
 
 
 class FlexSinkLinePlotWidget(QtWidgets.QWidget):
-    """QWidget that allows the user to connect to an arbitrary nspyre DataSource and plot its data. 
+    """QWidget that allows the user to connect to an arbitrary nspyre DataSource and plot its data.
+
     The DataSource may contain the following attributes:
-        title: plot title string
-        xlabel: x label string
-        ylabel: y label string
-        datasets: dictionary where keys are a dataset name to display in the 
-            legend, and values are data as a 2D numpy array like 
-            np.array([[xdata0, xdata1, ...], [ydata0, ydata1, ...]]), or a 
-            list of a such numpy arrays
+    title: plot title string
+    xlabel: x label string
+    ylabel: y label string
+    datasets: dictionary where keys are a dataset name to display in the
+    legend, and values are data as a 2D numpy array like
+    np.array([[xdata0, xdata1, ...], [ydata0, ydata1, ...]]), or a
+    list of a such numpy arrays
 
     """
+
     def __init__(self, data_processing: str = 'append'):
         """Init FlexSinkLinePlotWidget.
 
         Args:
-            data_processing: If a dataset's value is an array of numpy arrays, this 
-                parameter controls how the data is processed. If set to 'append' 
-                the numpy arrays are appended. If set to 'avg' the numpy arrays 
+            data_processing: If a dataset's value is an array of numpy arrays, this
+                parameter controls how the data is processed. If set to 'append'
+                the numpy arrays are appended. If set to 'avg' the numpy arrays
                 must all be the same length, and will be averaged.
 
         """
@@ -283,18 +293,22 @@ class FlexSinkLinePlotWidget(QtWidgets.QWidget):
         settings_layout.addWidget(QtWidgets.QLabel('Numer of Points'), layout_row, 0)
         # spinbox for entering the number of points to plot
         self.npoints_spinbox = SpinBox(value=0, int=True, bounds=(0, None))
+
         def user_changed_npoints(spinbox):
             self.lineplot.set_npoints(spinbox.value())
+
         self.npoints_spinbox.sigValueChanged.connect(user_changed_npoints)
         settings_layout.addWidget(self.npoints_spinbox, layout_row, 1)
         layout_row += 1
 
         # average / append
-        settings_layout.addWidget(QtWidgets.QLabel(f'Data Processing'), layout_row, 0)
+        settings_layout.addWidget(QtWidgets.QLabel('Data Processing'), layout_row, 0)
         self.data_processing_dropdown = QtWidgets.QComboBox()
-        self.data_processing_dropdown.addItem('Append') # index 0
-        self.data_processing_dropdown.addItem('Average') # index 1
-        self.data_processing_dropdown.currentIndexChanged.connect(self.update_data_processing)
+        self.data_processing_dropdown.addItem('Append')  # index 0
+        self.data_processing_dropdown.addItem('Average')  # index 1
+        self.data_processing_dropdown.currentIndexChanged.connect(
+            self.update_data_processing
+        )
         # default to append
         self.data_processing_dropdown.setCurrentIndex(0)
         settings_layout.addWidget(self.data_processing_dropdown, layout_row, 1)
@@ -320,6 +334,7 @@ class FlexSinkLinePlotWidget(QtWidgets.QWidget):
 
 class _FlexSinkLinePlotWidget(LinePlotWidget):
     """See FlexSinkLinePlotWidget."""
+
     def __init__(self, data_processing: str = 'append'):
         super().__init__()
         self.sink = None
@@ -357,31 +372,41 @@ class _FlexSinkLinePlotWidget(LinePlotWidget):
                     try:
                         title = self.sink.title
                     except AttributeError:
-                        logger.info(f'Data source [{data_source_name}] has no "title" attribute - skipping...')
+                        logger.info(
+                            f'Data source [{data_source_name}] has no "title" attribute - skipping...'
+                        )
                     else:
                         self.set_title(title)
                     # set xlabel
                     try:
                         xlabel = self.sink.xlabel
                     except AttributeError:
-                        logger.info(f'Data source [{data_source_name}] has no "xlabel" attribute - skipping...')
+                        logger.info(
+                            f'Data source [{data_source_name}] has no "xlabel" attribute - skipping...'
+                        )
                     else:
                         self.xaxis.setLabel(text=xlabel)
                     # set ylabel
                     try:
                         ylabel = self.sink.ylabel
                     except AttributeError:
-                        logger.info(f'Data source [{data_source_name}] has no "ylabel" attribute - skipping...')
+                        logger.info(
+                            f'Data source [{data_source_name}] has no "ylabel" attribute - skipping...'
+                        )
                     else:
                         self.yaxis.setLabel(text=ylabel)
                     try:
                         dsets = self.sink.datasets
-                    except AttributeError:
-                        logger.error(f'Data source [{data_source_name}] has no "datasets" attribute - exitting...')
-                        raise RuntimeError
+                    except AttributeError as err:
+                        logger.error(
+                            f'Data source [{data_source_name}] has no "datasets" attribute - exitting...'
+                        )
+                        raise RuntimeError from err
                     else:
                         if not isinstance(dsets, dict):
-                            logger.error(f'Data source [{data_source_name}] "datasets" attribute is not a dictionary - exitting...')
+                            logger.error(
+                                f'Data source [{data_source_name}] "datasets" attribute is not a dictionary - exitting...'
+                            )
                             raise RuntimeError
                         for d in dsets:
                             # make a new plot for each data set
@@ -391,7 +416,9 @@ class _FlexSinkLinePlotWidget(LinePlotWidget):
                     raise RuntimeError
             except (TimeoutError, RuntimeError) as err:
                 self.teardown()
-                raise RuntimeError(f'Could not connect to new data source [{data_source_name}]') from err
+                raise RuntimeError(
+                    f'Could not connect to new data source [{data_source_name}]'
+                ) from err
 
     def teardown(self):
         if self.sink is not None:
@@ -409,7 +436,9 @@ class _FlexSinkLinePlotWidget(LinePlotWidget):
                         if isinstance(data, np.ndarray):
                             # check numpy array shape
                             if data.shape[0] != 2 or len(data.shape) != 2:
-                                raise ValueError(f'Dataset shape is {data.shape}, but should be (2, n).')
+                                raise ValueError(
+                                    f'Dataset shape is {data.shape}, but should be (2, n).'
+                                )
                         elif isinstance(data, list):
                             if len(data) == 0:
                                 continue
@@ -423,13 +452,19 @@ class _FlexSinkLinePlotWidget(LinePlotWidget):
                                     # average the numpy arrays
                                     data = np.average(np.stack(data), axis=0)
                                 else:
-                                    raise ValueError(f'data_processing has unsupported value [{self.data_processing}].')
+                                    raise ValueError(
+                                        f'data_processing has unsupported value [{self.data_processing}].'
+                                    )
                         else:
-                            raise ValueError(f'Data set [{d}] is not a numpy array or list of numpy arrays.')
+                            raise ValueError(
+                                f'Data set [{d}] is not a numpy array or list of numpy arrays.'
+                            )
 
                         # update the plot
                         if self.npoints != 0:
-                            self.set_data(d, data[0][-self.npoints:], data[1][-self.npoints:])
+                            self.set_data(
+                                d, data[0][-self.npoints :], data[1][-self.npoints :]
+                            )
                         else:
                             self.set_data(d, data[0], data[1])
         else:

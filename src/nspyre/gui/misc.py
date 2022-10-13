@@ -14,12 +14,15 @@ logger = logging.getLogger(__name__)
 
 try:
     from pyqtgraph.Qt.QtCore import pyqtRemoveInputHook
-except ImportError as err:
+except ImportError:
     qt_remove_hook = False
-    logger.debug(f'Ignoring Qt remove hook because the PyQt implementation doesn\'t required it.')
+    logger.debug(
+        'Ignoring Qt remove hook because the PyQt implementation doesn\'t required it.'
+    )
 else:
     qt_remove_hook = True
-    logger.debug(f'Using PyQt remove input hook.')
+    logger.debug('Using PyQt remove input hook.')
+
 
 def qt_set_trace():
     """Set a tracepoint in the Python debugger (pdb) that works with Qt."""

@@ -75,7 +75,7 @@ class InstrumentGateway:
         addr: str = 'localhost',
         port: int = INSERV_DEFAULT_PORT,
         conn_timeout: float = 0.0,
-        sync_timeout: float = RPYC_SYNC_TIMEOUT
+        sync_timeout: float = RPYC_SYNC_TIMEOUT,
     ):
         """Initialize with the address and port of the InstrumentServer.
 

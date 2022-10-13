@@ -1,8 +1,8 @@
 import os
 from enum import Enum
 
-from pyqtgraph.Qt import QtWidgets
 from pyqtgraph.Qt import QtCore
+from pyqtgraph.Qt import QtWidgets
 
 
 class SplitterOrientation(Enum):

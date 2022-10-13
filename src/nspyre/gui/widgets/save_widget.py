@@ -18,13 +18,17 @@ from ...dataserv.dataserv import DataSink
 
 HOME = Path.home()
 
-# for converting numpy arrays to python lists so that they can be written to JSON
-# https://stackoverflow.com/questions/26646362/numpy-array-is-not-json-serializable
+
 class NumpyEncoder(json.JSONEncoder):
+    """For converting numpy arrays to python lists so that they can be written to JSON:
+    https://stackoverflow.com/questions/26646362/numpy-array-is-not-json-serializable
+    """
+
     def default(self, obj):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
+
 
 def save_json(filename, data):
     """Save data to a json file."""
@@ -37,8 +41,10 @@ def save_pickle(filename, data):
     with open(filename, 'wb') as f:
         pickle.dump(data, f)
 
+
 class SaveWidget(QtWidgets.QWidget):
     """Qt widget that saves data from the dataserver."""
+
     def __init__(self, additional_filetypes=None, save_dialog_dir=HOME):
         """
         Args:

@@ -40,8 +40,8 @@ from pimpmyclass.helpers import DictPropertyNameKey
 from pint.util import infer_base_unit
 from pyqtgraph import SpinBox as pyqtgraph_SpinBox
 from pyqtgraph import ValueLabel as pyqtgraph_ValueLabel
-from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtCore
+from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
 from ..inserv.gateway import InstrumentGateway
@@ -126,7 +126,9 @@ class pyqt_LineEdit(QtWidgets.QLineEdit):
     same way as other pyqtgraph widgets because pyqtgraph does not have its own QLineEdit implementation.
     """
 
-    def __init__(self, suffix, siPrefix, contents: str = None, parent: QtWidgets.QWidget = None):
+    def __init__(
+        self, suffix, siPrefix, contents: str = None, parent: QtWidgets.QWidget = None
+    ):
         super().__init__((contents, parent) if contents else parent)
         self.valuelabel = pyqtgraph_ValueLabel(suffix=suffix, siPrefix=siPrefix)
         self.setReadOnly(True)
@@ -321,7 +323,9 @@ class InstrumentManagerWindow(QtWidgets.QMainWindow):
 
                         # set formatting and add docstring information as a tooltip
                         feat_widget.setFont(QtGui.QFont('Helvetica [Cronyx]', 14))
-                        feat_item = QtWidgets.QTreeWidgetItem(device_tree, [feat_name, ''])
+                        feat_item = QtWidgets.QTreeWidgetItem(
+                            device_tree, [feat_name, '']
+                        )
                         tool_tip = (
                             feat.fget.__doc__.rstrip() if feat.fget.__doc__ else ''
                         ) + (
@@ -439,7 +443,9 @@ class InstrumentManagerWindow(QtWidgets.QMainWindow):
                         ):
                             continue
                         if not action_tree:
-                            action_tree = QtWidgets.QTreeWidgetItem(device_tree, ['Actions', ''])
+                            action_tree = QtWidgets.QTreeWidgetItem(
+                                device_tree, ['Actions', '']
+                            )
 
                         action_widget = self._generate_action_widget(
                             device, action, action_name
@@ -447,7 +453,9 @@ class InstrumentManagerWindow(QtWidgets.QMainWindow):
 
                         # set formatting and add docstring information as a tooltip
                         action_widget.setFont(QtGui.QFont('Helvetica [Cronyx]', 14))
-                        action_item = QtWidgets.QTreeWidgetItem(action_tree, [action_name, ''])
+                        action_item = QtWidgets.QTreeWidgetItem(
+                            action_tree, [action_name, '']
+                        )
                         tool_tip = action.__doc__.rstrip() if action.__doc__ else None
                         if tool_tip:
                             action_item.setData(0, QtCore.Qt.ToolTipRole, tool_tip)

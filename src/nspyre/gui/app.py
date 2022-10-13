@@ -14,8 +14,8 @@ from pathlib import Path
 
 from pyqtgraph import _connectCleanup
 from pyqtgraph import setConfigOptions
-from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtCore
+from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
 from .style.style import nspyre_font
@@ -52,7 +52,9 @@ class NspyreApp(QtWidgets.QApplication):
         """
         # for high DPI displays in Qt5
         if hasattr(QtCore.Qt, 'AA_EnableHighDpiScaling'):
-            QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+            QtCore.QCoreApplication.setAttribute(
+                QtCore.Qt.AA_EnableHighDpiScaling, True
+            )
         if hasattr(QtCore.Qt, 'AA_UseHighDpiPixmaps'):
             QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 

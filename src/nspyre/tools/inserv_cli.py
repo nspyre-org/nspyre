@@ -58,7 +58,7 @@ class InservCmdPrompt(cmd.Cmd):
         if arg_string:
             print('Expected 0 args')
             return
-        for d in self.inserv.devs.keys():
+        for d in self.inserv.devs():
             print(d)
 
     def do_del(self, arg_string: str):
@@ -106,7 +106,7 @@ class InservCmdPrompt(cmd.Cmd):
         if arg_string:
             print('Expected 0 args')
             return
-        devs = self.inserv._devs
+        # use self.inserv.devs()['my_device'] to access drivers directly
         pdb.set_trace()
 
     def do_quit(self, arg_string: str):

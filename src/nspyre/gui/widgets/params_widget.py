@@ -6,8 +6,8 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
-from pyqtgraph.Qt import QtWidgets
 from pyqtgraph import SpinBox
+from pyqtgraph.Qt import QtWidgets
 
 
 class ParamsWidget(QtWidgets.QWidget):
@@ -31,12 +31,12 @@ class ParamsWidget(QtWidgets.QWidget):
         """Initialize params widget.
 
         Args:
-            params: dictionary mapping parameter names to options, which are 
-                    passed as arguments to their corresponding pyqtgraph 
-                    spinbox, or to strings. The spinbox options are documented 
-                    at https://pyqtgraph.readthedocs.io/en/latest/widgets/spinbox.html. 
+            params: dictionary mapping parameter names to options, which are
+                    passed as arguments to their corresponding pyqtgraph
+                    spinbox, or to strings. The spinbox options are documented
+                    at https://pyqtgraph.readthedocs.io/en/latest/widgets/spinbox.html.
                     Additional configuration parameters than be passed are:
-                        - display_text: parameter text label
+                    - display_text: parameter text label
         """
         super().__init__(*args, **kwargs)
         self.params = params

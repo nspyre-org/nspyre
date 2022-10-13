@@ -1,5 +1,5 @@
-"""Widget that generates a GUI for a simple experiment with a set of 
-user-defined parameters and buttons to run, stop, and kill the experiment 
+"""Widget that generates a GUI for a simple experiment with a set of
+user-defined parameters and buttons to run, stop, and kill the experiment
 process.
 
 Copyright (c) 2022 Jacob Feder
@@ -8,30 +8,40 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
+import logging
 from functools import partial
 from importlib import reload
-import logging
 from multiprocessing import Queue
-from typing import Callable
 from types import ModuleType
-
-from .params_widget import ParamsWidget
-from ...misc.misc import ProcessRunner
 
 from pyqtgraph.Qt import QtWidgets
 
+from ...misc.misc import ProcessRunner
+from .params_widget import ParamsWidget
+
 logger = logging.getLogger(__name__)
+
 
 class ExperimentWidget(QtWidgets.QWidget):
     """Qt widget generating a GUI for a simple experiment."""
-    def __init__(self, params_config: dict, module: ModuleType, cls: str, fun_name: str, args: list=None, kwargs: dict=None, title: str=None):
+
+    def __init__(
+        self,
+        params_config: dict,
+        module: ModuleType,
+        cls: str,
+        fun_name: str,
+        args: list = None,
+        kwargs: dict = None,
+        title: str = None,
+    ):
         """Init ExperimentWidget.
 
         Args:
             params_config: dictionary that is passed to the constructor of ParamsWidget. See ParamsWidget docs for details.
             module: python module that contains cls
-            cls: python class name as a string (that descends from QWidget). 
-                An instance of this class will be created when the user tries 
+            cls: python class name as a string (that descends from QWidget).
+                An instance of this class will be created when the user tries
                 to load the widget and it will be added to the DockArea.
             fun_name: name of function within cls to run
             args: args to pass to cls
@@ -51,7 +61,7 @@ class ExperimentWidget(QtWidgets.QWidget):
             self.args = args
         else:
             self.args = []
-        
+
         if kwargs is not None:
             self.kwargs = kwargs
         else:
@@ -98,22 +108,22 @@ class ExperimentWidget(QtWidgets.QWidget):
         # get the function that runs the experiment
         fun = getattr(experiment, self.fun_name)
         # call the function in a new process
-        self.run_proc.run(fun,
-            queue=self.queue,
-            **self.params_widget.all_params()
-        )
+        self.run_proc.run(fun, queue=self.queue, **self.params_widget.all_params())
 
     def stop(self):
         """Stop the sweep process."""
         if self.queue is not None and self.run_proc.running():
             self.queue.put('stop')
         else:
-            logging.info('Not stopping the experiment process because it is not running.')
+            logging.info(
+                'Not stopping the experiment process because it is not running.'
+            )
 
     def kill(self):
         """Kill the sweep process."""
         if self.run_proc.running():
             self.run_proc.kill()
         else:
-            logging.info('Not killing the experiment process because it is not running.')
-
+            logging.info(
+                'Not killing the experiment process because it is not running.'
+            )

@@ -1,15 +1,15 @@
 """
-The nspyre DataServer transports arbitrary python objects over a TCP/IP socket 
-to a set of local or remote network clients, and keeps those objects up to date 
-as they are modified. For each data set on the data server, there is a single 
+The nspyre DataServer transports arbitrary python objects over a TCP/IP socket
+to a set of local or remote network clients, and keeps those objects up to date
+as they are modified. For each data set on the data server, there is a single
 data "source", and a set of data "sinks".
 
-Objects are serialized by the source then pushed to the server. For local 
-clients, the data server sends the serialized data directly to the be 
-deserialized by the sink process. For remote clients, the serialized object 
-data is diffed with any previously pushed data and the diff is sent rather than 
-the full object in order to minimize the required network bandwidth. The client 
-can then reconstruct the pushed data using a local copy of the last version of 
+Objects are serialized by the source then pushed to the server. For local
+clients, the data server sends the serialized data directly to the be
+deserialized by the sink process. For remote clients, the serialized object
+data is diffed with any previously pushed data and the diff is sent rather than
+the full object in order to minimize the required network bandwidth. The client
+can then reconstruct the pushed data using a local copy of the last version of
 the object, and the diff received from the server.
 
 Example usage:

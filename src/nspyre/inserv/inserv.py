@@ -99,9 +99,7 @@ class InstrumentServer(ClassicService):
     """
 
     def __init__(
-        self,
-        port: int = INSERV_DEFAULT_PORT,
-        sync_timeout: float = RPYC_SYNC_TIMEOUT
+        self, port: int = INSERV_DEFAULT_PORT, sync_timeout: float = RPYC_SYNC_TIMEOUT
     ):
         """Initialize an instrument server.
 
@@ -221,7 +219,7 @@ class InstrumentServer(ClassicService):
             InstrumentServerError: Deleting the device failed.
         """
         try:
-            dev,_ = self._devs.pop(name)
+            dev, _ = self._devs.pop(name)
         except Exception as exc:
             raise InstrumentServerError(f'Failed deleting device "{name}"') from exc
 
@@ -322,6 +320,17 @@ class InstrumentServer(ClassicService):
         RPYC_SERVER_STOP_EVENT.wait()
         RPYC_SERVER_STOP_EVENT.clear()
         self._rpyc_server = None
+
+    def devs(self):
+        """Get all of the devices on the InstrumentSever.
+
+        Returns:
+            dict: the device name as keys and device object as values
+        """
+        devs = {}
+        for d in self._devs:
+            devs[d] = getattr(self, d)
+        return devs
 
     def __getattr__(self, attr: str):
         """Allow the user to access the driver objects directly using

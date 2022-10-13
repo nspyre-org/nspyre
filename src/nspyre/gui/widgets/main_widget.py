@@ -10,38 +10,49 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 from importlib import reload
 from types import ModuleType
 
-from pyqtgraph.Qt import QtGui
-from pyqtgraph.Qt import QtCore
-from pyqtgraph.Qt import QtWidgets
 from pyqtgraph.dockarea import Dock
 from pyqtgraph.dockarea import DockArea
+from pyqtgraph.Qt import QtCore
+from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtWidgets
 
 from .snake import sssss
 
+
 class MainWidgetItem:
     """Represents a QWidget which can be loaded from the MainWidget."""
-    def __init__(self, module: ModuleType, cls: str,
-                    args: list=[], kwargs: dict={}):
+
+    def __init__(
+        self, module: ModuleType, cls: str, args: list = None, kwargs: dict = None
+    ):
         """
         Args:
             name: display name for the widget
             module: python module that contains cls
-            cls: python class name as a string (that descends from QWidget). 
-                An instance of this class will be created when the user tries 
+            cls: python class name as a string (that descends from QWidget).
+                An instance of this class will be created when the user tries
                 to load the widget and it will be added to the DockArea.
             args: list of arguments to pass to the __init__ function of cls
-            kwargs: dictionary of keyword arguments to pass to the __init__ 
+            kwargs: dictionary of keyword arguments to pass to the __init__
                 function of cls
         """
         super().__init__()
         self.module = module
         self.cls = cls
-        self.args = args
-        self.kwargs = kwargs
+        if args is None:
+            self.args = []
+        else:
+            self.args = args
+        if kwargs is None:
+            self.kwargs = {}
+        else:
+            self.kwargs = kwargs
+
 
 class _MainWidgetItem(QtGui.QStandardItem):
-    """A leaf node in the QTreeView of the MainWidget which contains the 
+    """A leaf node in the QTreeView of the MainWidget which contains the
     information for launching the widget."""
+
     def __init__(self, name: str, main_widget_item: MainWidgetItem):
         """
         Args:
@@ -54,13 +65,16 @@ class _MainWidgetItem(QtGui.QStandardItem):
         self.setEditable(False)
         self.setText(name)
 
+
 class _MainWidgetItemContainer(QtGui.QStandardItem):
     """A non-leaf node in the QTreeView of the MainWidget"""
+
     def __init__(self, name):
         super().__init__()
         self.name = name
         self.setEditable(False)
         self.setText(name)
+
 
 class MainWidget(QtWidgets.QWidget):
     """Qt widget that contains a list of widgets to run, and a pyqtgraph DockArea where they are displayed.
@@ -115,7 +129,8 @@ class MainWidget(QtWidgets.QWidget):
         self.tree_widget.setHeaderHidden(True)
         tree_model = QtGui.QStandardItemModel()
         tree_root_node = tree_model.invisibleRootItem()
-        # recursive function to parse through the user supplied widgets and add 
+
+        # recursive function to parse through the user supplied widgets and add
         # them to the tree widget
         def parse_widgets(w, parent):
             for name, value in w.items():
@@ -128,7 +143,10 @@ class MainWidget(QtWidgets.QWidget):
                     parent.appendRow(node)
                     parse_widgets(value, node)
                 else:
-                    raise ValueError(f'Value in widgets dictionary must be a MainWidgetItem or another dictionary containing MainWidgetItem.')
+                    raise ValueError(
+                        'Value in widgets dictionary must be a MainWidgetItem or another dictionary containing MainWidgetItem.'
+                    )
+
         parse_widgets(widgets, tree_root_node)
         self.tree_widget.setModel(tree_model)
         self.tree_widget.collapseAll()
@@ -174,7 +192,7 @@ class MainWidget(QtWidgets.QWidget):
         self.load_widget(tree_widget_item)
 
     def load_widget(self, tree_widget_item):
-        """Loads the QWidget corresponding to the given tree item and add it to 
+        """Loads the QWidget corresponding to the given tree item and add it to
         the dock area."""
         if isinstance(tree_widget_item, _MainWidgetItemContainer):
             # do nothing if the user tried to load a container class item

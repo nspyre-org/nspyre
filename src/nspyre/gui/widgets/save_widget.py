@@ -11,17 +11,25 @@ import json
 import pickle
 from pathlib import Path
 
+import numpy as np
 from pyqtgraph.Qt import QtWidgets
 
 from ...dataserv.dataserv import DataSink
 
 HOME = Path.home()
 
+# for convert numpy arrays to python lists so that they can be written to JSON
+# https://stackoverflow.com/questions/26646362/numpy-array-is-not-json-serializable
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
 
 def save_json(filename, data):
     """Save data to a json file."""
     with open(filename, 'w') as f:
-        json.dump(data, f)
+        json.dump(data, f, cls=NumpyEncoder, indent=4)
 
 
 def save_pickle(filename, data):
@@ -29,10 +37,8 @@ def save_pickle(filename, data):
     with open(filename, 'wb') as f:
         pickle.dump(data, f)
 
-
 class SaveWidget(QtWidgets.QWidget):
     """Qt widget that saves data from the dataserver."""
-
     def __init__(self, additional_filetypes=None, save_dialog_dir=HOME):
         """
         Args:
@@ -45,8 +51,8 @@ class SaveWidget(QtWidgets.QWidget):
 
         # file type options for saving data
         self.filetypes = {
-            'pickle': save_pickle,
             'json': save_json,
+            'pickle': save_pickle,
         }
         # merge with the user-provided dictionary
         if additional_filetypes:
@@ -76,6 +82,7 @@ class SaveWidget(QtWidgets.QWidget):
         layout.addWidget(dataset_container)
         layout.addWidget(self.filetype_combobox)
         layout.addWidget(save_button)
+        layout.addStretch()
         self.setLayout(layout)
 
     def save(self):

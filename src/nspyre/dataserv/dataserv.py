@@ -918,7 +918,7 @@ class DataSink:
         self._name = name
 
         # dict mapping the object name to the watched object
-        self._data: Dict[str, Any] = {}
+        self.data: Dict[str, Any] = {}
 
         # IP address of the data server to connect to
         self._addr = addr
@@ -1215,13 +1215,13 @@ class DataSink:
         else:
             logger.debug(f'pop returning [{len(new_pickle)}] bytes unpickled')
             # update data object
-            self._data = deserialize(new_pickle)
+            self.data = deserialize(new_pickle)
             return True
 
     def __getattr__(self, attr: str):
         """Allow the user to access the data objects using sink.obj notation"""
-        if attr in self._data:
-            return self._data[attr]
+        if attr in self.data:
+            return self.data[attr]
         else:
             # raise the default python error when an attribute isn't found
             return self.__getattribute__(attr)

@@ -71,6 +71,7 @@ setup(
     zip_safe=False,
     python_requires='>=3.9',
     install_requires=[
+        'numpy',
         # instrument server
         'rpyc==5.2.3',
         # Qt / GUI

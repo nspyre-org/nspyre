@@ -108,7 +108,7 @@ class ExperimentWidget(QtWidgets.QWidget):
         # get the function that runs the experiment
         fun = getattr(experiment, self.fun_name)
         # call the function in a new process
-        self.run_proc.run(fun, queue=self.queue, **self.params_widget.all_params())
+        self.run_proc.run(fun, msg_queue=self.queue, **self.params_widget.all_params())
 
     def stop(self):
         """Stop the sweep process."""

@@ -58,7 +58,7 @@ class SaveWidget(QtWidgets.QWidget):
         # file type options for saving data
         self.filetypes = {
             'json': save_json,
-            'pickle': save_pickle,
+            'pkl': save_pickle,
         }
         # merge with the user-provided dictionary
         if additional_filetypes:
@@ -99,7 +99,7 @@ class SaveWidget(QtWidgets.QWidget):
         )
         # make a file browser dialog to get the desired file location from the user
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(
-            parent=self, directory=str(self.save_dialog_dir)
+            parent=self, directory=str(self.save_dialog_dir / f'data.{filetype}' )
         )
         if filename:
             dataset = self.dataset_lineedit.text()

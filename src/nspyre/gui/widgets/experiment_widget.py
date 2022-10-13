@@ -103,8 +103,10 @@ class ExperimentWidget(QtWidgets.QWidget):
 
         # reload the module at runtime in case any changes were made to the code
         reload(self.module)
+        # get the experiment class
+        exp_cls = getattr(self.module, self.cls)
         # make an instance of the experiment
-        experiment = self.cls(*self.args, **self.kwargs)
+        experiment = exp_cls(*self.args, **self.kwargs)
         # get the function that runs the experiment
         fun = getattr(experiment, self.fun_name)
         # call the function in a new process

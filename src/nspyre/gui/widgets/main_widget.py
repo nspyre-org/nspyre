@@ -16,7 +16,7 @@ from pyqtgraph.Qt import QtWidgets
 from pyqtgraph.dockarea import Dock
 from pyqtgraph.dockarea import DockArea
 
-from .sssss import sssss
+from .snake import sssss
 
 class MainWidgetItem:
     """Represents a QWidget which can be loaded from the MainWidget."""

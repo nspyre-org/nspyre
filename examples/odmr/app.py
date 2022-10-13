@@ -12,12 +12,16 @@ import logging
 from pathlib import Path
 import argparse
 
+# in order for dynamic reloading of code to work, you must pass the specifc
+# module containing your class to MainWidgetItem, since the python reload() 
+# function it does not recursively reload modules
 import gui_elements
-import nspyre
 from nspyre import MainWidget
 from nspyre import MainWidgetItem
 from nspyre import nspyre_init_logger
 from nspyre import NspyreApp
+import nspyre.gui.widgets.line_plot_widget
+import nspyre.gui.widgets.snake
 
 HERE = Path(__file__).parent
 
@@ -59,7 +63,8 @@ def main():
             'Plots': {
                 'ODMR Plot': MainWidgetItem(gui_elements, 'ODMRPlotWidget'),            
                 'ODMR Scroll Plot': MainWidgetItem(gui_elements, 'ScrollingODMRPlotWidget'),            
-                'FlexSinkLinePlot': MainWidgetItem(nspyre, 'FlexSinkLinePlotWidget'),
+                'FlexSinkLinePlot': MainWidgetItem(nspyre.gui.widgets.line_plot_widget, 'FlexSinkLinePlotWidget'),
+            'Snake': MainWidgetItem(nspyre.gui.widgets.snake, 'sssss'),
             }
         }
     )

@@ -7,6 +7,7 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
+from functools import partial
 import logging
 import time
 from threading import Lock
@@ -344,6 +345,8 @@ class _FlexSinkLinePlotWidget(LinePlotWidget):
         self.npoints = 0
         # data processing to perform on plot data
         self.data_processing = data_processing
+        # clean up when the widget is destroyed
+        self.destroyed.connect(partial(self.teardown))
 
     def set_npoints(self, npoints):
         with self.mutex:

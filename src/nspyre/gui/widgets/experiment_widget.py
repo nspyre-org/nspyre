@@ -34,6 +34,7 @@ class ExperimentWidget(QtWidgets.QWidget):
         args: list = None,
         kwargs: dict = None,
         title: str = None,
+        layout: QtWidgets.QLayout = None
     ):
         """Init ExperimentWidget.
 
@@ -47,7 +48,7 @@ class ExperimentWidget(QtWidgets.QWidget):
             args: args to pass to cls
             kwargs: keyword args to pass to cls
             title: window title
-
+            layout: additional Qt layout to place between the parameters and run/stop/kill buttons
         """
         super().__init__()
 
@@ -90,6 +91,10 @@ class ExperimentWidget(QtWidgets.QWidget):
         # Qt layout that arranges the params and button vertically
         params_layout = QtWidgets.QVBoxLayout()
         params_layout.addWidget(self.params_widget)
+        if layout is not None:
+            params_layout.addLayout(layout)
+        # add stretch element to take up any extra space below the spinboxes
+        params_layout.addStretch()
         params_layout.addWidget(run_button)
         params_layout.addWidget(stop_button)
         params_layout.addWidget(kill_button)

@@ -73,9 +73,6 @@ class ParamsWidget(QtWidgets.QWidget):
                 label_param_layout.addWidget(spinbox)
             total_layout.addLayout(label_param_layout)
 
-        # add stretch element to take up any extra space below the spinboxes
-        total_layout.addStretch()
-
         self.setLayout(total_layout)
 
     def all_params(self):

@@ -8,7 +8,7 @@ The recommended way to install NSpyre is to **install the latest stable release*
    
    $ conda install -c conda-forge nspyre
 
-NSpyre is also available from PyPI:
+or PyPI:
 
 .. code-block:: bash
 
@@ -19,7 +19,7 @@ Conda
 
 If you do not already have conda installed, we recommend using the Miniconda distribution (instead of the Anaconda distribution) because it contains fewer default packages, many of which are unnecessary for the vast majority of users. The latest release of Miniconda for your platform is available here: `Miniconda installers <https://docs.conda.io/en/latest/miniconda.html>`__. The default installation options are appropriate for most users.
 
-Once conda is installed, you'll want to add the conda-forge channel as a repository and rebuild/update conda with the latest packages from conda-forge:
+Once conda is installed, you'll want to add the conda-forge channel as a repository and update conda with the latest packages from conda-forge:
 
 .. code-block:: bash
 
@@ -48,18 +48,25 @@ Notice that you now have two channels from which conda will search for packages:
    zlib                      1.2.11            h7795811_1009    conda-forge
    zstd                      1.4.5                h289c70a_2    conda-forge
 
-You will see that everything is installed from *conda-forge*. It is desirable to have all the packages come from the same repository due to compiling complexities, ABI compatibility, and consistent build environments (beyond the scope of discussion). The ``channel_priority`` can be set to ``strict`` so that only the highest priority channel is even searched when updating or installing; however, there are a few exceptions where a package is needed from *defaults* so this config parameter should not be modified.
+You will see that everything is installed from *conda-forge*. It is desirable to have all the packages come from the same repository due to compiling complexities, ABI compatibility, and consistent build environments (beyond the scope of discussion).
 
-Finally, by default the base environment will always be active upon opening the terminal (you probably didn't need to run ``conda activate`` above). Typically, this isn't good practice and it's better to explicitly activate the environment. To change conda’s configuration settings so that it does not automatically activate the base environment upon opening of the terminal run:
-
-.. code-block:: bash
-
-   $ conda config --set auto_activate_base false
-
-Once you have conda setup, it's trivial to install nspyre. Make sure to create and activate a new conda environment for running nspyre so you don't mess with your base environment:
+Once you have conda itself installed, create and activate a new conda environment for running nspyre:
 
 .. code-block:: bash
 
-   (base) $ conda env create --name nspyre-env
-   (base) $ conda activate nspyre-env
-   ([nspyre-env]) $ conda install nspyre
+   (base) $ conda env create --name my-env
+   (base) $ conda activate my-env
+
+Whenever creating a new conda environment, we recommend that you first install pip to the environment:
+
+.. code-block:: bash
+
+   (my-env) $ conda install pip
+
+This ensures that any future calls to ``pip`` will install packages to your conda environment, rather than the system installation (which would defeat the purpose of conda). To confirm that ``pip`` will be called from your conda environment, you can run ``which pip`` on \*nix (Mac, Linux), or ``where pip`` on Windows to reveal its location. The location should be ``.../miniconda3/envs/<your_env>/bin/pip`` and NOT ``.../miniconda3/bin/pip`` or, e.g., ``/usr/bin/pip``.
+
+Finally, install nspyre:
+
+.. code-block:: bash
+
+   (my-env) $ conda install nspyre

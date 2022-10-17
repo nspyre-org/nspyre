@@ -18,7 +18,7 @@ import nspyre.gui.widgets.snake
 from nspyre import MainWidget
 from nspyre import MainWidgetItem
 from nspyre import nspyre_init_logger
-from nspyre import NspyreApp
+from nspyre import NSpyreApp
 
 # in order for dynamic reloading of code to work, you must pass the specifc
 # module containing your class to MainWidgetItem, since the python reload()
@@ -59,7 +59,7 @@ def main():
     )
 
     # Create Qt application and apply nspyre visual settings.
-    app = NspyreApp()
+    app = NSpyreApp()
 
     # Create the GUI.
     main_widget = MainWidget(

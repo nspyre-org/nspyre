@@ -27,16 +27,16 @@ logger = logging.getLogger(__name__)
 HERE = Path(__file__).parent
 
 
-class NspyreApp(QtWidgets.QApplication):
+class NSpyreApp(QtWidgets.QApplication):
     """Create a Qt application object with the default nspyre settings.
 
     Typical usage example:
 
     .. code-block:: python
 
-        from nspyre import NspyreApp
+        from nspyre import NSpyreApp
 
-        app = NspyreApp()
+        app = NSpyreApp()
         some_widget = SomeWidget()
         some_widget.show()
         # run the GUI event loop

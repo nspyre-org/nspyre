@@ -71,11 +71,11 @@ setup(
     zip_safe=False,
     python_requires='>=3.10',
     install_requires=[
-        'numpy',
+        'numpy==1.23.1',
         # instrument server
         'rpyc==5.2.3',
         # Qt / GUI
-        'pyqt6==6.2;platform_machine!="aarch64" and platform_machine!="armv7l"',
+        'pyqt6==6.2.3;platform_machine!="aarch64" and platform_machine!="armv7l"',
         'pyqtgraph==0.13.1;platform_machine!="aarch64" and platform_machine!="armv7l"',
     ],
     extras_require={
@@ -93,7 +93,6 @@ setup(
             'pytest',
             'pytest-cov',
             'psutil',
-            'numpy',
             'lantz',
             'pint',
         ],

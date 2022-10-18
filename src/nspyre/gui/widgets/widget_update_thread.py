@@ -15,12 +15,12 @@ from pyqtgraph.Qt import QtCore
 
 logger = logging.getLogger(__name__)
 
-
+# TODO this should be done with a worker object
+# https://mayaposch.wordpress.com/2011/11/01/how-to-really-truly-use-qthreads-the-full-explanation/
 class WidgetUpdateThread(QtCore.QThread):
     """Run update_func() repeatedly in a thread."""
 
     def __init__(self, update_func, report_fps=False, fps_period=1):
-        """TODO"""
         super().__init__()
         self.update_func = update_func
         self.report_fps = report_fps

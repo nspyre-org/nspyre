@@ -30,14 +30,14 @@ HERE = Path(__file__).parent
 def main():
     arg_parser = argparse.ArgumentParser(description='Run the Biosensing2 GUI.')
     arg_parser.add_argument(
-        '-l',
-        '--level',
+        '-v',
+        '--verbosity',
         default='info',
         help='Log level: info, debug, warning, or error',
     )
 
     cmd_line_args = arg_parser.parse_args()
-    match cmd_line_args.level:
+    match cmd_line_args.verbosity:
         case 'debug':
             log_level = logging.DEBUG
         case 'info':
@@ -47,7 +47,7 @@ def main():
         case 'error':
             log_level = logging.ERROR
         case _:
-            raise ValueError(f'log level [{cmd_line_args.level}] not supported')
+            raise ValueError(f'log level [{cmd_line_args.verbosity}] not supported')
 
     # Log to the console as well as a file inside the logs folder.
     nspyre_init_logger(

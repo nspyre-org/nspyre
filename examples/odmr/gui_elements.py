@@ -77,6 +77,7 @@ class ODMRWidget(QtWidgets.QWidget):
         # Qt layout that arranges the params and button vertically
         params_layout = QtWidgets.QVBoxLayout()
         params_layout.addWidget(self.params_widget)
+        params_layout.addStretch()
         params_layout.addWidget(stop_button)
         params_layout.addWidget(sweep_button)
 
@@ -123,6 +124,7 @@ class ODMRPlotWidget(LinePlotWidget):
         self.new_plot('ODMR')
         self.plot_widget.setYRange(-100, 5100)
         self.sink = DataSink('ODMR')
+        self.sink.start()
 
     def teardown(self):
         self.sink.stop()

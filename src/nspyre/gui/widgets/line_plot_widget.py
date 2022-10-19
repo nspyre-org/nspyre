@@ -221,27 +221,27 @@ class LinePlotWidget(QtWidgets.QWidget):
         finally:
             self.plots[name]['sem'].release()
 
-    def add_zoom_region(self):
-        """Create a GUI element for selecting a plot subregion. Returns a new PlotWidget that contains a view with it's x span linked to the area selected by the plot subregion."""
-        # current display region
-        plot_xrange, plot_yrange = self.plot_widget.viewRange()
-        xmin, xmax = plot_xrange
-        center = (xmax + xmin) / 2
-        span = (xmax - xmin) / 20
-        # create GUI element for subregion selection
-        linear_region = LinearRegionItem(values=[center - span, center + span])
-        self.plot_widget.addItem(linear_region)
+    # TODO
+    # def add_zoom_region(self):
+    #     """Create a GUI element for selecting a plot subregion. Returns a new PlotWidget that contains a view with it's x span linked to the area selected by the plot subregion."""
+    #     # current display region
+    #     plot_xrange, plot_yrange = self.plot_widget.viewRange()
+    #     xmin, xmax = plot_xrange
+    #     center = (xmax + xmin) / 2
+    #     span = (xmax - xmin) / 20
+    #     # create GUI element for subregion selection
+    #     linear_region = LinearRegionItem(values=[center - span, center + span])
+    #     self.plot_widget.addItem(linear_region)
 
-        # TODO
-        # p9 = win.addPlot(title="Zoom on selected region")
-        # p9.plot(data2)
-        # def updatePlot():
-        #     p9.setXRange(*lr.getRegion(), padding=0)
-        # def updateRegion():
-        #     lr.setRegion(p9.getViewBox().viewRange()[0])
-        # lr.sigRegionChanged.connect(updatePlot)
-        # p9.sigXRangeChanged.connect(updateRegion)
-        # updatePlot()
+    #     # p9 = win.addPlot(title="Zoom on selected region")
+    #     # p9.plot(data2)
+    #     # def updatePlot():
+    #     #     p9.setXRange(*lr.getRegion(), padding=0)
+    #     # def updateRegion():
+    #     #     lr.setRegion(p9.getViewBox().viewRange()[0])
+    #     # lr.sigRegionChanged.connect(updatePlot)
+    #     # p9.sigXRangeChanged.connect(updateRegion)
+    #     # updatePlot()
 
     def stop(self):
         self.update_thread.update_func = None

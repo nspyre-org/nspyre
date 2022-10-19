@@ -48,3 +48,7 @@ class SpinMeasurements:
                 counts[i] = gw.daq.cnts(1)
                 # save the current data to the data server.
                 odmr_data.push({'freqs': frequencies, 'counts': counts, 'idx': i})
+
+if __name__ == '__main__':
+    exp = SpinMeasurements()
+    exp.odmr_sweep(3e9, 4e9, 50)

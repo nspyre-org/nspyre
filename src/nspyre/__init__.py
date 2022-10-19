@@ -30,8 +30,8 @@ try:
     from .gui import ParamsWidget
     from .gui import qt_set_trace
     from .gui import SaveWidget
-    from .gui import SplitterOrientation
-    from .gui import SplitterWidget
+    # from .gui import SplitterOrientation
+    # from .gui import SplitterWidget
     from .gui import sssss
 except ModuleNotFoundError as exc:
     logger = logging.getLogger(__name__)

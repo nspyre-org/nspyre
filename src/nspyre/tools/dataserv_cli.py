@@ -114,7 +114,7 @@ def main():
                 log_path=Path(cmd_args.log),
                 log_path_level=logging.DEBUG,
                 prefix='dataserv',
-                filesize=LOG_FILE_MAX_SIZE,
+                file_size=LOG_FILE_MAX_SIZE,
             )
         else:
             # the user asked for no log file

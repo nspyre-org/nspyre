@@ -76,6 +76,7 @@ setup(
         'rpyc==5.2.3',
         # Qt / GUI
         'pyqt6==6.2.3;platform_machine!="aarch64" and platform_machine!="armv7l"',
+        'pyqt6-qt6==6.2.3;platform_machine!="aarch64" and platform_machine!="armv7l"',
         'pyqtgraph==0.13.1;platform_machine!="aarch64" and platform_machine!="armv7l"',
     ],
     extras_require={

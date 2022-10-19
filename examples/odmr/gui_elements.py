@@ -57,6 +57,7 @@ class ODMRWidget(QtWidgets.QWidget):
                     'bounds': (1, None),
                     'dec': True,
                 },
+                'dataset': 'ODMR'
             }
         )
 
@@ -95,6 +96,7 @@ class ODMRWidget(QtWidgets.QWidget):
         # run the sweep function in a new thread.
         self.sweep_proc.run(
             spin_meas.odmr_sweep,
+            self.params_widget.dataset,
             self.params_widget.start_freq,
             self.params_widget.stop_freq,
             self.params_widget.num_points,

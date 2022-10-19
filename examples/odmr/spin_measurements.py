@@ -17,9 +17,11 @@ from nspyre import InstrumentGateway
 class SpinMeasurements:
     """Perform spin measurements."""
 
-    def odmr_sweep(self, start: float, stop: float, num_points: int):
+    def odmr_sweep(self, dataset: str,  start: float, stop: float, num_points: int):
         """Run an ODMR (optically detected magnetic resonance) PL (photoluminescence) sweep over a set of microwave frequencies.
+
         Args:
+            dataset: name of the dataset to push data to
             start (float): start frequency
             stop (float): stop frequency
             num_points (int): number of points between start-stop (inclusive)
@@ -28,7 +30,7 @@ class SpinMeasurements:
         # connect to the instrument server
         # connect to the data server and create a data set, or connect to an
         # existing one with the same name if it was created earlier.
-        with InstrumentGateway() as gw, DataSource('ODMR') as odmr_data:
+        with InstrumentGateway() as gw, DataSource(dataset) as odmr_data:
             # frequencies that will be swept over in the ODMR measurement
             frequencies = np.linspace(start, stop, num_points)
 

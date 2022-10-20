@@ -23,7 +23,7 @@ class MainWidgetItem:
     """Represents a QWidget which can be loaded from the MainWidget."""
 
     def __init__(
-        self, module: ModuleType, cls: str, args: list = None, kwargs: dict = None
+        self, module: ModuleType, cls: str, args: list = None, kwargs: dict = None, stretch: tuple = None
     ):
         """
         Args:
@@ -35,10 +35,12 @@ class MainWidgetItem:
             args: list of arguments to pass to the __init__ function of cls
             kwargs: dictionary of keyword arguments to pass to the __init__
                 function of cls
+            stretch: the dock stretch factor as a tuple (stretch_x, stretch_y) (see https://pyqtgraph.readthedocs.io/en/latest/api_reference/dockarea.html)
         """
         super().__init__()
         self.module = module
         self.cls = cls
+        self.stretch = stretch
         if args is None:
             self.args = []
         else:
@@ -61,7 +63,7 @@ class _MainWidgetItem(QtGui.QStandardItem):
         """
         super().__init__()
         self.name = name
-        self.widget = main_widget_item
+        self.main_widget_item = main_widget_item
         self.setEditable(False)
         self.setText(name)
 
@@ -199,10 +201,10 @@ class MainWidget(QtWidgets.QWidget):
             return
 
         widget_name = tree_widget_item.name
-        widget_module = tree_widget_item.widget.module
-        widget_class_name = tree_widget_item.widget.cls
-        widget_args = tree_widget_item.widget.args
-        widget_kwargs = tree_widget_item.widget.kwargs
+        widget_module = tree_widget_item.main_widget_item.module
+        widget_class_name = tree_widget_item.main_widget_item.cls
+        widget_args = tree_widget_item.main_widget_item.args
+        widget_kwargs = tree_widget_item.main_widget_item.kwargs
 
         # reload the module at runtime in case any changes were made to the code
         widget_module = reload(widget_module)
@@ -211,7 +213,11 @@ class MainWidget(QtWidgets.QWidget):
         widget = widget_class(*widget_args, **widget_kwargs)
         # add the widget to the GUI
         dock = self.dock_widget(widget, name=widget_name, closable=True)
-        dock.setStretch(80, 1)
+        # set the dock stretch factor
+        # see https://pyqtgraph.readthedocs.io/en/latest/api_reference/dockarea.html
+        stretch = tree_widget_item.main_widget_item.stretch
+        if stretch is not None:
+            dock.setStretch(*stretch)
 
     def dock_widget(self, widget, *args, **kwargs):
         """Create a new dock for the given widget and add it to the dock area."""

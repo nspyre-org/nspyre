@@ -18,7 +18,6 @@ Networked Scientific Python Research Environment
 
    install
    getting_started
-   instrument_server
 
 .. toctree::
    :maxdepth: 1

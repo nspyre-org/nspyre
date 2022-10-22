@@ -69,4 +69,4 @@ Finally, install nspyre:
 
 .. code-block:: bash
 
-   (my-env) $ conda install nspyre
+   (my-env) $ conda install -c conda-forge nspyre

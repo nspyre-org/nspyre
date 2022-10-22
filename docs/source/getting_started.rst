@@ -70,7 +70,8 @@ The Experiment
 Once the instrument and data servers have been started, we can run our 
 experiment. The InstrumentGateway provides a connection to the InstrumentServer 
 and its devices. We can create a data set on the data server and provide data 
-it by creating a DataSource. A simple experiment might look something like this:
+to it by creating a DataSource. A simple experiment might look something like 
+this:
 
 .. code-block:: python
 

@@ -44,10 +44,11 @@ class NSpyreApp(QtWidgets.QApplication):
 
     """
 
-    def __init__(self, app_name: str = 'nspyre', font: QtGui.QFont = nspyre_font):
+    def __init__(self, app_name: str = 'nspyre', palette: QtGui.QPalette = nspyre_palette, font: QtGui.QFont = nspyre_font):
         """
         Args:
             app_name: display name of the application.
+            palette: Qt palette
             font: QFont to use for the application.
         """
         # for high DPI displays in Qt5
@@ -71,9 +72,8 @@ class NSpyreApp(QtWidgets.QApplication):
         setConfigOptions(antialias=True)
 
         # appearance settings for nspyre
-        fusion = QtWidgets.QStyleFactory.create('Fusion')
-        self.setStyle(fusion)
-        self.setPalette(nspyre_palette)
+        self.setStyle(QtWidgets.QStyleFactory.create('Fusion'))
+        self.setPalette(palette)
         self.setStyleSheet(nspyre_style_sheet)
         self.setFont(font)
 

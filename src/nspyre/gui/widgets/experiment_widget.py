@@ -34,7 +34,7 @@ class ExperimentWidget(QtWidgets.QWidget):
         args: list = None,
         kwargs: dict = None,
         title: str = None,
-        layout: QtWidgets.QLayout = None
+        layout: QtWidgets.QLayout = None,
     ):
         """Init ExperimentWidget.
 

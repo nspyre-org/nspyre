@@ -17,7 +17,7 @@ from nspyre import InstrumentGateway
 class SpinMeasurements:
     """Perform spin measurements."""
 
-    def odmr_sweep(self, dataset: str,  start: float, stop: float, num_points: int):
+    def odmr_sweep(self, dataset: str, start: float, stop: float, num_points: int):
         """Run an ODMR (optically detected magnetic resonance) PL (photoluminescence) sweep over a set of microwave frequencies.
 
         Args:
@@ -51,6 +51,7 @@ class SpinMeasurements:
                 # save the current data to the data server.
                 odmr_data.push({'freqs': frequencies, 'counts': counts, 'idx': i})
 
+
 if __name__ == '__main__':
     exp = SpinMeasurements()
-    exp.odmr_sweep(3e9, 4e9, 50)
+    exp.odmr_sweep('ODMR', 3e9, 4e9, 50)

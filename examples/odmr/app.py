@@ -64,18 +64,22 @@ def main():
     # Create the GUI.
     main_widget = MainWidget(
         {
-            'Save ODMR': MainWidgetItem(gui_elements, 'ODMRSaveWidget'),
-            'ODMR': MainWidgetItem(gui_elements, 'ODMRWidget'),
+            'Save ODMR': MainWidgetItem(gui_elements, 'ODMRSaveWidget', stretch=(1, 1)),
+            'ODMR': MainWidgetItem(gui_elements, 'ODMRWidget', stretch=(1, 1)),
             'Plots': {
-                'ODMR Plot': MainWidgetItem(gui_elements, 'ODMRPlotWidget'),
+                'ODMR Plot': MainWidgetItem(
+                    gui_elements, 'ODMRPlotWidget', stretch=(100, 100)
+                ),
                 'ODMR Scroll Plot': MainWidgetItem(
-                    gui_elements, 'ScrollingODMRPlotWidget'
+                    gui_elements, 'ScrollingODMRPlotWidget', stretch=(100, 100)
                 ),
                 'FlexSinkLinePlot': MainWidgetItem(
-                    nspyre.gui.widgets.line_plot_widget, 'FlexSinkLinePlotWidget'
+                    nspyre.gui.widgets.line_plot_widget,
+                    'FlexSinkLinePlotWidget',
+                    stretch=(100, 100),
                 ),
-                'Snake': MainWidgetItem(nspyre.gui.widgets.snake, 'sssss'),
             },
+            'Snake': MainWidgetItem(nspyre.gui.widgets.snake, 'sssss'),
         }
     )
     main_widget.show()

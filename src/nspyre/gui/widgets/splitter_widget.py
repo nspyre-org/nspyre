@@ -1,23 +1,17 @@
 # TODO
 # import os
 # from enum import Enum
-
 # from pyqtgraph.Qt import QtCore
 # from pyqtgraph.Qt import QtWidgets
-
-
 # class SplitterOrientation(Enum):
 #     vertical_left_button = 0
 #     vertical_right_button = 1
 #     horizontal_top_button = 2
 #     horizontal_bottom_button = 3
-
-
 # class SplitterWidget(QtWidgets.QSplitter):
 #     def __init__(self, main_w, side_w, orientation=None, parent=None):
 #         if orientation is None:
 #             orientation = SplitterOrientation.vertical_left_button
-
 #         if orientation in [
 #             SplitterOrientation.vertical_left_button,
 #             SplitterOrientation.vertical_right_button,
@@ -42,7 +36,6 @@
 #         self.setSizes(initial_size)
 #         self.showMaximized()
 #         return
-
 #     def setSizes(self, sizes):
 #         super().setSizes(sizes)
 #         button = self.widget((self.orientation.value % 2)).collapse_area.button
@@ -55,13 +48,9 @@
 #             button.closed = False
 #             button.on_splitter_moved(None, None)
 #         return
-
-
 # class SplitterHoverArea(QtWidgets.QWidget):
-
 #     width = 30
 #     height = 60
-
 #     def __init__(self, splitter, orientation=None, parent=None):
 #         if orientation is None:
 #             orientation = SplitterOrientation.vertical_left_button
@@ -93,37 +82,29 @@
 #         self.button = SplitterHoverButton(splitter, parent=self)
 #         self.on_hover(False, duration=0)
 #         return
-
 #     def enterEvent(self, ev):
 #         self.on_hover(True)
 #         return
-
 #     def leaveEvent(self, ev):
 #         self.on_hover(False)
 #         return
-
 #     def on_hover(self, entering, duration=200):
 #         animation = QtCore.QPropertyAnimation(self)
 #         animation.setDuration(duration)
 #         animation.setTargetObject(self.button)
 #         animation.setPropertyName(b'pos')
 #         animation.setEasingCurve(QtCore.QEasingCurve.Linear)
-
 #         if entering:
 #             start = QtCore.QPoint(self.end_y, self.end_x)
 #             end = QtCore.QPoint(self.start_y, self.start_x)
 #         else:
 #             start = QtCore.QPoint(self.start_y, self.start_x)
 #             end = QtCore.QPoint(self.end_y, self.end_x)
-
 #         animation.setStartValue(start)
 #         animation.setEndValue(end)
 #         animation.start()
 #         return
-
-
 # class SplitterHoverButton(QtWidgets.QPushButton):
-
 #     button_style = '''
 #         background-image: url({image});
 #         background-repeat: no-repeat;
@@ -137,7 +118,6 @@
 #         border-style: outset;
 #         border-width: {border_width};
 #     '''
-
 #     def __init__(self, splitter, parent=None):
 #         super().__init__(parent=parent)
 #         hover_area = self.parent()
@@ -146,10 +126,8 @@
 #             self.even = False
 #         else:
 #             self.even = True
-
 #         image_path = os.path.join(os.path.dirname(__file__), '..\\images\\')
 #         image_path = image_path.replace("\\", "/")
-
 #         if hover_area.orientation.value >= 2:
 #             # horizontal orientation
 #             self.closed_image = image_path + '/{}_arrow.png'.format(
@@ -172,7 +150,6 @@
 #                 self.button_params['corner1'] = 'bottom-left'
 #                 self.button_params['corner2'] = 'bottom-right'
 #                 self.button_params['border_width'] = '0 0.5px 0.5px 0.5px'
-
 #         else:
 #             self.closed_image = image_path + '/{}_arrow.png'.format(
 #                 'left' if self.even else 'right'
@@ -194,7 +171,6 @@
 #                 self.button_params['corner1'] = 'top-right'
 #                 self.button_params['corner2'] = 'bottom-right'
 #                 self.button_params['border_width'] = '0.5px 0.5px 0.5px 0'
-
 #         self.style = self.button_style.format(**self.button_params)
 #         self.setStyleSheet(self.style)
 #         self.setFixedSize(self.width, self.height)
@@ -205,7 +181,6 @@
 #         self.splitter.splitterMoved.connect(self.on_splitter_moved)
 #         self.clicked.connect(self.on_clicked)
 #         return
-
 #     def on_clicked(self):
 #         self.setStyleSheet(self.style)
 #         if self.closed:
@@ -217,7 +192,6 @@
 #         self.splitter.setSizes(size)
 #         self.on_splitter_moved(None, None)
 #         return
-
 #     def on_splitter_moved(self, pos, idx):
 #         sizes = self.splitter.sizes()
 #         if not self.even:
@@ -233,12 +207,9 @@
 #         self.style = self.button_style.format(**self.button_params)
 #         self.setStyleSheet(self.style)
 #         return
-
 #     def resizeEvent(self, ev):
 #         ev.ignore()
 #         return
-
-
 # class Container(QtWidgets.QWidget):
 #     def __init__(self, w, collapse=None, parent=None):
 #         super().__init__(parent=parent)
@@ -252,7 +223,6 @@
 #         else:
 #             self.collapse_area = None
 #         return
-
 #     def resizeEvent(self, ev):
 #         if self.collapse_area is not None:
 #             if self.collapse_area.orientation.value % 2:

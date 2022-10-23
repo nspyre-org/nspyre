@@ -669,7 +669,13 @@ class DataServer:
 class DataSource:
     """For sourcing data to a DataServer"""
 
-    def __init__(self, name: str, addr: str = 'localhost', port: int = DATASERV_PORT, auto_reconnect: bool = False):
+    def __init__(
+        self,
+        name: str,
+        addr: str = 'localhost',
+        port: int = DATASERV_PORT,
+        auto_reconnect: bool = False,
+    ):
         """Initialize connection to the data set on the server.
 
         See DataSink.pop() for typical usage example.
@@ -730,7 +736,7 @@ class DataSource:
 
     def stop(self, timeout=3):
         """Stop the asyncio event loop.
-        
+
         Args:
             timeout: time to wait to shut down the event loop.
         """

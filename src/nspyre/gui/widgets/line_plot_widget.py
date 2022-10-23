@@ -7,16 +7,15 @@ All rights reserved.
 This work is licensed under the terms of the 3-Clause BSD license.
 For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
-from functools import partial
 import logging
 import time
+from functools import partial
 from threading import Lock
 from typing import Any
 from typing import Dict
 
 import numpy as np
 from nspyre import DataSink
-from pyqtgraph import LinearRegionItem
 from pyqtgraph import mkColor
 from pyqtgraph import PlotWidget
 from pyqtgraph import SpinBox
@@ -28,6 +27,8 @@ from ..style.colors import colors
 from ..style.colors import cyclic_colors
 from ..style.style import nspyre_font
 from .widget_update_thread import WidgetUpdateThread
+
+# from pyqtgraph import LinearRegionItem
 
 logger = logging.getLogger(__name__)
 

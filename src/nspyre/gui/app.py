@@ -44,7 +44,12 @@ class NSpyreApp(QtWidgets.QApplication):
 
     """
 
-    def __init__(self, app_name: str = 'nspyre', palette: QtGui.QPalette = nspyre_palette, font: QtGui.QFont = nspyre_font):
+    def __init__(
+        self,
+        app_name: str = 'nspyre',
+        palette: QtGui.QPalette = nspyre_palette,
+        font: QtGui.QFont = nspyre_font,
+    ):
         """
         Args:
             app_name: display name of the application.

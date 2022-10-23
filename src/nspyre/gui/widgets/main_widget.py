@@ -23,7 +23,12 @@ class MainWidgetItem:
     """Represents a QWidget which can be loaded from the MainWidget."""
 
     def __init__(
-        self, module: ModuleType, cls: str, args: list = None, kwargs: dict = None, stretch: tuple = None
+        self,
+        module: ModuleType,
+        cls: str,
+        args: list = None,
+        kwargs: dict = None,
+        stretch: tuple = None,
     ):
         """
         Args:

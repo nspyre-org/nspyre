@@ -57,7 +57,7 @@ class ODMRWidget(QtWidgets.QWidget):
                     'bounds': (1, None),
                     'dec': True,
                 },
-                'dataset': 'ODMR'
+                'dataset': 'ODMR',
             }
         )
 

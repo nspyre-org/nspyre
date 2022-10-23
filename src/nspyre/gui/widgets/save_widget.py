@@ -99,7 +99,7 @@ class SaveWidget(QtWidgets.QWidget):
         )
         # make a file browser dialog to get the desired file location from the user
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(
-            parent=self, directory=str(self.save_dialog_dir / f'data.{filetype}' )
+            parent=self, directory=str(self.save_dialog_dir / f'data.{filetype}')
         )
         if filename:
             dataset = self.dataset_lineedit.text()

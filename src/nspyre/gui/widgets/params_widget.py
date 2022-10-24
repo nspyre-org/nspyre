@@ -68,6 +68,7 @@ class ParamsWidget(QtWidgets.QWidget):
             else:
                 # create spinbox
                 spinbox = SpinBox(**self.params[p])
+                spinbox.setMinimumWidth(100)
                 # store the spinboxes
                 self.spinboxes[p] = spinbox
                 label_param_layout.addWidget(spinbox)

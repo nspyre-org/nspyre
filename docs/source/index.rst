@@ -18,6 +18,7 @@ Networked Scientific Python Research Environment
 
    install
    getting_started
+   data_server
 
 .. toctree::
    :maxdepth: 1
@@ -63,12 +64,9 @@ Who we are, and why we made NSpyre
 NSpyre is primarily developed out of the 
 `Awschalom Group <https://pme.uchicago.edu/group/awschalom-group>`__ at the 
 University of Chicago PME. We are an experimental quantum physics research lab 
-with a focus on spin dynamics and quantum information processing. There has 
-been growing adoption of NSpyre in the immediate surroundings outside our 
-doors, as well as at other research institutions.
-
-There are many software packages that seek to solve the same problems as 
-NSpyre. However, most suffer from being either:
+with a focus on spin dynamics and quantum information processing. There are 
+many software packages that seek to solve the same problems as NSpyre. However, 
+most suffer from being either:
 
 1. Designed for a very specific type of experiment at the expense of generality
 2. A commerical product that attempts to force users to utilize their proprietary equipment
@@ -80,9 +78,9 @@ set of helpful tools, without forcing them to run their experiment in any
 specific way. We hope that others will find this software useful, and will 
 :ref:`contribute <contribute>` to its development so that all can benefit.
 
-Indices and tables
-==================
+.. Indices and tables
+.. ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`

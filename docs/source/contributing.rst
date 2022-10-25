@@ -4,15 +4,14 @@
 Contributing
 ############
 
-If you’re reading this, you probably want to contribute to NSpyre — great! Any and all support is greatly appreciated. This document lays out guidelines and advice for contributing to this project. If you’re thinking of contributing, please start by reading the immediate info below detailing project specifics to get a feel for how contributing to this project works. If you have any questions, feel free to reach out to one of the primary maintainers. 
+If you’re reading this, you probably want to contribute to NSpyre — great! Any and all support is greatly appreciated. This document lays out guidelines and advice for contributing to this project. If you’re thinking of contributing, please start by reading the immediate info below detailing project specifics to get a feel for how contributing to this project works. If you have any questions, feel free to reach out to one of the primary maintainers. NSpyre is hosted on GitHub:
 
-..
-   TODO: *(Need link/contact info)*
+`<https://github.com/nspyre-org/nspyre>`_
 
 Quick Facts
 ===========
 
-* For this project, we use a standard *fork & pull* model to collaborate, a common practice for open source projects. If you are interested in helping maintain the platform, send us a message after getting involved and we’ll be happy to bring you onboard.
+* For this project, we use a standard *fork & pull* model to collaborate, a common practice for open source projects. If you are interested in helping maintain the platform, send us a message and we’ll be happy to bring you onboard.
 
 * We like to run some automated tools to maintain style throughout the repo using :ref:`pre-commit <precommit>`.
 
@@ -460,24 +459,28 @@ software development. Below is a collection of the most useful as they pertain
 to development in this project; they were referenced heavily in the construct
 of the above material. Hopefully, they are just as useful to you too.
 
-* Git & GitHub
-  
+Git & GitHub
+------------
+
   - `GitHub Guides <https://guides.github.com>`_
   - `Git CheetSheet <https://cheat.readthedocs.io/en/latest/git.html>`_
   - `GitHub walkthrough video tutorials <https://egghead.io/courses/how-to-contribute-to-an-open-source-project-on-github>`_
 
-* Python Style Conventions
+Python Style Conventions
+------------------------
   
   - `PEP8 CheetSheet <https://gist.github.com/RichardBronosky/454964087739a449da04>`_
   - `Docstrings -- Google Style Examples <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html>`_
 
-* reStructuredText
+reStructuredText
+----------------
   
   - `(Another) reStructuredText CheetSheet <https://cheat.readthedocs.io/en/latest/rst.html>`_
   - `Sphinx Primer on reST roles <https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html>`_
   - `An Introduction to reStructuredText (complete specification) <https://docutils.readthedocs.io/en/sphinx-docs/ref/rst/introduction.html>`_
 
-* Miscellaneous
+Miscellaneous
+-------------
   
   - `Continuous Integration <https://www.writethedocs.org/guide/tools/testing/>`_
   - `Workshop tutorial on just about everything you need to contribute <https://dont-be-afraid-to-commit.readthedocs.io/en/latest/contributing.html>`_

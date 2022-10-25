@@ -2,12 +2,6 @@
 Getting Started
 ###############
 
-
-
-How is it used?
-===============
-
-
 There are `code examples <https://github.com/nspyre-org/examples>`__ available 
 to help new users get started, but a brief description is given here. An 
 experiment utilizing the full capabilities of NSpyre can be broken down into 
@@ -55,8 +49,8 @@ The Data Server
 ===============
 
 The data server hosts experimental data. It has a collection of data sets, each 
-of which contains a "source", and one or more "sinks". The "source" provides 
-data to a data set, and the "sinks" collect data from the data set. 
+of which contains a "source" and one or more "sinks". The "source" provides 
+data to a data set and the "sinks" collect data from the data set.
 
 To start the data server, simply run:
 
@@ -75,7 +69,6 @@ this:
 
 .. code-block:: python
 
-   from pathlib import Path
    import time
 
    import numpy as np
@@ -105,10 +98,17 @@ this:
 GUI and Plotting
 ================
 
+The starting point for an NSpyre GUI is ``NSpyreApp``, which creates a template
+Qt application with the default look and feel of NSpyre. ``MainWidget`` 
+provides a list of other widgets that the user can load into the GUI, as well 
+as a convenient dockable interface for rearranging widgets. The code below 
+creates a GUI that can load one of the NSpyre plotting widgets, 
+``FlexLinePlotWidget``, and a theoretical user-defined experiment widget 
+``ExampleExperiment``.
 
 .. code-block:: python
 
-   import nspyre.gui.widgets.line_plot_widget
+   import nspyre.gui.widgets.flex_line_plot_widget
    from nspyre import MainWidget
    from nspyre import MainWidgetItem
    from nspyre import NSpyreApp
@@ -124,9 +124,10 @@ GUI and Plotting
          'ExampleExperiment': MainWidgetItem(mygui, 'ExampleExperiment')
       }
       'Plots': {
-         'FlexSinkLinePlot': MainWidgetItem(nspyre.gui.widgets.line_plot_widget, 'FlexSinkLinePlotWidget')
+         'FlexLinePlot': MainWidgetItem(nspyre.gui.widgets.flex_line_plot_widget, 'FlexLinePlotWidget')
       },
    })
    main_widget.show()
    # Run the GUI event loop.
    app.exec()
+

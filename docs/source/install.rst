@@ -2,7 +2,7 @@
 Install
 #######
 
-The recommended way to install NSpyre is to **install the latest stable release** from `conda-forge <https://conda-forge.org/docs/>`_ (more info below).
+You can install NSpyre from `conda-forge <https://conda-forge.org/docs/>`_:
 
 .. code-block:: bash
    
@@ -14,8 +14,8 @@ or PyPI:
 
    $ pip install nspyre
 
-Conda
-=====
+Conda Basics
+============
 
 If you do not already have conda installed, we recommend using the Miniconda distribution (instead of the Anaconda distribution) because it contains fewer default packages, many of which are unnecessary for the vast majority of users. The latest release of Miniconda for your platform is available here: `Miniconda installers <https://docs.conda.io/en/latest/miniconda.html>`__. The default installation options are appropriate for most users.
 
@@ -63,10 +63,10 @@ Whenever creating a new conda environment, we recommend that you first install p
 
    (my-env) $ conda install pip
 
-This ensures that any future calls to ``pip`` will install packages to your conda environment, rather than the system installation (which would defeat the purpose of conda). To confirm that ``pip`` will be called from your conda environment, you can run ``which pip`` on \*nix (Mac, Linux), or ``where pip`` on Windows to reveal its location. The location should be ``.../miniconda3/envs/<your_env>/bin/pip`` and NOT ``.../miniconda3/bin/pip`` or, e.g., ``/usr/bin/pip``.
+This ensures that any future calls to ``pip`` will install packages to your conda environment, rather than the system installation (which would defeat the purpose of conda). You may need to restart your terminal application for this to take effect. To confirm that ``pip`` will be called from your conda environment, you can run ``which pip`` on \*nix (Mac, Linux), or ``where pip`` on Windows to reveal its location. The location should be ``.../miniconda3/envs/<your_env>/bin/pip`` and NOT ``.../miniconda3/bin/pip`` or, e.g., ``/usr/bin/pip``.
 
 Finally, install nspyre:
 
 .. code-block:: bash
 
-   (my-env) $ conda install -c conda-forge nspyre
+   (my-env) $ conda install nspyre

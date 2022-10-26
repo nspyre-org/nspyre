@@ -130,4 +130,3 @@ creates a GUI that can load one of the NSpyre plotting widgets,
    main_widget.show()
    # Run the GUI event loop.
    app.exec()
-

@@ -68,6 +68,7 @@ class SaveWidget(QtWidgets.QWidget):
         dataset_label = QtWidgets.QLabel('Data Set')
         # text box for the user to enter the name of the desired data set in the dataserver
         self.dataset_lineedit = QtWidgets.QLineEdit()
+        self.dataset_lineedit.setMinimumWidth(150)
         dataset_layout = QtWidgets.QHBoxLayout()
         dataset_layout.addWidget(dataset_label)
         dataset_layout.addWidget(self.dataset_lineedit)

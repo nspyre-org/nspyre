@@ -27,51 +27,79 @@ class ParamsWidget(QtWidgets.QWidget):
 
     """
 
-    def __init__(self, params: dict, *args, **kwargs):
+    def __init__(self, params_config: dict, get_param_value_funs: dict = None):
         """Initialize params widget.
 
         Args:
-            params: dictionary mapping parameter names to options, which are
-                    passed as arguments to their corresponding pyqtgraph
-                    spinbox, or to strings. The spinbox options are documented
-                    at https://pyqtgraph.readthedocs.io/en/latest/widgets/spinbox.html.
-                    Additional configuration parameters than be passed are:
-                    - display_text: parameter text label
+            params_config: Dictionary mapping parameter names to a parameter 
+                configuration dictionary, which should contain:
+                - widget: QWidget instance that represents the parameter
+                - display_text[optional]: parameter text label
+            get_param_value_funs: Dictionary mapping python classes to a
+                function that takes an instance of that class and returns its
+                value. This can be used to show ParamsWidget how to handle new
+                QWidgets. There is built-in support for pyqtgraph SpinBox, 
+                QLineEdit, QComboBox, QCheckBox.
         """
-        super().__init__(*args, **kwargs)
-        self.params = params
-        self.spinboxes = {}
-        self.textboxes = {}
+        super().__init__()
+        self.params_config = params_config
+        self.widgets = {}
+
+        # getter functions of GUI parameter widgets
+        if get_param_value_funs is None:
+            self.get_param_value_funs = {}
+        else:
+            self.get_param_value_funs = get_param_value_funs
+        # pyqtgraph SpinBox
+        if SpinBox not in self.get_param_value_funs:
+            def get_spinbox_val(spinbox):
+                return spinbox.value()
+            self.get_param_value_funs[SpinBox] = get_spinbox_val
+        # QLineEdit
+        if QtWidgets.QLineEdit not in self.get_param_value_funs:
+            def get_lineedit_val(lineedit):
+                return lineedit.text()
+            self.get_param_value_funs[QtWidgets.QLineEdit] = get_lineedit_val
+        # QComboBox
+        if QtWidgets.QComboBox not in self.get_param_value_funs:
+            def get_combobox_val(combobox):
+                idx = combobox.currentIndex()
+                return combobox.itemText(idx)
+            self.get_param_value_funs[QtWidgets.QComboBox] = get_combobox_val
+        # QCheckBox
+        if QtWidgets.QCheckBox not in self.get_param_value_funs:
+            def get_combobox_val(checkbox):
+                return checkbox.isChecked()
+            self.get_param_value_funs[QtWidgets.QCheckBox] = get_combobox_val
 
         # vertical layout
         total_layout = QtWidgets.QVBoxLayout()
 
-        # add parameter spinbox widgets to the layout
-        for p in self.params:
+        # add widgets to the layout
+        for p in self.params_config:
             # small layout containing a label and spinbox
             label_param_layout = QtWidgets.QHBoxLayout()
             # create parameter label
             label = QtWidgets.QLabel()
             try:
-                display_text = self.params[p].pop('display_text')
-            except (KeyError, AttributeError):
+                display_text = self.params_config[p]['display_text']
+            except KeyError:
                 label.setText(p)
             else:
                 label.setText(display_text)
             label_param_layout.addWidget(label)
-            if isinstance(self.params[p], str):
-                # create textbox (QLineEdit widget)
-                textbox = QtWidgets.QLineEdit(self.params[p])
-                # store the textboxes
-                self.textboxes[p] = textbox
-                label_param_layout.addWidget(textbox)
-            else:
-                # create spinbox
-                spinbox = SpinBox(**self.params[p])
-                spinbox.setMinimumWidth(100)
-                # store the spinboxes
-                self.spinboxes[p] = spinbox
-                label_param_layout.addWidget(spinbox)
+
+            # retrive the QWidget
+            try:
+                self.widgets[p] = self.params_config[p]['widget']
+            except KeyError as err:
+                raise ValueError(f'parameter [{p}] does not have a "widget" key') from err
+            if not isinstance(self.widgets[p], QtWidgets.QWidget):
+                raise ValueError(f'parameter [{p}] widget is not a QWidget') from err
+            # set a default min width
+            self.widgets[p].setMinimumWidth(100)
+            # add the QWidget to the layout
+            label_param_layout.addWidget(self.widgets[p])
             total_layout.addLayout(label_param_layout)
 
         self.setLayout(total_layout)
@@ -79,20 +107,20 @@ class ParamsWidget(QtWidgets.QWidget):
     def all_params(self):
         """Return the current value of all user parameters as a dictionary."""
         all_params = {}
-        for p in self.params:
-            if isinstance(self.params[p], str):
-                all_params[p] = self.textboxes[p].text()
-            else:
-                all_params[p] = self.spinboxes[p].value()
+        for p in self.params_config:
+            all_params[p] = getattr(self, p)
         return all_params
 
     def __getattr__(self, attr: str):
         """Allow easy access to the parameter values."""
-        if attr in self.params:
-            if isinstance(self.params[attr], str):
-                return self.textboxes[attr].text()
+        if attr in self.params_config:
+            widget = self.params_config[attr]['widget']
+            try:
+                fun = self.get_param_value_funs[type(widget)]
+            except KeyError:
+                raise ValueError(f'Parameter [{attr}] has no function for retrieving its value from the GUI. This should be set using the "get_param_value_funs" in the ParamsWidget constructor.')
             else:
-                return self.spinboxes[attr].value()
+                return fun(widget)
         else:
             # raise the default python error when an attribute isn't found
             return self.__getattribute__(attr)

@@ -8,6 +8,7 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 from pyqtgraph import SpinBox
 from pyqtgraph.Qt import QtWidgets
+from pyqtgraph.Qt import QtCore
 
 
 class ParamsWidget(QtWidgets.QWidget):
@@ -72,22 +73,26 @@ class ParamsWidget(QtWidgets.QWidget):
                 return checkbox.isChecked()
             self.get_param_value_funs[QtWidgets.QCheckBox] = get_combobox_val
 
-        # vertical layout
-        total_layout = QtWidgets.QVBoxLayout()
+        # layout
+        layout = QtWidgets.QGridLayout()
+        layout_row = 0
 
         # add widgets to the layout
         for p in self.params_config:
-            # small layout containing a label and spinbox
-            label_param_layout = QtWidgets.QHBoxLayout()
             # create parameter label
             label = QtWidgets.QLabel()
+            # set minimum size for label so that other widget uses the rest of the space
+            label.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed,
+                                                    QtWidgets.QSizePolicy.Policy.Fixed))
+            # align text to right side
+            label.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
             try:
                 display_text = self.params_config[p]['display_text']
             except KeyError:
                 label.setText(p)
             else:
                 label.setText(display_text)
-            label_param_layout.addWidget(label)
+            layout.addWidget(label, layout_row, 0)
 
             # retrive the QWidget
             try:
@@ -99,10 +104,10 @@ class ParamsWidget(QtWidgets.QWidget):
             # set a default min width
             self.widgets[p].setMinimumWidth(100)
             # add the QWidget to the layout
-            label_param_layout.addWidget(self.widgets[p])
-            total_layout.addLayout(label_param_layout)
+            layout.addWidget(self.widgets[p], layout_row, 1)
+            layout_row += 1
 
-        self.setLayout(total_layout)
+        self.setLayout(layout)
 
     def all_params(self):
         """Return the current value of all user parameters as a dictionary."""

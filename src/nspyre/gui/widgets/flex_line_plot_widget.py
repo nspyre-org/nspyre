@@ -9,18 +9,11 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 import logging
 import time
-from functools import partial
-from typing import Any
-from typing import Dict
 from threading import Lock
 
 import numpy as np
 from nspyre import DataSink
-from pyqtgraph import mkColor
-from pyqtgraph import PlotWidget
-from pyqtgraph import SpinBox
 from pyqtgraph.Qt import QtCore
-from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
 from .line_plot_widget import LinePlotWidget
@@ -35,7 +28,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
     title: plot title string
     xlabel: x label string
     ylabel: y label string
-    datasets: dictionary where keys are a data series name, and values are data 
+    datasets: dictionary where keys are a data series name, and values are data
     as a list of 2D numpy array like
     [np.array([[x0, x1, ...], [y0, y1, ...]]), np.array([[x10, x11, ...], [y10, y11, ...]]), ...]
 
@@ -47,23 +40,26 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
 
         layout = QtWidgets.QVBoxLayout()
 
+        # lineplot widget
+        self.flex_line_plot = _FlexLinePlotWidget()
+
         # lineedit and button for selecting the data source
         datasource_layout = QtWidgets.QHBoxLayout()
         self.datasource_lineedit = QtWidgets.QLineEdit()
         self.update_button = QtWidgets.QPushButton('Connect')
         self.update_button.clicked.connect(self._update_source)
-        datasource_layout.addWidget(self.update_button)
+        datasource_layout.addWidget(QtWidgets.QLabel('Data Set'))
         datasource_layout.addWidget(self.datasource_lineedit)
-
-        # lineplot widget
-        self.flex_line_plot = _FlexLinePlotWidget()
+        datasource_layout.addWidget(self.update_button)
 
         # contains plot settings
         plot_settings_layout = QtWidgets.QHBoxLayout()
 
         # add new subplot layout
         plot_add_layout = QtWidgets.QVBoxLayout()
-        plot_add_layout.addWidget(QtWidgets.QLabel('Plot Settings'))
+        plot_settings_label = QtWidgets.QLabel('Plot Settings')
+        plot_settings_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
+        plot_add_layout.addWidget(plot_settings_label)
 
         # plot name
         plot_name_layout = QtWidgets.QHBoxLayout()
@@ -93,11 +89,11 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         # average / append
         plot_processing_layout = QtWidgets.QHBoxLayout()
         plot_processing_label = QtWidgets.QLabel('Processing')
-        # set minimum size for label so that other widget uses the rest of the space
         plot_processing_label.setSizePolicy(
-            QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed,
-                                    QtWidgets.QSizePolicy.Policy.Fixed)
+            QtWidgets.QSizePolicy(
+                QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed
             )
+        )
         plot_processing_layout.addWidget(plot_processing_label)
         self.plot_processing_dropdown = QtWidgets.QComboBox()
         self.plot_processing_dropdown.addItem('Average')  # index 0
@@ -110,7 +106,9 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         plot_add_layout.addStretch()
         plot_settings_layout.addLayout(plot_add_layout)
         # set to minimum size
-        plot_add_layout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetMinimumSize)
+        plot_add_layout.setSizeConstraint(
+            QtWidgets.QLayout.SizeConstraint.SetMinimumSize
+        )
 
         # subplot show/hide/add/del buttons
         plot_actions_layout = QtWidgets.QVBoxLayout()
@@ -142,10 +140,22 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         self.plots_list_widget.currentItemChanged.connect(self._plot_selection_changed)
         plot_settings_layout.addWidget(self.plots_list_widget)
 
-        # arrange main layout
-        layout.addLayout(datasource_layout)
-        layout.addWidget(self.flex_line_plot)
-        layout.addLayout(plot_settings_layout)
+        # layout for containing the data source selection layout and the plot settings layout
+        settings_layout = QtWidgets.QVBoxLayout()
+        settings_layout.addLayout(datasource_layout)
+        settings_layout.addLayout(plot_settings_layout)
+        # widget for containing the settings layout
+        settings_widget = QtWidgets.QWidget()
+        settings_widget.setLayout(settings_layout)
+
+        # splitter
+        splitter = QtWidgets.QSplitter()
+        splitter.setOrientation(QtCore.Qt.Orientation.Vertical)
+        splitter.addWidget(self.flex_line_plot)
+        splitter.addWidget(settings_widget)
+
+        # main layout
+        layout.addWidget(splitter)
 
         self.setLayout(layout)
 
@@ -176,13 +186,17 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             if scan_i != '':
                 int(scan_i)
         except ValueError as err:
-            raise ValueError(f'Scan start [{scan_i}] must be either an integer or empty.')
+            raise ValueError(
+                f'Scan start [{scan_i}] must be either an integer or empty.'
+            ) from err
         scan_j = self.add_plot_scan_j_textbox.text()
         try:
             if scan_j != '':
                 int(scan_j)
         except ValueError as err:
-            raise ValueError(f'Scan end [{scan_j}] must be either an integer or empty.')
+            raise ValueError(
+                f'Scan end [{scan_j}] must be either an integer or empty.'
+            ) from err
         name = self.plot_name_lineedit.text()
         series = self.plot_series_lineedit.text()
         processing = self.plot_processing_dropdown.currentText()
@@ -190,7 +204,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         return name, series, scan_i, scan_j, processing
 
     def _update_plot(self):
-        """Called when the user clicks the update button."""        
+        """Called when the user clicks the update button."""
         name, series, scan_i, scan_j, processing = self._get_plot_settings()
         # set the plot settings
         self.flex_line_plot.new_plot_settings(name, series, scan_i, scan_j, processing)
@@ -203,7 +217,12 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         # add the plot to the pyqtgraph plotwidget
         self.flex_line_plot.add_plot(name)
         # set the plot settings
-        self.flex_line_plot.plot_settings[name] = {'series': series,'scan_i': scan_i, 'scan_j': scan_j, 'processing': processing}
+        self.flex_line_plot.plot_settings[name] = {
+            'series': series,
+            'scan_i': scan_i,
+            'scan_j': scan_j,
+            'processing': processing,
+        }
         # add the plot name to the list of plots
         self.plots_list_widget.addItem(name)
 
@@ -255,7 +274,12 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
     def new_plot_settings(self, name, series, scan_i, scan_j, processing):
         with self.mutex:
-            self.plot_settings[name] = {'series': series, 'scan_i': scan_i, 'scan_j': scan_j, 'processing': processing}
+            self.plot_settings[name] = {
+                'series': series,
+                'scan_i': scan_i,
+                'scan_j': scan_j,
+                'processing': processing,
+            }
 
     def new_source(self, data_source_name, timeout=1):
         # connect to a new data set
@@ -302,7 +326,9 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     try:
                         dsets = self.sink.datasets
                     except AttributeError as err:
-                        raise RuntimeError(f'Data source [{data_source_name}] has no "datasets" attribute - exiting...') from err
+                        raise RuntimeError(
+                            f'Data source [{data_source_name}] has no "datasets" attribute - exiting...'
+                        ) from err
                     else:
                         if not isinstance(dsets, dict):
                             logger.error(
@@ -342,7 +368,9 @@ class _FlexLinePlotWidget(LinePlotWidget):
                         try:
                             data = self.sink.datasets[series]
                         except KeyError:
-                            logger.error(f'Data series [{series}] does not exist in data set [{self.data_source_name}]')
+                            logger.error(
+                                f'Data series [{series}] does not exist in data set [{self.data_source_name}]'
+                            )
                             continue
 
                         if isinstance(data, list):
@@ -351,22 +379,28 @@ class _FlexLinePlotWidget(LinePlotWidget):
                             else:
                                 # check for numpy array
                                 if not isinstance(data[0], np.ndarray):
-                                    raise ValueError(f'Data series [{series}] must be a list of numpy arrays, but the first list element has type [{type(data[0])}].')
+                                    raise ValueError(
+                                        f'Data series [{series}] must be a list of numpy arrays, but the first list element has type [{type(data[0])}].'
+                                    )
                                 # check numpy array shape
                                 if data[0].shape[0] != 2 or len(data[0].shape) != 2:
-                                    raise ValueError(f'Data series [{series}] first list element has shape {data.shape}, but should be (2, n).')
+                                    raise ValueError(
+                                        f'Data series [{series}] first list element has shape {data.shape}, but should be (2, n).'
+                                    )
 
                                 try:
                                     if scan_i == '' and scan_j == '':
                                         data_subset = data[:]
                                     elif scan_j == '':
-                                        data_subset = data[int(scan_i):]
+                                        data_subset = data[int(scan_i) :]
                                     elif scan_i == '':
-                                        data_subset = data[:int(scan_j)]
+                                        data_subset = data[: int(scan_j)]
                                     else:
-                                        data_subset = data[int(scan_i):int(scan_j)]
-                                except IndexError as err:
-                                    logger.warning(f'Data series [{series}] invalid scan indices [{scan_i}, {scan_j}]')
+                                        data_subset = data[int(scan_i) : int(scan_j)]
+                                except IndexError:
+                                    logger.warning(
+                                        f'Data series [{series}] invalid scan indices [{scan_i}, {scan_j}]'
+                                    )
                                     continue
 
                                 if processing == 'Append':
@@ -374,7 +408,9 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                     processed_data = np.concatenate(data_subset, axis=1)
                                 elif processing == 'Average':
                                     # average the numpy arrays
-                                    processed_data = np.average(np.stack(data_subset), axis=0)
+                                    processed_data = np.average(
+                                        np.stack(data_subset), axis=0
+                                    )
                                 else:
                                     raise ValueError(
                                         f'processing has unsupported value [{processing}].'

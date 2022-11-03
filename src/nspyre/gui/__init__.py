@@ -12,10 +12,10 @@ from .widgets import LinePlotWidget
 from .widgets import MainWidget
 from .widgets import MainWidgetItem
 from .widgets import ParamsWidget
-from .widgets import SaveWidget
-from .widgets import sssss
 from .widgets import QHLine
 from .widgets import QVLine
+from .widgets import SaveWidget
+from .widgets import sssss
 
 # from .widgets import SplitterOrientation
 # from .widgets import SplitterWidget

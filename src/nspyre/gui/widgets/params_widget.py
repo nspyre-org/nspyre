@@ -8,7 +8,6 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 from pyqtgraph import SpinBox
 from pyqtgraph.Qt import QtWidgets
-from pyqtgraph.Qt import QtCore
 
 
 class ParamsWidget(QtWidgets.QWidget):
@@ -32,14 +31,14 @@ class ParamsWidget(QtWidgets.QWidget):
         """Initialize params widget.
 
         Args:
-            params_config: Dictionary mapping parameter names to a parameter 
+            params_config: Dictionary mapping parameter names to a parameter
                 configuration dictionary, which should contain:
                 - widget: QWidget instance that represents the parameter
                 - display_text[optional]: parameter text label
             get_param_value_funs: Dictionary mapping python classes to a
                 function that takes an instance of that class and returns its
                 value. This can be used to show ParamsWidget how to handle new
-                QWidgets. There is built-in support for pyqtgraph SpinBox, 
+                QWidgets. There is built-in support for pyqtgraph SpinBox,
                 QLineEdit, QComboBox, QCheckBox.
         """
         super().__init__()
@@ -53,24 +52,32 @@ class ParamsWidget(QtWidgets.QWidget):
             self.get_param_value_funs = get_param_value_funs
         # pyqtgraph SpinBox
         if SpinBox not in self.get_param_value_funs:
+
             def get_spinbox_val(spinbox):
                 return spinbox.value()
+
             self.get_param_value_funs[SpinBox] = get_spinbox_val
         # QLineEdit
         if QtWidgets.QLineEdit not in self.get_param_value_funs:
+
             def get_lineedit_val(lineedit):
                 return lineedit.text()
+
             self.get_param_value_funs[QtWidgets.QLineEdit] = get_lineedit_val
         # QComboBox
         if QtWidgets.QComboBox not in self.get_param_value_funs:
+
             def get_combobox_val(combobox):
                 idx = combobox.currentIndex()
                 return combobox.itemText(idx)
+
             self.get_param_value_funs[QtWidgets.QComboBox] = get_combobox_val
         # QCheckBox
         if QtWidgets.QCheckBox not in self.get_param_value_funs:
+
             def get_combobox_val(checkbox):
                 return checkbox.isChecked()
+
             self.get_param_value_funs[QtWidgets.QCheckBox] = get_combobox_val
 
         # layout
@@ -82,8 +89,12 @@ class ParamsWidget(QtWidgets.QWidget):
             # create parameter label
             label = QtWidgets.QLabel()
             # set minimum size for label so that other widget uses the rest of the space
-            label.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed,
-                                                    QtWidgets.QSizePolicy.Policy.Fixed))
+            label.setSizePolicy(
+                QtWidgets.QSizePolicy(
+                    QtWidgets.QSizePolicy.Policy.Fixed,
+                    QtWidgets.QSizePolicy.Policy.Fixed,
+                )
+            )
             # TODO align text to right side
             # label.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
             try:
@@ -98,9 +109,11 @@ class ParamsWidget(QtWidgets.QWidget):
             try:
                 self.widgets[p] = self.params_config[p]['widget']
             except KeyError as err:
-                raise ValueError(f'parameter [{p}] does not have a "widget" key') from err
+                raise ValueError(
+                    f'parameter [{p}] does not have a "widget" key'
+                ) from err
             if not isinstance(self.widgets[p], QtWidgets.QWidget):
-                raise ValueError(f'parameter [{p}] widget is not a QWidget') from err
+                raise ValueError(f'parameter [{p}] widget is not a QWidget')
             # set a default min width
             self.widgets[p].setMinimumWidth(100)
             # add the QWidget to the layout
@@ -122,8 +135,10 @@ class ParamsWidget(QtWidgets.QWidget):
             widget = self.params_config[attr]['widget']
             try:
                 fun = self.get_param_value_funs[type(widget)]
-            except KeyError:
-                raise ValueError(f'Parameter [{attr}] has no function for retrieving its value from the GUI. This should be set using the "get_param_value_funs" in the ParamsWidget constructor.')
+            except KeyError as err:
+                raise ValueError(
+                    f'Parameter [{attr}] has no function for retrieving its value from the GUI. This should be set using the "get_param_value_funs" in the ParamsWidget constructor.'
+                ) from err
             else:
                 return fun(widget)
         else:

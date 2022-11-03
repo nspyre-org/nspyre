@@ -13,11 +13,8 @@ from functools import partial
 from typing import Any
 from typing import Dict
 
-import numpy as np
-from nspyre import DataSink
 from pyqtgraph import mkColor
 from pyqtgraph import PlotWidget
-from pyqtgraph import SpinBox
 from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets

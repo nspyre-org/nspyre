@@ -34,6 +34,7 @@ class ExperimentWidget(QtWidgets.QWidget):
         args: list = None,
         kwargs: dict = None,
         title: str = None,
+        kill: bool = True,
         layout: QtWidgets.QLayout = None,
     ):
         """Init ExperimentWidget.
@@ -85,8 +86,9 @@ class ExperimentWidget(QtWidgets.QWidget):
         self.destroyed.connect(partial(self.stop))
 
         # kill button
-        kill_button = QtWidgets.QPushButton('Kill')
-        kill_button.clicked.connect(self.kill)
+        if kill:
+            kill_button = QtWidgets.QPushButton('Kill')
+            kill_button.clicked.connect(self.kill)
 
         # Qt layout that arranges the params and button vertically
         params_layout = QtWidgets.QVBoxLayout()
@@ -97,7 +99,8 @@ class ExperimentWidget(QtWidgets.QWidget):
         params_layout.addStretch()
         params_layout.addWidget(run_button)
         params_layout.addWidget(stop_button)
-        params_layout.addWidget(kill_button)
+        if kill:
+            params_layout.addWidget(kill_button)
 
         self.setLayout(params_layout)
 

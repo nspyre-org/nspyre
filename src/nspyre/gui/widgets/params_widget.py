@@ -84,8 +84,8 @@ class ParamsWidget(QtWidgets.QWidget):
             # set minimum size for label so that other widget uses the rest of the space
             label.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed,
                                                     QtWidgets.QSizePolicy.Policy.Fixed))
-            # align text to right side
-            label.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
+            # TODO align text to right side
+            # label.setAlignment(QtCore.Qt.AlignmentFlag.AlignRight)
             try:
                 display_text = self.params_config[p]['display_text']
             except KeyError:

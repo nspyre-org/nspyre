@@ -74,8 +74,8 @@ def main():
                     gui_elements, 'ScrollingODMRPlotWidget', stretch=(100, 100)
                 ),
                 'FlexSinkLinePlot': MainWidgetItem(
-                    nspyre.gui.widgets.line_plot_widget,
-                    'FlexSinkLinePlotWidget',
+                    nspyre.gui.widgets.flex_line_plot_widget,
+                    'FlexLinePlotWidget',
                     stretch=(100, 100),
                 ),
             },

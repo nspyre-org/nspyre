@@ -18,7 +18,7 @@ from nspyre import ParamsWidget
 from nspyre import ProcessRunner
 from nspyre import SaveWidget
 from pyqtgraph.Qt import QtWidgets
-
+from pyqtgraph import SpinBox
 
 class ODMRWidget(QtWidgets.QWidget):
     """Qt widget subclass that generates an interface for running ODMR scans.
@@ -36,28 +36,20 @@ class ODMRWidget(QtWidgets.QWidget):
             {
                 'start_freq': {
                     'display_text': 'Start Frequency',
-                    'value': 3e9,
-                    'suffix': 'Hz',
-                    'siPrefix': True,
-                    'bounds': (100e3, 10e9),
-                    'dec': True,
+                    'widget': SpinBox(value=3e9, suffix='Hz', siPrefix=True, bounds=(100e3, 10e9), dec=True)
                 },
                 'stop_freq': {
                     'display_text': 'Stop Frequency',
-                    'value': 4e9,
-                    'suffix': 'Hz',
-                    'siPrefix': True,
-                    'bounds': (100e3, 10e9),
-                    'dec': True,
+                    'widget': SpinBox(value=4e9, suffix='Hz', siPrefix=True, bounds=(100e3, 10e9), dec=True)
                 },
                 'num_points': {
                     'display_text': 'Number of points',
-                    'value': 100,
-                    'int': True,
-                    'bounds': (1, None),
-                    'dec': True,
+                    'widget': SpinBox(value=100, int=True, bounds=(1, None), dec=True)
                 },
-                'dataset': 'ODMR',
+                'dataset': {
+                    'display_text': 'Data Set',
+                    'widget': QtWidgets.QLineEdit('ODMR')
+                }
             }
         )
 
@@ -123,7 +115,7 @@ class ODMRPlotWidget(LinePlotWidget):
         )
 
     def setup(self):
-        self.new_plot('ODMR')
+        self.add_plot('ODMR')
         self.plot_widget.setYRange(-100, 5100)
         self.sink = DataSink('ODMR')
         self.sink.start()

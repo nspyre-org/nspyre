@@ -19,7 +19,7 @@ try:
     from .gui import colors
     from .gui import cyclic_colors
     from .gui import ExperimentWidget
-    from .gui import FlexSinkLinePlotWidget
+    from .gui import FlexLinePlotWidget
     from .gui import LinePlotWidget
     from .gui import MainWidget
     from .gui import MainWidgetItem
@@ -30,6 +30,8 @@ try:
     from .gui import ParamsWidget
     from .gui import qt_set_trace
     from .gui import SaveWidget
+    from .gui import QHLine
+    from .gui import QVLine
 
     # from .gui import SplitterOrientation
     # from .gui import SplitterWidget

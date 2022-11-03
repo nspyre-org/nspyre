@@ -10,7 +10,6 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 import logging
 import time
 from functools import partial
-from threading import Lock
 from typing import Any
 from typing import Dict
 
@@ -141,7 +140,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         self.current_color_idx += 1
         return color
 
-    def new_plot(
+    def add_plot(
         self,
         name: str,
         pen: QtGui.QColor = None,
@@ -185,6 +184,75 @@ class LinePlotWidget(QtWidgets.QWidget):
             'sem': QtCore.QSemaphore(n=1),
         }
 
+    def remove_plot(self, name: str):
+        """Remove a plot from the display and delete it from the internal storage.
+
+        Args:
+            name: Name of the plot.
+
+        Raises:
+            ValueError: An error with the supplied arguments.
+        """
+        if name not in self.plots:
+            raise ValueError(f'A plot with the name [{name}] does not exist.')
+        # acquire the semaphore to make it isn't currently plotting
+        sem = self.plots[name]['sem']
+        sem.acquire()
+        # check again in case the plot was just deleted
+        if name not in self.plots:
+            raise ValueError(f'A plot with the name [{name}] does not exist.')
+        plt = self.plots[name]['plot']
+        if plt in self.plot_widget.listDataItems():
+            self.plot_widget.removeItem(plt)
+        del self.plots[name]
+        sem.release()
+
+    def hide(self, name: str):
+        """Remove a plot from the display.
+
+        Args:
+            name: Name of the plot.
+
+        Raises:
+            ValueError: An error with the supplied arguments.
+        """
+        if name not in self.plots:
+            raise ValueError(f'A plot with the name [{name}] does not exist.')
+        # acquire the semaphore to make sure the plot isn't currently being manipulated
+        self.plots[name]['sem'].acquire()
+        # check again in case the plot was just deleted
+        if name not in self.plots:
+            raise ValueError(f'A plot with the name [{name}] does not exist.')
+        plt = self.plots[name]['plot']
+        if plt in self.plot_widget.listDataItems():
+            self.plot_widget.removeItem(plt)
+            self.plots[name]['sem'].release()
+        else:
+            self.plots[name]['sem'].release()
+            raise ValueError(f'The plot [{name}] is already hidden.')
+
+    def show(self, name: str):
+        """Display a previously hidden plot from the display.
+
+        Args:
+            name: Name of the plot.
+
+        Raises:
+            ValueError: An error with the supplied arguments.
+        """
+        if name not in self.plots:
+            raise ValueError(f'A plot with the name [{name}] does not exist.')
+        self.plots[name]['sem'].acquire()
+        # check again in case the plot was just deleted
+        if name not in self.plots:
+            raise ValueError(f'A plot with the name [{name}] does not exist.')
+        if self.plots[name]['plot'] in self.plot_widget.listDataItems():
+            self.plots[name]['sem'].release()
+            raise ValueError(f'The plot [{name}] is already shown.')
+        else:
+            self.plot_widget.addItem(self.plots[name]['plot'])
+            self.plots[name]['sem'].release()
+
     def set_data(self, name: str, xdata, ydata):
         """Queue up x/y data to update a line plot. Threadsafe.
 
@@ -197,7 +265,7 @@ class LinePlotWidget(QtWidgets.QWidget):
             ValueError: An error with the supplied arguments.
         """
         if name not in self.plots:
-            raise ValueError(f'A plot with the name {name} does not exist.')
+            raise ValueError(f'A plot with the name [{name}] does not exist.')
 
         # block until any previous calls to set_data have been fully processed
         self.plots[name]['sem'].acquire()
@@ -250,227 +318,3 @@ class LinePlotWidget(QtWidgets.QWidget):
     def stop(self):
         self.update_thread.update_func = None
         self.teardown()
-
-
-class FlexSinkLinePlotWidget(QtWidgets.QWidget):
-    """QWidget that allows the user to connect to an arbitrary nspyre DataSource and plot its data.
-
-    The DataSource may contain the following attributes:
-    title: plot title string
-    xlabel: x label string
-    ylabel: y label string
-    datasets: dictionary where keys are a dataset name to display in the
-    legend, and values are data as a 2D numpy array like
-    np.array([[xdata0, xdata1, ...], [ydata0, ydata1, ...]]), or a
-    list of a such numpy arrays
-
-    """
-
-    def __init__(self, data_processing: str = 'append'):
-        """Init FlexSinkLinePlotWidget.
-
-        Args:
-            data_processing: If a dataset's value is an array of numpy arrays, this
-                parameter controls how the data is processed. If set to 'append'
-                the numpy arrays are appended. If set to 'avg' the numpy arrays
-                must all be the same length, and will be averaged.
-
-        """
-        super().__init__()
-
-        layout = QtWidgets.QVBoxLayout()
-
-        # lineedit and button for selecting the data source
-        datasource_layout = QtWidgets.QHBoxLayout()
-        self.datasource_lineedit = QtWidgets.QLineEdit()
-        self.update_button = QtWidgets.QPushButton('Connect')
-        self.update_button.clicked.connect(self.update_source)
-        datasource_layout.addWidget(self.update_button)
-        datasource_layout.addWidget(self.datasource_lineedit)
-
-        # lineplot widget
-        self.lineplot = _FlexSinkLinePlotWidget(data_processing=data_processing)
-
-        layout_row = 0
-        settings_layout = QtWidgets.QGridLayout()
-
-        # number of points to display
-        settings_layout.addWidget(QtWidgets.QLabel('Numer of Points'), layout_row, 0)
-        # spinbox for entering the number of points to plot
-        self.npoints_spinbox = SpinBox(value=0, int=True, bounds=(0, None))
-
-        def user_changed_npoints(spinbox):
-            self.lineplot.set_npoints(spinbox.value())
-
-        self.npoints_spinbox.sigValueChanged.connect(user_changed_npoints)
-        settings_layout.addWidget(self.npoints_spinbox, layout_row, 1)
-        layout_row += 1
-
-        # average / append
-        settings_layout.addWidget(QtWidgets.QLabel('Data Processing'), layout_row, 0)
-        self.data_processing_dropdown = QtWidgets.QComboBox()
-        self.data_processing_dropdown.addItem('Append')  # index 0
-        self.data_processing_dropdown.addItem('Average')  # index 1
-        self.data_processing_dropdown.currentIndexChanged.connect(
-            self.update_data_processing
-        )
-        # default to append
-        self.data_processing_dropdown.setCurrentIndex(0)
-        settings_layout.addWidget(self.data_processing_dropdown, layout_row, 1)
-        layout_row += 1
-
-        layout.addLayout(datasource_layout)
-        layout.addWidget(self.lineplot)
-        layout.addLayout(settings_layout)
-
-        self.setLayout(layout)
-
-    def update_data_processing(self, idx):
-        if idx == 0:
-            self.lineplot.set_data_processing('append')
-        elif idx == 1:
-            self.lineplot.set_data_processing('average')
-        else:
-            raise ValueError('Invalid data processing selection.')
-
-    def update_source(self):
-        self.lineplot.new_source(self.datasource_lineedit.text())
-
-
-class _FlexSinkLinePlotWidget(LinePlotWidget):
-    """See FlexSinkLinePlotWidget."""
-
-    def __init__(self, data_processing: str = 'append'):
-        super().__init__()
-        self.sink = None
-        # mutex for protecting access to the data sink
-        self.mutex = Lock()
-        # number of points to plot
-        self.npoints = 0
-        # data processing to perform on plot data
-        self.data_processing = data_processing
-
-    def set_npoints(self, npoints):
-        with self.mutex:
-            self.npoints = npoints
-
-    def set_data_processing(self, data_processing):
-        with self.mutex:
-            self.data_processing = data_processing
-
-    def new_source(self, data_source_name, timeout=1):
-        # connect to a new data set
-        with self.mutex:
-            self.teardown()
-            self.data_source_name = data_source_name
-
-            # clear previous plots
-            self.plot_widget.getPlotItem().clear()
-            self.plots = {}
-
-            # try to get the plot title and x/y labels
-            try:
-                self.sink = DataSink(self.data_source_name)
-                self.sink.__enter__()
-                if self.sink.pop(timeout=timeout):
-                    # set title
-                    try:
-                        title = self.sink.title
-                    except AttributeError:
-                        logger.info(
-                            f'Data source [{data_source_name}] has no "title" attribute - skipping...'
-                        )
-                    else:
-                        self.set_title(title)
-                    # set xlabel
-                    try:
-                        xlabel = self.sink.xlabel
-                    except AttributeError:
-                        logger.info(
-                            f'Data source [{data_source_name}] has no "xlabel" attribute - skipping...'
-                        )
-                    else:
-                        self.xaxis.setLabel(text=xlabel)
-                    # set ylabel
-                    try:
-                        ylabel = self.sink.ylabel
-                    except AttributeError:
-                        logger.info(
-                            f'Data source [{data_source_name}] has no "ylabel" attribute - skipping...'
-                        )
-                    else:
-                        self.yaxis.setLabel(text=ylabel)
-                    try:
-                        dsets = self.sink.datasets
-                    except AttributeError as err:
-                        logger.error(
-                            f'Data source [{data_source_name}] has no "datasets" attribute - exitting...'
-                        )
-                        raise RuntimeError from err
-                    else:
-                        if not isinstance(dsets, dict):
-                            logger.error(
-                                f'Data source [{data_source_name}] "datasets" attribute is not a dictionary - exitting...'
-                            )
-                            raise RuntimeError
-                        for d in dsets:
-                            # make a new plot for each data set
-                            self.new_plot(d)
-                else:
-                    # some other pop error occured
-                    raise RuntimeError
-            except (TimeoutError, RuntimeError) as err:
-                self.teardown()
-                raise RuntimeError(
-                    f'Could not connect to new data source [{data_source_name}]'
-                ) from err
-
-    def teardown(self):
-        if self.sink is not None:
-            self.sink.__exit__(None, None, None)
-            self.sink = None
-
-    def update(self):
-        # update the plot data
-        if self.sink is not None and self.sink.pop():
-            with self.mutex:
-                # check again to be sure
-                if self.sink is not None:
-                    for d in self.sink.datasets:
-                        data = self.sink.datasets[d]
-                        if isinstance(data, np.ndarray):
-                            # check numpy array shape
-                            if data.shape[0] != 2 or len(data.shape) != 2:
-                                raise ValueError(
-                                    f'Dataset shape is {data.shape}, but should be (2, n).'
-                                )
-                        elif isinstance(data, list):
-                            if len(data) == 0:
-                                continue
-                            elif len(data) == 1:
-                                data = data[0]
-                            else:
-                                if self.data_processing == 'append':
-                                    # concatenate the numpy arrays
-                                    data = np.concatenate(data, axis=1)
-                                elif self.data_processing == 'average':
-                                    # average the numpy arrays
-                                    data = np.average(np.stack(data), axis=0)
-                                else:
-                                    raise ValueError(
-                                        f'data_processing has unsupported value [{self.data_processing}].'
-                                    )
-                        else:
-                            raise ValueError(
-                                f'Data set [{d}] is not a numpy array or list of numpy arrays.'
-                            )
-
-                        # update the plot
-                        if self.npoints != 0:
-                            self.set_data(
-                                d, data[0][-self.npoints :], data[1][-self.npoints :]
-                            )
-                        else:
-                            self.set_data(d, data[0], data[1])
-        else:
-            time.sleep(0.1)

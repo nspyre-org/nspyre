@@ -37,17 +37,16 @@ def main():
     )
 
     cmd_line_args = arg_parser.parse_args()
-    match cmd_line_args.verbosity:
-        case 'debug':
-            log_level = logging.DEBUG
-        case 'info':
-            log_level = logging.INFO
-        case 'warning':
-            log_level = logging.WARNING
-        case 'error':
-            log_level = logging.ERROR
-        case _:
-            raise ValueError(f'log level [{cmd_line_args.verbosity}] not supported')
+    if cmd_line_args.verbosity == 'debug':
+        log_level = logging.DEBUG
+    elif cmd_line_args.verbosity == 'info':
+        log_level = logging.INFO
+    elif cmd_line_args.verbosity == 'warning':
+        log_level = logging.WARNING
+    elif cmd_line_args.verbosity == 'error':
+        log_level = logging.ERROR
+    else:
+        raise ValueError(f'log level [{cmd_line_args.verbosity}] not supported')
 
     # Log to the console as well as a file inside the logs folder.
     nspyre_init_logger(

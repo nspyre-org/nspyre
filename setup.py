@@ -69,7 +69,7 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
     zip_safe=False,
-    python_requires='>=3.10',
+    python_requires='>=3.7',
     install_requires=[
         # you know it, you love it
         'numpy==1.23.1',

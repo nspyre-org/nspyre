@@ -416,6 +416,8 @@ class _FlexLinePlotWidget(LinePlotWidget):
                         self.add_plot(plot_name)
                         if self.plot_settings[plot_name]['hidden']:
                             self.hide(plot_name)
+                    # flag indicating that this is the first pop from the sink
+                    self.first = True
                 else:
                     # some other pop error occured
                     raise RuntimeError
@@ -432,7 +434,9 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
     def update(self):
         # update the plot data
-        if self.sink is not None and self.sink.pop():
+        # plot immediately if this is the first time, otherwise wait for new 
+        # data to be available from the sink with pop()
+        if self.sink is not None and (self.first or self.sink.pop()):
             with self.mutex:
                 # check again to be sure
                 if self.sink is not None:
@@ -500,5 +504,6 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
                         # update the plot
                         self.set_data(plot_name, processed_data[0], processed_data[1])
+            self.first = False
         else:
             time.sleep(0.1)

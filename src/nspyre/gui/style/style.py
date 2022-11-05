@@ -1,5 +1,5 @@
 """
-NSpyre application style settings.
+nspyre application style settings.
 
 Copyright (c) 2021, Michael Solomon, Jacob Feder
 All rights reserved.

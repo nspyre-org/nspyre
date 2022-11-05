@@ -72,8 +72,6 @@ cyclic_colors = [
     colors['b'],
     colors['m'],
     colors['c'],
-    colors['w'],
-    colors['y'],
     colors['o'],
     colors['gr'],
 ]

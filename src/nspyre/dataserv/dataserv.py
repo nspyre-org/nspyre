@@ -1179,7 +1179,7 @@ class DataSink:
             raise err
 
     async def _pop(self, timeout) -> bytes:
-        """Coroutine that gets data from the queue"""
+        """Coroutine that gets data from the queue."""
         try:
             # get pickle data from the queue
             new_pickle = await asyncio.wait_for(self._queue.get(), timeout=timeout)

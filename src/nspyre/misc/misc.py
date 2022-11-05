@@ -171,15 +171,14 @@ class ProcessRunner:
             RuntimeError: The function from a previous call is still running.
 
         """
-
         if self.running():
             if self.should_kill:
-                logger.debug('Previous function is still running. Killing it...')
+                logger.info('Previous function is still running. Killing it...')
                 self.kill()
             else:
                 raise RuntimeError('Previous function is still running.')
 
-        logger.debug(f'Running process {fun} args: {args} kwargs: {kwargs}.')
+        logger.info(f'Running process function [{fun}] with args: [{args}] kwargs: [{kwargs}].')
         self.proc = Process(target=fun, args=args, kwargs=kwargs, daemon=True)
         self.proc.start()
 
@@ -190,6 +189,7 @@ class ProcessRunner:
     def kill(self):
         """Kill the process."""
         if self.proc:
+            logger.info(f'Killing process.')
             self.proc.terminate()
             self.proc.join()
             self.proc = None

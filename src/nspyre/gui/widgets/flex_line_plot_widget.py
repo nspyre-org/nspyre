@@ -15,6 +15,7 @@ import numpy as np
 from nspyre import DataSink
 from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtWidgets
+from pyqtgraph.Qt import QtGui
 
 from .line_plot_widget import LinePlotWidget
 
@@ -47,7 +48,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         datasource_layout = QtWidgets.QHBoxLayout()
         self.datasource_lineedit = QtWidgets.QLineEdit()
         self.update_button = QtWidgets.QPushButton('Connect')
-        self.update_button.clicked.connect(self._update_source)
+        self.update_button.clicked.connect(self._update_source_clicked)
         datasource_layout.addWidget(QtWidgets.QLabel('Data Set'))
         datasource_layout.addWidget(self.datasource_lineedit)
         datasource_layout.addWidget(self.update_button)
@@ -114,23 +115,23 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         plot_actions_layout = QtWidgets.QVBoxLayout()
         # show button
         self.show_button = QtWidgets.QPushButton('Show')
-        self.show_button.clicked.connect(self._show_plot)
+        self.show_button.clicked.connect(self._show_plot_clicked)
         plot_actions_layout.addWidget(self.show_button)
         # hide button
         self.hide_button = QtWidgets.QPushButton('Hide')
-        self.hide_button.clicked.connect(self._hide_plot)
+        self.hide_button.clicked.connect(self._hide_plot_clicked)
         plot_actions_layout.addWidget(self.hide_button)
         # update button
         self.add_plot_button = QtWidgets.QPushButton('Update')
-        self.add_plot_button.clicked.connect(self._update_plot)
+        self.add_plot_button.clicked.connect(self._update_plot_clicked)
         plot_actions_layout.addWidget(self.add_plot_button)
         # add button
         self.add_plot_button = QtWidgets.QPushButton('Add')
-        self.add_plot_button.clicked.connect(self._add_plot)
+        self.add_plot_button.clicked.connect(self._add_plot_clicked)
         plot_actions_layout.addWidget(self.add_plot_button)
         # del button
         self.remove_button = QtWidgets.QPushButton('Remove')
-        self.remove_button.clicked.connect(self._remove_plot)
+        self.remove_button.clicked.connect(self._remove_plot_clicked)
         plot_actions_layout.addWidget(self.remove_button)
         plot_actions_layout.addStretch()
         plot_settings_layout.addLayout(plot_actions_layout)
@@ -203,61 +204,132 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
 
         return name, series, scan_i, scan_j, processing
 
-    def _update_plot(self):
+    def _update_plot_clicked(self):
         """Called when the user clicks the update button."""
         name, series, scan_i, scan_j, processing = self._get_plot_settings()
         # set the plot settings
-        self.flex_line_plot.new_plot_settings(name, series, scan_i, scan_j, processing)
+        self.flex_line_plot.update_plot_settings(name, series, scan_i, scan_j, processing)
 
-    def _add_plot(self):
+    def _add_plot_clicked(self):
         """Called when the user clicks the add button."""
         name, series, scan_i, scan_j, processing = self._get_plot_settings()
+        self.add_plot(name, series, scan_i, scan_j, processing)
+
+    def add_plot(self, name: str, series: str, scan_i: str, scan_j: str, processing: str):
+        """Add a new subplot.
+
+        Args:
+            name: name for the new plot
+            series: see FlexLinePlotWidget doc
+            scan_i: String value of the scan to start plotting from. Use Python 
+            list indexing notation e.g. [scan_i, scan_j] = ['-1', ''] for 
+            the last element; [scan_i, scan_j] = ['0', '1'] for the first 
+            element; [scan_i, scan_j] = ['-3', ''] for the last 3 elements.
+            scan_j: String value of the scan to stop plotting at.
+            processing: 'Average' to average the x and y values of scans i through j, 'Append' to concatenate them
+        """
         if name in self.flex_line_plot.plot_settings:
             raise ValueError(f'Plot [{name}] already exists.')
-        # add the plot to the pyqtgraph plotwidget
-        self.flex_line_plot.add_plot(name)
-        # set the plot settings
-        self.flex_line_plot.plot_settings[name] = {
-            'series': series,
-            'scan_i': scan_i,
-            'scan_j': scan_j,
-            'processing': processing,
-        }
-        # add the plot name to the list of plots
-        self.plots_list_widget.addItem(name)
+        with self.flex_line_plot.mutex:
+            # add the plot to the pyqtgraph plotwidget
+            self.flex_line_plot.add_plot(name)
+            # set the plot settings
+            self.flex_line_plot.plot_settings[name] = {
+                'series': series,
+                'scan_i': scan_i,
+                'scan_j': scan_j,
+                'processing': processing,
+                'hidden': False,
+            }
+            # add the plot name to the list of plots
+            self.plots_list_widget.addItem(name)
 
-    def _remove_plot(self):
+    def _find_plot_item(self, name):
+        """Return the index of the list widget plot item with the given name."""
+        if name not in self.flex_line_plot.plot_settings:
+            raise ValueError(f'Plot [{name}] does not exist.')
+
+        # search for the list widget item whose text is the same as name
+        list_widget_index = None
+        for i in range(self.plots_list_widget.count()):
+            if self.plots_list_widget.item(i).text() == name:
+                list_widget_index = i
+                break
+        if list_widget_index is None:
+            raise RuntimeError(f'Internal error: plot [{name}] not found in list widget.')
+
+        return list_widget_index
+
+    def _remove_plot_clicked(self):
         """Called when the user clicks the remove button."""
         # array of selected QListWidgetItems
         selected_items = self.plots_list_widget.selectedItems()
         for i in selected_items:
             name = i.text()
-            if name not in self.flex_line_plot.plot_settings:
-                raise ValueError(f'Plot [{name}] does not exist.')
+            self.remove_plot(name)
+
+    def remove_plot(self, name: str):
+        """Remove a subplot.
+
+        Args:
+            name: name of the subplot
+        """
+        with self.flex_line_plot.mutex:
             # remove the plot name from the list of plots
-            self.plots_list_widget.takeItem(self.plots_list_widget.row(i))
+            self.plots_list_widget.takeItem(self._find_plot_item(name))
             # remove the plot settings
             self.flex_line_plot.plot_settings.pop(name)
             # remove the plot from the pyqtgraph plotwidget
             self.flex_line_plot.remove_plot(name)
 
-    def _hide_plot(self):
+    def _hide_plot_clicked(self):
         """Called when the user clicks the hide button."""
         # array of selected QListWidgetItems
         selected_items = self.plots_list_widget.selectedItems()
         for i in selected_items:
             name = i.text()
-            self.flex_line_plot.hide(name)
+            self.hide_plot(name)
 
-    def _show_plot(self):
+    def hide_plot(self, name: str):
+        """Hide a subplot.
+
+        Args:
+            name: name of the subplot
+        """
+        with self.flex_line_plot.mutex:
+            self.flex_line_plot.plot_settings[name]['hidden'] = True
+            self.flex_line_plot.hide(name)
+            # change the list widget item color scheme
+            idx = self._find_plot_item(name)
+            self.plots_list_widget.item(idx).setForeground(QtCore.Qt.GlobalColor.gray)
+            self.plots_list_widget.item(idx).setBackground(self.palette().color(QtGui.QPalette.ColorRole.Mid))
+
+    def _show_plot_clicked(self):
         """Called when the user clicks the show button."""
         # array of selected QListWidgetItems
         selected_items = self.plots_list_widget.selectedItems()
         for i in selected_items:
             name = i.text()
-            self.flex_line_plot.show(name)
+            self.show_plot(name)
 
-    def _update_source(self):
+    def show_plot(self, name: str):
+        """Show a previously hidden subplot.
+
+        Args:
+            name: name of the subplot
+        """
+        with self.flex_line_plot.mutex:
+            self.flex_line_plot.plot_settings[name]['hidden'] = False
+            self.flex_line_plot.show(name)
+            # return list widget item to normal color scheme
+            # text
+            idx = self._find_plot_item(name)
+            normal_text_color = self.palette().color(QtGui.QPalette.ColorRole.Text)
+            normal_bg_color = self.palette().color(QtGui.QPalette.ColorRole.Base)
+            self.plots_list_widget.item(idx).setForeground(normal_text_color)
+            self.plots_list_widget.item(idx).setBackground(normal_bg_color)
+
+    def _update_source_clicked(self):
         """Called when the user clicks the connect button."""
         self.flex_line_plot.new_source(self.datasource_lineedit.text())
 
@@ -268,17 +340,21 @@ class _FlexLinePlotWidget(LinePlotWidget):
     def __init__(self):
         super().__init__()
         self.sink = None
-        # mutex for protecting access to the data sink
+        # mutex for protecting access to the data sink and plot settings
         self.mutex = Lock()
         self.plot_settings = {}
 
-    def new_plot_settings(self, name, series, scan_i, scan_j, processing):
+    def update_plot_settings(self, name, series, scan_i, scan_j, processing):
         with self.mutex:
+            if name not in self.plot_settings:
+               raise ValueError(f'Plot [{name}] does not exist.')
+            hidden = self.plot_settings[name]['hidden']
             self.plot_settings[name] = {
                 'series': series,
                 'scan_i': scan_i,
                 'scan_j': scan_j,
                 'processing': processing,
+                'hidden': hidden
             }
 
     def new_source(self, data_source_name, timeout=1):
@@ -338,6 +414,8 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     # add the existing plots
                     for plot_name in self.plot_settings:
                         self.add_plot(plot_name)
+                        if self.plot_settings[plot_name]['hidden']:
+                            self.hide(plot_name)
                 else:
                     # some other pop error occured
                     raise RuntimeError

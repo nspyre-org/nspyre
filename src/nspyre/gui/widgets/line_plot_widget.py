@@ -217,9 +217,6 @@ class LinePlotWidget(QtWidgets.QWidget):
             raise ValueError(f'A plot with the name [{name}] does not exist.')
         # acquire the semaphore to make sure the plot isn't currently being manipulated
         self.plots[name]['sem'].acquire()
-        # check again in case the plot was just deleted
-        if name not in self.plots:
-            raise ValueError(f'A plot with the name [{name}] does not exist.')
         plt = self.plots[name]['plot']
         if plt in self.plot_widget.listDataItems():
             self.plot_widget.removeItem(plt)

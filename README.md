@@ -2,7 +2,7 @@
 [![GitHub license](https://img.shields.io/github/license/nspyre-org/nspyre)](https://github.com/nspyre-org/nspyre/blob/master/LICENSE)
 [![Documentation Status](https://readthedocs.org/projects/nspyre/badge/?version=latest)](https://nspyre.readthedocs.io/en/latest/?badge=latest)
 
-Networked Scientific Python Research Environment.
+(N)etworked (S)cientific (Py)thon (R)esearch (E)nvironment.
 
 See https://nspyre.readthedocs.io/
 

@@ -351,6 +351,8 @@ class _FlexLinePlotWidget(LinePlotWidget):
         # mutex for protecting access to the data sink and plot settings
         self.mutex = Lock()
         self.plot_settings = {}
+        # flag indicating that this is the first pop from the sink
+        self.first = False
 
     def update_plot_settings(self, name, series, scan_i, scan_j, processing):
         with self.mutex:

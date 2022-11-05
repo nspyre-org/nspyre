@@ -92,11 +92,11 @@ class MainWidget(QtWidgets.QWidget):
 
         import my_module
         import nspyre
-        from nspyre import NSpyreApp
+        from nspyre import nspyreApp
         from nspyre import MainWidget
 
         # Create Qt application and apply nspyre visual settings.
-        app = NSpyreApp()
+        app = nspyreApp()
 
         # Create the GUI.
         main_widget = MainWidget({

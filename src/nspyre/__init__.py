@@ -26,7 +26,7 @@ try:
     from .gui import nspyre_font
     from .gui import nspyre_palette
     from .gui import nspyre_style_sheet
-    from .gui import NSpyreApp
+    from .gui import nspyreApp
     from .gui import ParamsWidget
     from .gui import qt_set_trace
     from .gui import SaveWidget

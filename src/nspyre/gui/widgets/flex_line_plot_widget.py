@@ -14,8 +14,8 @@ from threading import Lock
 import numpy as np
 from nspyre import DataSink
 from pyqtgraph.Qt import QtCore
-from pyqtgraph.Qt import QtWidgets
 from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtWidgets
 
 from .line_plot_widget import LinePlotWidget
 
@@ -208,22 +208,26 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         """Called when the user clicks the update button."""
         name, series, scan_i, scan_j, processing = self._get_plot_settings()
         # set the plot settings
-        self.flex_line_plot.update_plot_settings(name, series, scan_i, scan_j, processing)
+        self.flex_line_plot.update_plot_settings(
+            name, series, scan_i, scan_j, processing
+        )
 
     def _add_plot_clicked(self):
         """Called when the user clicks the add button."""
         name, series, scan_i, scan_j, processing = self._get_plot_settings()
         self.add_plot(name, series, scan_i, scan_j, processing)
 
-    def add_plot(self, name: str, series: str, scan_i: str, scan_j: str, processing: str):
+    def add_plot(
+        self, name: str, series: str, scan_i: str, scan_j: str, processing: str
+    ):
         """Add a new subplot.
 
         Args:
             name: name for the new plot
             series: see FlexLinePlotWidget doc
-            scan_i: String value of the scan to start plotting from. Use Python 
-            list indexing notation e.g. [scan_i, scan_j] = ['-1', ''] for 
-            the last element; [scan_i, scan_j] = ['0', '1'] for the first 
+            scan_i: String value of the scan to start plotting from. Use Python
+            list indexing notation e.g. [scan_i, scan_j] = ['-1', ''] for
+            the last element; [scan_i, scan_j] = ['0', '1'] for the first
             element; [scan_i, scan_j] = ['-3', ''] for the last 3 elements.
             scan_j: String value of the scan to stop plotting at.
             processing: 'Average' to average the x and y values of scans i through j, 'Append' to concatenate them
@@ -256,7 +260,9 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
                 list_widget_index = i
                 break
         if list_widget_index is None:
-            raise RuntimeError(f'Internal error: plot [{name}] not found in list widget.')
+            raise RuntimeError(
+                f'Internal error: plot [{name}] not found in list widget.'
+            )
 
         return list_widget_index
 
@@ -302,7 +308,9 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             # change the list widget item color scheme
             idx = self._find_plot_item(name)
             self.plots_list_widget.item(idx).setForeground(QtCore.Qt.GlobalColor.gray)
-            self.plots_list_widget.item(idx).setBackground(self.palette().color(QtGui.QPalette.ColorRole.Mid))
+            self.plots_list_widget.item(idx).setBackground(
+                self.palette().color(QtGui.QPalette.ColorRole.Mid)
+            )
 
     def _show_plot_clicked(self):
         """Called when the user clicks the show button."""
@@ -347,14 +355,14 @@ class _FlexLinePlotWidget(LinePlotWidget):
     def update_plot_settings(self, name, series, scan_i, scan_j, processing):
         with self.mutex:
             if name not in self.plot_settings:
-               raise ValueError(f'Plot [{name}] does not exist.')
+                raise ValueError(f'Plot [{name}] does not exist.')
             hidden = self.plot_settings[name]['hidden']
             self.plot_settings[name] = {
                 'series': series,
                 'scan_i': scan_i,
                 'scan_j': scan_j,
                 'processing': processing,
-                'hidden': hidden
+                'hidden': hidden,
             }
 
     def new_source(self, data_source_name, timeout=1):
@@ -434,7 +442,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
     def update(self):
         # update the plot data
-        # plot immediately if this is the first time, otherwise wait for new 
+        # plot immediately if this is the first time, otherwise wait for new
         # data to be available from the sink with pop()
         if self.sink is not None and (self.first or self.sink.pop()):
             with self.mutex:

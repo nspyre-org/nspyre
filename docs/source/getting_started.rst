@@ -4,7 +4,7 @@ Getting Started
 
 There are `code examples <https://github.com/nspyre-org/examples>`__ available 
 to help new users get started, but a brief description is given here. An 
-experiment utilizing the full capabilities of NSpyre can be broken down into 
+experiment utilizing the full capabilities of nspyre can be broken down into 
 a few pieces of functionality.
 
 The Instrument Server
@@ -48,7 +48,7 @@ Running this Python code will start the instrument server:
 The Data Server
 ===============
 
-The data server hosts experimental data. It has a collection of data sets, each 
+The :ref:`data server <data_server>` hosts experimental data. It has a collection of data sets, each 
 of which contains a "source" and one or more "sinks". The "source" provides 
 data to a data set and the "sinks" collect data from the data set.
 
@@ -98,11 +98,11 @@ this:
 GUI and Plotting
 ================
 
-The starting point for an NSpyre GUI is ``NSpyreApp``, which creates a template
-Qt application with the default look and feel of NSpyre. ``MainWidget`` 
+The starting point for an nspyre GUI is ``nspyreApp``, which creates a template
+Qt application with the default look and feel of nspyre. ``MainWidget`` 
 provides a list of other widgets that the user can load into the GUI, as well 
 as a convenient dockable interface for rearranging widgets. The code below 
-creates a GUI that can load one of the NSpyre plotting widgets, 
+creates a GUI that can load one of the nspyre plotting widgets, 
 ``FlexLinePlotWidget``, and a theoretical user-defined experiment widget 
 ``ExampleExperiment``.
 
@@ -111,12 +111,12 @@ creates a GUI that can load one of the NSpyre plotting widgets,
    import nspyre.gui.widgets.flex_line_plot_widget
    from nspyre import MainWidget
    from nspyre import MainWidgetItem
-   from nspyre import NSpyreApp
+   from nspyre import nspyreApp
    
    import mygui
    
    # create a Qt application and apply nspyre visual settings
-   app = NSpyreApp()
+   app = nspyreApp()
 
    # create the GUI which allows launching of user widgets
    main_widget = MainWidget({

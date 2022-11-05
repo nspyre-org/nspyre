@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-"""The class defining the NSpyre Instrument Manager MainWindow.
+"""The class defining the nspyre Instrument Manager MainWindow.
 
 The InstrumentManagerWindow class is the main GUI window for viewing the live
-state and settings of the hardware devices connected to an NSpyre InstrumentServer.
+state and settings of the hardware devices connected to an nspyre InstrumentServer.
 It is defined by the QtWidgets.QMainWindow subclass from Qt and consists of a
 QTreeWidget and subsequent QTreeWidgetItem(s) for displaying the attributes of
 each device located on each connected Instrument Server. It is also responsible
@@ -162,7 +162,7 @@ class InstrumentManagerWindow(QtWidgets.QMainWindow):
 
     def __init__(self, gateway, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setWindowTitle('NSpyre Instrument Manager')
+        self.setWindowTitle('nspyre Instrument Manager')
         # connection to the instrument servers
         self.gateway = gateway
 

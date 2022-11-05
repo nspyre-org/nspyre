@@ -1,5 +1,5 @@
 """
-NSpyre application Qt GUI settings.
+nspyre application Qt GUI settings.
 
 Copyright (c) 2021, Michael Solomon, Jacob Feder
 All rights reserved.
@@ -27,16 +27,16 @@ logger = logging.getLogger(__name__)
 HERE = Path(__file__).parent
 
 
-class NSpyreApp(QtWidgets.QApplication):
+class nspyreApp(QtWidgets.QApplication):
     """Create a Qt application object with the default nspyre settings.
 
     Typical usage example:
 
     .. code-block:: python
 
-        from nspyre import NSpyreApp
+        from nspyre import NspyreApp
 
-        app = NSpyreApp()
+        app = NspyreApp()
         some_widget = SomeWidget()
         some_widget.show()
         # run the GUI event loop

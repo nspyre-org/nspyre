@@ -2,7 +2,7 @@
 Install
 #######
 
-You can install NSpyre from `conda-forge <https://conda-forge.org/docs/>`_:
+You can install nspyre from `conda-forge <https://conda-forge.org/docs/>`_:
 
 .. code-block:: bash
    

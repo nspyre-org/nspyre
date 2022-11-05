@@ -1,3 +1,5 @@
+.. _data_server:
+
 ###############
 The Data Server
 ###############
@@ -84,10 +86,11 @@ source if previous data has not yet been processed by the sink. This could
 introduce timing variation and uncertainty in the source, which is very 
 undesirable if a scientific experiment is the source. Instead, if a sink object 
 is not calling ``pop()`` fast enough to keep up with the source, the data 
-server will start throwing away older packets (for that specific sink).
+server will start throwing away older packets (just for that specific sink). 
+This design creates a decoupling between the code running an experiment and 
+any user interaction with viewing the resulting data.
 
-The data server is effectively a series of 
-`FIFO buffers <https://en.wikipedia.org/wiki/FIFO_(computing_and_electronics)>`__.
+The data server is effectively a series of `FIFO buffers <https://en.wikipedia.org/wiki/FIFO_(computing_and_electronics)>`__.
 For each data set, there is one FIFO buffer for the source and one for each of 
 the sinks. ``push()`` queues data to the source FIFO. The data server dequeues 
 data from the source FIFO, then queues a copy of that data on each of the sink 

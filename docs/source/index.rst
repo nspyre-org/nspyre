@@ -1,4 +1,4 @@
-Welcome to NSpyre's documentation!
+Welcome to nspyre's documentation!
 ==================================
 
 .. image:: https://img.shields.io/github/license/nspyre-org/nspyre
@@ -41,42 +41,42 @@ Networked Scientific Python Research Environment
    
    contributing
 
-What is NSpyre?
+What is nspyre?
 ===============
 
-NSpyre is a Python package for conducting scientific experiments. It provides 
+nspyre is a Python package for conducting scientific experiments. It provides 
 a set of tools to allow for control of instrumentation, data collection, 
 real-time plotting, as well as GUI generation. Anyone in the research or 
 industrial spaces using computer-controlled equipment and collecting data can 
-potentially benefit from using NSpyre to run their experiments.
+potentially benefit from using nspyre to run their experiments.
 
 The hardware being controlled can be connected either locally on the machine 
 running the experimental logic, or on a remote machine, which can be accessed 
 in a simple, pythonic fashion. This allows for the easy integration of shared 
 instrumentation in a research environment. Data collection is also 
 networked, and allows for real-time viewing locally, or from a remote machine. 
-NSpyre also provides a set of tools for quickly generating a Qt-based GUI for 
+nspyre provides a set of tools for quickly generating a Qt-based GUI for 
 control and data viewing.
 
-Who we are, and why we made NSpyre
+Who we are, and why we made nspyre
 ==================================
 
-NSpyre is primarily developed out of the 
+nspyre is primarily developed out of the 
 `Awschalom Group <https://pme.uchicago.edu/group/awschalom-group>`__ at the 
 University of Chicago PME. We are an experimental quantum physics research lab 
 with a focus on spin dynamics and quantum information processing. There are 
-many software packages that seek to solve the same problems as NSpyre. However, 
+many software packages that seek to solve the same problems as nspyre. However, 
 most suffer from being either:
 
 1. Designed for a very specific type of experiment at the expense of generality
-2. A commerical product that attempts to force users to utilize their proprietary equipment
+2. A commerical product that attempts to force users into buying the company's proprietary equipment
 
-NSpyre is free and open-source 
+nspyre is free and open-source 
 (`available on github <https://github.com/nspyre-org/nspyre>`__). Its design 
 intent aspires to the Unix philosophy. It attempts to give the user a 
 set of helpful tools, without forcing them to run their experiment in any 
 specific way. We hope that others will find this software useful, and will 
-:ref:`contribute <contribute>` to its development so that all can benefit.
+:ref:`contribute <contribute>` to its development.
 
 .. Indices and tables
 .. ==================

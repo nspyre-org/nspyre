@@ -4,7 +4,7 @@
 Contributing
 ############
 
-If you’re reading this, you probably want to contribute to NSpyre — great! Any and all support is greatly appreciated. This document lays out guidelines and advice for contributing to this project. If you’re thinking of contributing, please start by reading the immediate info below detailing project specifics to get a feel for how contributing to this project works. If you have any questions, feel free to reach out to one of the primary maintainers. NSpyre is hosted on GitHub:
+If you’re reading this, you probably want to contribute to nspyre — great! Any and all support is greatly appreciated. This document lays out guidelines and advice for contributing to this project. If you’re thinking of contributing, please start by reading the immediate info below detailing project specifics to get a feel for how contributing to this project works. If you have any questions, feel free to reach out to one of the primary maintainers. nspyre is hosted on GitHub:
 
 `<https://github.com/nspyre-org/nspyre>`_
 
@@ -66,7 +66,7 @@ Git grew out of the needs of the developers of the Linux kernel and is one of th
 Testing
 -------
 
-We use `pytest <https://pytest.org/>`__ to run tests on NSpyre. Proper testing insures that when you make a code change, nspyre still works as advertised. Run pytest and ensure all tests pass before making any commits:
+We use `pytest <https://pytest.org/>`__ to run tests on nspyre. Proper testing insures that when you make a code change, nspyre still works as advertised. Run pytest and ensure all tests pass before making any commits:
 
 .. code-block:: bash
 
@@ -133,7 +133,7 @@ First you need to fork the repository of interest. To do so, click the Fork butt
      
      As this is a github specific step and not a git step, it can’t be completed with the `git <https://git-scm.com>`__ command line tool. However, the `hub <https://hub.github.com>`__ command line tool provides useful extensions.
 
-When it’s finished, you’ll be taken to your copy of the NSpyre repository, which will be located at ``https://github.com/[your-username]/nspyre``. The rest can now be completed using the console:
+When it’s finished, you’ll be taken to your copy of the nspyre repository, which will be located at ``https://github.com/[your-username]/nspyre``. The rest can now be completed using the console:
 
 .. code-block:: bash
 
@@ -225,7 +225,7 @@ All that's left is to officially merge your changes into ``main`` and delete the
 Code Style
 ----------
 
-The NSpyre codebase generally follows the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`__ for both code and docstrings. `Black <https://black.readthedocs.io/en/stable/>`__, `Flake8 <https://flake8.pycqa.org/>`__, and `MyPy <http://mypy-lang.org/>`__ are used to enforce style compliance. 
+The nspyre codebase generally follows the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`__ for both code and docstrings. `Black <https://black.readthedocs.io/en/stable/>`__, `Flake8 <https://flake8.pycqa.org/>`__, and `MyPy <http://mypy-lang.org/>`__ are used to enforce style compliance. 
 
 Type hints according to :pep:`484` are encouraged in all but the most obvious cases. *Type hints* are the annotations that indicate the type of arguments and the return value of a function. Unlike a static programming language, Python neither requires these type declarations nor does it use them to do runtime type checking. The benefit to putting this information outside the docstrings is to increase their readability, while also making both static analysis and refactoring easier.
 

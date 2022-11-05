@@ -9,7 +9,7 @@ Welcome to nspyre's documentation!
    :target: https://nspyre.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
-Networked Scientific Python Research Environment
+(N)etworked (S)cientific (Py)thon (R)esearch (E)nvironment
 
 .. toctree::
    :maxdepth: 4

@@ -4,7 +4,7 @@
 
 (N)etworked (S)cientific (Py)thon (R)esearch (E)nvironment.
 
-See https://nspyre.readthedocs.io/
+See https://nspyre.readthedocs.io/.
 
 # What is nspyre?
 

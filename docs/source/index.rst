@@ -72,7 +72,7 @@ most suffer from being either:
 2. A commerical product that attempts to force users into buying the company's proprietary equipment
 
 nspyre is free and open-source 
-(`available on github <https://github.com/nspyre-org/nspyre>`__). Its design 
+(`github <https://github.com/nspyre-org/nspyre>`__). Its design 
 intent aspires to the Unix philosophy. It attempts to give the user a 
 set of helpful tools, without forcing them to run their experiment in any 
 specific way. We hope that others will find this software useful, and will 

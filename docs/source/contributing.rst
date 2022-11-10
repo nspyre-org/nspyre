@@ -4,9 +4,7 @@
 Contributing
 ############
 
-If you’re reading this, you probably want to contribute to nspyre — great! Any and all support is greatly appreciated. This document lays out guidelines and advice for contributing to this project. If you’re thinking of contributing, please start by reading the immediate info below detailing project specifics to get a feel for how contributing to this project works. If you have any questions, feel free to reach out to one of the primary maintainers. nspyre is hosted on GitHub:
-
-`<https://github.com/nspyre-org/nspyre>`_
+If you’re reading this, you probably want to contribute to nspyre — great! Any and all support is greatly appreciated. This document lays out guidelines and advice for contributing to this project. If you’re thinking of contributing, please start by reading the immediate info below detailing project specifics to get a feel for how contributing to this project works. If you have any questions, feel free to reach out to one of the primary maintainers. nspyre is hosted on `GitHub <https://github.com/nspyre-org/nspyre>`_.
 
 Quick Facts
 ===========
@@ -227,7 +225,7 @@ Code Style
 
 The nspyre codebase generally follows the `Google Style Guide <https://google.github.io/styleguide/pyguide.html>`__ for both code and docstrings. `Black <https://black.readthedocs.io/en/stable/>`__, `Flake8 <https://flake8.pycqa.org/>`__, and `MyPy <http://mypy-lang.org/>`__ are used to enforce style compliance. 
 
-Type hints according to :pep:`484` are encouraged in all but the most obvious cases. *Type hints* are the annotations that indicate the type of arguments and the return value of a function. Unlike a static programming language, Python neither requires these type declarations nor does it use them to do runtime type checking. The benefit to putting this information outside the docstrings is to increase their readability, while also making both static analysis and refactoring easier.
+Type hints according to :pep:`484` are encouraged. *Type hints* are the annotations that indicate the type of arguments and the return value of a function. Unlike a static programming language, Python neither requires these type declarations nor does it use them to do runtime type checking. The benefit to putting this information outside the docstrings is to increase their readability, while also making both static analysis and refactoring easier.
 
 All functions, methods, and classes are to contain docstrings. Object data model methods (e.g. ``__repr__``) are typically the exception to this rule.
 

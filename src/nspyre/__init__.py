@@ -1,13 +1,63 @@
-# from nspyre.definitions import Q_
-# from nspyre.gui import Plot1D, Plot2D, PlotFormatInit, PlotFormatUpdate
-# from nspyre.gui.data_handling import load_data
-# from nspyre.spyrelet import Spyrelet, load_all_spyrelets, unload_all_spyrelets
-# from nspyre.widgets import LinePlotWidget, HeatmapPlotWidget
-# from nspyre.inserv import InservGateway
+import logging
 
-# __all__ = ['Plot1D', 'Plot2D', 'PlotFormatInit', 'PlotFormatUpdate', 
-#            'Spyrelet', 'LinePlotWidget', 'HeatmapPlotWidget', 'Q_', 
-#            'load_data', 'instrument_manager', 'load_all_spyrelets', 
-#            'unload_all_spyrelets']
+try:
+    from .dataserv import DataSink
+    from .dataserv import DataSource
+    from .dataserv import deserialize
+    from .dataserv import serialize
+    from .dataserv import SINK_DATA_TYPE_DEFAULT
+    from .dataserv import SINK_DATA_TYPE_DELTA
+    from .dataserv import SINK_DATA_TYPE_PICKLE
+except ModuleNotFoundError as exc:
+    logger = logging.getLogger(__name__)
+    logger.warning(
+        f'Not importing data server functionality because the required packages are not installed:\n{exc}'
+    )
 
-__version__ = '0.4.9'
+try:
+    from .gui import ColorMapWidget
+    from .gui import colors
+    from .gui import cyclic_colors
+    from .gui import ExperimentWidget
+    from .gui import FlexLinePlotWidget
+    from .gui import LinePlotWidget
+    from .gui import MainWidget
+    from .gui import MainWidgetItem
+    from .gui import nspyre_font
+    from .gui import nspyre_palette
+    from .gui import nspyre_style_sheet
+    from .gui import nspyreApp
+    from .gui import ParamsWidget
+    from .gui import qt_set_trace
+    from .gui import SaveWidget
+    from .gui import QHLine
+    from .gui import QVLine
+
+    # from .gui import SplitterOrientation
+    # from .gui import SplitterWidget
+    from .gui import sssss
+except ModuleNotFoundError as exc:
+    logger = logging.getLogger(__name__)
+    logger.warning(
+        f'Not importing GUI functionality because the required packages are not installed:\n{exc}'
+    )
+
+try:
+    from .inserv import InstrumentGateway
+    from .inserv import InstrumentGatewayError
+    from .inserv import InstrumentServer
+    from .inserv import InstrumentServerDeviceExistsError
+    from .inserv import InstrumentServerError
+    from .tools import inserv_cli
+except ModuleNotFoundError as exc:
+    logger = logging.getLogger(__name__)
+    logger.warning(
+        f'Not importing instrument server functionality because the required packages are not installed:\n{exc}'
+    )
+
+from .misc import nspyre_init_logger
+from .misc import ProcessRunner
+from .misc import Q_
+
+
+__version__ = '0.5.0'

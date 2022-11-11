@@ -1,90 +1,108 @@
 """
 pytest fixtures
 
-Author: Jacob Feder
-Date: 11/12/2020
+Copyright (c) 2021, Michael Solomon, Jacob Feder
+All rights reserved.
+
+This work is licensed under the terms of the 3-Clause BSD license.
+For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
-
-###########################
-# imports
-###########################
-
-# std
-from pathlib import Path
-import subprocess
-import atexit
-import time
 import logging
+import socket
+import time
+from contextlib import closing
+from pathlib import Path
 
-# 3rd party
-import pytest
 import psutil
+import pytest
+from nspyre import InstrumentGateway
+from nspyre import InstrumentGatewayError
+from nspyre import InstrumentServer
 
-# nspyre
-from nspyre.inserv.gateway import InservGateway
+HERE = Path(__file__).parent
+DRIVERS = HERE / 'fixtures' / 'drivers'
 
-###########################
-# globals
-###########################
 
-server_cfg_path = Path(__file__).parent / Path('fixtures/configs/server_test_config.yaml')
-client_cfg_path = Path(__file__).parent / Path('fixtures/configs/client_test_config.yaml')
+def _free_port():
+    """Return a free port number"""
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(('', 0))
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return s.getsockname()[1]
 
-###########################
-# fixtures
-###########################
 
-@pytest.fixture()
-def client_config_path():
-    """return the client config path"""
-    logging.info('getting client config')
-    return client_cfg_path.resolve()
+@pytest.fixture
+def free_port():
+    return _free_port()
 
-@pytest.fixture(scope='class')
-def gateway():
-    """return an instrument gateway"""
-    logging.info('getting gateway')
-    with InservGateway(client_cfg_path) as insgw:
-        yield insgw
 
-@pytest.fixture(scope='session', autouse=True)
-def setup():
-    """start mongodb and the instrument server in subprocesses for use by 
-    subsequent tests"""
-    logging.info('test setup...')
+@pytest.fixture
+def dataserv():
+    """Start a data server if one isn't running"""
+    # TODO: An unresolved bug currently prevents nspyre-dataserv from being started
+    # automatically by pytest, so for now just throw an error if it isn't running
+    running_procs = [p.name() for p in psutil.process_iter()]
+    if (
+        'nspyre-dataserv' not in running_procs
+        and 'nspyre-dataserv.exe' not in running_procs
+    ):
+        raise Exception(
+            "The data server isn't running and must be started manually with 'nspyre-dataserv'"
+        )
 
-    # search through all running processes, and only start mongo if it's not
-    # already running, since it takes awhile to start up
-    if not 'mongod' in [p.name() for p in psutil.process_iter()]:
-        logging.info('running nspyre-mongodb')
-        # start mongod in a subprocess
-        mongo = subprocess.run(['nspyre-mongodb'])
-        # give time for the database to start
-        time.sleep(30)
 
-    # start the instrument server
-    inserv = subprocess.Popen(['nspyre-inserv', '-c', server_cfg_path, '-v', 'debug'],
-                                stdin=subprocess.PIPE)
+@pytest.fixture
+def inserv():
+    """Create an instrument server"""
+    port = _free_port()
 
-    # make sure the inserv gets killed on exit even if there's an error
-    def cleanup():
-        inserv.kill()
-    atexit.register(cleanup)
+    inserv = InstrumentServer(port=port)
+    inserv.start()
+
+    yield inserv
+
+    # stop the instrument server
+    inserv.stop()
+
+
+# depend on inserv to make sure it gets started first
+@pytest.fixture
+def gateway(inserv):
+    """Return a gateway connected to the instrument server"""
 
     # ignore logging while we attempt to connect
     logging.disable(logging.CRITICAL)
+
     # wait until the server is online
+    counter = 0
     while True:
+        # wait until the instrument server is online
         try:
-            with InservGateway(client_cfg_path) as insgw:
-                getattr(insgw, 'tserv')
+            with InstrumentGateway(port=inserv._port) as gw:
+                # connection succeeded, so re-enable logging
+                logging.disable(logging.NOTSET)
+
+                yield gw
+
                 break
-        except:
+        except InstrumentGatewayError:
             time.sleep(0.1)
-    # re-enable logging
-    logging.disable(logging.NOTSET)
+            # wait up to 1 second before giving up
+            assert counter < 10
+            counter += 1
 
-    # now the tests run
-    yield
 
-    logging.info('test teardown')
+@pytest.fixture
+def gateway_with_devs(gateway):
+    """Return a gateway with initialized test devices"""
+
+    # add test drivers to instrument server
+    gateway.add('daq', DRIVERS / 'fake_daq.py', 'FakeDAQ')
+    gateway.add('pel', DRIVERS / 'fake_pellicle.py', 'FakePellicle')
+    gateway.add('sg', DRIVERS / 'fake_sg.py', 'FakeSigGen')
+
+    yield gateway
+
+    # remove drivers from instrument server
+    for d in list(gateway._devs):
+        gateway.remove(d)

@@ -13,6 +13,5 @@ __pycache__/
 .tox
 .cache
 
-# due to db config and backups stored internally
-src/nspyre/mongodb/db_files/
-src/nspyre/mongodb/db_files_backup/
+# pycharm project files
+.idea/

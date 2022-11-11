@@ -1,4 +1,6 @@
-from lantz.core import Driver, Feat
+from lantz.core import Driver
+from lantz.core import Feat
+
 
 class FakePellicle(Driver):
     def __init__(self, *args, **kwargs):

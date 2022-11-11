@@ -1,10 +1,12 @@
-from setuptools import setup, find_packages
 import codecs
-import pathlib
 import re
+from pathlib import Path
+
+from setuptools import find_packages
+from setuptools import setup
 
 
-here = pathlib.Path(__file__).parent.resolve()
+here = Path(__file__).parent.resolve()
 
 
 def read(*parts):
@@ -12,7 +14,7 @@ def read(*parts):
     Build an absolute path from *parts* and and return the contents of the
     resulting file.  Assume UTF-8 encoding.
     """
-    with codecs.open(pathlib.PurePath(here, *parts), "rb", "utf-8") as f:
+    with codecs.open(Path(here, *parts), 'rb', 'utf-8') as f:
         return f.read()
 
 
@@ -22,15 +24,13 @@ def find_version(*file_paths):
     string inside.
     """
     version_file = read(*file_paths)
-    version_match = re.search(
-        r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M
-    )
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M)
     if version_match:
         return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
+    raise RuntimeError('Unable to find version string.')
 
 
-meta_path = pathlib.PurePath('src', 'nspyre', '__init__.py')
+meta_path = Path('src', 'nspyre', '__init__.py')
 version = find_version(meta_path)
 
 long_description = (here / 'README.md').read_text(encoding='utf-8')
@@ -43,26 +43,19 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/nspyre-org/nspyre',
-    author='Alexandre Bourassa',
-    author_email='abourassa@uchicago.edu',
-    maintainer='Michael Solomon',
-    maintainer_email='msolo@uchicago.edu',
+    author='Alexandre Bourassa, Michael Solomon, Jacob Feder',
+    author_email='abourassa@uchicago.edu, msolo@uchicago.edu, jfed@uchicago.edu',
+    maintainer='Michael Solomon, Jacob Feder',
+    maintainer_email='msolo@uchicago.edu, jfed@uchicago.edu',
     classifiers=[
-        'Development Status :: 4 - Beta',
-        'Framework :: IPython',
-        'Framework :: Jupyter',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
         'Operating System :: Microsoft :: Windows',
-        'Operating System :: POSIX',
+        'Operating System :: MacOS',
         'Operating System :: Unix',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Physics',
         'Topic :: Scientific/Engineering :: Visualization',
@@ -71,55 +64,47 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Software Development :: User Interfaces',
         'Topic :: System :: Distributed Computing',
-        'Topic :: System :: Logging',
     ],
     keywords='nspyre, measurement toolkit, experimentation platform, physics, science, research',
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
     zip_safe=False,
-    python_requires='>=3.8, <4',
+    python_requires='>=3.7',
     install_requires=[
-        # SciPy
-        'numpy>=1.19.1',
-        'scipy>=1.5.2',
-        'pandas>=1.1.2',
-        # MongoDB
-        'mongodb<6.0.0',
-        'pymongo>=3.10.1',
-        # Qt
-        'pyqt5>=5.12.3',
-        'pyqtgraph>=0.11.0',
-        'qscintilla>=2.11.2',
-        # VISA
-        'pyvisa>=1.10.1',
-        # Lantz
-        'pint>=0.15',
-        'pimpmyclass>=0.4.3',
-        'lantzdev>=0.5.2',
-        # Utilities
-        'parse>=1.18.0',
-        'tqdm>=4.49.0',
-        'rpyc>=4.1.5',
+        # you know it, you love it
+        'numpy==1.23.1',
+        # instrument server proxying
+        'rpyc==5.2.3',
+        # Qt/GUI (won't install on ARM)
+        'pyqt6==6.2.3;platform_machine!="aarch64" and platform_machine!="armv7l"',
+        'pyqt6-qt6==6.2.3;platform_machine!="aarch64" and platform_machine!="armv7l"',
+        'pyqtgraph==0.13.1;platform_machine!="aarch64" and platform_machine!="armv7l"',
     ],
     extras_require={
+        'extras': [
+            'xdelta3',  # dataserver delta compression for remote clients
+        ],
         'dev': [
-            'pytest>=6.1.2',
+            'pre-commit',
+            'sphinx',
+            'sphinx-copybutton',
+            'sphinx_rtd_theme',
+            'docutils',
+        ],
+        'tests': [
+            'pytest',
             'pytest-cov',
-            'psutil>=5.7.3',
-        ]
+            'psutil',
+            'lantz',
+            'pint',
+        ],
     },
-    test_requires=[
-        'pytest>=6.1.2',
-        'pytest-cov',
-        'psutil>=5.7.3',
-    ],
     test_suite='tests',
     entry_points={
         'console_scripts': [
-            'nspyre=nspyre.gui:main',
-            'nspyre-config=nspyre.config.config_cli:main',
-            'nspyre-mongodb=nspyre.mongodb:main',
-            'nspyre-inserv=nspyre.inserv:main',
+            'nspyre-insmgr=nspyre.gui.instrument_manager:main',
+            'nspyre-inserv=nspyre.tools.inserv_cli:main',
+            'nspyre-dataserv=nspyre.tools.dataserv_cli:main',
         ],
     },
     project_urls={

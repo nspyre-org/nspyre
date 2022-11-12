@@ -19,6 +19,7 @@ Welcome to nspyre's documentation!
    install
    getting_started
    data_server
+   instrument_server
 
 .. toctree::
    :maxdepth: 1

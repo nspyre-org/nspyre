@@ -72,13 +72,13 @@ setup(
     python_requires='>=3.7',
     install_requires=[
         # you know it, you love it
-        'numpy==1.23.1',
+        'numpy >=1.23.1',
         # instrument server proxying
-        'rpyc==5.2.3',
+        'rpyc >=5.2.3',
         # Qt/GUI (won't install on ARM)
-        'pyqt6==6.2.3;platform_machine!="aarch64" and platform_machine!="armv7l"',
-        'pyqt6-qt6==6.2.3;platform_machine!="aarch64" and platform_machine!="armv7l"',
-        'pyqtgraph==0.13.1;platform_machine!="aarch64" and platform_machine!="armv7l"',
+        'pyqt6 ==6.2.3; platform_machine != "aarch64" and platform_machine != "armv7l"',
+        'pyqt6-qt6 ==6.2.3; platform_machine != "aarch64" and platform_machine != "armv7l"',
+        'pyqtgraph >=0.13.1; platform_machine != "aarch64" and platform_machine != "armv7l"',
     ],
     extras_require={
         'extras': [
@@ -102,7 +102,6 @@ setup(
     test_suite='tests',
     entry_points={
         'console_scripts': [
-            'nspyre-insmgr=nspyre.gui.instrument_manager:main',
             'nspyre-inserv=nspyre.tools.inserv_cli:main',
             'nspyre-dataserv=nspyre.tools.dataserv_cli:main',
         ],

@@ -1,0 +1,8 @@
+# conda dependencies for building docs
+channels:
+  - conda-forge
+dependencies:
+  - sphinx-copybutton
+  - docutils
+  - sphinx_rtd_theme
+  - sphinx

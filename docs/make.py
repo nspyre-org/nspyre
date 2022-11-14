@@ -14,6 +14,7 @@ def main():
         return ret.returncode
     print(ret.stdout, file=sys.stdout)
     print(ret.stderr, file=sys.stderr)
+
     cmd = ['make', '-C', str(HERE), 'html']
     ret = subprocess.run(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True

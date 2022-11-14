@@ -5,9 +5,9 @@ import sys
 from pathlib import Path
 
 # location of the source code root directory relative to this directory
-source_root = '../../src/nspyre/'
+source_root = '../../src/'
 # location of the file containing the '__version__' string relative to this directory
-source_version_file = '../../src/nspyre/__init__.py'
+source_version_file = source_root + 'nspyre/__init__.py'
 
 # resolve the source absolute path
 HERE = Path(__file__).parent
@@ -15,7 +15,6 @@ source_path = (HERE / source_root).resolve()
 
 # add the source to sys path so autodoc can import it
 sys.path.insert(0, str(source_path))
-
 
 def find_version(file_path):
     """

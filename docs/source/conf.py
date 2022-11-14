@@ -5,9 +5,9 @@ import sys
 from pathlib import Path
 
 # location of the source code root directory relative to this directory
-source_root = '../src/nspyre/'
+source_root = '../../src/nspyre/'
 # location of the file containing the '__version__' string relative to this directory
-source_version_file = '../src/nspyre/__init__.py'
+source_version_file = '../../src/nspyre/__init__.py'
 
 # resolve the source absolute path
 HERE = Path(__file__).parent
@@ -107,7 +107,7 @@ html_theme_options = {
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['source/_static']
+html_static_path = ['_static']
 html_css_files = ['custom.css']
 
 # html_logo = 'images/logo.png'

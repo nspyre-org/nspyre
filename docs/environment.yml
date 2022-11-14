@@ -6,3 +6,4 @@ dependencies:
   - docutils
   - sphinx_rtd_theme
   - sphinx
+  - nspyre

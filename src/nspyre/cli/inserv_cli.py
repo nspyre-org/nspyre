@@ -1,16 +1,9 @@
 #!/usr/bin/env python
 """
-This module serves a shell prompt allowing the user runtime control of
-the instrument server.
-
-Copyright (c) 2021, Michael Solomon, Jacob Feder
-All rights reserved.
-
-This work is licensed under the terms of the 3-Clause BSD license.
-For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
+Serves a shell prompt allowing the user runtime control of the instrument server.
 """
 import argparse
-import cmd
+from cmd import Cmd
 import logging
 import pdb
 import signal
@@ -42,7 +35,7 @@ def inserv_cli(inserv):
         pass
 
 
-class InservCmdPrompt(cmd.Cmd):
+class InservCmdPrompt(Cmd):
     """Instrument Server shell prompt processor"""
 
     def __init__(self, inserv: Union[InstrumentServer, InstrumentGateway]):

@@ -1,3 +1,5 @@
+"""Wrapper for pyqtgraph ImageView.
+"""
 import logging
 import time
 from typing import Any
@@ -31,8 +33,7 @@ class ColorMapWidget(QtWidgets.QWidget):
         font: QtGui.QFont = nspyre_font,
         **kwargs,
     ):
-        """Initialize a LinePlotWidget.
-
+        """
         Args:
             title: Plot title.
             btm_label: Plot bottom axis label.

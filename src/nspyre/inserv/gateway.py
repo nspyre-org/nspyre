@@ -1,11 +1,5 @@
 """
-This module allows interfacing with an instrument server.
-
-Copyright (c) 2021, Michael Solomon, Jacob Feder
-All rights reserved.
-
-This work is licensed under the terms of the 3-Clause BSD license.
-For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
+This module provides an interface to control devices on an instrument server.
 """
 import logging
 import time
@@ -77,13 +71,13 @@ class InstrumentGateway:
         conn_timeout: float = 0.0,
         sync_timeout: float = RPYC_SYNC_TIMEOUT,
     ):
-        """Initialize with the address and port of the InstrumentServer.
-
+        """
         Args:
             addr: Network address of the Instrument Server.
             port: Port number of the Instrument Server.
             conn_timeout: Lower bound on the time to wait for the connection to be established.
             sync_timeout: Time to wait for requests / function calls to finish
+
         Raises:
             InstrumentGatewayError: Connection to the InstrumentServer failed.
         """

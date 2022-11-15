@@ -3,8 +3,6 @@ import logging
 try:
     from .dataserv import DataSink
     from .dataserv import DataSource
-    from .dataserv import deserialize
-    from .dataserv import serialize
     from .dataserv import SINK_DATA_TYPE_DEFAULT
     from .dataserv import SINK_DATA_TYPE_DELTA
     from .dataserv import SINK_DATA_TYPE_PICKLE
@@ -32,9 +30,6 @@ try:
     from .gui import SaveWidget
     from .gui import QHLine
     from .gui import QVLine
-
-    # from .gui import SplitterOrientation
-    # from .gui import SplitterWidget
     from .gui import sssss
 except ModuleNotFoundError as exc:
     logger = logging.getLogger(__name__)
@@ -48,7 +43,8 @@ try:
     from .inserv import InstrumentServer
     from .inserv import InstrumentServerDeviceExistsError
     from .inserv import InstrumentServerError
-    from .tools import inserv_cli
+    from .cli import inserv_cli
+    from .cli import dataserv_cli
 except ModuleNotFoundError as exc:
     logger = logging.getLogger(__name__)
     logger.warning(

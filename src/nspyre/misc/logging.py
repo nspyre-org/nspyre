@@ -10,7 +10,7 @@ from typing import Any
 LOG_FILE_MAX_SIZE = 100e6
 
 
-class StreamToLog(TextIOBase):
+class _StreamToLog(TextIOBase):
     """Fake stream object that redirects writes to a logger"""
 
     def __init__(self, logger: logging.Logger, log_level: int, terminator: str):
@@ -78,7 +78,7 @@ def nspyre_init_logger(
     # all stderr messages will now be redirected to a special logger
     stderr_logger = logging.getLogger('stderr')
     stderr_logger.propagate = False
-    sys.stderr = StreamToLog(stderr_logger, logging.CRITICAL, '\n')  # type: ignore
+    sys.stderr = _StreamToLog(stderr_logger, logging.CRITICAL, '\n')  # type: ignore
 
     # log format for stderr messages
     stderr_formatter = logging.Formatter('[stderr] %(message)s')

@@ -1,11 +1,5 @@
 """
 A wrapper for pyqtgraph PlotWidget.
-
-Copyright (c) 2022, Jacob Feder
-All rights reserved.
-
-This work is licensed under the terms of the 3-Clause BSD license.
-For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 import logging
 import time
@@ -30,9 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class LinePlotWidget(QtWidgets.QWidget):
-    """Qt widget that generates a pyqtgraph 1D line plot with some reasonable default settings and a variety of added features.
-    TODO: example
-    """
+    """Qt widget that generates a pyqtgraph 1D line plot with some reasonable default settings and a variety of added features."""
 
     new_data = QtCore.Signal(str)
 
@@ -47,8 +39,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         downsample: bool = True,
         **kwargs,
     ):
-        """Initialize a LinePlotWidget.
-
+        """
         Args:
             title: Plot title.
             xlabel: Plot x-axis label.

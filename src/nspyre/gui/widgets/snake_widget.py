@@ -1,11 +1,5 @@
 """
 Ssssspin snake logo.
-
-Copyright (c) 2021, Jacob Feder
-All rights reserved.
-
-This work is licensed under the terms of the 3-Clause BSD license.
-For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 from pathlib import Path
 

@@ -1,10 +1,4 @@
 """Widget that generates a simple GUI that allows the user to enter a set of parameters.
-
-Copyright (c) 2021 Jacob Feder
-All rights reserved.
-
-This work is licensed under the terms of the 3-Clause BSD license.
-For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 from pyqtgraph import SpinBox
 from pyqtgraph.Qt import QtWidgets
@@ -28,8 +22,7 @@ class ParamsWidget(QtWidgets.QWidget):
     """
 
     def __init__(self, params_config: dict, get_param_value_funs: dict = None):
-        """Initialize params widget.
-
+        """
         Args:
             params_config: Dictionary mapping parameter names to a parameter
                 configuration dictionary, which should contain:

@@ -1,11 +1,5 @@
 """
-A collection of functionality that doesn't fit anywhere else.
-
-Copyright (c) 2022, Jacob Feder
-All rights reserved.
-
-This work is licensed under the terms of the 3-Clause BSD license.
-For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
+A collection of miscellaneous functionality for GUIs.
 """
 import logging
 from pdb import set_trace

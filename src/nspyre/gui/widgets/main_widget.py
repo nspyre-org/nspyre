@@ -1,11 +1,5 @@
 """
 This widget creates an interface that allows the user to easily launch Qt widgets. The widgets are placed in a pyqtgraph dock area.
-
-Copyright (c) 2021, Jacob Feder
-All rights reserved.
-
-This work is licensed under the terms of the 3-Clause BSD license.
-For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 from importlib import reload
 from types import ModuleType
@@ -16,7 +10,7 @@ from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
-from .snake import sssss
+from .snake_widget import sssss
 
 
 class MainWidgetItem:

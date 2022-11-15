@@ -1,22 +1,16 @@
 """
 A plotting widget that connects to an nspyre data server, collects and processes the data, and offers a variety of user-controlled plotting options.
-
-Copyright (c) 2022, Jacob Feder
-All rights reserved.
-
-This work is licensed under the terms of the 3-Clause BSD license.
-For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 import logging
 import time
 from threading import Lock
 
 import numpy as np
-from nspyre import DataSink
 from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
+from ...dataserv.dataserv import DataSink
 from .line_plot_widget import LinePlotWidget
 
 logger = logging.getLogger(__name__)
@@ -26,17 +20,17 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
     """QWidget that allows the user to connect to an arbitrary nspyre DataSource and plot its data.
 
     The DataSource may contain the following attributes:
-    title: plot title string
-    xlabel: x label string
-    ylabel: y label string
-    datasets: dictionary where keys are a data series name, and values are data
-    as a list of 2D numpy array like
-    [np.array([[x0, x1, ...], [y0, y1, ...]]), np.array([[x10, x11, ...], [y10, y11, ...]]), ...]
+
+    - title: plot title string
+    - xlabel: x label string
+    - ylabel: y label string
+    - datasets: dictionary where keys are a data series name, and values are data as a list of 2D numpy array like::
+
+        [np.array([[x0, x1, ...], [y0, y1, ...]]), np.array([[x10, x11, ...], [y10, y11, ...]]), ...]
 
     """
 
     def __init__(self):
-        """Init FlexLinePlotWidget."""
         super().__init__()
 
         layout = QtWidgets.QVBoxLayout()

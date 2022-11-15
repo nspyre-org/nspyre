@@ -4,8 +4,10 @@ import re
 import sys
 from pathlib import Path
 
+# root
+root = '../../'
 # location of the source code root directory relative to this directory
-source_root = '../../src/'
+source_root = root + 'src/'
 # location of the file containing the '__version__' string relative to this directory
 source_version_file = source_root + 'nspyre/__init__.py'
 
@@ -29,17 +31,6 @@ def find_version(file_path):
             return version_match.group(1)
         raise RuntimeError('Unable to find version string.')
 
-
-def skip(app, what, name, obj, would_skip, options):
-    if name == '__init__':
-        return False
-    return would_skip
-
-
-def setup(app):
-    app.connect('autodoc-skip-member', skip)
-
-
 # -- Project information -----------------------------------------------------
 
 project = 'nspyre'
@@ -51,20 +42,34 @@ release = find_version(source_version_file)
 
 # -- General configuration ---------------------------------------------------
 
-needs_sphinx = '3.1.2'
-
-# Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
-# ones.
+# Sphinx extension module names
 extensions = [
     'sphinx.ext.autodoc',  # for generating API from docstrings
-    'sphinx.ext.mathjax',  # for math formulas
+    'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',  # for numpy and google style docstrings
     'sphinx_copybutton',  # for adding 'copy to clipboard' buttons to all text/code boxes
 ]
 
+# Include Python objects as they appear in source files
+# Default: alphabetically ('alphabetical')
+# autodoc_member_order = 'bysource'
+autodoc_default_options = {
+    'members': True,
+    'show-inheritance': True,
+}
+autodoc_mock_imports = []
+
+napoleon_include_init_with_doc = True
+
+# Configure copybutton to ignore console prompts
+copybutton_prompt_text = r">>> |\.\.\. |\$ "
+copybutton_prompt_is_regexp = True
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
+
+# The suffix(es) of source filenames.
+source_suffix = ['.rst', '.md']
 
 # The master toctree document.
 master_doc = 'index'
@@ -72,11 +77,10 @@ master_doc = 'index'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build']
 
-# Configure copybutton to ignore console prompts
-copybutton_prompt_text = r">>> |\.\.\. |\$ "
-copybutton_prompt_is_regexp = True
+# The name of the Pygments (syntax highlighting) style to use.
+pygments_style = 'friendly'
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -90,13 +94,10 @@ html_theme = 'sphinx_rtd_theme'
 # documentation.
 
 html_theme_options = {
-    # 'canonical_url': '',
-    # 'analytics_id': 'UA-XXXXXXX-1',  #  Provided by Google in your dashboard
     'logo_only': False,
     'display_version': True,
     'prev_next_buttons_location': 'top',
     'style_external_links': False,
-    # 'vcs_pageview_mode': '',
     'style_nav_header_background': '#2b2b2b',
     # Toc options
     'collapse_navigation': True,
@@ -111,9 +112,3 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 html_css_files = ['custom.css']
-
-# html_logo = 'images/logo.png'
-# html_favicon = 'images/favicon.ico'
-
-html_last_updated_fmt = '%b %d, %Y'
-# '%Y/%m/%d'

@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 """
-A CLI for the DataServer
-
-Author: Jacob Feder
-Date: 11/28/2020
+A CLI for the DataServer.
 """
 import argparse
 import logging
@@ -13,7 +10,7 @@ from cmd import Cmd
 from pathlib import Path
 from threading import Thread
 
-from ..dataserv.dataserv import DataServer
+from ..dataserv.dataserv import _DataServer
 from ..misc.logging import LOG_FILE_MAX_SIZE
 from ..misc.logging import nspyre_init_logger
 
@@ -58,8 +55,19 @@ class DataservCmdPrompt(Cmd):
         return True
 
 
-def _cmd_prompt(dataserv_cmd):
-    dataserv_cmd.cmdloop()
+def dataserv_cli(dataserv):
+    """Run a command-line interface to allow user interaction with the data server.
+
+    Args:
+        dataserv: DataServer object.
+    """
+    # start the shell prompt event loop
+    dataserv_cmd = DataservCmdPrompt(dataserv)
+    dataserv_cmd.prompt = 'dataserv > '
+    try:
+        dataserv_cmd.cmdloop('')
+    except KeyboardInterrupt:
+        pass
 
 
 def main():
@@ -122,9 +130,9 @@ def main():
 
     # init the data server
     if cmd_args.port:
-        dataserv = DataServer(cmd_args.port)
+        dataserv = _DataServer(cmd_args.port)
     else:
-        dataserv = DataServer()
+        dataserv = _DataServer()
 
     # properly stop the server when a kill signal is received
     def stop_server(signum, frame):
@@ -133,14 +141,10 @@ def main():
     signal.signal(signal.SIGINT, stop_server)
     signal.signal(signal.SIGTERM, stop_server)
 
-    # init command prompt
-    cmd_prompt = DataservCmdPrompt(dataserv)
-    cmd_prompt.prompt = 'dataserv > '
-
     # start the shell prompt event loop in a new thread, since DataServer
     # must be run in the main thread
     # daemon=True so that the program will exit when the data server is stopped with a signal - otherwise the cmd loop will hang forever
-    cmd_prompt_thread = Thread(target=_cmd_prompt, args=(cmd_prompt,), daemon=True)
+    cmd_prompt_thread = Thread(target=dataserv_cli, args=(dataserv, ), daemon=True)
     cmd_prompt_thread.start()
 
     # start the data server event loop

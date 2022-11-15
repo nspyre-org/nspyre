@@ -32,7 +32,7 @@ Welcome to nspyre's documentation!
    :maxdepth: 1
    :caption: API
    :hidden:
-   
+
    api
 
 .. toctree::
@@ -79,9 +79,9 @@ set of helpful tools, without forcing them to run their experiment in any
 specific way. We hope that others will find this software useful, and will 
 :ref:`contribute <contribute>` to its development.
 
-.. Indices and tables
-.. ==================
+Indices and tables
+==================
 
-.. * :ref:`genindex`
-.. * :ref:`modindex`
-.. * :ref:`search`
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

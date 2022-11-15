@@ -1,26 +1,14 @@
 """
-The nspyre DataServer transports arbitrary python objects over a TCP/IP socket
-to a set of local or remote network clients, and keeps those objects up to date
-as they are modified. For each data set on the data server, there is a single
-data "source", and a set of data "sinks".
+The nspyre DataServer transports arbitrary python objects over a TCP/IP socket to a set of local or remote network clients, and keeps those objects up to date as they are modified. For each data set on the data server, there is a single data "source", and a set of data "sinks".
 
-Objects are serialized by the source then pushed to the server. For local
-clients, the data server sends the serialized data directly to the be
-deserialized by the sink process. For remote clients, the serialized object
-data is diffed with any previously pushed data and the diff is sent rather than
-the full object in order to minimize the required network bandwidth. The client
-can then reconstruct the pushed data using a local copy of the last version of
-the object, and the diff received from the server.
+Objects are serialized by the source then pushed to the server. For local clients, the data server sends the serialized data directly to the be deserialized by the sink process. For remote clients, the serialized object data is diffed with any previously pushed data and the diff is sent rather than the full object in order to minimize the required network bandwidth. The client can then reconstruct the pushed data using a local copy of the last version of the object, and the diff received from the server.
 
 Example usage:
 
-# run the command-line tool for starting up the data server, specifying the port
-nspyre-dataserv -p 12345
+.. code-block:: console
 
-# see DataSink.pop()
+   $ nspyre-dataserv -p 12345
 
-Author: Jacob Feder
-Date: 11/29/2020
 """
 import asyncio
 import concurrent.futures
@@ -97,7 +85,7 @@ SINK_DATA_TYPE_DEFAULT = SINK_DATA_TYPE_DEFAULT_UNPADDED + b'\x00' * (
 )
 
 
-class CustomSock:
+class _CustomSock:
     """Tiny socket wrapper class that implements a custom messaging protocol"""
 
     def __init__(self, sock_reader, sock_writer):
@@ -149,7 +137,7 @@ class CustomSock:
         logger.debug(f'closed socket [{self.addr}]')
 
 
-def queue_flush_and_put(queue, item):
+def _queue_flush_and_put(queue, item):
     """Empty an asyncio queue then put a single item onto it"""
     for _ in range(queue.qsize()):
         queue.get_nowait()
@@ -157,7 +145,7 @@ def queue_flush_and_put(queue, item):
     queue.put_nowait(item)
 
 
-async def cleanup_event_loop(loop):
+async def _cleanup_event_loop(loop):
     """End all tasks in an event loop and exit"""
 
     if not loop.is_running():
@@ -180,17 +168,17 @@ async def cleanup_event_loop(loop):
     loop.stop()
 
 
-def deserialize(obj) -> Any:
+def _deserialize(obj) -> Any:
     """Deserialize a python object from a byte stream."""
     return pickle.loads(obj)
 
 
-def serialize(obj) -> bytes:
+def _serialize(obj) -> bytes:
     """Serialize a python object into a byte stream."""
     return pickle.dumps(obj)
 
 
-class DataSet:
+class _DataSet:
     """Class that wraps a pipeline consisting of a data source and a list of data sinks."""
 
     def __init__(self):
@@ -211,14 +199,17 @@ class DataSet:
     async def run_sink(
         self,
         event_loop: asyncio.AbstractEventLoop,
-        sock: CustomSock,
+        sock: _CustomSock,
         data_type_override: bytes,
     ):
         """run a new data sink until it closes
-        sock: socket for the sink
-        data_type_override: SINK_DATA_TYPE_DEFAULT for the server to decide whether diffs should be performed
-                            SINK_DATA_TYPE_PICKLE to always use pickle data (no diff)
-                            SINK_DATA_TYPE_DELTA to always generate a diff"""
+        
+        Args:
+            sock: socket for the sink
+            data_type_override: SINK_DATA_TYPE_DEFAULT for the server to decide whether diffs should be performed
+                SINK_DATA_TYPE_PICKLE to always use pickle data (no diff)
+                SINK_DATA_TYPE_DELTA to always generate a diff
+        """
         sink_id = sock.addr
         # sink connections should get unique ports, so this shouldn't happen
         assert sink_id not in self.sinks
@@ -240,7 +231,7 @@ class DataSet:
             queue.put_nowait(self.data)
         await task
 
-    async def run_source(self, sock: CustomSock):
+    async def run_source(self, sock: _CustomSock):
         """run a data source until it closes"""
         task = asyncio.create_task(self._source_coro())
         self.source = {'task': task, 'sock': sock}
@@ -281,7 +272,7 @@ class DataSet:
                                 f'sink [{sink["sock"].addr}] can\'t keep up with data source'
                             )
                             # empty the queue then put a single item into it
-                            queue_flush_and_put(queue, new_pickle)
+                            _queue_flush_and_put(queue, new_pickle)
                         logger.debug(
                             f'source [{sock.addr}] queued pickle of [{len(new_pickle)}] for sink [{sink["sock"].addr}]'
                         )
@@ -413,30 +404,30 @@ class DataSet:
             logger.debug(f'dropped sink [{sock.addr}]')
 
 
-class DataServer:
-    """The server has a set of DataSet objects. Each has 1 data source, and any number of data sinks. Pickled object data from the source is received on its socket, then transferred to the FIFO of every sink. The pickle is then sent out on the sink's socket.
-    If the sink is remote, then sending a full pickle of the data every time will probably be network-bandwidth limited. Instead, if the sink has previous data available, it runs a diff algorithm (xdelta3) with the new and previous data to generate a 'delta', which is sent out instead of the pickle. The remote client can then reconstruct the data using the delta.
+class _DataServer:
+    """
+    The server has a set of DataSet objects. Each has 1 data source, and any number of data sinks. Pickled object data from the source is received on its socket, then transferred to the FIFO of every sink. The pickle is then sent out on the sink's socket.
+    If the sink is remote, then sending a full pickle of the data every time will probably be network-bandwidth limited. Instead, if the sink has previous data available, it runs a diff algorithm (xdelta3) with the new and previous data to generate a 'delta', which is sent out instead of the pickle. The remote client can then reconstruct the data using the delta. E.g.::
 
-    i.e.
-    self.datasets = {
+        self.datasets = {
 
-    'dataset1' : DataSet(
-                        ------> FIFO ------> diff ------> socket (remote client)
-                       /
-    socket (source) ----------> FIFO ------> diff ------> socket (remote client)
-                       \
-                        ------> FIFO -------------------> socket (local client)
-    ),
+        'dataset1' : _DataSet(
+                            ------> FIFO ------> diff ------> socket (remote client)
+                           /
+        socket (source) ----------> FIFO ------> diff ------> socket (remote client)
+                           \\
+                            ------> FIFO -------------------> socket (local client)
+        ),
 
-    'dataset2' : DataSet(
-                        ------> FIFO ------> diff ------> socket (remote client)
-                       /
-    socket (source) ----------> FIFO -------------------> socket (local client)
-                       \
-                        ------> FIFO -------------------> socket (local client)
-    ),
+        'dataset2' : _DataSet(
+                            ------> FIFO ------> diff ------> socket (remote client)
+                           /
+        socket (source) ----------> FIFO -------------------> socket (local client)
+                           \\
+                            ------> FIFO -------------------> socket (local client)
+        ),
 
-    ... }
+        ... }
 
     """
 
@@ -444,7 +435,7 @@ class DataServer:
         """port: TCP/IP port of the data server"""
         self.port = port
         # a dictionary with string identifiers mapping to DataSet objects
-        self.datasets: Dict[str, DataSet] = {}
+        self.datasets: Dict[str, _DataSet] = {}
         # asyncio event loop for running all the server tasks
         # TODO for some reason there are performance issues on windows when using the ProactorEventLoop
         selector = selectors.SelectSelector()
@@ -466,7 +457,7 @@ class DataServer:
         """Stop the asyncio event loop."""
         if self.event_loop.is_running():
             asyncio.run_coroutine_threadsafe(
-                cleanup_event_loop(self.event_loop), self.event_loop
+                _cleanup_event_loop(self.event_loop), self.event_loop
             )
         else:
             raise RuntimeError('tried stopping the data server but it isn\'t running!')
@@ -495,7 +486,7 @@ class DataServer:
         with it accordingly"""
 
         # custom socket wrapper for sending / receiving structured messages
-        sock = CustomSock(sock_reader, sock_writer)
+        sock = _CustomSock(sock_reader, sock_writer)
 
         logger.info(f'new client connection from [{sock.addr}]')
 
@@ -560,7 +551,7 @@ class DataServer:
 
                 if dataset_name not in self.datasets:
                     # create a new DataSet
-                    self.datasets[dataset_name] = DataSet()
+                    self.datasets[dataset_name] = _DataSet()
 
                 # the server already contains a dataset with this name
                 if self.datasets[dataset_name].source:
@@ -667,7 +658,7 @@ class DataServer:
 
 
 class DataSource:
-    """For sourcing data to a DataServer"""
+    """For sourcing data to a DataServer. See DataSink.pop() for typical usage example."""
 
     def __init__(
         self,
@@ -676,10 +667,7 @@ class DataSource:
         port: int = DATASERV_PORT,
         auto_reconnect: bool = False,
     ):
-        """Initialize connection to the data set on the server.
-
-        See DataSink.pop() for typical usage example.
-
+        """
         Args:
             name: Name of the data set.
             addr: Network address of the data server.
@@ -758,7 +746,7 @@ class DataSource:
                 logging.error('queue.join() was cancelled. This is shouldn\'t happen.')
             # kill the event loop
             asyncio.run_coroutine_threadsafe(
-                cleanup_event_loop(self._event_loop), self._event_loop
+                _cleanup_event_loop(self._event_loop), self._event_loop
             )
         else:
             raise RuntimeError('tried stopping the source but it isn\'t running!')
@@ -791,7 +779,7 @@ class DataSource:
                             f'Failed connecting to data server [{(self._addr, self._port)}]'
                         ) from err
 
-                sock = CustomSock(sock_reader, sock_writer)
+                sock = _CustomSock(sock_reader, sock_writer)
                 logger.info(f'source connected to data server [{sock.addr}]')
 
                 try:
@@ -889,7 +877,7 @@ class DataSource:
                     f'data server [{(self._addr, self._port)}] can\'t keep up with source'
                 )
                 # empty the queue then put a single item into it
-                queue_flush_and_put(self._queue, new_pickle)
+                _queue_flush_and_put(self._queue, new_pickle)
             logger.debug(f'source queued pickle of [{len(new_pickle)}] bytes')
         except asyncio.CancelledError:
             logger.debug('source push cancelled')
@@ -902,7 +890,7 @@ class DataSource:
             data: Any python object (must be pickleable) to send. Ideally, this should be a dictionary to allow for simple attribute access from the sink side like `sink.my_var`.
         """
         # serialize the objects
-        new_pickle = serialize(data)
+        new_pickle = _serialize(data)
         logger.debug(f'source pushing object of [{len(new_pickle)}] bytes pickled')
         # put it on the queue
         future = asyncio.run_coroutine_threadsafe(
@@ -937,7 +925,7 @@ class DataSource:
 
 
 class DataSink:
-    """For sinking data from a DataServer"""
+    """For sinking data from a DataServer."""
 
     def __init__(
         self,
@@ -947,8 +935,7 @@ class DataSink:
         auto_reconnect: bool = False,
         data_type_override: bytes = SINK_DATA_TYPE_DEFAULT,
     ):
-        """Initialize connection to the data set on the server.
-
+        """
         Args:
             name: Name of the data set.
             addr: Network address of the data server.
@@ -1004,7 +991,7 @@ class DataSink:
         """Stop the asyncio event loop."""
         if self._event_loop.is_running():
             asyncio.run_coroutine_threadsafe(
-                cleanup_event_loop(self._event_loop), self._event_loop
+                _cleanup_event_loop(self._event_loop), self._event_loop
             )
         else:
             raise RuntimeError('tried stopping the data sink but it isn\'t running!')
@@ -1052,7 +1039,7 @@ class DataSink:
                             f'Failed connecting to data server [{(self._addr, self._port)}]'
                         ) from err
 
-                sock = CustomSock(sock_reader, sock_writer)
+                sock = _CustomSock(sock_reader, sock_writer)
                 logger.info(f'sink connected to data server [{sock.addr}]')
 
                 try:
@@ -1159,7 +1146,7 @@ class DataSink:
                             'pop() isn\'t being called frequently enough to keep up with data source'
                         )
                         # empty the queue then put a single item into it
-                        queue_flush_and_put(self._queue, new_pickle)
+                        _queue_flush_and_put(self._queue, new_pickle)
                     logger.debug(f'sink queued pickle of [{len(new_pickle)}] bytes')
                 await asyncio.sleep(FAST_TIMEOUT)
 
@@ -1278,7 +1265,7 @@ class DataSink:
         else:
             logger.debug(f'pop returning [{len(new_pickle)}] bytes unpickled')
             # update data object
-            self.data = deserialize(new_pickle)
+            self.data = _deserialize(new_pickle)
             ret = True
         self._check_exc()
         return ret

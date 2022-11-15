@@ -1,12 +1,6 @@
 """Widget that generates a GUI for a simple experiment with a set of
 user-defined parameters and buttons to run, stop, and kill the experiment
 process.
-
-Copyright (c) 2022 Jacob Feder
-All rights reserved.
-
-This work is licensed under the terms of the 3-Clause BSD license.
-For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 import logging
 from functools import partial
@@ -24,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 class ExperimentWidget(QtWidgets.QWidget):
     """Qt widget generating a GUI for a simple experiment."""
-
     def __init__(
         self,
         params_config: dict,
@@ -37,8 +30,7 @@ class ExperimentWidget(QtWidgets.QWidget):
         kill: bool = True,
         layout: QtWidgets.QLayout = None,
     ):
-        """Init ExperimentWidget.
-
+        """
         Args:
             params_config: dictionary that is passed to the constructor of ParamsWidget. See ParamsWidget docs for details.
             module: python module that contains cls

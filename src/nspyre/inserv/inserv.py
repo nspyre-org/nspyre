@@ -1,11 +1,5 @@
 """
 This module starts a process running an RPyC server. Clients may connect and access devices, or command the server to add, remove, or restart devices.
-
-Copyright (c) 2021, Michael Solomon, Jacob Feder
-All rights reserved.
-
-This work is licensed under the terms of the 3-Clause BSD license.
-For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 import logging
 import threading
@@ -19,8 +13,8 @@ from rpyc.core.protocol import Connection
 from rpyc.utils.classic import obtain
 from rpyc.utils.server import ThreadedServer
 
-from ..misc.misc import load_class_from_file
-from ..misc.misc import load_class_from_str
+from ..misc.misc import _load_class_from_file
+from ..misc.misc import _load_class_from_str
 
 try:
     from ..misc.pint import Q_
@@ -101,8 +95,7 @@ class InstrumentServer(ClassicService):
     def __init__(
         self, port: int = INSERV_DEFAULT_PORT, sync_timeout: float = RPYC_SYNC_TIMEOUT
     ):
-        """Initialize an instrument server.
-
+        """
         Args:
             port: port number to use for the RPyC server
             sync_timeout: Time to wait for requests / function calls to finish
@@ -160,7 +153,7 @@ class InstrumentServer(ClassicService):
             # load the class from a file on disk
             try:
                 dev_class_path = Path(class_path).resolve()
-                dev_class = load_class_from_file(dev_class_path, class_name)
+                dev_class = _load_class_from_file(dev_class_path, class_name)
             except Exception as exc:
                 raise InstrumentServerError(
                     f'The specified class "{class_name}" from file "{class_path}" for'
@@ -170,7 +163,7 @@ class InstrumentServer(ClassicService):
             # load the class from a python module
             try:
                 dev_class_mod = f'{class_path}.{class_name}'
-                dev_class = load_class_from_str(dev_class_mod)
+                dev_class = _load_class_from_str(dev_class_mod)
             except Exception as exc:
                 raise InstrumentServerError(
                     f'The specified class "{dev_class_mod}" for device "{name}"'

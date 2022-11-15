@@ -2,7 +2,11 @@
 channels:
   - conda-forge
 dependencies:
-  - sphinx-copybutton
-  - docutils
-  - sphinx_rtd_theme
+  - pip
   - sphinx
+  - sphinx-copybutton
+  - sphinx_rtd_theme
+  - rpyc
+  - numpy
+  - pyqtgraph
+  - pyqt

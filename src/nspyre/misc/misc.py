@@ -1,11 +1,5 @@
 """
-A collection of functionality that doesn't fit anywhere else.
-
-Copyright (c) 2022, Jacob Feder
-All rights reserved.
-
-This work is licensed under the terms of the 3-Clause BSD license.
-For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
+A collection of miscellaneous functionality.
 """
 import functools
 import importlib
@@ -25,17 +19,24 @@ logger = logging.getLogger(__name__)
 NSPYRE_ROOT = Path(__file__).parent.parent
 
 
-def join_nspyre_path(path):
-    """Return a full path from a path given relative to the nspyre root
-    directory"""
-    return NSPYRE_ROOT / path
+def join_nspyre_path(path) -> Path:
+    """Return a path from a path given relative to the nspyre root
+    directory.
+
+    Args:
+        path: Path object relative to the nspyre root
+
+    Returns:
+        The absolute path.
+    """
+    return (NSPYRE_ROOT / path).resolve()
 
 
 # images
 LOGO_PATH = str(join_nspyre_path('gui/images/spyre.png'))
 
 
-def deprecated(reason):
+def _deprecated(reason):
     """
     This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
@@ -109,7 +110,7 @@ def deprecated(reason):
         raise TypeError(repr(type(reason)))
 
 
-def load_class_from_str(class_str: str) -> Type:
+def _load_class_from_str(class_str: str) -> Type:
     """Load a python class object (available in the local scope)
     from a string"""
     class_name = class_str.split('.')[-1]
@@ -125,7 +126,7 @@ def load_class_from_str(class_str: str) -> Type:
     return getattr(mod, class_name)
 
 
-def load_class_from_file(file_path: Path, class_name: str) -> Type:
+def _load_class_from_file(file_path: Path, class_name: str) -> Type:
     """Load a python class object from an external python file"""
 
     # confirm the file exists

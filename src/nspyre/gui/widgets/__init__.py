@@ -8,7 +8,4 @@ from .params_widget import ParamsWidget
 from .save_widget import SaveWidget
 from .separator_widget import QHLine
 from .separator_widget import QVLine
-from .snake import sssss
-
-# from .splitter_widget import SplitterOrientation
-# from .splitter_widget import SplitterWidget
+from .snake_widget import sssss

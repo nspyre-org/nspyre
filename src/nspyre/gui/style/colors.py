@@ -1,11 +1,5 @@
 """
 Color palette. Some colors from https://gist.github.com/mishelen/9525865.
-
-Copyright (c) 2022, Michael Solomon, Jacob Feder
-All rights reserved.
-
-This work is licensed under the terms of the 3-Clause BSD license.
-For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 from collections import OrderedDict
 

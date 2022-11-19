@@ -4,6 +4,7 @@ A widget to save data from the dataserver.
 import json
 import pickle
 from pathlib import Path
+import re
 
 import numpy as np
 from pyqtgraph.Qt import QtWidgets
@@ -17,7 +18,6 @@ class NumpyEncoder(json.JSONEncoder):
     """For converting numpy arrays to python lists so that they can be written to JSON:
     https://stackoverflow.com/questions/26646362/numpy-array-is-not-json-serializable
     """
-
     def default(self, obj):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
@@ -42,7 +42,11 @@ class SaveWidget(QtWidgets.QWidget):
     def __init__(self, additional_filetypes=None, save_dialog_dir=HOME):
         """
         Args:
-            additional_filetypes: Dictionary containing string key names mapping to functions that will save data to a file. The function should have the form save(filename: str, data: Any).
+            additional_filetypes: Dictionary containing string keys that 
+            represent a file type mapping to functions that will save data to a 
+            file. The keys should have the form 'FileType (*.extension1 *.extension2)', 
+            e.g., 'Pickle (*.pickle *.pkl)'. Functions should have the 
+            signature save(filename: str, data: Any).
             save_dialog_dir: Directory where the file dialog begins.
         """
         super().__init__()
@@ -51,8 +55,8 @@ class SaveWidget(QtWidgets.QWidget):
 
         # file type options for saving data
         self.filetypes = {
-            'json': save_json,
-            'pkl': save_pickle,
+            'Pickle (*.pickle *.pkl)': save_pickle,
+            'JSON (*.json)': save_json,
         }
         # merge with the user-provided dictionary
         if additional_filetypes:
@@ -70,10 +74,6 @@ class SaveWidget(QtWidgets.QWidget):
         dataset_container = QtWidgets.QWidget()
         dataset_container.setLayout(dataset_layout)
 
-        # dropdown menu for selecting the desired filetype
-        self.filetype_combobox = QtWidgets.QComboBox()
-        self.filetype_combobox.addItems(list(self.filetypes))
-
         # save button
         save_button = QtWidgets.QPushButton('Save')
         # run the relevant save method on button press
@@ -81,32 +81,44 @@ class SaveWidget(QtWidgets.QWidget):
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(dataset_container)
-        layout.addWidget(self.filetype_combobox)
         layout.addWidget(save_button)
         layout.addStretch()
         self.setLayout(layout)
 
     def save(self):
         """Save the data to a file."""
-        # get the file type
-        filetype = self.filetype_combobox.itemText(
-            self.filetype_combobox.currentIndex()
-        )
+
+        # generate a list of filetypes of the form, e.g.:
+        # 'JSON (*.json);;Pickle (*.pickle *.pkl);; ...'
+        filters = ';;'.join(self.filetypes)
+
+        # data set name
+        dataset = self.dataset_lineedit.text()
+
         # make a file browser dialog to get the desired file location from the user
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
-            parent=self, directory=str(self.save_dialog_dir / f'data.{filetype}')
+        filename, selected_filter = QtWidgets.QFileDialog.getSaveFileName(
+            parent=self, directory=str(self.save_dialog_dir / f'{dataset}'), 
+            filter=filters
         )
-        if filename:
-            dataset = self.dataset_lineedit.text()
-            # connect to the dataserver
-            try:
-                with DataSink(dataset) as sink:
-                    # get the data from the dataserver
-                    if sink.pop(timeout=0.1):
-                        # run the relevant save function
-                        save_fun = self.filetypes[filetype]
-                        save_fun(filename, sink.data)
-            except TimeoutError as err:
-                raise RuntimeError(
-                    f'Failed getting data set [{dataset}] from data server.'
-                ) from err
+
+        if filename == '':
+            # the user cancelled
+            return
+
+        # pick out the file extension from the filter string, e.g.
+        # 'Pickle (*.pickle *.pkl)' -> '.pickle'
+        extension = selected_filter.replace(' ', ')').split('*')[1].split(')')[0]
+        filename += extension
+
+        # connect to the dataserver
+        try:
+            with DataSink(dataset) as sink:
+                # get the data from the dataserver
+                if sink.pop(timeout=0.1):
+                    # run the relevant save function
+                    save_fun = self.filetypes[selected_filter]
+                    save_fun(filename, sink.data)
+        except TimeoutError as err:
+            raise RuntimeError(
+                f'Failed getting data set [{dataset}] from data server.'
+            ) from err

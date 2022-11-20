@@ -1,6 +1,7 @@
 # nspyre
 [![GitHub license](https://img.shields.io/github/license/nspyre-org/nspyre)](https://github.com/nspyre-org/nspyre/blob/master/LICENSE)
 [![Documentation Status](https://readthedocs.org/projects/nspyre/badge/?version=latest)](https://nspyre.readthedocs.io/en/latest/?badge=latest)
+[![DOI](https://zenodo.org/badge/220515183.svg)](https://zenodo.org/badge/latestdoi/220515183)
 
 (N)etworked (S)cientific (Py)thon (R)esearch (E)nvironment.
 
@@ -21,3 +22,6 @@ instrumentation in a research environment. Data collection is also
 networked, and allows for real-time viewing locally, or from a remote machine. 
 nspyre provides a set of tools for quickly generating a Qt-based GUI for 
 control and data viewing.
+
+If you use nspyre for an experiment, please [cite](https://doi.org/10.5281/zenodo.7315077) 
+it in your publication!

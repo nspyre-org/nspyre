@@ -53,11 +53,18 @@ def nspyre_init_logger(
     """Initialize system-wide logging to stdout/err and, optionally, a file.
 
     Args:
-        log_level: Log messages of lower severity than this will not be sent to stdout/err (e.g. logging.INFO).
-        log_path: If a file, log to that file. If a directory, generate a log file name and create a new log file in that directory. If None, only log to stdout/err.
-        log_path_level: Logging level for the log file. Leave as None for same as log_level.
-        prefix: If a directory was specified for log_path, prepend this string to the log file name.
-        file_size: Maximum log file size (bytes). If this size is exceeded, the log file is rotated according to RotatingFileHandler (https://docs.python.org/3/library/logging.handlers.html).
+        log_level: Log messages of lower severity than this will not be sent \
+            to stdout/err (e.g. :code:`logging.INFO`).
+        log_path: If a file, log to that file. If a directory, generate a log \
+            file name and create a new log file in that directory. If \
+            :code:`None`, only log to stdout/err.
+        log_path_level: Logging level for the log file. Leave as :code:`None` \
+            for same as log_level.
+        prefix: If a directory was specified for log_path, prepend this string \
+            to the log file name.
+        file_size: Maximum log file size (bytes). If this size is exceeded, \
+            the log file is rotated according to :code:`RotatingFileHandler` \
+            (https://docs.python.org/3/library/logging.handlers.html).
     """
 
     root_logger = logging.getLogger()

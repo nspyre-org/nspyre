@@ -145,8 +145,8 @@ class ColorMapWidget(QtWidgets.QWidget):
 
         Args:
             name: Name of the plot.
-            xs: array-like of data for the x-axis.
-            ys: array-like of data for the y-axis.
+            xs: Array-like of data for the x-axis.
+            ys: Array-like of data for the y-axis.
             data
             zs: Optional array-like of data for the z-axis.
         Raises:

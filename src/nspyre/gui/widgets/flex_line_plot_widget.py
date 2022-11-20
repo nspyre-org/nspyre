@@ -17,14 +17,14 @@ logger = logging.getLogger(__name__)
 
 
 class FlexLinePlotWidget(QtWidgets.QWidget):
-    """QWidget that allows the user to connect to an arbitrary nspyre DataSource and plot its data.
+    """QWidget that allows the user to connect to an arbitrary nspyre :py:class:`~nspyre.dataserv.dataserv.DataSource` and plot its data.
 
-    The DataSource may contain the following attributes:
+    The :py:class:`~nspyre.dataserv.dataserv.DataSource` may contain the following attributes:
 
-    - title: plot title string
-    - xlabel: x label string
-    - ylabel: y label string
-    - datasets: dictionary where keys are a data series name, and values are data as a list of 2D numpy array like::
+    - title: Plot title string
+    - xlabel: X label string
+    - ylabel: Y label string
+    - datasets: Dictionary where keys are a data series name, and values are data as a list of 2D numpy array like::
 
         [np.array([[x0, x1, ...], [y0, y1, ...]]), np.array([[x10, x11, ...], [y10, y11, ...]]), ...]
 
@@ -219,12 +219,16 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         Args:
             name: name for the new plot
             series: see FlexLinePlotWidget doc
-            scan_i: String value of the scan to start plotting from. Use Python
-            list indexing notation e.g. [scan_i, scan_j] = ['-1', ''] for
-            the last element; [scan_i, scan_j] = ['0', '1'] for the first
-            element; [scan_i, scan_j] = ['-3', ''] for the last 3 elements.
+            scan_i: String value of the scan to start plotting from.
             scan_j: String value of the scan to stop plotting at.
-            processing: 'Average' to average the x and y values of scans i through j, 'Append' to concatenate them
+                Use Python list indexing notation, e.g.:
+
+                - :code:`scan_i = '-1'`, :code:`scan_j = ''` for the last element
+                - :code:`scan_i = '0'`, :code:`scan_j = '1'` for the first element
+                - :code:`scan_i = '-3'`, :code:`scan_j = ''` for the last 3 elements.
+
+            processing: 'Average' to average the x and y values of scans i
+                through j, 'Append' to concatenate them.
         """
         if name in self.flex_line_plot.plot_settings:
             raise ValueError(f'Plot [{name}] already exists.')
@@ -272,7 +276,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         """Remove a subplot.
 
         Args:
-            name: name of the subplot
+            name: Name of the subplot.
         """
         with self.flex_line_plot.mutex:
             # remove the plot name from the list of plots
@@ -294,7 +298,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         """Hide a subplot.
 
         Args:
-            name: name of the subplot
+            name: Name of the subplot.
         """
         with self.flex_line_plot.mutex:
             self.flex_line_plot.plot_settings[name]['hidden'] = True
@@ -318,7 +322,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         """Show a previously hidden subplot.
 
         Args:
-            name: name of the subplot
+            Name: name of the subplot.
         """
         with self.flex_line_plot.mutex:
             self.flex_line_plot.plot_settings[name]['hidden'] = False

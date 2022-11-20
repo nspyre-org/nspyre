@@ -1,9 +1,11 @@
 """
-A widget to load data from a file and push it to the dataserver.
+A widget to load data from a file and push it to the :py:class:`~nspyre.dataserv.dataserv.DataServer`.
 """
 import json
 import pickle
 from pathlib import Path
+from typing import Any
+from typing import Union
 
 from pyqtgraph.Qt import QtWidgets
 
@@ -12,36 +14,55 @@ from ...dataserv.dataserv import DataSource
 HOME = Path.home()
 
 
-def load_json(filename):
-    """Load data from a json file."""
+def load_json(filename: Union[str, Path]) -> Any:
+    """Load data from a JSON file.
+
+    Args:
+        filename: File to load from.
+
+    Returns:
+        A Python object loaded from the file.
+    """
     with open(filename, 'r') as f:
         data = json.load(f)
     return data
 
 
-def load_pickle(filename):
-    """Load data from a python pickle file."""
+def load_pickle(filename: Union[str, Path]) -> Any:
+    """Load data from a Python pickle file.
+
+    Args:
+        filename: File to load from.
+
+    Returns:
+        A Python object loaded from the file.
+    """
     with open(filename, 'rb') as f:
         data = pickle.load(f)
     return data
 
 
 class LoadWidget(QtWidgets.QWidget):
-    """Qt widget that loads data from the dataserver."""
+    """Qt widget that loads data from the :py:class:`~nspyre.dataserv.dataserv.DataServer`."""
 
-    def __init__(self, additional_filetypes=None, load_dialog_dir=HOME):
+    def __init__(
+        self, additional_filetypes=None, load_dialog_dir: Union[str, Path] = None
+    ):
         """
         Args:
-            additional_filetypes: Dictionary containing string keys that 
-            represent a file type mapping to functions that will load data to a 
-            file. The keys should have the form 'FileType (*.extension1 *.extension2)', 
-            e.g., 'Pickle (*.pickle *.pkl)'. Functions should have the 
-            signature load(filename: str, data: Any).
-            load_dialog_dir: Directory where the file dialog begins.
+            additional_filetypes: Dictionary containing string keys that
+                represent a file type mapping to functions that will load data to a
+                file. The keys should have the form :code:`'FileType (*.extension1 *.extension2)'`,
+                e.g., :code:`'Pickle (*.pickle *.pkl)"`. Functions should have the
+                signature :code:`load(filename: str, data: Any)`.
+            load_dialog_dir: Directory where the file dialog begins. If :code:`None`, default to the user home directory.
         """
         super().__init__()
 
-        self.load_dialog_dir = load_dialog_dir
+        if load_dialog_dir is None:
+            self.load_dialog_dir: Union[str, Path] = HOME
+        else:
+            self.load_dialog_dir = load_dialog_dir
 
         # file type options for saving data
         self.filetypes = {
@@ -67,7 +88,7 @@ class LoadWidget(QtWidgets.QWidget):
         # load button
         load_button = QtWidgets.QPushButton('Load')
         # run the relevant load method on button press
-        load_button.clicked.connect(self.load)
+        load_button.clicked.connect(self._load_clicked)
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(dataset_container)
@@ -75,7 +96,7 @@ class LoadWidget(QtWidgets.QWidget):
         layout.addStretch()
         self.setLayout(layout)
 
-    def load(self):
+    def _load_clicked(self):
         """Load the data from a file."""
 
         # generate a list of filetypes of the form, e.g.:
@@ -84,8 +105,7 @@ class LoadWidget(QtWidgets.QWidget):
 
         # make a file browser dialog to get the desired file location from the user
         filename, selected_filter = QtWidgets.QFileDialog.getOpenFileName(
-            parent=self, directory=str(self.load_dialog_dir), 
-            filter=filters
+            parent=self, directory=str(self.load_dialog_dir), filter=filters
         )
 
         if filename == '':

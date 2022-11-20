@@ -3,10 +3,10 @@
 Serves a shell prompt allowing the user runtime control of the instrument server.
 """
 import argparse
-from cmd import Cmd
 import logging
 import pdb
 import signal
+from cmd import Cmd
 from pathlib import Path
 from typing import Union
 
@@ -24,7 +24,8 @@ def inserv_cli(inserv):
     """Run a command-line interface to allow user interaction with the instrument server.
 
     Args:
-        inserv: InstrumentServer or InstrumentGateway object.
+        inserv: :py:class:`~nspyre.inserv.inserv.InstrumentServer` or
+            :py:class:`~nspyre.inserv.gateway.InstrumentGateway` object.
     """
     # start the shell prompt event loop
     cmd_prompt = InservCmdPrompt(inserv)
@@ -95,7 +96,17 @@ class InservCmdPrompt(Cmd):
             return
 
     def do_py(self, arg_string: str):
-        """Drop into the pdb (python debugger) console. From there, arbitrary Python commands can be executed and/or the instrument server can be debugged. Enter "c" or "continue" to return to the main inserv console. The instrument gateway/server object can be accessed via "self.inserv". If the instrument server was created in this session, self.inserv will be an InstrumentServer object. If a server was connected to, it will be an InstrumentGateway. See instrument gateway/server documentation for details on how to add/manipulate drivers."""
+        """Drop into the pdb (python debugger) console. From there, arbitrary
+        Python commands can be executed and/or the instrument server can be
+        debugged. Enter "c" or "continue" to return to the main inserv console.
+        The instrument gateway/server object can be accessed via
+        :code:`self.inserv`. If the instrument server was created in this
+        session, :code:`self.inserv` will be an
+        :py:class:`~nspyre.inserv.inserv.InstrumentServer` object. If a server
+        was connected to, it will be an
+        :py:class:`~nspyre.inserv.gateway.InstrumentGateway`. See
+        :py:class:`~nspyre.inserv.inserv.InstrumentServer`/:py:class:`~nspyre.inserv.gateway.InstrumentGateway`
+        documentation for details on how to add/manipulate drivers."""
         if arg_string:
             print('Expected 0 args')
             return

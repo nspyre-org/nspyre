@@ -1,4 +1,5 @@
-"""Widget that generates a simple GUI that allows the user to enter a set of parameters.
+"""Widget that generates a simple GUI that allows the user to enter a set of
+parameters.
 """
 from pyqtgraph import SpinBox
 from pyqtgraph.Qt import QtWidgets
@@ -11,13 +12,51 @@ class ParamsWidget(QtWidgets.QWidget):
 
     .. code-block:: python
 
-        self.params_widget = ParamsWidget({
-                            'pulse_power': {'suffix': 'V', 'siPrefix': True},
-                            'pulse_length': {'suffix': 's', 'siPrefix': True},
-                            })
+        from pyqtgraph import SpinBox
+        from pyqtgraph.Qt import QtWidgets
 
-        def doSomething(self):
-            print(f'Making a pulse with power = {self.params_widget.pulse_power} V, length = {self.params_widget.pulse_length} V'
+        class MyWidget(QtWidgets.QWidget)
+            def __init__(self):
+                super().__init__()
+                self.params_widget = ParamsWidget({
+                    'start_freq': {
+                        'display_text': 'Start Frequency',
+                        'widget': SpinBox(
+                            value=3e9,
+                            suffix='Hz',
+                            siPrefix=True,
+                            bounds=(100e3, 10e9),
+                            dec=True,
+                        ),
+                    },
+                    'stop_freq': {
+                        'display_text': 'Stop Frequency',
+                        'widget': SpinBox(
+                            value=4e9,
+                            suffix='Hz',
+                            siPrefix=True,
+                            bounds=(100e3, 10e9),
+                            dec=True,
+                        ),
+                    },
+                    'num_points': {
+                        'display_text': 'Number of Scan Points',
+                        'widget': SpinBox(value=100, int=True, bounds=(1, None), dec=True),
+                    },
+                    'iterations': {
+                        'display_text': 'Number of Experiment Repeats',
+                        'widget': SpinBox(value=20, int=True, bounds=(1, None), dec=True),
+                    },
+                    'dataset': {
+                        'display_text': 'Data Set',
+                        'widget': QtWidgets.QLineEdit('odmr'),
+                    },
+                })
+
+            ...
+
+            def doSomething(self):
+                print(f'Making a pulse with power = {self.params_widget.pulse_power} V, length = {self.params_widget.pulse_length} V'
 
     """
 
@@ -26,13 +65,31 @@ class ParamsWidget(QtWidgets.QWidget):
         Args:
             params_config: Dictionary mapping parameter names to a parameter
                 configuration dictionary, which should contain:
-                - widget: QWidget instance that represents the parameter
-                - display_text[optional]: parameter text label
-            get_param_value_funs: Dictionary mapping python classes to a
+
+                - :code:`widget`: QWidget instance that represents the parameter
+                - :code:`display_text` [optional]: parameter text label
+
+            get_param_value_funs: Dictionary mapping Python classes to a
                 function that takes an instance of that class and returns its
                 value. This can be used to show ParamsWidget how to handle new
                 QWidgets. There is built-in support for pyqtgraph SpinBox,
-                QLineEdit, QComboBox, QCheckBox.
+                QLineEdit, QComboBox, QCheckBox. E.g.:
+
+                .. code-block:: python
+
+                    def get_lineedit_val(lineedit):
+                        return lineedit.text()
+
+                    pw = ParamsWidget({
+                                'dataset': {
+                                    'display_text': 'Data Set',
+                                    'widget': QtWidgets.QLineEdit('odmr'),
+                                },
+                                ...
+                            },
+                            get_param_value_funs={QLineEdit: get_lineedit_val}
+                        )
+
         """
         super().__init__()
         self.params_config = params_config

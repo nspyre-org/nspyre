@@ -19,6 +19,7 @@ API Reference
    nspyre.gui.widgets.experiment_widget
    nspyre.gui.widgets.flex_line_plot_widget
    nspyre.gui.widgets.line_plot_widget
+   nspyre.gui.widgets.load_widget
    nspyre.gui.widgets.main_widget
    nspyre.gui.widgets.params_widget
    nspyre.gui.widgets.save_widget

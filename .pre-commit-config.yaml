@@ -8,7 +8,11 @@ repos:
     -   id: check-merge-conflict
     -   id: check-shebang-scripts-are-executable
     -   id: check-yaml
+    -   id: check-toml
+    -   id: check-ast
     -   id: end-of-file-fixer
+    -   id: check-symlinks
+    -   id: destroyed-symlinks
 
 # reorder imports
 -   repo: https://github.com/asottile/reorder_python_imports
@@ -45,7 +49,6 @@ repos:
   hooks:
     -   id: sphinx
         name: Sphinx (docs)
-        entry: python docs/make.py
+        entry: make -C docs html
         language: system
-        types: [python]
         pass_filenames: false

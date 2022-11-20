@@ -18,6 +18,7 @@ source_path = (HERE / source_root).resolve()
 # add the source to sys path so autodoc can import it
 sys.path.insert(0, str(source_path))
 
+
 def find_version(file_path):
     """
     Search for a ``__version__`` string.
@@ -30,6 +31,7 @@ def find_version(file_path):
         if version_match:
             return version_match.group(1)
         raise RuntimeError('Unable to find version string.')
+
 
 # -- Project information -----------------------------------------------------
 
@@ -57,7 +59,7 @@ autodoc_default_options = {
     'members': True,
     'show-inheritance': True,
 }
-autodoc_mock_imports = []
+# autodoc_mock_imports = []
 
 napoleon_include_init_with_doc = True
 

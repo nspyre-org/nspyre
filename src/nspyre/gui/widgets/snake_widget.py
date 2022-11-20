@@ -1,5 +1,5 @@
 """
-Ssssspin snake logo.
+Qwidget that displays the spin snake logo.
 """
 from pathlib import Path
 
@@ -16,7 +16,7 @@ class sssss(QtWidgets.QWidget):
     def __init__(self, size=300):
         """
         Args:
-            size: size of the logo in pixels.
+            size: Size of the logo in pixels.
         """
         super().__init__()
 

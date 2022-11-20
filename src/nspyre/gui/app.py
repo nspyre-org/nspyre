@@ -46,8 +46,8 @@ class nspyreApp(QtWidgets.QApplication):
     ):
         """
         Args:
-            app_name: display name of the application.
-            palette: Qt palette
+            app_name: Display name of the application.
+            palette: Qt palette.
             font: QFont to use for the application.
         """
         # for high DPI displays in Qt5

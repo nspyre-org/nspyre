@@ -1,7 +1,16 @@
 """
-The nspyre DataServer transports arbitrary python objects over a TCP/IP socket to a set of local or remote network clients, and keeps those objects up to date as they are modified. For each data set on the data server, there is a single data "source", and a set of data "sinks".
+The nspyre data server transports arbitrary python objects over a TCP/IP socket
+to a set of local or remote network clients, and keeps those objects up to date
+as they are modified. For each data set on the data server, there is a single
+data "source", and a set of data "sinks".
 
-Objects are serialized by the source then pushed to the server. For local clients, the data server sends the serialized data directly to the be deserialized by the sink process. For remote clients, the serialized object data is diffed with any previously pushed data and the diff is sent rather than the full object in order to minimize the required network bandwidth. The client can then reconstruct the pushed data using a local copy of the last version of the object, and the diff received from the server.
+Objects are serialized by the source then pushed to the server. For local
+clients, the data server sends the serialized data directly to the be
+deserialized by the sink process. For remote clients, the serialized object
+data is diffed with any previously pushed data and the diff is sent rather than
+the full object in order to minimize the required network bandwidth. The client
+can then reconstruct the pushed data using a local copy of the last version of
+the object, and the diff received from the server.
 
 Example usage:
 
@@ -179,7 +188,8 @@ def _serialize(obj) -> bytes:
 
 
 class _DataSet:
-    """Class that wraps a pipeline consisting of a data source and a list of data sinks."""
+    """Class that wraps a pipeline consisting of a data source and a list of
+    data sinks."""
 
     def __init__(self):
         # dict of the form
@@ -203,7 +213,7 @@ class _DataSet:
         data_type_override: bytes,
     ):
         """run a new data sink until it closes
-        
+
         Args:
             sock: socket for the sink
             data_type_override: SINK_DATA_TYPE_DEFAULT for the server to decide whether diffs should be performed
@@ -404,10 +414,18 @@ class _DataSet:
             logger.debug(f'dropped sink [{sock.addr}]')
 
 
-class _DataServer:
+class DataServer:
     """
-    The server has a set of DataSet objects. Each has 1 data source, and any number of data sinks. Pickled object data from the source is received on its socket, then transferred to the FIFO of every sink. The pickle is then sent out on the sink's socket.
-    If the sink is remote, then sending a full pickle of the data every time will probably be network-bandwidth limited. Instead, if the sink has previous data available, it runs a diff algorithm (xdelta3) with the new and previous data to generate a 'delta', which is sent out instead of the pickle. The remote client can then reconstruct the data using the delta. E.g.::
+    The server has a set of DataSet objects. Each has 1 data source, and any
+    number of data sinks. Pickled object data from the source is received on
+    its socket, then transferred to the FIFO of every sink. The pickle is then
+    sent out on the sink's socket.
+    If the sink is remote, then sending a full pickle of the data every time
+    will probably be network-bandwidth limited. Instead, if the sink has
+    previous data available, it runs a diff algorithm (xdelta3) with the new
+    and previous data to generate a 'delta', which is sent out instead of the
+    pickle. The remote client can then reconstruct the data using the delta.
+    E.g.::
 
         self.datasets = {
 
@@ -658,7 +676,7 @@ class _DataServer:
 
 
 class DataSource:
-    """For sourcing data to a DataServer. See DataSink.pop() for typical usage example."""
+    """For sourcing data to a data server. See DataSink.pop() for typical usage example."""
 
     def __init__(
         self,
@@ -672,7 +690,9 @@ class DataSource:
             name: Name of the data set.
             addr: Network address of the data server.
             port: Port of the data server.
-            auto_reconnect: If True, automatically reconnect to the data server if it is disconnected. Otherwise raise an error if connection fails.
+            auto_reconnect: If True, automatically reconnect to the data
+                server if it is disconnected. Otherwise raise an error if
+                connection fails.
         """
 
         # name of the dataset
@@ -700,7 +720,7 @@ class DataSource:
             raise self._exc
 
     def start(self):
-        """Start the asyncio event loop that connects to the data server and serves pop requests."""
+        """Start the :code:`asyncio` event loop that connects to the data server and serves pop requests."""
         # thread for running self._event_loop
         self._thread = Thread(target=self._event_loop_thread, daemon=True)
         self._thread.start()
@@ -723,7 +743,7 @@ class DataSource:
             logger.info(f'source [{(self._addr, self._port)}] closed')
 
     def stop(self, timeout=3):
-        """Stop the asyncio event loop.
+        """Stop the :code:`asyncio` event loop.
 
         Args:
             timeout: time to wait to shut down the event loop.
@@ -887,7 +907,9 @@ class DataSource:
         """Push new data to the data server.
 
         Args:
-            data: Any python object (must be pickleable) to send. Ideally, this should be a dictionary to allow for simple attribute access from the sink side like `sink.my_var`.
+            data: Any python object (must be pickleable) to send. Ideally, \
+                this should be a dictionary to allow for simple attribute access \
+                from the sink side like :code:`sink.my_var`.
         """
         # serialize the objects
         new_pickle = _serialize(data)
@@ -925,7 +947,7 @@ class DataSource:
 
 
 class DataSink:
-    """For sinking data from a DataServer."""
+    """For sinking data from a data server."""
 
     def __init__(
         self,
@@ -940,8 +962,13 @@ class DataSink:
             name: Name of the data set.
             addr: Network address of the data server.
             port: Port of the data server.
-            auto_reconnect: If True, automatically reconnect to the data server if it is disconnected. Otherwise raise an error if connection fails.
-            data_type_override: Specify SINK_DATA_TYPE_PICKLE to force the data server to only send pickled data over the network, SINK_DATA_TYPE_DELTA to send delta objects, or SINK_DATA_TYPE_DEFAULT to choose automatically.
+            auto_reconnect: If True, automatically reconnect to the data
+                server if it is disconnected. Otherwise raise an error if
+                connection fails.
+            data_type_override: Specify :code:`SINK_DATA_TYPE_PICKLE` to force
+                the data server to only send pickled data over the network,
+                :code:`SINK_DATA_TYPE_DELTA` to send delta objects, or
+                :code:`SINK_DATA_TYPE_DEFAULT` to choose automatically.
         """
 
         # name of the dataset
@@ -1086,7 +1113,7 @@ class DataSink:
                             sock.recv_msg(), timeout=TIMEOUT
                         )
                     except (asyncio.IncompleteReadError, asyncio.TimeoutError):
-                        # if there was a timeout / problem receiving the message the dataserver / connection is dead
+                        # if there was a timeout / problem receiving the message the data server / connection is dead
                         logger.info(
                             f'sink data server [{sock.addr}] disconnected or hasn\'t sent a keepalive message - dropping connection'
                         )
@@ -1178,7 +1205,9 @@ class DataSink:
             return new_pickle
 
     def pop(self, timeout=None) -> bool:
-        """Block waiting for an updated version of the data from the data server. Once the data is received, the internal data instance variable will be updated and the function will return.
+        """Block waiting for an updated version of the data from the data
+        server. Once the data is received, the internal data instance variable
+        will be updated and the function will return.
 
         Typical usage example:
 
@@ -1232,7 +1261,7 @@ class DataSink:
                             my_plot_update(sink.freq, sink.volts)
 
         Args:
-            timeout: Time to wait for an update in seconds. Set to None to wait forever.
+            timeout: Time to wait for an update in seconds. Set to :code:`None` to wait forever.
 
         Raises:
             TimeoutError: A timeout occured.

@@ -24,7 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 class LinePlotWidget(QtWidgets.QWidget):
-    """Qt widget that generates a pyqtgraph 1D line plot with some reasonable default settings and a variety of added features."""
+    """Qt widget that generates a pyqtgraph 1D line plot with some reasonable
+    default settings and a variety of added features."""
 
     new_data = QtCore.Signal(str)
 
@@ -44,9 +45,11 @@ class LinePlotWidget(QtWidgets.QWidget):
             title: Plot title.
             xlabel: Plot x-axis label.
             ylabel: Plot y-axis label.
-            font: Font to use in the plot title, axis labels, etc., although the font type may not be fully honored.
-            legend: If True, display a figure legend
-            downsample: If True, utilize the pyqtgraph 'auto' downsampling in the 'mean' mode (see https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/plotitem.html#pyqtgraph.PlotItem.setDownsampling)
+            font: Font to use in the plot title, axis labels, etc., although
+                the font type may not be fully honored.
+            legend: If True, display a figure legend.
+            downsample: If True, utilize the pyqtgraph 'auto' downsampling in
+                the 'mean' mode (see https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/plotitem.html#pyqtgraph.PlotItem.setDownsampling).
         """
         super().__init__(*args, **kwargs)
 
@@ -110,7 +113,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         self.plot_widget.setTitle(title, size=f'{self.font.pointSize()}pt')
 
     def setup(self):
-        """Subclasses should override this function to perform any setup code"""
+        """Subclasses should override this function to perform any setup code."""
         pass
 
     def update(self):
@@ -118,7 +121,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         time.sleep(1)
 
     def teardown(self):
-        """Subclasses should override this function to perform any teardown code"""
+        """Subclasses should override this function to perform any teardown code."""
         pass
 
     def _next_color(self):
@@ -243,8 +246,8 @@ class LinePlotWidget(QtWidgets.QWidget):
 
         Args:
             name: Name of the plot.
-            xdata: array-like of data for the x-axis.
-            ydata: array-like of data for the y-axis.
+            xdata: Array-like of data for the x-axis.
+            ydata: Array-like of data for the y-axis.
 
         Raises:
             ValueError: An error with the supplied arguments.

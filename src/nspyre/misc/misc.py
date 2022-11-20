@@ -24,7 +24,7 @@ def join_nspyre_path(path) -> Path:
     directory.
 
     Args:
-        path: Path object relative to the nspyre root
+        path: Path object relative to the nspyre root.
 
     Returns:
         The absolute path.
@@ -165,8 +165,8 @@ class ProcessRunner:
 
         Args:
             fun: Function to run.
-            args: arguments to pass to fun.
-            kwargs: keyword arguments to pass to fun.
+            args: Arguments to pass to fun.
+            kwargs: Keyword arguments to pass to fun.
 
         Raises:
             RuntimeError: The function from a previous call is still running.

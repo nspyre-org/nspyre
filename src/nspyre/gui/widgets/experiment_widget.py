@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class ExperimentWidget(QtWidgets.QWidget):
     """Qt widget generating a GUI for a simple experiment."""
+
     def __init__(
         self,
         params_config: dict,
@@ -32,16 +33,17 @@ class ExperimentWidget(QtWidgets.QWidget):
     ):
         """
         Args:
-            params_config: dictionary that is passed to the constructor of ParamsWidget. See ParamsWidget docs for details.
-            module: python module that contains cls
-            cls: python class name as a string (that descends from QWidget).
+            params_config: Dictionary that is passed to the constructor of
+                :py:class:`~nspyre.gui.widgets.params_widget.ParamsWidget`.
+            module: Python module that contains cls.
+            cls: Python class name as a string (that descends from QWidget).
                 An instance of this class will be created when the user tries
-                to load the widget and it will be added to the DockArea.
-            fun_name: name of function within cls to run
-            args: args to pass to cls
-            kwargs: keyword args to pass to cls
-            title: window title
-            layout: additional Qt layout to place between the parameters and run/stop/kill buttons
+                to load the widget and it will be added to the pyqtgraph :code:`DockArea`.
+            fun_name: Name of function within cls to run.
+            args: Args to pass to cls.
+            kwargs: Keyword args to pass to cls.
+            title: Window title.
+            layout: Additional Qt layout to place between the parameters and run/stop/kill buttons.
         """
         super().__init__()
 

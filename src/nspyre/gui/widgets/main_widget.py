@@ -1,5 +1,6 @@
 """
-This widget creates an interface that allows the user to easily launch Qt widgets. The widgets are placed in a pyqtgraph dock area.
+This widget creates an interface that allows the user to easily launch Qt \
+widgets. The widgets are placed in a pyqtgraph :code:`DockArea`.
 """
 from importlib import reload
 from types import ModuleType
@@ -26,15 +27,15 @@ class MainWidgetItem:
     ):
         """
         Args:
-            name: display name for the widget
-            module: python module that contains cls
-            cls: python class name as a string (that descends from QWidget).
+            name: Display name for the widget.
+            module: Python module that contains cls.
+            cls: Python class name as a string (that descends from QWidget).
                 An instance of this class will be created when the user tries
-                to load the widget and it will be added to the DockArea.
-            args: list of arguments to pass to the __init__ function of cls
-            kwargs: dictionary of keyword arguments to pass to the __init__
-                function of cls
-            stretch: the dock stretch factor as a tuple (stretch_x, stretch_y) (see https://pyqtgraph.readthedocs.io/en/latest/api_reference/dockarea.html)
+                to load the widget and it will be added to the :code:`DockArea`.
+            args: Arguments to pass to the __init__ function of cls.
+            kwargs: Keyword arguments to pass to the __init__ function of cls.
+            stretch: The dock stretch factor as a tuple (stretch_x, stretch_y) \
+                (see https://pyqtgraph.readthedocs.io/en/latest/api_reference/dockarea.html)
         """
         super().__init__()
         self.module = module
@@ -78,7 +79,8 @@ class _MainWidgetItemContainer(QtGui.QStandardItem):
 
 
 class MainWidget(QtWidgets.QWidget):
-    """Qt widget that contains a list of widgets to run, and a pyqtgraph DockArea where they are displayed.
+    """Qt widget that contains a list of widgets to run, and a pyqtgraph \
+    :code:`DockArea` where they are displayed.
 
     Typical usage example:
 
@@ -194,7 +196,7 @@ class MainWidget(QtWidgets.QWidget):
 
     def load_widget(self, tree_widget_item):
         """Loads the QWidget corresponding to the given tree item and add it to
-        the dock area."""
+        the :code:`DockArea`."""
         if isinstance(tree_widget_item, _MainWidgetItemContainer):
             # do nothing if the user tried to load a container class item
             return
@@ -219,7 +221,7 @@ class MainWidget(QtWidgets.QWidget):
             dock.setStretch(*stretch)
 
     def dock_widget(self, widget, *args, **kwargs):
-        """Create a new dock for the given widget and add it to the dock area."""
+        """Create a new dock for the given widget and add it to the :code:`DockArea`."""
         # if the logo dock is there, remove it
         try:
             if self.logo_dock is not None:

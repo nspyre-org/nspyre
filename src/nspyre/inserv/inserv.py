@@ -1,5 +1,6 @@
 """
-This module starts a process running an RPyC server. Clients may connect and access devices, or command the server to add, remove, or restart devices.
+This module starts a process running an RPyC server. Clients may connect and
+access devices, or command the server to add, remove, or restart devices.
 """
 import logging
 import threading
@@ -48,7 +49,10 @@ class InstrumentServerDeviceExistsError(InstrumentServerError):
 class InstrumentServer(ClassicService):
     """RPyC service that loads devices and exposes them to the client.
 
-    The RPyC service (https://rpyc.readthedocs.io/en/latest/) starts a new thread running an RPyC server. Clients may connect and access devices or command the server to add, remove, or restart devices (through the InstrumentGateway).
+    The RPyC service (https://rpyc.readthedocs.io/en/latest/) starts a new
+    thread running an RPyC server. Clients may connect and access devices or
+    command the server to add, remove, or restart devices (through the
+    :class:`.InstrumentGateway`).
 
     Typical usage example:
 
@@ -120,15 +124,22 @@ class InstrumentServer(ClassicService):
         import_or_file: str = 'file',
         **kwargs,
     ):
-        r"""Create an instance of the specified class and add it to the instrument server.
+        """Create an instance of the specified class and add it to the instrument server.
 
         Args:
             name: Alias for the device.
-            class_path: If import_or_file is 'file', path to the file containing the class, e.g. '~/drivers/oscilloscopes/rtb2004.py'. If import_or_file is 'import', python module containing the class, e.g. 'driver_module.oscilloscopes.rtb2004'
-            class_name: Name of the class to create an instance of, e.g. 'RTB2004'.
-            import_or_file: 'file' for creating the device object from a file on disk, 'import' for creating the device object from a python module.
-            args: arguments to pass to the class during initialization, as in RTB2004(\*args, \*\*kwargs).
-            kwargs: keyword args to pass to the class during initialization, as in RTB2004(\*args, \*\*kwargs).
+            class_path: If import_or_file is :code:`'file'`, path to the file
+                containing the class, e.g. :code:`'~/drivers/oscilloscopes/rtb2004.py'`.
+                If import_or_file is :code:`'import'`, python module
+                containing the class, e.g. :code:`'driver_module.oscilloscopes.rtb2004'`
+            class_name: Name of the class to create an instance of, e.g. :code:`'RTB2004'`.
+            import_or_file: :code:`'file'` for creating the device object from
+                a file on disk, :code:`'import'` for creating the device
+                object from a python module.
+            args: Arguments to pass to the class during initialization, as in
+                :code:`RTB2004(*args, **kwargs)`.
+            kwargs: Keyword args to pass to the class during initialization,
+                as in :code:`RTB2004(*args, **kwargs)`.
 
         Raises:
             ValueError: An argument was invalid.
@@ -339,11 +350,11 @@ class InstrumentServer(ClassicService):
             return self.__getattribute__(attr)
 
     def on_connect(self, conn: Connection):
-        """Called when a client connects to the RPyC server"""
+        """Called when a client connects to the RPyC server."""
         logger.info(f'client {conn} connected')
 
     def on_disconnect(self, conn: Connection):
-        """Called when a client disconnects from the RPyC server"""
+        """Called when a client disconnects from the RPyC server."""
         logger.info(f'client {conn} disconnected')
 
     def __enter__(self):

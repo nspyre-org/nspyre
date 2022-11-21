@@ -12,7 +12,27 @@ To start the data server, simply run:
 
 .. code-block:: bash
 
-   nspyre-dataserv
+   $ nspyre-dataserv
+
+The data server can be controlled through its CLI (command-line interface). 
+Type ``help`` for a list of available commands:
+
+.. code-block:: bash
+
+   $ nspyre-dataserv
+   2022-11-21 11:42:25.647 [INFO] (dataserv_cli.py:151) starting data server...
+   dataserv > 2022-11-21 11:42:25.654 [INFO] (base_events.py:1539) <Server sockets=(<asyncio.TransportSocket fd=7, family=2, type=1, proto=6, laddr=('127.0.0.1', 30000)>,)> is serving
+   2022-11-21 11:42:25.654 [INFO] (dataserv.py:497) Serving on ('127.0.0.1', 30000)
+
+   dataserv > help
+
+   Documented commands (type help <topic>):
+   ========================================
+   debug  help  list  quit
+
+   dataserv > help list
+
+   ...
 
 Data can be pushed to the data server like so:
 

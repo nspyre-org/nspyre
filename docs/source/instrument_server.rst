@@ -32,6 +32,27 @@ You can use the InstrumentServer class to create an instrument server, and add d
       # commands to control the server
       inserv_cli(inserv)
 
+You can use the CLI (command-line interface) to interact with the instrument server:
+
+.. code-block:: bash
+
+   $ python inserv.py
+   2022-11-21 11:48:55.404 [INFO] (inserv.py:290) starting InstrumentServer RPyC server...
+   2022-11-21 11:48:55.405 [INFO] (server.py:250) server started on [127.0.0.1]:42068
+   2022-11-21 11:48:55.506 [INFO] (inserv.py:214) added device "sg" with args: () kwargs: {}
+   2022-11-21 11:48:55.507 [INFO] (inserv.py:214) added device "daq" with args: () kwargs: {}
+   inserv > help
+
+   Documented commands (type help <topic>):
+   ========================================
+   del  help  list  py  quit  restart  restart_all
+
+   inserv > help list
+   List all the available devices
+   inserv > list
+   sg
+   daq
+
 Once the instrument server has been created, its devices can be accessed using an instrument gateway:
 
 .. code-block:: python

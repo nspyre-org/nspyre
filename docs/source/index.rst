@@ -9,6 +9,10 @@ Welcome to nspyre's documentation!
    :target: https://nspyre.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
+.. image:: https://zenodo.org/badge/220515183.svg
+   :target: https://zenodo.org/badge/latestdoi/220515183
+   :alt: Documentation Status
+
 (N)etworked (S)cientific (Py)thon (R)esearch (E)nvironment
 
 .. toctree::
@@ -58,6 +62,9 @@ instrumentation in a research environment. Data collection is also
 networked, and allows for real-time viewing locally, or from a remote machine. 
 nspyre provides a set of tools for quickly generating a Qt-based GUI for 
 control and data viewing.
+
+If you use nspyre for an experiment, we would really appreciate it if you 
+[cite](https://doi.org/10.5281/zenodo.7315077) it in your publication!
 
 Who we are, and why we made nspyre
 ==================================

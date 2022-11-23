@@ -23,5 +23,5 @@ networked, and allows for real-time viewing locally, or from a remote machine.
 nspyre provides a set of tools for quickly generating a Qt-based GUI for 
 control and data viewing.
 
-If you use nspyre for an experiment, please [cite](https://doi.org/10.5281/zenodo.7315077) 
-it in your publication!
+If you use nspyre for an experiment, we would really appreciate it if you 
+[cite](https://doi.org/10.5281/zenodo.7315077) it in your publication!

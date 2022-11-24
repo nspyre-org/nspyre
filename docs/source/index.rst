@@ -64,7 +64,7 @@ nspyre provides a set of tools for quickly generating a Qt-based GUI for
 control and data viewing.
 
 If you use nspyre for an experiment, we would really appreciate it if you 
-[cite](https://doi.org/10.5281/zenodo.7315077) it in your publication!
+(`cite <https://doi.org/10.5281/zenodo.7315077>`__) it in your publication!
 
 Who we are, and why we made nspyre
 ==================================

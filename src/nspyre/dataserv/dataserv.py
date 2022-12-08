@@ -1282,15 +1282,11 @@ class DataSink:
         try:
             # wait for the coroutine to return
             new_pickle = future.result()
-        except concurrent.futures.TimeoutError:
-            logger.error(
-                '_pop timed out (this shouldn\'t happen since timeout is handled by _pop itself), cancelling the task...'
-            )
+        except concurrent.futures.TimeoutError as exc:
             future.cancel()
+            raise TimeoutError('pop timed out') from exc
         except concurrent.futures.CancelledError:
             logging.debug('_pop was cancelled')
-        except asyncio.exceptions.TimeoutError as exc:
-            raise TimeoutError('Pop timed out') from exc
         else:
             logger.debug(f'pop returning [{len(new_pickle)}] bytes unpickled')
             # update data object

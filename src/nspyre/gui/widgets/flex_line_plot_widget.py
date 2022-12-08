@@ -205,11 +205,13 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         self.flex_line_plot.update_plot_settings(
             name, series, scan_i, scan_j, processing
         )
+        self.flex_line_plot.force_update = True
 
     def _add_plot_clicked(self):
         """Called when the user clicks the add button."""
         name, series, scan_i, scan_j, processing = self._get_plot_settings()
         self.add_plot(name, series, scan_i, scan_j, processing)
+        self.flex_line_plot.force_update = True
 
     def add_plot(
         self, name: str, series: str, scan_i: str, scan_j: str, processing: str
@@ -350,7 +352,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
         self.mutex = Lock()
         self.plot_settings = {}
         # flag indicating that this is the first pop from the sink
-        self.first = False
+        self.force_update = False
 
     def update_plot_settings(self, name, series, scan_i, scan_j, processing):
         with self.mutex:
@@ -425,7 +427,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                         if self.plot_settings[plot_name]['hidden']:
                             self.hide(plot_name)
                     # flag indicating that this is the first pop from the sink
-                    self.first = True
+                    self.force_update = True
                 else:
                     # some other pop error occured
                     raise RuntimeError
@@ -444,74 +446,77 @@ class _FlexLinePlotWidget(LinePlotWidget):
         # update the plot data
         # plot immediately if this is the first time, otherwise wait for new
         # data to be available from the sink with pop()
-        if self.sink is not None and (self.first or self.sink.pop()):
-            with self.mutex:
-                # check again to be sure
-                if self.sink is not None:
-                    for plot_name in self.plot_settings:
-                        series = self.plot_settings[plot_name]['series']
-                        scan_i = self.plot_settings[plot_name]['scan_i']
-                        scan_j = self.plot_settings[plot_name]['scan_j']
-                        processing = self.plot_settings[plot_name]['processing']
+        try:
+            if self.sink is not None and (self.force_update or self.sink.pop(timeout=0.1)):
+                with self.mutex:
+                    # check again to be sure
+                    if self.sink is not None:
+                        for plot_name in self.plot_settings:
+                            series = self.plot_settings[plot_name]['series']
+                            scan_i = self.plot_settings[plot_name]['scan_i']
+                            scan_j = self.plot_settings[plot_name]['scan_j']
+                            processing = self.plot_settings[plot_name]['processing']
 
-                        # pick out the particulary data series
-                        try:
-                            data = self.sink.datasets[series]
-                        except KeyError:
-                            logger.error(
-                                f'Data series [{series}] does not exist in data set [{self.data_source_name}]'
-                            )
-                            continue
-
-                        if isinstance(data, list):
-                            if len(data) == 0:
+                            # pick out the particulary data series
+                            try:
+                                data = self.sink.datasets[series]
+                            except KeyError:
+                                logger.error(
+                                    f'Data series [{series}] does not exist in data set [{self.data_source_name}]'
+                                )
                                 continue
-                            else:
-                                # check for numpy array
-                                if not isinstance(data[0], np.ndarray):
-                                    raise ValueError(
-                                        f'Data series [{series}] must be a list of numpy arrays, but the first list element has type [{type(data[0])}].'
-                                    )
-                                # check numpy array shape
-                                if data[0].shape[0] != 2 or len(data[0].shape) != 2:
-                                    raise ValueError(
-                                        f'Data series [{series}] first list element has shape {data.shape}, but should be (2, n).'
-                                    )
 
-                                try:
-                                    if scan_i == '' and scan_j == '':
-                                        data_subset = data[:]
-                                    elif scan_j == '':
-                                        data_subset = data[int(scan_i) :]
-                                    elif scan_i == '':
-                                        data_subset = data[: int(scan_j)]
-                                    else:
-                                        data_subset = data[int(scan_i) : int(scan_j)]
-                                except IndexError:
-                                    logger.warning(
-                                        f'Data series [{series}] invalid scan indices [{scan_i}, {scan_j}]'
-                                    )
+                            if isinstance(data, list):
+                                if len(data) == 0:
                                     continue
-
-                                if processing == 'Append':
-                                    # concatenate the numpy arrays
-                                    processed_data = np.concatenate(data_subset, axis=1)
-                                elif processing == 'Average':
-                                    # average the numpy arrays
-                                    processed_data = np.average(
-                                        np.stack(data_subset), axis=0
-                                    )
                                 else:
-                                    raise ValueError(
-                                        f'processing has unsupported value [{processing}].'
-                                    )
-                        else:
-                            raise ValueError(
-                                f'Data series [{series}] must be a list of numpy arrays, but has type [{type(data)}].'
-                            )
+                                    # check for numpy array
+                                    if not isinstance(data[0], np.ndarray):
+                                        raise ValueError(
+                                            f'Data series [{series}] must be a list of numpy arrays, but the first list element has type [{type(data[0])}].'
+                                        )
+                                    # check numpy array shape
+                                    if data[0].shape[0] != 2 or len(data[0].shape) != 2:
+                                        raise ValueError(
+                                            f'Data series [{series}] first list element has shape {data.shape}, but should be (2, n).'
+                                        )
 
-                        # update the plot
-                        self.set_data(plot_name, processed_data[0], processed_data[1])
-            self.first = False
-        else:
-            time.sleep(0.1)
+                                    try:
+                                        if scan_i == '' and scan_j == '':
+                                            data_subset = data[:]
+                                        elif scan_j == '':
+                                            data_subset = data[int(scan_i) :]
+                                        elif scan_i == '':
+                                            data_subset = data[: int(scan_j)]
+                                        else:
+                                            data_subset = data[int(scan_i) : int(scan_j)]
+                                    except IndexError:
+                                        logger.warning(
+                                            f'Data series [{series}] invalid scan indices [{scan_i}, {scan_j}]'
+                                        )
+                                        continue
+
+                                    if processing == 'Append':
+                                        # concatenate the numpy arrays
+                                        processed_data = np.concatenate(data_subset, axis=1)
+                                    elif processing == 'Average':
+                                        # average the numpy arrays
+                                        processed_data = np.average(
+                                            np.stack(data_subset), axis=0
+                                        )
+                                    else:
+                                        raise ValueError(
+                                            f'processing has unsupported value [{processing}].'
+                                        )
+                            else:
+                                raise ValueError(
+                                    f'Data series [{series}] must be a list of numpy arrays, but has type [{type(data)}].'
+                                )
+
+                            # update the plot
+                            self.set_data(plot_name, processed_data[0], processed_data[1])
+                self.force_update = False
+            else:
+                time.sleep(0.1)
+        except TimeoutError:
+            pass

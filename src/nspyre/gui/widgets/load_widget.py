@@ -9,7 +9,7 @@ from typing import Union
 
 from pyqtgraph.Qt import QtWidgets
 
-from ...dataserv.dataserv import DataSource
+from ...dataserv.data_source import DataSource
 
 HOME = Path.home()
 

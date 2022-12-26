@@ -1,21 +1,22 @@
 """
-Implements a List-like object that can be streamed efficiently through the data 
-server.
+Implements a List-like object that can be streamed efficiently through the data server.
 """
 
+
 class StreamingList(list):
-    """List-like object that can be streamed efficiently through the data 
+    """List-like object that can be streamed efficiently through the data
     server."""
+
     def __init__(self, iterable):
         """
         Args:
-            iterable: iterable object to initialize the contents of the list 
+            iterable: iterable object to initialize the contents of the list
                 with, e.g. StreamingList([1, 2, 3])
         """
         super().__init__()
-        # A list of operations that have been performed on the list since the 
-        # last update. A list of tuples where the first tuple element is the 
-        # operation type, and the subsequent elements are (optional) objects 
+        # A list of operations that have been performed on the list since the
+        # last update. A list of tuples where the first tuple element is the
+        # operation type, and the subsequent elements are (optional) objects
         # for that operation.
         self.diff_ops = []
         # initialize the list contents
@@ -23,7 +24,7 @@ class StreamingList(list):
             self.append(i)
 
     def updated_item(self, idx):
-        """The item at the given index was modified, and, therefore, its cached 
+        """The item at the given index was modified, and, therefore, its cached
         value is no longer valid and must be updated.
 
         Args:
@@ -68,10 +69,12 @@ class StreamingList(list):
     def __mul__(self, repeats):
         """See docs for Python list."""
         if not isinstance(repeats, int):
-            raise ValueError(f"can't multiply sequence by non-int of type {type(repeats)}")
+            raise ValueError(
+                f"can't multiply sequence by non-int of type {type(repeats)}"
+            )
         if repeats > 0:
             new_sl = self.copy()
-            for i in range(repeats - 1):
+            for _ in range(repeats - 1):
                 new_sl.extend(self)
             return new_sl
         else:
@@ -136,6 +139,7 @@ class StreamingList(list):
         """See docs for Python list."""
         return StreamingList(super().copy())
 
+
 if __name__ == '__main__':
     sl1 = StreamingList(['a', 'b', 'c'])
     sl2 = StreamingList(['e', 'f', 'g'])
@@ -148,42 +152,93 @@ if __name__ == '__main__':
     assert sl1.diff_ops == [('i', 0, 'a'), ('i', 1, 'b'), ('i', 2, 'c'), ('i', 3, 'd')]
     sl1.extend(sl2)
     assert sl1 == ['a', 'b', 'c', 'd', 'e', 'f', 'g']
-    assert sl1.diff_ops == [('i', 0, 'a'), ('i', 1, 'b'), ('i', 2, 'c'), \
-                            ('i', 3, 'd'), ('i', 4, 'e'), ('i', 5, 'f'), ('i', 6, 'g')]
+    assert sl1.diff_ops == [
+        ('i', 0, 'a'),
+        ('i', 1, 'b'),
+        ('i', 2, 'c'),
+        ('i', 3, 'd'),
+        ('i', 4, 'e'),
+        ('i', 5, 'f'),
+        ('i', 6, 'g'),
+    ]
     sl1[0] = 'x'
     assert sl1 == ['x', 'b', 'c', 'd', 'e', 'f', 'g']
-    assert sl1.diff_ops == [('i', 0, 'a'), ('i', 1, 'b'), ('i', 2, 'c'), \
-                            ('i', 3, 'd'), ('i', 4, 'e'), ('i', 5, 'f'), \
-                            ('i', 6, 'g'), ('u', 0, 'x')]
+    assert sl1.diff_ops == [
+        ('i', 0, 'a'),
+        ('i', 1, 'b'),
+        ('i', 2, 'c'),
+        ('i', 3, 'd'),
+        ('i', 4, 'e'),
+        ('i', 5, 'f'),
+        ('i', 6, 'g'),
+        ('u', 0, 'x'),
+    ]
     sl1[0:2] = ['y', 'z']
     assert sl1 == ['y', 'z', 'c', 'd', 'e', 'f', 'g']
-    assert sl1.diff_ops == [('i', 0, 'a'), ('i', 1, 'b'), ('i', 2, 'c'), \
-                            ('i', 3, 'd'), ('i', 4, 'e'), ('i', 5, 'f'), \
-                            ('i', 6, 'g'), ('u', 0, 'x'), ('u', slice(0, 2), ['y', 'z'])]
+    assert sl1.diff_ops == [
+        ('i', 0, 'a'),
+        ('i', 1, 'b'),
+        ('i', 2, 'c'),
+        ('i', 3, 'd'),
+        ('i', 4, 'e'),
+        ('i', 5, 'f'),
+        ('i', 6, 'g'),
+        ('u', 0, 'x'),
+        ('u', slice(0, 2), ['y', 'z']),
+    ]
     sl1._clear_diff_ops()
     assert sl1 == ['y', 'z', 'c', 'd', 'e', 'f', 'g']
     assert sl1.diff_ops == []
     sl3 = sl1 + ['h', 'i']
     assert sl3 == ['y', 'z', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
-    assert sl3.diff_ops == [('i', 0, 'y'), ('i', 1, 'z'), ('i', 2, 'c'), \
-                            ('i', 3, 'd'), ('i', 4, 'e'), ('i', 5, 'f'), \
-                            ('i', 6, 'g'), ('i', 7, 'h'), ('i', 8, 'i')]
+    assert sl3.diff_ops == [
+        ('i', 0, 'y'),
+        ('i', 1, 'z'),
+        ('i', 2, 'c'),
+        ('i', 3, 'd'),
+        ('i', 4, 'e'),
+        ('i', 5, 'f'),
+        ('i', 6, 'g'),
+        ('i', 7, 'h'),
+        ('i', 8, 'i'),
+    ]
     sl3.remove('h')
     assert sl3 == ['y', 'z', 'c', 'd', 'e', 'f', 'g', 'i']
-    assert sl3.diff_ops == [('i', 0, 'y'), ('i', 1, 'z'), ('i', 2, 'c'), \
-                            ('i', 3, 'd'), ('i', 4, 'e'), ('i', 5, 'f'), \
-                            ('i', 6, 'g'), ('i', 7, 'h'), ('i', 8, 'i'), \
-                            ('d', 7)]
+    assert sl3.diff_ops == [
+        ('i', 0, 'y'),
+        ('i', 1, 'z'),
+        ('i', 2, 'c'),
+        ('i', 3, 'd'),
+        ('i', 4, 'e'),
+        ('i', 5, 'f'),
+        ('i', 6, 'g'),
+        ('i', 7, 'h'),
+        ('i', 8, 'i'),
+        ('d', 7),
+    ]
     sl4 = StreamingList([1, 2]) * 3
     assert sl4 == [1, 2, 1, 2, 1, 2]
-    assert sl4.diff_ops == [('i', 0, 1), ('i', 1, 2), ('i', 2, 1), \
-                            ('i', 3, 2), ('i', 4, 1), ('i', 5, 2)]
+    assert sl4.diff_ops == [
+        ('i', 0, 1),
+        ('i', 1, 2),
+        ('i', 2, 1),
+        ('i', 3, 2),
+        ('i', 4, 1),
+        ('i', 5, 2),
+    ]
     sl4.pop(0)
     sl4.pop(1)
     assert sl4 == [2, 2, 1, 2]
-    assert sl4.diff_ops == [('i', 0, 1), ('i', 1, 2), ('i', 2, 1), \
-                            ('i', 3, 2), ('i', 4, 1), ('i', 5, 2), \
-                            ('d', 0), ('d', 1)]
+    assert sl4.diff_ops == [
+        ('i', 0, 1),
+        ('i', 1, 2),
+        ('i', 2, 1),
+        ('i', 3, 2),
+        ('i', 4, 1),
+        ('i', 5, 2),
+        ('d', 0),
+        ('d', 1),
+    ]
     sl4._clear_diff_ops()
     sl4.merge([('d', 0), ('i', 0, 3)])
     assert sl4 == [3, 2, 1, 2]

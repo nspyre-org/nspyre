@@ -1,13 +1,9 @@
 import logging
-import sys
 import time
 
 import numpy as np
 from nspyre import DataSink
 from nspyre import DataSource
-from nspyre import SINK_DATA_TYPE_DEFAULT
-from nspyre import SINK_DATA_TYPE_DELTA
-from nspyre import SINK_DATA_TYPE_PICKLE
 
 logger = logging.getLogger(__name__)
 
@@ -15,16 +11,14 @@ logger = logging.getLogger(__name__)
 NPUSHES = 100
 
 
-def dataserv_push_pop(
-    name: str = 'push_pop', data_type_override: bytes = SINK_DATA_TYPE_DEFAULT
-):
+def dataserv_push_pop(name: str = 'push_pop'):
     """Test the base functionality of the data server by synchronously
     pushing then popping an object repeatedly"""
 
     with DataSource(name) as source:
         # allow time for the server to set up the data source
         time.sleep(0.1)
-        with DataSink(name, data_type_override=data_type_override) as sink:
+        with DataSink(name) as sink:
             # allow time for the server to set up the data sink
             time.sleep(0.1)
 
@@ -62,41 +56,21 @@ def dataserv_push_pop(
     )
 
 
-def test_dataserv_push_pop_delta(dataserv):
-    """Test the base functionality of the data server by synchronously
-    pushing then popping an object repeatedly, but force the server to use
-    deltas"""
-
-    if 'xdelta3' in sys.modules:
-        dataserv_push_pop(
-            name='push_pop_delta', data_type_override=SINK_DATA_TYPE_DELTA
-        )
-    else:
-        logger.info(
-            'Skipping test_dataserv_push_pop_delta because xdelta3 is not installed.'
-        )
-
-
 def test_dataserv_push_pop_pickle(dataserv):
     """Test the base functionality of the data server by synchronously
     pushing then popping an object repeatedly, but force the server to use
     pickles"""
-    dataserv_push_pop(name='push_pop_pickle', data_type_override=SINK_DATA_TYPE_PICKLE)
+    dataserv_push_pop(name='push_pop_pickle')
 
 
-def dataserv_push_multipop(
-    name: str = 'push_multipop',
-    data_type_override: bytes = SINK_DATA_TYPE_DEFAULT,
-):
+def dataserv_push_multipop(name: str = 'push_multipop'):
     """Test the base functionality of the data server by synchronously
     pushing an object, then popping it from two different sinks"""
 
     with DataSource(name) as source:
         # allow time for the server to set up the data source
         time.sleep(0.1)
-        with DataSink(name, data_type_override=data_type_override) as sink1, DataSink(
-            name, data_type_override=data_type_override
-        ) as sink2:
+        with DataSink(name) as sink1, DataSink(name) as sink2:
             # allow time for the server to set up the data sink
             time.sleep(0.1)
 
@@ -136,28 +110,11 @@ def dataserv_push_multipop(
     )
 
 
-def test_dataserv_push_multipop_delta(dataserv):
-    """Test the base functionality of the data server by synchronously
-    pushing an object, then popping it from two different sinks, but force the
-    server to use deltas"""
-
-    if 'xdelta3' in sys.modules:
-        dataserv_push_multipop(
-            name='push_pop_delta', data_type_override=SINK_DATA_TYPE_DELTA
-        )
-    else:
-        logger.info(
-            'Skipping test_dataserv_push_multipop_delta because xdelta3 is not installed.'
-        )
-
-
 def test_dataserv_push_multipop_pickle(dataserv):
     """Test the base functionality of the data server by synchronously
     pushing an object, then popping it from two different sinks, but force the
     server to use pickles"""
-    dataserv_push_multipop(
-        name='push_pop_pickle', data_type_override=SINK_DATA_TYPE_PICKLE
-    )
+    dataserv_push_multipop(name='push_pop_pickle')
 
 
 def test_dataserv_push_no_pop(dataserv):

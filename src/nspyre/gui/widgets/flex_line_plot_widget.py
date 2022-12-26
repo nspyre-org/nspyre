@@ -10,7 +10,7 @@ from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
-from ...dataserv.dataserv import DataSink
+from ...dataserv.data_sink import DataSink
 from .line_plot_widget import LinePlotWidget
 
 logger = logging.getLogger(__name__)
@@ -447,7 +447,9 @@ class _FlexLinePlotWidget(LinePlotWidget):
         # plot immediately if this is the first time, otherwise wait for new
         # data to be available from the sink with pop()
         try:
-            if self.sink is not None and (self.force_update or self.sink.pop(timeout=0.1)):
+            if self.sink is not None and (
+                self.force_update or self.sink.pop(timeout=0.1)
+            ):
                 with self.mutex:
                     # check again to be sure
                     if self.sink is not None:
@@ -489,7 +491,9 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                         elif scan_i == '':
                                             data_subset = data[: int(scan_j)]
                                         else:
-                                            data_subset = data[int(scan_i) : int(scan_j)]
+                                            data_subset = data[
+                                                int(scan_i) : int(scan_j)
+                                            ]
                                     except IndexError:
                                         logger.warning(
                                             f'Data series [{series}] invalid scan indices [{scan_i}, {scan_j}]'
@@ -498,7 +502,9 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
                                     if processing == 'Append':
                                         # concatenate the numpy arrays
-                                        processed_data = np.concatenate(data_subset, axis=1)
+                                        processed_data = np.concatenate(
+                                            data_subset, axis=1
+                                        )
                                     elif processing == 'Average':
                                         # average the numpy arrays
                                         processed_data = np.average(
@@ -514,7 +520,9 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                 )
 
                             # update the plot
-                            self.set_data(plot_name, processed_data[0], processed_data[1])
+                            self.set_data(
+                                plot_name, processed_data[0], processed_data[1]
+                            )
                 self.force_update = False
             else:
                 time.sleep(0.1)

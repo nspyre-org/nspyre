@@ -1,12 +1,11 @@
+"""For sourcing data to the data server."""
+
 import asyncio
 import concurrent.futures
 import logging
 import pickle
-import selectors
-from threading import Semaphore
-from threading import Thread
 
-from .dataserv import _cleanup_event_loop
+from .asyncio_worker import AsyncioWorker
 from .dataserv import _CustomSock
 from .dataserv import _queue_flush_and_put
 from .dataserv import DATASERV_PORT
@@ -25,8 +24,8 @@ def _serialize(obj) -> bytes:
     return pickle.dumps(obj)
 
 
-class DataSource:
-    """For sourcing data to a data server. See DataSink.pop() for typical usage example."""
+class DataSource(AsyncioWorker):
+    """For sourcing data to the data server. See DataSink.pop() for typical usage example."""
 
     def __init__(
         self,
@@ -44,86 +43,15 @@ class DataSource:
                 server if it is disconnected. Otherwise raise an error if
                 connection fails.
         """
-
+        super().__init__()
         # name of the dataset
         self._name = name
-
         # IP address of the data server to connect to
         self._addr = addr
-
         # port of the data server to connect to
         self._port = port
-
-        # asyncio event loop for sending/receiving data to/from the socket
-        selector = selectors.SelectSelector()
-        self._event_loop = asyncio.SelectorEventLoop(selector)
-
-        # store exceptions thrown in the event loop (running in another thread)
-        self._exc = None
-
         # whether the source should try to reconnect to the data server
         self._auto_reconnect = auto_reconnect
-
-    def _check_exc(self):
-        """Check to see if an exception was raised in the event loop thread."""
-        if self._exc is not None:
-            raise self._exc
-
-    def start(self):
-        """Start the :code:`asyncio` event loop that connects to the data server and serves pop requests."""
-        # thread for running self._event_loop
-        self._thread = Thread(target=self._event_loop_thread, daemon=True)
-        self._thread.start()
-        # semaphore to block until connection has occurred
-        self._sem = Semaphore(value=0)
-        self._sem.acquire()
-        self._check_exc()
-
-    def _event_loop_thread(self):
-        """Run the asyncio event loop - this may be run in a separate thread because
-        we aren't starting any subprocesses or responding to signals"""
-        logging.debug(f'started DataSource event loop thread {self._thread}')
-        self._event_loop.set_debug(True)
-        asyncio.set_event_loop(self._event_loop)
-        try:
-            self._event_loop.call_soon(self._main_helper)
-            self._event_loop.run_forever()
-        finally:
-            self._event_loop.close()
-            logger.info(f'source [{(self._addr, self._port)}] closed')
-
-    def stop(self, timeout=3):
-        """Stop the :code:`asyncio` event loop.
-
-        Args:
-            timeout: time to wait to shut down the event loop.
-        """
-        if self._event_loop.is_running():
-            # wait for the queue to be empty (with timeout) to allow any pushes in the pipeline to be sent
-            future = asyncio.run_coroutine_threadsafe(
-                self._queue.join(), self._event_loop
-            )
-            # wait for the coroutine to return
-            try:
-                future.result(timeout=timeout)
-            except concurrent.futures.TimeoutError:
-                logger.info(
-                    'Timed out waiting for the DataSource queue to be empty. Stopping anyway...'
-                )
-                future.cancel()
-                return
-            except concurrent.futures.CancelledError:
-                logging.error('queue.join() was cancelled. This is shouldn\'t happen.')
-            # kill the event loop
-            asyncio.run_coroutine_threadsafe(
-                _cleanup_event_loop(self._event_loop), self._event_loop
-            )
-        else:
-            raise RuntimeError('tried stopping the source but it isn\'t running!')
-
-    def _main_helper(self):
-        """Callback function to start _main"""
-        asyncio.create_task(self._main())
 
     async def _main(self):
         """asyncio main loop"""
@@ -280,17 +208,5 @@ class DataSource:
             logging.debug('_push was cancelled')
         self._check_exc()
 
-    def __enter__(self):
-        """Python context manager setup"""
-        self.start()
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Python context manager teardown"""
-        self.stop()
-
-    def __del__(self):
-        if self._event_loop.is_running():
-            logger.warning(
-                f'DataSource {self} event loop is still running. Did you forget to call stop()?'
-            )
+    def __str__(self):
+        return f'Data Source (running={self.is_running()}) [name={self._name}, ip={self._addr}, port={self._port}, auto_reconnect={self._auto_reconnect}]'

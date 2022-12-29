@@ -381,56 +381,53 @@ class _FlexLinePlotWidget(LinePlotWidget):
             try:
                 self.sink = DataSink(self.data_source_name)
                 self.sink.__enter__()
-                if self.sink.pop(timeout=timeout):
-                    # set title
-                    try:
-                        title = self.sink.title
-                    except AttributeError:
-                        logger.info(
-                            f'Data source [{data_source_name}] has no "title" attribute - skipping...'
-                        )
-                    else:
-                        self.set_title(title)
-                    # set xlabel
-                    try:
-                        xlabel = self.sink.xlabel
-                    except AttributeError:
-                        logger.info(
-                            f'Data source [{data_source_name}] has no "xlabel" attribute - skipping...'
-                        )
-                    else:
-                        self.xaxis.setLabel(text=xlabel)
-                    # set ylabel
-                    try:
-                        ylabel = self.sink.ylabel
-                    except AttributeError:
-                        logger.info(
-                            f'Data source [{data_source_name}] has no "ylabel" attribute - skipping...'
-                        )
-                    else:
-                        self.yaxis.setLabel(text=ylabel)
-                    try:
-                        dsets = self.sink.datasets
-                    except AttributeError as err:
-                        raise RuntimeError(
-                            f'Data source [{data_source_name}] has no "datasets" attribute - exiting...'
-                        ) from err
-                    else:
-                        if not isinstance(dsets, dict):
-                            logger.error(
-                                f'Data source [{data_source_name}] "datasets" attribute is not a dictionary - exiting...'
-                            )
-                            raise RuntimeError
-                    # add the existing plots
-                    for plot_name in self.plot_settings:
-                        self.add_plot(plot_name)
-                        if self.plot_settings[plot_name]['hidden']:
-                            self.hide(plot_name)
-                    # flag indicating that this is the first pop from the sink
-                    self.force_update = True
+                self.sink.pop(timeout=timeout)
+                # set title
+                try:
+                    title = self.sink.title
+                except AttributeError:
+                    logger.info(
+                        f'Data source [{data_source_name}] has no "title" attribute - skipping...'
+                    )
                 else:
-                    # some other pop error occured
-                    raise RuntimeError
+                    self.set_title(title)
+                # set xlabel
+                try:
+                    xlabel = self.sink.xlabel
+                except AttributeError:
+                    logger.info(
+                        f'Data source [{data_source_name}] has no "xlabel" attribute - skipping...'
+                    )
+                else:
+                    self.xaxis.setLabel(text=xlabel)
+                # set ylabel
+                try:
+                    ylabel = self.sink.ylabel
+                except AttributeError:
+                    logger.info(
+                        f'Data source [{data_source_name}] has no "ylabel" attribute - skipping...'
+                    )
+                else:
+                    self.yaxis.setLabel(text=ylabel)
+                try:
+                    dsets = self.sink.datasets
+                except AttributeError as err:
+                    raise RuntimeError(
+                        f'Data source [{data_source_name}] has no "datasets" attribute - exiting...'
+                    ) from err
+                else:
+                    if not isinstance(dsets, dict):
+                        logger.error(
+                            f'Data source [{data_source_name}] "datasets" attribute is not a dictionary - exiting...'
+                        )
+                        raise RuntimeError
+                # add the existing plots
+                for plot_name in self.plot_settings:
+                    self.add_plot(plot_name)
+                    if self.plot_settings[plot_name]['hidden']:
+                        self.hide(plot_name)
+                # flag indicating that this is the first pop from the sink
+                self.force_update = True
             except (TimeoutError, RuntimeError) as err:
                 self.teardown()
                 raise RuntimeError(
@@ -447,9 +444,9 @@ class _FlexLinePlotWidget(LinePlotWidget):
         # plot immediately if this is the first time, otherwise wait for new
         # data to be available from the sink with pop()
         try:
-            if self.sink is not None and (
-                self.force_update or self.sink.pop(timeout=0.1)
-            ):
+            if self.sink is not None:
+                if not self.force_update:
+                    self.sink.pop(timeout=0.1)
                 with self.mutex:
                     # check again to be sure
                     if self.sink is not None:

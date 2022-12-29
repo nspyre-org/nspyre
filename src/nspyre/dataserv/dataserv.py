@@ -6,7 +6,7 @@ data "source", and a set of data "sinks".
 
 Objects are serialized by the source then pushed to the server. For local
 clients, the data server sends the serialized data directly to the be
-deserialized by the sink process. For remote clients, the serialized object
+deserialized by the sink process. For sinks, the serialized object
 data is diffed with any previously pushed data and the diff is sent rather than
 the full object in order to minimize the required network bandwidth. The client
 can then reconstruct the pushed data using a local copy of the last version of
@@ -229,7 +229,6 @@ class _DataSet:
                             logger.debug(
                                 f'sink [{sink["sock"].addr}] can\'t keep up with data source'
                             )
-                            # empty the queue then put a single item into it
                             _queue_flush_and_put(queue, new_pickle)
                         logger.debug(
                             f'source [{sock.addr}] queued pickle of [{len(new_pickle)}] for sink [{sink["sock"].addr}]'
@@ -293,29 +292,24 @@ class DataServer:
     number of data sinks. Pickled object data from the source is received on
     its socket, then transferred to the FIFO of every sink. The pickle is then
     sent out on the sink's socket.
-    If the sink is remote, then sending a full pickle of the data every time
-    will probably be network-bandwidth limited. Instead, if the sink has
-    previous data available, it runs a diff algorithm (xdelta3) with the new
-    and previous data to generate a 'delta', which is sent out instead of the
-    pickle. The remote client can then reconstruct the data using the delta.
     E.g.::
 
         self.datasets = {
 
         'dataset1' : _DataSet(
-                            ------> FIFO ------> diff ------> socket (remote client)
-                           /
-        socket (source) ----------> FIFO ------> diff ------> socket (remote client)
-                           \\
-                            ------> FIFO -------------------> socket (local client)
+        socket (source) ----------> FIFO ------> socket (sink 1)
+                           |
+                            ------> FIFO ------> socket (sink 2)
         ),
 
         'dataset2' : _DataSet(
-                            ------> FIFO ------> diff ------> socket (remote client)
-                           /
-        socket (source) ----------> FIFO -------------------> socket (local client)
-                           \\
-                            ------> FIFO -------------------> socket (local client)
+        socket (source) ----------> FIFO ------> socket (sink 1)
+                           |
+                            ------> FIFO ------> socket (sink 2)
+                           |
+                            ------> FIFO ------> socket (sink 3)
+                           |
+                            ------> FIFO ------> socket (sink 4)
         ),
 
         ... }
@@ -448,8 +442,7 @@ class DataServer:
                 if self.datasets[dataset_name].source:
                     # the dataset already has a source
                     logger.warning(
-                        f'client [{sock.addr}] wants to source data '
-                        f'for data set [{dataset_name}], but it already has a source - dropping connection'
+                        f'client [{sock.addr}] wants to source data for data set [{dataset_name}], but it already has a source - dropping connection'
                     )
                     try:
                         await sock.close()

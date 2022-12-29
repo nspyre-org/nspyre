@@ -1,14 +1,12 @@
+"""For sinking data from the data server."""
+
 import asyncio
 import concurrent.futures
 import logging
 import pickle
-import selectors
-from threading import Semaphore
-from threading import Thread
 from typing import Any
-from typing import Dict
 
-from .dataserv import _cleanup_event_loop
+from .asyncio_worker import AsyncioWorker
 from .dataserv import _CustomSock
 from .dataserv import _queue_flush_and_put
 from .dataserv import DATASERV_PORT
@@ -23,11 +21,14 @@ logger = logging.getLogger(__name__)
 
 def _deserialize(obj) -> Any:
     """Deserialize a python object from a byte stream."""
-    return pickle.loads(obj)
+    try:
+        return pickle.loads(obj)
+    except EOFError as err:
+        logging.debug('unpickle failed')
+        raise ValueError from err
 
-
-class DataSink:
-    """For sinking data from a data server."""
+class DataSink(AsyncioWorker):
+    """For sinking data from the data server."""
 
     def __init__(
         self,
@@ -36,7 +37,37 @@ class DataSink:
         port: int = DATASERV_PORT,
         auto_reconnect: bool = False,
     ):
-        """
+        """sink.data can be used to directly access the python object pushed by the source, e.g.:
+
+        .. code-block:: python
+
+            from nspyre import DataSink, DataSource
+
+            with DataSource('my_dataset') as src:
+                src.push('Data!')
+
+            with DataSink('my_dataset') as sink:
+                sink.pop()
+                print(sink.data)
+
+        Alternatively, if the data pushed by the source is a dictionary, its values can be accessed as if they were instance variables of the sink, e.g.:
+
+        .. code-block:: python
+
+            from nspyre import DataSink, DataSource
+
+            with DataSource('my_dataset') as src:
+                data = {
+                    'some_data': 1,
+                    'some_other_data': 'a string'
+                }
+                src.push(data)
+
+            with DataSink('my_dataset') as sink:
+                sink.pop()
+                print(sink.some_data)
+                print(sink.some_other_data)
+
         Args:
             name: Name of the data set.
             addr: Network address of the data server.
@@ -45,70 +76,17 @@ class DataSink:
                 server if it is disconnected. Otherwise raise an error if
                 connection fails.
         """
-
+        super().__init__()
         # name of the dataset
         self._name = name
-
         # dict mapping the object name to the watched object
-        self.data: Dict[str, Any] = {}
-
+        self.data: Any = None
         # IP address of the data server to connect to
         self._addr = addr
-
         # port of the data server to connect to
         self._port = port
-
-        # asyncio event loop for sending/receiving data to/from the socket
-        selector = selectors.SelectSelector()
-        self._event_loop = asyncio.SelectorEventLoop(selector)
-
-        # store exceptions thrown in the event loop (running in another thread)
-        self._exc = None
-
         # whether the sink should try to reconnect to the data server
         self._auto_reconnect = auto_reconnect
-
-    def _check_exc(self):
-        """Check to see if an exception was raised in the event loop thread."""
-        if self._exc is not None:
-            raise self._exc
-
-    def start(self):
-        """Start the asyncio event loop that connects to the data server and serves pop requests."""
-        # thread for running self._event_loop
-        self._thread = Thread(target=self._event_loop_thread, daemon=True)
-        self._thread.start()
-        # semaphore to block until connection has occurred
-        self._sem = Semaphore(value=0)
-        self._sem.acquire()
-        self._check_exc()
-
-    def stop(self):
-        """Stop the asyncio event loop."""
-        if self._event_loop.is_running():
-            asyncio.run_coroutine_threadsafe(
-                _cleanup_event_loop(self._event_loop), self._event_loop
-            )
-        else:
-            raise RuntimeError('tried stopping the data sink but it isn\'t running!')
-
-    def _event_loop_thread(self):
-        """Run the asyncio event loop - this may be run in a separate thread because
-        we aren't starting any subprocesses or responding to signals"""
-        logger.debug(f'started DataSource event loop thread {self._thread}')
-        self._event_loop.set_debug(True)
-        asyncio.set_event_loop(self._event_loop)
-        try:
-            self._event_loop.call_soon(self._main_helper)
-            self._event_loop.run_forever()
-        finally:
-            self._event_loop.close()
-            logger.info(f'sink [{(self._addr, self._port)}] closed')
-
-    def _main_helper(self):
-        """Callback function to start _main"""
-        # TODO for some reason this takes a long time
-        asyncio.create_task(self._main())
 
     async def _main(self):
         """asyncio main loop"""
@@ -241,7 +219,7 @@ class DataSink:
 
     def pop(self, timeout=None) -> bool:
         """Block waiting for an updated version of the data from the data
-        server. Once the data is received, the internal data instance variable
+        server. Once the data is received, the internal 'data' instance variable
         will be updated and the function will return.
 
         Typical usage example:
@@ -290,10 +268,10 @@ class DataSink:
                 with DataSink('my_dataset', '192.168.1.50') as sink:
                     while True:
                         # block until an updated version of the data set is available
-                        if sink.pop():
-                            # sink.freq and sink.volts have been modified
-                            # replot the data to show the new values
-                            my_plot_update(sink.freq, sink.volts)
+                        sink.pop():
+                        # sink.freq and sink.volts have been modified
+                        # replot the data to show the new values
+                        my_plot_update(sink.freq, sink.volts)
 
         Args:
             timeout: Time to wait for an update in seconds. Set to :code:`None` to wait forever.
@@ -305,46 +283,50 @@ class DataSink:
             bool: True if successful, False otherwise.
 
         """
-        ret = False
+        if not self.is_running():
+            raise RuntimeError(
+                f'Tried to pop from data sink {self} but the sink has not been started.'
+            )
+
         # get the most recent pickle from the queue
         future = asyncio.run_coroutine_threadsafe(self._pop(timeout), self._event_loop)
+        # whether timeout ocurred
+        timed_out = False
 
         try:
             # wait for the coroutine to return
             new_pickle = future.result()
         except TimeoutError as err:
-            logger.debug('pop timed out, cancelling future')
-            future.cancel()
-            raise err
+            timed_out = True
         except concurrent.futures.CancelledError:
             logger.debug('_pop was cancelled')
         else:
-            logger.debug(f'pop returning [{len(new_pickle)}] bytes unpickled')
+            logger.debug(f'pop returning [{len(new_pickle)}] bytes')
             # update data object
-            self.data = _deserialize(new_pickle)
-            ret = True
+            try:
+                self.data = _deserialize(new_pickle)
+            except ValueError as err:
+                # new_pickle contained no data due to a timeout
+                timed_out = True
+
+        if timed_out:
+            logger.debug('pop timed out, cancelling future')
+            future.cancel()
+            raise TimeoutError(f'{self} pop() timed out.')
+
         self._check_exc()
-        return ret
+
+    def __str__(self):
+        return f'Data Sink (running={self.is_running()}) [name={self._name}, ip={self._addr}, port={self._port}, auto_reconnect={self._auto_reconnect}]'
 
     def __getattr__(self, attr: str):
-        """Allow the user to access the data objects using sink.obj notation"""
-        if attr in self.data:
-            return self.data[attr]
-        else:
-            # raise the default python error when an attribute isn't found
+        """Allow the user to access the data objects using sink.obj notation if self.data is a dictionary"""
+        try:
+            if attr in self.data:
+                return self.data[attr]
+            else:
+                # raise the default python error when an attribute isn't found
+                return self.__getattribute__(attr)
+        except TypeError:
+            # data is not iterable
             return self.__getattribute__(attr)
-
-    def __enter__(self):
-        """Python context manager setup"""
-        self.start()
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Python context manager teardown"""
-        self.stop()
-
-    def __del__(self):
-        if self._event_loop.is_running():
-            logger.warning(
-                f'DataSink {self} event loop is still running. Did you forget to call stop()?'
-            )

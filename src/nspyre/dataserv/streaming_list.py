@@ -139,6 +139,13 @@ class StreamingList(list):
         """See docs for Python list."""
         return StreamingList(super().copy())
 
+    def __getstate__(self):
+        # only pickle the diff_ops
+        return self.diff_ops.copy()
+
+    def __setstate__(self, diff_ops):
+        # merge the unpickled diff_ops
+        self.merge(diff_ops)
 
 if __name__ == '__main__':
     sl1 = StreamingList(['a', 'b', 'c'])

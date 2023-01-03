@@ -10,7 +10,7 @@ from typing import Union
 import numpy as np
 from pyqtgraph.Qt import QtWidgets
 
-from ...dataserv.data_sink import DataSink
+from ...data_server.data_sink import DataSink
 
 HOME = Path.home()
 

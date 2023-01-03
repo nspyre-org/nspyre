@@ -1,13 +1,8 @@
 import logging
 
-try:
-    from .dataserv import DataSink
-    from .dataserv import DataSource
-except ModuleNotFoundError as exc:
-    logger = logging.getLogger(__name__)
-    logger.warning(
-        f'Not importing data server functionality because the required packages are not installed:\n{exc}'
-    )
+from .data_server import DataSink
+from .data_server import DataSource
+from .data_server import StreamingList
 
 try:
     from .gui import ColorMapWidget
@@ -34,19 +29,13 @@ except ModuleNotFoundError as exc:
         f'Not importing GUI functionality because the required packages are not installed:\n{exc}'
     )
 
-try:
-    from .inserv import InstrumentGateway
-    from .inserv import InstrumentGatewayError
-    from .inserv import InstrumentServer
-    from .inserv import InstrumentServerDeviceExistsError
-    from .inserv import InstrumentServerError
-    from .cli import inserv_cli
-    from .cli import dataserv_cli
-except ModuleNotFoundError as exc:
-    logger = logging.getLogger(__name__)
-    logger.warning(
-        f'Not importing instrument server functionality because the required packages are not installed:\n{exc}'
-    )
+from .inserv import InstrumentGateway
+from .inserv import InstrumentGatewayError
+from .inserv import InstrumentServer
+from .inserv import InstrumentServerDeviceExistsError
+from .inserv import InstrumentServerError
+from .cli import inserv_cli
+from .cli import dataserv_cli
 
 from .misc import nspyre_init_logger
 from .misc import ProcessRunner

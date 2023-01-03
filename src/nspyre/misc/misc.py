@@ -7,10 +7,13 @@ import inspect
 import logging
 import sys
 import warnings
+from collections import deque
+from itertools import chain
 from multiprocessing import Process
 from pathlib import Path
 from typing import Type
 
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +149,53 @@ def _load_class_from_file(file_path: Path, class_name: str) -> Type:
     loaded_class = getattr(loaded_module, class_name)
 
     return loaded_class
+
+
+def total_sizeof(o, handlers=None):
+    """Returns the approximate memory footprint an object and all of its contents.
+    Taken from https://code.activestate.com/recipes/577504/.
+
+    Automatically finds the contents of the following builtin containers and
+    their subclasses:  tuple, list, deque, dict, set and frozenset.
+    To search other containers, add handlers to iterate over their contents:
+
+        handlers = {SomeContainerClass: iter,
+                    OtherContainerClass: OtherContainerClass.get_elements}
+
+    """
+
+    def dict_handler(d):
+        return chain.from_iterable(d.items())
+
+    all_handlers = {
+        tuple: iter,
+        list: iter,
+        deque: iter,
+        dict: dict_handler,
+        set: iter,
+        frozenset: iter,
+    }
+    if handlers is not None:
+        all_handlers.update(handlers)  # user handlers take precedence
+    seen = set()  # track which object id's have already been seen
+    default_size = sys.getsizeof(0)  # estimate sizeof object without __sizeof__
+
+    def sizeof(o):
+        if id(o) in seen:  # do not double count the same object
+            return 0
+        seen.add(id(o))
+        if isinstance(o, np.ndarray):
+            s = o.nbytes
+        else:
+            s = sys.getsizeof(o, default_size)
+
+        for typ, handler in all_handlers.items():
+            if isinstance(o, typ):
+                s += sum(map(sizeof, handler(o)))
+                break
+        return s
+
+    return sizeof(o)
 
 
 class ProcessRunner:

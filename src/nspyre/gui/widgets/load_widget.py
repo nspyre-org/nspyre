@@ -1,5 +1,5 @@
 """
-A widget to load data from a file and push it to the :py:class:`~nspyre.dataserv.dataserv.DataServer`.
+A widget to load data from a file and push it to the :py:class:`~nspyre.data_server.data_server.DataServer`.
 """
 import json
 import pickle
@@ -9,7 +9,7 @@ from typing import Union
 
 from pyqtgraph.Qt import QtWidgets
 
-from ...dataserv.data_source import DataSource
+from ...data_server.data_source import DataSource
 
 HOME = Path.home()
 
@@ -43,7 +43,7 @@ def load_pickle(filename: Union[str, Path]) -> Any:
 
 
 class LoadWidget(QtWidgets.QWidget):
-    """Qt widget that loads data from the :py:class:`~nspyre.dataserv.dataserv.DataServer`."""
+    """Qt widget that loads data from the :py:class:`~nspyre.data_server.data_server.DataServer`."""
 
     def __init__(
         self, additional_filetypes=None, load_dialog_dir: Union[str, Path] = None

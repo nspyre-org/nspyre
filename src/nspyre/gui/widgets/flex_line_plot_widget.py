@@ -10,16 +10,16 @@ from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
-from ...dataserv.data_sink import DataSink
+from ...data_server.data_sink import DataSink
 from .line_plot_widget import LinePlotWidget
 
 logger = logging.getLogger(__name__)
 
 
 class FlexLinePlotWidget(QtWidgets.QWidget):
-    """QWidget that allows the user to connect to an arbitrary nspyre :py:class:`~nspyre.dataserv.dataserv.DataSource` and plot its data.
+    """QWidget that allows the user to connect to an arbitrary nspyre :py:class:`~nspyre.data_server.data_server.DataSource` and plot its data.
 
-    The :py:class:`~nspyre.dataserv.dataserv.DataSource` may contain the following attributes:
+    The :py:class:`~nspyre.data_server.data_server.DataSource` may contain the following attributes:
 
     - title: Plot title string
     - xlabel: X label string

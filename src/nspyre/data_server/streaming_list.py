@@ -20,8 +20,9 @@ class StreamingList(list):
         # for that operation.
         self.diff_ops = []
         # initialize the list contents
-        for i in iterable:
-            self.append(i)
+        if iterable is not None:
+            for i in iterable:
+                self.append(i)
 
     def updated_item(self, idx):
         """The item at the given index was modified, and, therefore, its cached
@@ -139,13 +140,6 @@ class StreamingList(list):
         """See docs for Python list."""
         return StreamingList(super().copy())
 
-    def __getstate__(self):
-        # only pickle the diff_ops
-        return self.diff_ops.copy()
-
-    def __setstate__(self, diff_ops):
-        # merge the unpickled diff_ops
-        self.merge(diff_ops)
 
 if __name__ == '__main__':
     sl1 = StreamingList(['a', 'b', 'c'])

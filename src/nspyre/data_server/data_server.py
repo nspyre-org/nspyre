@@ -2,15 +2,17 @@
 The nspyre data server transports arbitrary python objects over a TCP/IP socket
 to a set of local or remote network clients, and keeps those objects up to date
 as they are modified. For each data set on the data server, there is a single
-data "source", and a set of data "sinks".
+data "source", and a set of data "sinks". The source pushes data to the data
+server and each of the sinks pops data from the data server.
 
-Objects are serialized by the source then pushed to the server. For local
-clients, the data server sends the serialized data directly to the be
-deserialized by the sink process. For sinks, the serialized object
-data is diffed with any previously pushed data and the diff is sent rather than
-the full object in order to minimize the required network bandwidth. The client
-can then reconstruct the pushed data using a local copy of the last version of
-the object, and the diff received from the server.
+Objects are serialized by the source then pushed to the server. Each sink
+receives a copy of the serialized objects, then deserializes them locally. If
+the user makes use of "Streaming" objects such as the StreamingList, the source
+will only serialize the operations that have been performed on the streaming
+object since the last serialization. The sink can then reconstruct the pushed
+data using a local copy of the last version of the object, and the diff
+received from the data server. This is more efficient when data sets start
+becoming larger and serialization performance is a bottleneck.
 
 Example usage:
 
@@ -24,6 +26,12 @@ import logging
 import selectors
 import socket
 from typing import Dict
+
+from ..misc.misc import total_sizeof
+from .streaming_pickle import streaming_deserialize
+from .streaming_pickle import streaming_load_pickle_diff
+from .streaming_pickle import streaming_pickle_diff
+from .streaming_pickle import streaming_serialize
 
 logger = logging.getLogger(__name__)
 
@@ -56,17 +64,20 @@ NEGOTIATION_TIMEOUT = TIMEOUT
 # timeout for relatively quick operations
 FAST_TIMEOUT = 1.0
 
-# custom recv_msg() and send_msg() use the following packet structure
-# |                      HEADER       | PAYLOAD
-# | message length (excluding header) | message
-# |        HEADER_MSG_LEN             | variable length
-
 # length (bytes) of the header section that identifies how large the payload is
 HEADER_MSG_LEN = 8
 
+# maximum size of a diff (bytes)
+MAX_DIFF = 10 * 1e9
+
 
 class _CustomSock:
-    """Tiny socket wrapper class that implements a custom messaging protocol"""
+    """Tiny socket wrapper class that implements a custom messaging protocol.
+    recv_msg() and send_msg() use the following packet structure:
+    |                      HEADER       | PAYLOAD
+    | message length (excluding header) | message
+    |        HEADER_MSG_LEN             | variable length
+    """
 
     def __init__(self, sock_reader, sock_writer):
         self.sock_reader = sock_reader
@@ -110,12 +121,40 @@ class _CustomSock:
         logger.debug(f'closed socket [{self.addr}]')
 
 
-def _queue_flush_and_put(queue, item):
-    """Empty an asyncio queue then put a single item onto it"""
+def _squash_queue(queue, item, max_diff=MAX_DIFF):
+    """Combine all streaming pickle diff entries in an asyncio queue into a single entry.
+
+    Args:
+        queue: Asyncio queue.
+        item: streaming pickle entry to be squashed with the rest of the entries in the queue.
+        max_diff: maximum size (bytes) for the squashed diff object.
+
+    Returns:
+        True on success, False if max_diff is exceeded.
+    """
+    # collect all of the items to be squashed
+    queue_entries = []
     for _ in range(queue.qsize()):
-        queue.get_nowait()
+        queue_entries.append(queue.get_nowait())
         queue.task_done()
-    queue.put_nowait(item)
+    queue_entries.append(item)
+    # squashed diff operations
+    new_diffs = {}
+    for _, diffs in queue_entries:
+        for uid in diffs:
+            # iterate through each
+            if uid in new_diffs:
+                # new_diffs already has a record for the streaming object given
+                # by uid, so we will combine their diffs
+                new_diffs[uid].extend(diffs[uid])
+            else:
+                # there is a new streaming object entry, so add it to the new_diffs
+                new_diffs[uid] = diffs[uid]
+    if total_sizeof(new_diffs) > max_diff:
+        return False
+    # place the squashed item onto the queue
+    queue.put_nowait((item[0], new_diffs))
+    return True
 
 
 async def _cleanup_event_loop(loop):
@@ -157,15 +196,17 @@ class _DataSet:
         #           'queue': sink FIFO/queue},
         # ('192.168.1.5', 19859): ... }
         self.sinks = {}
-        # object to store the most up-to-date data for safekeeping
-        self.data = None
+        # store the most up-to-date data
+        self.data = {}
+        # store the streaming objects
+        self.streaming_obj_db = {}
 
     async def run_sink(
         self,
         event_loop: asyncio.AbstractEventLoop,
         sock: _CustomSock,
     ):
-        """run a new data sink until it closes
+        """Run a new data sink until it closes.
 
         Args:
             sock: socket for the sink
@@ -184,20 +225,21 @@ class _DataSet:
             'queue': queue,
         }
         self.sinks[sink_id] = sink_dict
-        if self.data:
-            # push the current data to the sink so it has a starting point
-            queue.put_nowait(self.data)
+        # push the current data to the sink so it has a starting point
+        queue.put_nowait(streaming_pickle_diff(self.data))
         await task
 
     async def run_source(self, sock: _CustomSock):
-        """run a data source until it closes"""
+        """Run a data source until it closes."""
         task = asyncio.create_task(self._source_coro())
         self.source = {'task': task, 'sock': sock}
         await task
 
     async def _source_coro(self):
-        """Receive data from a source client and transfer it to the client queues"""
+        """Receive data from a source client and transfer it to the client queues."""
         sock = self.source['sock']
+        # reset the streaming object db since there is a new source
+        self.streaming_obj_db = {}
         try:
             while True:
                 try:
@@ -213,25 +255,32 @@ class _DataSet:
                     raise asyncio.CancelledError from exc
 
                 if len(new_pickle):
-                    self.data = new_pickle
                     logger.debug(
                         f'source [{sock.addr}] received pickle of [{len(new_pickle)}] bytes'
+                    )
+                    # deserialize the pickled pickle & diffs
+                    pickle_diff = streaming_deserialize(new_pickle)
+                    # unpickle the obj using diffs
+                    self.data = streaming_load_pickle_diff(
+                        self.streaming_obj_db, *pickle_diff
                     )
                     for sink_id in self.sinks:
                         sink = self.sinks[sink_id]
                         queue = sink['queue']
                         try:
-                            queue.put_nowait(new_pickle)
+                            queue.put_nowait(pickle_diff)
                         except asyncio.QueueFull:
                             # the sink isn't consuming data fast enough
-                            # so we will empty the queue and place only this most recent
-                            # piece of data on it
                             logger.debug(
                                 f'sink [{sink["sock"].addr}] can\'t keep up with data source'
                             )
-                            _queue_flush_and_put(queue, new_pickle)
+                            if not _squash_queue(queue, pickle_diff):
+                                logger.warning(
+                                    f'Cancelling sink [{sink_id}] because the max diff size was exceede.'
+                                )
+                                self.sinks[sink_id]['task'].cancel()
                         logger.debug(
-                            f'source [{sock.addr}] queued pickle of [{len(new_pickle)}] for sink [{sink["sock"].addr}]'
+                            f'source [{sock.addr}] queued pickle for sink [{sink["sock"].addr}]'
                         )
                 else:
                     # the server just sent a keepalive signal
@@ -254,19 +303,19 @@ class _DataSet:
             while True:
                 try:
                     # get pickle data from the queue
-                    new_pickle = await asyncio.wait_for(
+                    pickle_diff = await asyncio.wait_for(
                         queue.get(), timeout=KEEPALIVE_TIMEOUT
                     )
                     queue.task_done()
-                    logger.debug(
-                        f'sink [{sock.addr}] got [{len(new_pickle)}] bytes from queue'
-                    )
+                    logger.debug(f'sink [{sock.addr}] got pickle diff from queue')
                 except asyncio.TimeoutError:
                     # if there's no data available, send a keepalive message
                     logger.debug(
                         f'sink [{sock.addr}] no data available - sending keepalive'
                     )
                     new_pickle = b''
+                else:
+                    new_pickle = streaming_serialize(pickle_diff)
 
                 try:
                     await asyncio.wait_for(
@@ -322,7 +371,7 @@ class DataServer:
         # a dictionary with string identifiers mapping to DataSet objects
         self.datasets: Dict[str, _DataSet] = {}
         # asyncio event loop for running all the server tasks
-        # TODO for some reason there are performance issues on windows when using the ProactorEventLoop
+        # for some reason there are performance issues on windows when using the ProactorEventLoop
         selector = selectors.SelectSelector()
         self.event_loop = asyncio.SelectorEventLoop(selector)
 

@@ -1,31 +1,24 @@
 """For sinking data from the data server."""
-
 import asyncio
 import concurrent.futures
 import logging
-import pickle
 from typing import Any
+from typing import Dict
 
 from .asyncio_worker import AsyncioWorker
-from .dataserv import _CustomSock
-from .dataserv import _queue_flush_and_put
-from .dataserv import DATASERV_PORT
-from .dataserv import FAST_TIMEOUT
-from .dataserv import NEGOTIATION_SINK
-from .dataserv import NEGOTIATION_TIMEOUT
-from .dataserv import QUEUE_SIZE
-from .dataserv import TIMEOUT
+from .data_server import _CustomSock
+from .data_server import _squash_queue
+from .data_server import DATASERV_PORT
+from .data_server import FAST_TIMEOUT
+from .data_server import NEGOTIATION_SINK
+from .data_server import NEGOTIATION_TIMEOUT
+from .data_server import QUEUE_SIZE
+from .data_server import TIMEOUT
+from .streaming_pickle import streaming_deserialize
+from .streaming_pickle import streaming_load_pickle_diff
 
 logger = logging.getLogger(__name__)
 
-
-def _deserialize(obj) -> Any:
-    """Deserialize a python object from a byte stream."""
-    try:
-        return pickle.loads(obj)
-    except EOFError as err:
-        logging.debug('unpickle failed')
-        raise ValueError from err
 
 class DataSink(AsyncioWorker):
     """For sinking data from the data server."""
@@ -81,6 +74,8 @@ class DataSink(AsyncioWorker):
         self._name = name
         # dict mapping the object name to the watched object
         self.data: Any = None
+        # store the streaming objects
+        self.streaming_obj_db: Dict[str, Any] = {}
         # IP address of the data server to connect to
         self._addr = addr
         # port of the data server to connect to
@@ -175,16 +170,17 @@ class DataSink(AsyncioWorker):
                         f'sink received pickle of [{len(new_pickle)}] bytes from data server [{sock.addr}]'
                     )
 
+                    pickle_diff = streaming_deserialize(new_pickle)
+
                     try:
                         # put pickle on the queue
-                        self._queue.put_nowait(new_pickle)
+                        self._queue.put_nowait(pickle_diff)
                     except asyncio.QueueFull:
                         # the user isn't consuming data fast enough so we will empty the queue and place only this most recent pickle on it
                         logger.debug(
                             'pop() isn\'t being called frequently enough to keep up with data source'
                         )
-                        # empty the queue then put a single item into it
-                        _queue_flush_and_put(self._queue, new_pickle)
+                        _squash_queue(self._queue, pickle_diff)
                     logger.debug(f'sink queued pickle of [{len(new_pickle)}] bytes')
                 await asyncio.sleep(FAST_TIMEOUT)
 
@@ -207,7 +203,7 @@ class DataSink(AsyncioWorker):
         """Coroutine that gets data from the queue."""
         try:
             # get pickle data from the queue
-            new_pickle = await asyncio.wait_for(self._queue.get(), timeout=timeout)
+            pickle_diff = await asyncio.wait_for(self._queue.get(), timeout=timeout)
         except asyncio.exceptions.CancelledError:
             logger.debug('pop cancelled')
             return b''
@@ -215,9 +211,9 @@ class DataSink(AsyncioWorker):
             raise TimeoutError('pop timed out') from err
         else:
             self._queue.task_done()
-            return new_pickle
+            return pickle_diff
 
-    def pop(self, timeout=None) -> bool:
+    def pop(self, timeout=None):
         """Block waiting for an updated version of the data from the data
         server. Once the data is received, the internal 'data' instance variable
         will be updated and the function will return.
@@ -295,18 +291,21 @@ class DataSink(AsyncioWorker):
 
         try:
             # wait for the coroutine to return
-            new_pickle = future.result()
-        except TimeoutError as err:
+            pickle_diff = future.result()
+        except TimeoutError:
             timed_out = True
         except concurrent.futures.CancelledError:
             logger.debug('_pop was cancelled')
         else:
-            logger.debug(f'pop returning [{len(new_pickle)}] bytes')
+            logger.debug('pop returning new data')
             # update data object
-            try:
-                self.data = _deserialize(new_pickle)
-            except ValueError as err:
-                # new_pickle contained no data due to a timeout
+            # TODO not sure whats supposed to happen if theres a timeout
+            if pickle_diff is not None:
+                self.data = streaming_load_pickle_diff(
+                    self.streaming_obj_db, *pickle_diff
+                )
+            else:
+                # no data due to a timeout
                 timed_out = True
 
         if timed_out:

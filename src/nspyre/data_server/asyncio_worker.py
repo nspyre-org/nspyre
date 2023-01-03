@@ -7,7 +7,7 @@ import time
 from threading import Semaphore
 from threading import Thread
 
-from .dataserv import _cleanup_event_loop
+from .data_server import _cleanup_event_loop
 
 logger = logging.getLogger(__name__)
 

@@ -10,7 +10,7 @@ from cmd import Cmd
 from pathlib import Path
 from threading import Thread
 
-from ..dataserv.dataserv import DataServer
+from ..data_server.data_server import DataServer
 from ..misc.logging import LOG_FILE_MAX_SIZE
 from ..misc.logging import nspyre_init_logger
 
@@ -41,6 +41,7 @@ class DataservCmdPrompt(Cmd):
         if arg_string:
             print('Expected 0 args')
             return
+        # use self.dataserv.datasets['my_dataset'] to access datasets directly
         pdb.set_trace()
 
     def do_quit(self, arg_string):

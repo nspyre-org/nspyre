@@ -6,7 +6,7 @@ API Reference
 .. autosummary::
    :toctree: _autosummary
 
-   nspyre.dataserv.dataserv 
+   nspyre.data_server.data_server 
    nspyre.inserv.inserv
    nspyre.inserv.gateway
    nspyre.misc.logging

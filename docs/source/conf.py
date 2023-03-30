@@ -36,8 +36,8 @@ def find_version(file_path):
 # -- Project information -----------------------------------------------------
 
 project = 'nspyre'
-copyright = '2023, Jacob Feder, Michael Solomon, Alexandre Bourassa'
-author = 'Jacob Feder, Michael Solomon, Alexandre Bourassa'
+copyright = '2023, Jacob Feder, Michael Solomon'
+author = 'Jacob Feder, Michael Solomon'
 
 # The source version
 release = find_version(source_version_file)

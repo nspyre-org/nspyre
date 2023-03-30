@@ -43,10 +43,10 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/nspyre-org/nspyre',
-    author='Alexandre Bourassa, Michael Solomon, Jacob Feder',
-    author_email='abourassa@uchicago.edu, msolo@uchicago.edu, jfed@uchicago.edu',
-    maintainer='Michael Solomon, Jacob Feder',
-    maintainer_email='msolo@uchicago.edu, jfed@uchicago.edu',
+    author='Jacob Feder, Michael Solomon, Jose A. Mendez, Alexandre Bourassa',
+    author_email='jfed@uchicago.edu, msolo@uchicago.edu, mendez99@uchicago.edu, abourassa@uchicago.edu',
+    maintainer='Jacob Feder, Michael Solomon',
+    maintainer_email='jfed@uchicago.edu, msolo@uchicago.edu',
     classifiers=[
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
@@ -81,9 +81,6 @@ setup(
         'pyqtgraph >=0.13.1; platform_machine != "aarch64" and platform_machine != "armv7l"',
     ],
     extras_require={
-        'extras': [
-            'xdelta3',  # dataserver delta compression for remote clients
-        ],
         'dev': [
             'pre-commit',
             'sphinx',

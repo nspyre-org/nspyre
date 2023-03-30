@@ -36,8 +36,8 @@ def find_version(file_path):
 # -- Project information -----------------------------------------------------
 
 project = 'nspyre'
-copyright = '2022, Alexandre Bourassa, Michael Solomon, Jacob Feder'
-author = 'Alexandre Bourassa, Michael Solomon, Jacob Feder'
+copyright = '2023, Jacob Feder, Michael Solomon, Alexandre Bourassa'
+author = 'Jacob Feder, Michael Solomon, Alexandre Bourassa'
 
 # The source version
 release = find_version(source_version_file)
@@ -46,20 +46,25 @@ release = find_version(source_version_file)
 
 # Sphinx extension module names
 extensions = [
-    'sphinx.ext.autodoc',  # for generating API from docstrings
-    'sphinx.ext.autosummary',
+    'autoapi.extension',
     'sphinx.ext.napoleon',  # for numpy and google style docstrings
     'sphinx_copybutton',  # for adding 'copy to clipboard' buttons to all text/code boxes
 ]
 
-# Include Python objects as they appear in source files
-# Default: alphabetically ('alphabetical')
-# autodoc_member_order = 'bysource'
-autodoc_default_options = {
-    'members': True,
-    'show-inheritance': True,
-}
-# autodoc_mock_imports = []
+# autoapi config
+# https://sphinx-autoapi.readthedocs.io/en/latest/reference/config.html
+autoapi_type = 'python'
+autoapi_dirs = [source_root]
+autoapi_options = [
+    'members',
+    'inheritted-members',
+    'undoc-members',
+    'show-module-summary',
+    'imported-members',
+]
+autoapi_keep_files = True
+autodoc_typehints = 'description'
+autoapi_python_class_content = 'both'
 
 napoleon_include_init_with_doc = True
 

@@ -10,14 +10,14 @@ from cmd import Cmd
 from pathlib import Path
 from threading import Thread
 
-from ..data_server.data_server import DataServer
+from ..data_server.server import DataServer
 from ..misc.logging import LOG_FILE_MAX_SIZE
 from ..misc.logging import nspyre_init_logger
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
-class DataservCmdPrompt(Cmd):
+class _DataservCmdPrompt(Cmd):
     """Data Server shell prompt processor"""
 
     def __init__(self, dataserv):
@@ -49,21 +49,21 @@ class DataservCmdPrompt(Cmd):
         if arg_string:
             print('Expected 0 args')
             return
-        logger.info('exiting...')
+        _logger.info('exiting...')
         # stop the server
         self.dataserv.stop()
         # notify the command loop to exit
         return True
 
 
-def dataserv_cli(dataserv):
+def data_server_cli(dataserv):
     """Run a command-line interface to allow user interaction with the data server.
 
     Args:
-        dataserv: :py:class:`~nspyre.dataserv.dataserv.DataServer` object.
+        dataserv: :py:class:`~nspyre.data_server.server.DataServer` object.
     """
     # start the shell prompt event loop
-    dataserv_cmd = DataservCmdPrompt(dataserv)
+    dataserv_cmd = _DataservCmdPrompt(dataserv)
     dataserv_cmd.prompt = 'dataserv > '
     try:
         dataserv_cmd.cmdloop('')
@@ -71,7 +71,7 @@ def dataserv_cli(dataserv):
         pass
 
 
-def main():
+def _main():
     """Entry point for data server"""
 
     # parse command-line arguments
@@ -145,13 +145,13 @@ def main():
     # start the shell prompt event loop in a new thread, since DataServer
     # must be run in the main thread
     # daemon=True so that the program will exit when the data server is stopped with a signal - otherwise the cmd loop will hang forever
-    cmd_prompt_thread = Thread(target=dataserv_cli, args=(dataserv,), daemon=True)
+    cmd_prompt_thread = Thread(target=data_server_cli, args=(dataserv,), daemon=True)
     cmd_prompt_thread.start()
 
     # start the data server event loop
-    logger.info('starting data server...')
+    _logger.info('starting data server...')
     dataserv.serve_forever()
 
 
 if __name__ == '__main__':
-    main()
+    _main()

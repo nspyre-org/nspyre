@@ -1,27 +1,65 @@
-"""For sinking data from the data server."""
 import asyncio
 import concurrent.futures
 import logging
 from typing import Any
 from typing import Dict
 
-from .asyncio_worker import AsyncioWorker
-from .data_server import _CustomSock
-from .data_server import _squash_queue
-from .data_server import DATASERV_PORT
-from .data_server import FAST_TIMEOUT
-from .data_server import NEGOTIATION_SINK
-from .data_server import NEGOTIATION_TIMEOUT
-from .data_server import QUEUE_SIZE
-from .data_server import TIMEOUT
-from .streaming_pickle import streaming_deserialize
-from .streaming_pickle import streaming_load_pickle_diff
+from ._asyncio_worker import _AsyncioWorker
+from .server import _CustomSock
+from .server import _squash_queue
+from .server import DATASERV_PORT
+from .server import _FAST_TIMEOUT
+from .server import _NEGOTIATION_SINK
+from .server import _NEGOTIATION_TIMEOUT
+from .server import _QUEUE_SIZE
+from .server import _TIMEOUT
+from ._streaming_pickle import streaming_deserialize
+from ._streaming_pickle import streaming_load_pickle_diff
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
-class DataSink(AsyncioWorker):
-    """For sinking data from the data server."""
+class DataSink(_AsyncioWorker):
+    """For sinking data from the :py:class:`~nspyre.data_server.server.DataServer`. :py:attr:`~nspyre.data_server.sink.DataSink.data` can be used to directly access the python object pushed by the source.
+    E.g.:
+
+    First, start the data server:
+
+    .. code-block:: console
+
+        $ nspyre-dataserv
+
+
+    .. code-block:: python
+
+        from nspyre import DataSink, DataSource
+
+        with DataSource('my_dataset') as src:
+            src.push('Data!')
+
+        with DataSink('my_dataset') as sink:
+            sink.pop()
+            print(sink.data)
+
+    Alternatively, if the data pushed by the source is a dictionary, its values can be accessed as if they were attributes of the sink, e.g.:
+
+    .. code-block:: python
+
+        from nspyre import DataSink, DataSource
+
+        with DataSource('my_dataset') as src:
+            data = {
+                'some_data': 1,
+                'some_other_data': 'a string'
+            }
+            src.push(data)
+
+        with DataSink('my_dataset') as sink:
+            sink.pop()
+            print(sink.some_data)
+            print(sink.some_other_data)
+
+    """
 
     def __init__(
         self,
@@ -30,37 +68,7 @@ class DataSink(AsyncioWorker):
         port: int = DATASERV_PORT,
         auto_reconnect: bool = False,
     ):
-        """sink.data can be used to directly access the python object pushed by the source, e.g.:
-
-        .. code-block:: python
-
-            from nspyre import DataSink, DataSource
-
-            with DataSource('my_dataset') as src:
-                src.push('Data!')
-
-            with DataSink('my_dataset') as sink:
-                sink.pop()
-                print(sink.data)
-
-        Alternatively, if the data pushed by the source is a dictionary, its values can be accessed as if they were instance variables of the sink, e.g.:
-
-        .. code-block:: python
-
-            from nspyre import DataSink, DataSource
-
-            with DataSource('my_dataset') as src:
-                data = {
-                    'some_data': 1,
-                    'some_other_data': 'a string'
-                }
-                src.push(data)
-
-            with DataSink('my_dataset') as sink:
-                sink.pop()
-                print(sink.some_data)
-                print(sink.some_other_data)
-
+        """
         Args:
             name: Name of the data set.
             addr: Network address of the data server.
@@ -72,8 +80,9 @@ class DataSink(AsyncioWorker):
         super().__init__()
         # name of the dataset
         self._name = name
-        # dict mapping the object name to the watched object
         self.data: Any = None
+        """The object pushed by the :py:class:`~nspyre.data_server.source.DataSource`."""
+
         # store the streaming objects
         self.streaming_obj_db: Dict[str, Any] = {}
         # IP address of the data server to connect to
@@ -87,20 +96,20 @@ class DataSink(AsyncioWorker):
         """asyncio main loop"""
         try:
             # asyncio queue for buffering data from the server
-            self._queue = asyncio.Queue(maxsize=QUEUE_SIZE)
+            self._queue = asyncio.Queue(maxsize=_QUEUE_SIZE)
 
             while True:
                 try:
                     # connect to the data server
                     sock_reader, sock_writer = await asyncio.wait_for(
                         asyncio.open_connection(self._addr, self._port),
-                        timeout=NEGOTIATION_TIMEOUT,
+                        timeout=_NEGOTIATION_TIMEOUT,
                     )
                 except OSError as err:
-                    logger.warning(
+                    _logger.warning(
                         f'sink failed connecting to data server [{(self._addr, self._port)}]'
                     )
-                    await asyncio.sleep(FAST_TIMEOUT)
+                    await asyncio.sleep(_FAST_TIMEOUT)
                     if self._auto_reconnect:
                         continue
                     else:
@@ -109,28 +118,28 @@ class DataSink(AsyncioWorker):
                         ) from err
 
                 sock = _CustomSock(sock_reader, sock_writer)
-                logger.info(f'sink connected to data server [{sock.addr}]')
+                _logger.info(f'sink connected to data server [{sock.addr}]')
 
                 try:
                     # notify the server that this is a data sink client
                     await asyncio.wait_for(
-                        sock.send_msg(NEGOTIATION_SINK),
-                        timeout=NEGOTIATION_TIMEOUT,
+                        sock.send_msg(_NEGOTIATION_SINK),
+                        timeout=_NEGOTIATION_TIMEOUT,
                     )
                     # send the dataset name
                     await asyncio.wait_for(
                         sock.send_msg(self._name.encode()),
-                        timeout=NEGOTIATION_TIMEOUT,
+                        timeout=_NEGOTIATION_TIMEOUT,
                     )
                 except (ConnectionError, asyncio.TimeoutError) as err:
-                    logger.warning(
+                    _logger.warning(
                         f'sink failed negotiation process with data server [{sock.addr}] - attempting reconnect'
                     )
                     try:
                         await sock.close()
                     except IOError:
                         pass
-                    await asyncio.sleep(FAST_TIMEOUT)
+                    await asyncio.sleep(_FAST_TIMEOUT)
                     if self._auto_reconnect:
                         continue
                     else:
@@ -138,7 +147,7 @@ class DataSink(AsyncioWorker):
                             f'Failed connecting to data server [{(self._addr, self._port)}]'
                         ) from err
 
-                logger.debug(
+                _logger.debug(
                     f'sink finished negotiation with data server [{sock.addr}]'
                 )
 
@@ -149,11 +158,11 @@ class DataSink(AsyncioWorker):
                     try:
                         # get data from the server
                         new_pickle = await asyncio.wait_for(
-                            sock.recv_msg(), timeout=TIMEOUT
+                            sock.recv_msg(), timeout=_TIMEOUT
                         )
                     except (asyncio.IncompleteReadError, asyncio.TimeoutError):
                         # if there was a timeout / problem receiving the message the data server / connection is dead
-                        logger.info(
+                        _logger.info(
                             f'sink data server [{sock.addr}] disconnected or hasn\'t sent a keepalive message - dropping connection'
                         )
                         try:
@@ -166,7 +175,7 @@ class DataSink(AsyncioWorker):
                         # keepalive message
                         continue
 
-                    logger.debug(
+                    _logger.debug(
                         f'sink received pickle of [{len(new_pickle)}] bytes from data server [{sock.addr}]'
                     )
 
@@ -177,19 +186,19 @@ class DataSink(AsyncioWorker):
                         self._queue.put_nowait(pickle_diff)
                     except asyncio.QueueFull:
                         # the user isn't consuming data fast enough so we will empty the queue and place only this most recent pickle on it
-                        logger.debug(
+                        _logger.debug(
                             'pop() isn\'t being called frequently enough to keep up with data source'
                         )
                         _squash_queue(self._queue, pickle_diff)
-                    logger.debug(f'sink queued pickle of [{len(new_pickle)}] bytes')
-                await asyncio.sleep(FAST_TIMEOUT)
+                    _logger.debug(f'sink queued pickle of [{len(new_pickle)}] bytes')
+                await asyncio.sleep(_FAST_TIMEOUT)
 
         except ConnectionError as err:
             self._exc = err
             # release the main thread if there's a connection error
             self._sem.release()
         except asyncio.CancelledError as err:
-            logger.debug(
+            _logger.debug(
                 f'sink stopped, closing connection with data server [{sock.addr}]'
             )
             try:
@@ -205,7 +214,7 @@ class DataSink(AsyncioWorker):
             # get pickle data from the queue
             pickle_diff = await asyncio.wait_for(self._queue.get(), timeout=timeout)
         except asyncio.exceptions.CancelledError:
-            logger.debug('pop cancelled')
+            _logger.debug('pop cancelled')
             return b''
         except asyncio.exceptions.TimeoutError as err:
             raise TimeoutError('pop timed out') from err
@@ -215,7 +224,7 @@ class DataSink(AsyncioWorker):
 
     def pop(self, timeout=None):
         """Block waiting for an updated version of the data from the data
-        server. Once the data is received, the internal 'data' instance variable
+        server. Once the data is received, the internal :py:attr:`~nspyre.data_server.sink.DataSink.data` attribute
         will be updated and the function will return.
 
         Typical usage example:
@@ -274,10 +283,7 @@ class DataSink(AsyncioWorker):
 
         Raises:
             TimeoutError: A timeout occured.
-
-        Returns:
-            bool: True if successful, False otherwise.
-
+            RuntimeError: 
         """
         if not self.is_running():
             raise RuntimeError(
@@ -295,12 +301,11 @@ class DataSink(AsyncioWorker):
         except TimeoutError:
             timed_out = True
         except concurrent.futures.CancelledError:
-            logger.debug('_pop was cancelled')
+            _logger.debug('_pop was cancelled')
         else:
-            logger.debug('pop returning new data')
+            _logger.debug('pop returning new data')
             # update data object
-            # TODO not sure whats supposed to happen if theres a timeout
-            if pickle_diff is not None:
+            if pickle_diff != b'':
                 self.data = streaming_load_pickle_diff(
                     self.streaming_obj_db, *pickle_diff
                 )
@@ -309,7 +314,7 @@ class DataSink(AsyncioWorker):
                 timed_out = True
 
         if timed_out:
-            logger.debug('pop timed out, cancelling future')
+            _logger.debug('pop timed out, cancelling future')
             future.cancel()
             raise TimeoutError(f'{self} pop() timed out.')
 

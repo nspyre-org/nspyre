@@ -1,6 +1,3 @@
-"""Wrapper for pyqtgraph ImageView.
-"""
-import logging
 import time
 from typing import Any
 from typing import Dict
@@ -8,20 +5,20 @@ from typing import Dict
 import numpy as np
 from pyqtgraph import ImageView
 from pyqtgraph import PlotItem
+from pyqtgraph.colormap import getFromMatplotlib
 from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
-from ..style.colormap import viridis
-from ..style.style import nspyre_font
-from .widget_update_thread import WidgetUpdateThread
 
-logger = logging.getLogger(__name__)
+from ..style._style import nspyre_font
+from ._widget_update_thread import WidgetUpdateThread
 
 
 class ColorMapWidget(QtWidgets.QWidget):
-
+    """Qt Widget for displaying 2D data using pyqtgraph ImageView."""
     new_data = QtCore.Signal()
+    """Qt Signal emitted when new data is available."""
 
     def __init__(
         self,
@@ -38,13 +35,14 @@ class ColorMapWidget(QtWidgets.QWidget):
             title: Plot title.
             btm_label: Plot bottom axis label.
             lft_label: Plot left axis label.
+            colormap: pyqtgraph `ColorMap <https://pyqtgraph.readthedocs.io/en/latest/api_reference/colormap.html#pyqtgraph.ColorMap>`__ object.
             font: Font to use in the plot title, axis labels, etc., although
                 the font type may not be fully honored.
         """
         super().__init__(*args, **kwargs)
 
         if colormap is None:
-            colormap = viridis
+            colormap = getFromMatplotlib('magma')
 
         # layout for storing plot
         self.layout = QtWidgets.QVBoxLayout()
@@ -126,8 +124,7 @@ class ColorMapWidget(QtWidgets.QWidget):
             self.image['sem'].release()
 
     def setup(self):
-        """Subclasses should override this function to perform any setup
-        code"""
+        """Subclasses should override this function to perform any setup code."""
         pass
 
     def update(self):
@@ -136,8 +133,7 @@ class ColorMapWidget(QtWidgets.QWidget):
         time.sleep(1)
 
     def teardown(self):
-        """Subclasses should override this function to perform any teardown
-        code"""
+        """Subclasses should override this function to perform any teardown code."""
         pass
 
     def set_data(self, xs, ys, data, zs=None):
@@ -147,7 +143,7 @@ class ColorMapWidget(QtWidgets.QWidget):
             name: Name of the plot.
             xs: Array-like of data for the x-axis.
             ys: Array-like of data for the y-axis.
-            data
+            data: TODO - Jacob wuz here.
             zs: Optional array-like of data for the z-axis.
         Raises:
             ValueError: An error with the supplied arguments.

@@ -29,13 +29,14 @@ except ModuleNotFoundError as exc:
         f'Not importing GUI functionality because the required packages are not installed:\n{exc}'
     )
 
-from .inserv import InstrumentGateway
-from .inserv import InstrumentGatewayError
-from .inserv import InstrumentServer
-from .inserv import InstrumentServerDeviceExistsError
-from .inserv import InstrumentServerError
-from .cli import inserv_cli
-from .cli import dataserv_cli
+from .instrument_server import InstrumentGateway
+from .instrument_server import InstrumentGatewayError
+from .instrument_server import InstrumentServer
+from .instrument_server import InstrumentServerDeviceExistsError
+from .instrument_server import InstrumentServerError
+from .cli import start_instrument_server
+from .cli import serve_instrument_server_cli
+from .cli import data_server_cli
 
 from .misc import nspyre_init_logger
 from .misc import ProcessRunner

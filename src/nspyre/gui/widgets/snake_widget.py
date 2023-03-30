@@ -1,17 +1,14 @@
-"""
-Qwidget that displays the spin snake logo.
-"""
 from pathlib import Path
 
 from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
-HERE = Path(__file__).parent
+_HERE = Path(__file__).parent
 
 
 class sssss(QtWidgets.QWidget):
-    """Image widget showing the nspyre logo."""
+    """QWidget that displays the nspyre logo."""
 
     def __init__(self, size=300):
         """
@@ -23,7 +20,7 @@ class sssss(QtWidgets.QWidget):
         # label to display the image
         spin_snake_img_widget = QtWidgets.QLabel(self)
         # logo image
-        pixmap = QtGui.QPixmap(str(HERE / '../images/ssssspin.png'))
+        pixmap = QtGui.QPixmap(str(_HERE / '../images/ssssspin.png'))
         # rescale the image
         scaled_pixmap = pixmap.scaledToHeight(
             size, QtCore.Qt.TransformationMode.SmoothTransformation

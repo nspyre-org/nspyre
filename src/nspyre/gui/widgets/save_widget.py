@@ -1,6 +1,3 @@
-"""
-A widget to save data from the dataserver.
-"""
 import json
 import pickle
 from pathlib import Path
@@ -10,9 +7,9 @@ from typing import Union
 import numpy as np
 from pyqtgraph.Qt import QtWidgets
 
-from ...data_server.data_sink import DataSink
+from ...data_server.sink import DataSink
 
-HOME = Path.home()
+_HOME = Path.home()
 
 
 class _NumpyEncoder(json.JSONEncoder):
@@ -49,7 +46,8 @@ def save_pickle(filename: Union[str, Path], data: Any):
 
 
 class SaveWidget(QtWidgets.QWidget):
-    """Qt widget that saves data from the dataserver."""
+    """Qt widget that saves data from the :py:class:`~nspyre.data_server.server.DataServer`
+    to a file."""
 
     def __init__(
         self,
@@ -68,7 +66,7 @@ class SaveWidget(QtWidgets.QWidget):
         super().__init__()
 
         if save_dialog_dir is None:
-            self.save_dialog_dir: Union[str, Path] = HOME
+            self.save_dialog_dir: Union[str, Path] = _HOME
         else:
             self.save_dialog_dir = save_dialog_dir
 

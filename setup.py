@@ -89,6 +89,7 @@ setup(
             'sphinx',
             'sphinx-copybutton',
             'sphinx_rtd_theme',
+            'sphinx-autoapi'
         ],
         'tests': [
             'pytest',
@@ -101,8 +102,8 @@ setup(
     test_suite='tests',
     entry_points={
         'console_scripts': [
-            'nspyre-inserv=nspyre.cli.inserv_cli:main',
-            'nspyre-dataserv=nspyre.cli.dataserv_cli:main',
+            'nspyre-inserv=nspyre.cli.inserv:_main',
+            'nspyre-dataserv=nspyre.cli.dataserv:_main',
         ],
     },
     project_urls={

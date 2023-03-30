@@ -12,13 +12,13 @@ from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
-from .style.style import nspyre_font
-from .style.style import nspyre_palette
-from .style.style import nspyre_style_sheet
+from .style._style import nspyre_font
+from .style._style import nspyre_palette
+from .style._style import nspyre_style_sheet
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
-HERE = Path(__file__).parent
+_HERE = Path(__file__).parent
 
 
 class nspyreApp(QtWidgets.QApplication):
@@ -28,12 +28,11 @@ class nspyreApp(QtWidgets.QApplication):
 
     .. code-block:: python
 
-        from nspyre import NspyreApp
+        from nspyre import nspyreApp
 
-        app = NspyreApp()
+        app = nspyreApp()
         some_widget = SomeWidget()
         some_widget.show()
-        # run the GUI event loop
         app.exec()
 
     """
@@ -62,7 +61,7 @@ class nspyreApp(QtWidgets.QApplication):
 
         self.setApplicationName(app_name)
         # dock icon
-        icon_path = HERE / 'images' / 'favicon.ico'
+        icon_path = _HERE / 'images' / 'favicon.ico'
         self.setWindowIcon(QtGui.QIcon(str(icon_path)))
 
         # make sure pyqtgraph gets cleaned up properly
@@ -77,6 +76,7 @@ class nspyreApp(QtWidgets.QApplication):
         self.setFont(font)
 
     def exec(self, *args, **kwargs):
+        """Run the GUI event loop."""
         try:
             super().exec(*args, **kwargs)
         except AttributeError:
@@ -89,6 +89,6 @@ class nspyreApp(QtWidgets.QApplication):
             leaked_str = f'Leaked {len(leaked_widgets)} Qt widgets:\n'
             for w in leaked_widgets:
                 leaked_str += repr(w) + '\n'
-            logger.debug(leaked_str)
+            _logger.debug(leaked_str)
         else:
-            logger.debug('No Qt widgets leaked.')
+            _logger.debug('No Qt widgets leaked.')

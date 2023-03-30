@@ -1,6 +1,9 @@
 # nspyre
-[![GitHub license](https://img.shields.io/github/license/nspyre-org/nspyre)](https://github.com/nspyre-org/nspyre/blob/master/LICENSE)
-[![Documentation Status](https://readthedocs.org/projects/nspyre/badge/?version=latest)](https://nspyre.readthedocs.io/en/latest/?badge=latest)
+[![License](https://img.shields.io/github/license/nspyre-org/nspyre)](https://github.com/nspyre-org/nspyre/blob/master/LICENSE)
+[![Documentation](https://readthedocs.org/projects/nspyre/badge/?version=latest)](https://nspyre.readthedocs.io/en/latest/?badge=latest)
+[![Pypi](https://img.shields.io/pypi/v/nspyre)](https://pypi.org/project/nspyre/)
+[![conda-forge version](https://img.shields.io/conda/v/conda-forge/nspyre)](https://github.com/conda-forge/nspyre-feedstock)
+[![conda-forge platform](https://img.shields.io/conda/pn/conda-forge/nspyre)](https://github.com/conda-forge/nspyre-feedstock)
 [![DOI](https://zenodo.org/badge/220515183.svg)](https://zenodo.org/badge/latestdoi/220515183)
 
 (N)etworked (S)cientific (Py)thon (R)esearch (E)nvironment.

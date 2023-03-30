@@ -1,6 +1,3 @@
-"""
-A plotting widget that connects to an nspyre data server, collects and processes the data, and offers a variety of user-controlled plotting options.
-"""
 import logging
 import time
 from threading import Lock
@@ -10,23 +7,48 @@ from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
-from ...data_server.data_sink import DataSink
+from ...data_server.sink import DataSink
 from .line_plot_widget import LinePlotWidget
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 class FlexLinePlotWidget(QtWidgets.QWidget):
-    """QWidget that allows the user to connect to an arbitrary nspyre :py:class:`~nspyre.data_server.data_server.DataSource` and plot its data.
+    """A Qt plotting widget that connects to an arbitrary data set stored in 
+    the :py:class:`~nspyre.data_server.server.DataServer`, collects and 
+    processes the data, and offers a variety of user-controlled plotting options.
 
-    The :py:class:`~nspyre.data_server.data_server.DataSource` may contain the following attributes:
+    The user should push a dictionary containing the following key/value pairs 
+    to the corresponding :py:class:`~nspyre.data_server.source.DataSource` 
+    object sourcing data to the :py:class:`~nspyre.data_server.server.DataServer`:
 
-    - title: Plot title string
-    - xlabel: X label string
-    - ylabel: Y label string
-    - datasets: Dictionary where keys are a data series name, and values are data as a list of 2D numpy array like::
+    - key: :code:`title`, value: Plot title string
+    - key: :code:`xlabel`, value: X label string
+    - key: :code:`ylabel`, value: Y label string
+    - key: :code:`datasets`, value: Dictionary where keys are a data series \
+        name, and values are data as a list of 2D numpy arrays of shape (2, n). \
+        The two rows represent the x and y axes, respectively, of the plot, and \
+        the n columns each represent a data point.
 
-        [np.array([[x0, x1, ...], [y0, y1, ...]]), np.array([[x10, x11, ...], [y10, y11, ...]]), ...]
+    An example is given below:
+
+    .. code-block:: python
+
+        from nspyre import DataSource, StreamingList
+
+        with DataSource('my_dataset') as ds:
+            channel_1_data = StreamingList([np.array([[1, 2, 3], [12, 12.5, 12.25]]), np.array([[4, 5, 6], [12.6, 13, 11.2]])])
+            channel_2_data = StreamingList([np.array([[1, 2, 3], [3, 3.3, 3.1]]), np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
+            my_plot_data = {
+                'title': 'MyVoltagePlot',
+                'xlabel': 'Time (s)',
+                'ylabel': 'Amplitude (V)',
+                'datasets': {
+                    'channel_1': channel_1_data
+                    'channel_2': channel_2_data
+                }
+            }
+            ds.push(my_plot_data)
 
     """
 
@@ -219,10 +241,13 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         """Add a new subplot.
 
         Args:
-            name: name for the new plot
-            series: see FlexLinePlotWidget doc
+            name: Name for the new plot.
+            series: The data series name pushed by the \
+                :py:class:`~nspyre.data_server.source.DataSource`, e.g. \
+                :code:`channel_1` for the example given in \
+                :py:class:`~nspyre.gui.widgets.flex_line_plot_widget.FlexLinePlotWidget`
             scan_i: String value of the scan to start plotting from.
-            scan_j: String value of the scan to stop plotting at.
+            scan_j: String value of the scan to stop plotting at. \
                 Use Python list indexing notation, e.g.:
 
                 - :code:`scan_i = '-1'`, :code:`scan_j = ''` for the last element
@@ -324,7 +349,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         """Show a previously hidden subplot.
 
         Args:
-            Name: name of the subplot.
+            name: Name of the subplot.
         """
         with self.flex_line_plot.mutex:
             self.flex_line_plot.plot_settings[name]['hidden'] = False
@@ -386,7 +411,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                 try:
                     title = self.sink.title
                 except AttributeError:
-                    logger.info(
+                    _logger.info(
                         f'Data source [{data_source_name}] has no "title" attribute - skipping...'
                     )
                 else:
@@ -395,7 +420,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                 try:
                     xlabel = self.sink.xlabel
                 except AttributeError:
-                    logger.info(
+                    _logger.info(
                         f'Data source [{data_source_name}] has no "xlabel" attribute - skipping...'
                     )
                 else:
@@ -404,7 +429,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                 try:
                     ylabel = self.sink.ylabel
                 except AttributeError:
-                    logger.info(
+                    _logger.info(
                         f'Data source [{data_source_name}] has no "ylabel" attribute - skipping...'
                     )
                 else:
@@ -417,7 +442,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     ) from err
                 else:
                     if not isinstance(dsets, dict):
-                        logger.error(
+                        _logger.error(
                             f'Data source [{data_source_name}] "datasets" attribute is not a dictionary - exiting...'
                         )
                         raise RuntimeError
@@ -460,7 +485,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                             try:
                                 data = self.sink.datasets[series]
                             except KeyError:
-                                logger.error(
+                                _logger.error(
                                     f'Data series [{series}] does not exist in data set [{self.data_source_name}]'
                                 )
                                 continue
@@ -492,7 +517,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                                 int(scan_i) : int(scan_j)
                                             ]
                                     except IndexError:
-                                        logger.warning(
+                                        _logger.warning(
                                             f'Data series [{series}] invalid scan indices [{scan_i}, {scan_j}]'
                                         )
                                         continue

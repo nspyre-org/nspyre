@@ -1,6 +1,6 @@
 """
-This widget creates an interface that allows the user to easily launch Qt \
-widgets. The widgets are placed in a pyqtgraph :code:`DockArea`.
+Creates an interface that allows the user to easily launch Qt widgets. The 
+widgets are placed in a pyqtgraph :code:`DockArea`.
 """
 from importlib import reload
 from types import ModuleType
@@ -15,7 +15,7 @@ from .snake_widget import sssss
 
 
 class MainWidgetItem:
-    """Represents a QWidget which can be loaded from the MainWidget."""
+    """Represents an arbitrary QWidget that can be loaded from the MainWidget."""
 
     def __init__(
         self,
@@ -79,8 +79,10 @@ class _MainWidgetItemContainer(QtGui.QStandardItem):
 
 
 class MainWidget(QtWidgets.QWidget):
-    """Qt widget that contains a list of widgets to run, and a pyqtgraph \
-    :code:`DockArea` where they are displayed.
+    """Qt widget that displays a hierarchy of widgets for the user to run, and 
+    a pyqtgraph :code:`DockArea` where they are displayed. The widgets 
+    dictionary passed to __init__ can contain sub-dictionaries in order to 
+    group widgets together.
 
     Typical usage example:
 
@@ -96,8 +98,14 @@ class MainWidget(QtWidgets.QWidget):
 
         # Create the GUI.
         main_widget = MainWidget({
-            'Save_File': MainWidgetItem(nspyre, 'SaveWidget'),
-            'ODMR': MainWidgetItem(my_module, 'ODMRWidget'),
+            'Experiments': {
+                'ODMR': MainWidgetItem(my_module, 'ODMRWidget'),
+            },
+            'Plot': MainWidgetItem(nspyre.gui.widgets.flex_line_plot_widget, 'FlexLinePlotWidget'),
+            'Data': {
+                'Save': MainWidgetItem(nspyre.gui.widgets.save_widget, 'SaveWidget'),
+                'Load': MainWidgetItem(nspyre.gui.widgets.load_widget, 'LoadWidget'),
+            }
         })
         main_widget.show()
         # Run the GUI event loop.
@@ -153,12 +161,12 @@ class MainWidget(QtWidgets.QWidget):
         parse_widgets(widgets, tree_root_node)
         self.tree_widget.setModel(tree_model)
         self.tree_widget.collapseAll()
-        self.tree_widget.doubleClicked.connect(self.tree_item_double_click)
+        self.tree_widget.doubleClicked.connect(self._tree_item_double_click)
 
         # Qt button that loads a widget from the widget list when clicked
         load_button = QtWidgets.QPushButton('Load')
         # run the load widget method on button press
-        load_button.clicked.connect(self.load_widget_clicked)
+        load_button.clicked.connect(self._load_widget_clicked)
 
         # Qt layout that arranges the widget list and load button vertically
         main_layout = QtWidgets.QVBoxLayout()
@@ -169,13 +177,13 @@ class MainWidget(QtWidgets.QWidget):
         widget_tree_container.setLayout(main_layout)
 
         # add the widget list to the dock area
-        widget_list_dock = self.dock_widget(widget_tree_container, name='Widgets')
+        widget_list_dock = self._dock_widget(widget_tree_container, name='Widgets')
         # set size relative to other docks
         widget_list_dock.setStretch(20, 1)
 
         # add the snake logo to the dock area
         logo_widget = sssss()
-        self.logo_dock = self.dock_widget(logo_widget, name='snake')
+        self.logo_dock = self._dock_widget(logo_widget, name='snake')
         self.logo_dock.hideTitleBar()
         self.logo_dock.setStretch(80, 1)
 
@@ -183,18 +191,18 @@ class MainWidget(QtWidgets.QWidget):
         layout.addWidget(self.dock_area)
         self.setLayout(layout)
 
-    def tree_item_double_click(self, model_index):
+    def _tree_item_double_click(self, model_index):
         tree_widget_item = self.tree_widget.model().itemFromIndex(model_index)
-        self.load_widget(tree_widget_item)
+        self._load_widget(tree_widget_item)
 
-    def load_widget_clicked(self):
+    def _load_widget_clicked(self):
         # get the currently selected tree index
         selected_tree_index = self.tree_widget.selectedIndexes()[0]
         # retrieve the item
         tree_widget_item = self.tree_widget.model().itemFromIndex(selected_tree_index)
-        self.load_widget(tree_widget_item)
+        self._load_widget(tree_widget_item)
 
-    def load_widget(self, tree_widget_item):
+    def _load_widget(self, tree_widget_item):
         """Loads the QWidget corresponding to the given tree item and add it to
         the :code:`DockArea`."""
         if isinstance(tree_widget_item, _MainWidgetItemContainer):
@@ -213,14 +221,14 @@ class MainWidget(QtWidgets.QWidget):
         # create an instance of the widget class
         widget = widget_class(*widget_args, **widget_kwargs)
         # add the widget to the GUI
-        dock = self.dock_widget(widget, name=widget_name, closable=True)
+        dock = self._dock_widget(widget, name=widget_name, closable=True)
         # set the dock stretch factor
         # see https://pyqtgraph.readthedocs.io/en/latest/api_reference/dockarea.html
         stretch = tree_widget_item.main_widget_item.stretch
         if stretch is not None:
             dock.setStretch(*stretch)
 
-    def dock_widget(self, widget, *args, **kwargs):
+    def _dock_widget(self, widget, *args, **kwargs):
         """Create a new dock for the given widget and add it to the :code:`DockArea`."""
         # if the logo dock is there, remove it
         try:

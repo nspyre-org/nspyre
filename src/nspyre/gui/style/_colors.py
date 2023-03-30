@@ -59,6 +59,7 @@ colors = OrderedDict(
         ('gray', concrete),
     ]
 )
+"""Large list of colors for plotting."""
 
 cyclic_colors = [
     colors['r'],
@@ -69,3 +70,4 @@ cyclic_colors = [
     colors['o'],
     colors['gr'],
 ]
+"""Select list of colors for plotting."""

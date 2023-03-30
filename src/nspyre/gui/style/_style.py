@@ -6,11 +6,11 @@ from pathlib import Path
 from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 
-from .colors import almost_white
-from .colors import avg_colors
-from .colors import blackish
-from .colors import dark_grey
-from .colors import grey
+from ._colors import almost_white
+from ._colors import avg_colors
+from ._colors import blackish
+from ._colors import dark_grey
+from ._colors import grey
 
 HERE = Path(__file__).parent
 

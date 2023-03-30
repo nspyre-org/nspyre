@@ -13,14 +13,10 @@ from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
-from ..style.colors import colors
-from ..style.colors import cyclic_colors
-from ..style.style import nspyre_font
-from .widget_update_thread import WidgetUpdateThread
-
-# from pyqtgraph import LinearRegionItem
-
-logger = logging.getLogger(__name__)
+from ..style._colors import colors
+from ..style._colors import cyclic_colors
+from ..style._style import nspyre_font
+from ._widget_update_thread import WidgetUpdateThread
 
 
 class LinePlotWidget(QtWidgets.QWidget):
@@ -28,6 +24,7 @@ class LinePlotWidget(QtWidgets.QWidget):
     default settings and a variety of added features."""
 
     new_data = QtCore.Signal(str)
+    """Qt Signal emitted when new data is available."""
 
     def __init__(
         self,
@@ -42,6 +39,7 @@ class LinePlotWidget(QtWidgets.QWidget):
     ):
         """
         Args:
+            args: passed to the QWidget init, like :code:`super().__init__(*args, **kwargs)`
             title: Plot title.
             xlabel: Plot x-axis label.
             ylabel: Plot y-axis label.
@@ -50,6 +48,7 @@ class LinePlotWidget(QtWidgets.QWidget):
             legend: If True, display a figure legend.
             downsample: If True, utilize the pyqtgraph 'auto' downsampling in
                 the 'mean' mode (see https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/plotitem.html#pyqtgraph.PlotItem.setDownsampling).
+            kwargs: passed to the QWidget init, like :code:`super().__init__(*args, **kwargs)`
         """
         super().__init__(*args, **kwargs)
 
@@ -109,19 +108,29 @@ class LinePlotWidget(QtWidgets.QWidget):
         # start the thread
         self.update_thread.start()
 
-    def set_title(self, title):
+    def set_title(self, title: str):
+        """Set the plot title.
+
+        Args:
+            title: The new plot title.
+        """
         self.plot_widget.setTitle(title, size=f'{self.font.pointSize()}pt')
 
     def setup(self):
-        """Subclasses should override this function to perform any setup code."""
+        """Subclasses should override this function to perform any setup code \
+        before the :py:meth:`~nspyre.gui.widgets.line_plot_widget.LinePlotWidget.update` \
+        function is called from a new thread."""
         pass
 
     def update(self):
-        """Subclasses should override this function to update the plot. This function will be run in a separate QThread."""
+        """Subclasses should override this function to update the plot. This \
+        function will be called repeatedly from a new thread."""
         time.sleep(1)
 
     def teardown(self):
-        """Subclasses should override this function to perform any teardown code."""
+        """Subclasses should override this function to perform any teardown code. \
+        The thread calling :py:meth:`~nspyre.gui.widgets.line_plot_widget.LinePlotWidget.update` \
+        isn't guaranteed to have exited yet."""
         pass
 
     def _next_color(self):
@@ -176,7 +185,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         }
 
     def remove_plot(self, name: str):
-        """Remove a plot from the display and delete it from the internal storage.
+        """Remove a plot from the display and delete it's associated data.
 
         Args:
             name: Name of the plot.
@@ -199,7 +208,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         sem.release()
 
     def hide(self, name: str):
-        """Remove a plot from the display.
+        """Remove a plot from the display, keeping its data.
 
         Args:
             name: Name of the plot.
@@ -220,7 +229,7 @@ class LinePlotWidget(QtWidgets.QWidget):
             raise ValueError(f'The plot [{name}] is already hidden.')
 
     def show(self, name: str):
-        """Display a previously hidden plot from the display.
+        """Display a previously hidden plot.
 
         Args:
             name: Name of the plot.
@@ -304,5 +313,8 @@ class LinePlotWidget(QtWidgets.QWidget):
     #     # updatePlot()
 
     def stop(self):
+        """Stop the plot updating thread and run the \
+        :py:meth:`~nspyre.gui.widgets.line_plot_widget.LinePlotWidget.teardown` \
+        code."""
         self.update_thread.update_func = None
         self.teardown()

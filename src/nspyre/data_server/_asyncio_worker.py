@@ -7,12 +7,12 @@ import time
 from threading import Semaphore
 from threading import Thread
 
-from .data_server import _cleanup_event_loop
+from .server import _cleanup_event_loop
 
 logger = logging.getLogger(__name__)
 
 
-class AsyncioWorker:
+class _AsyncioWorker:
     """Implements functionality for an asyncio event loop running in a separate thread."""
 
     def __init__(self):

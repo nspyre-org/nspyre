@@ -3,15 +3,21 @@ Welcome to nspyre's documentation!
 
 .. image:: https://img.shields.io/github/license/nspyre-org/nspyre
    :target: https://github.com/nspyre-org/nspyre/blob/master/LICENSE
-   :alt: GitHub
 
 .. image:: https://readthedocs.org/projects/nspyre/badge/?version=latest
    :target: https://nspyre.readthedocs.io/en/latest/?badge=latest
-   :alt: Documentation Status
+
+.. image:: https://img.shields.io/pypi/v/nspyre
+   :target: https://pypi.org/project/nspyre/
+
+.. image:: https://img.shields.io/conda/v/conda-forge/nspyre
+   :target: https://github.com/conda-forge/nspyre-feedstock
+
+.. image:: https://img.shields.io/conda/pn/conda-forge/nspyre
+   :target: https://github.com/conda-forge/nspyre-feedstock
 
 .. image:: https://zenodo.org/badge/220515183.svg
    :target: https://zenodo.org/badge/latestdoi/220515183
-   :alt: Documentation Status
 
 (N)etworked (S)cientific (Py)thon (R)esearch (E)nvironment
 
@@ -33,11 +39,11 @@ Welcome to nspyre's documentation!
    guides/ni-daqmx
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 6
    :caption: API
    :hidden:
 
-   api
+   autoapi/index
 
 .. toctree::
    :maxdepth: 2

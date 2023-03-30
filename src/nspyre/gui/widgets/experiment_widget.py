@@ -1,7 +1,4 @@
-"""Widget that generates a GUI for a simple experiment with a set of
-user-defined parameters and buttons to run, stop, and kill the experiment
-process.
-"""
+
 import logging
 from functools import partial
 from importlib import reload
@@ -13,11 +10,17 @@ from pyqtgraph.Qt import QtWidgets
 from ...misc.misc import ProcessRunner
 from .params_widget import ParamsWidget
 
-logger = logging.getLogger(__name__)
-
 
 class ExperimentWidget(QtWidgets.QWidget):
-    """Qt widget generating a GUI for a simple experiment."""
+    """Qt widget for automatically generating a GUI for a simple experiment. 
+    Parameters can be entered by the user in a 
+    :py:class:`~nspyre.gui.widgets.params_widget.ParamsWidget`. Buttons are 
+    generated for the user to run, stop, and kill the experiment process. The 
+    keyword argument :code:`msg_queue` containing a multiprocessing Queue 
+    object is passed to the function. The Queue is used to pass messages to the 
+    subprocess running the experiment function. When the user presses the stop 
+    button, the string :code:`stop` is pushed to the Queue.
+    """
 
     def __init__(
         self,
@@ -28,7 +31,7 @@ class ExperimentWidget(QtWidgets.QWidget):
         args: list = None,
         kwargs: dict = None,
         title: str = None,
-        kill: bool = True,
+        kill: bool = False,
         layout: QtWidgets.QLayout = None,
     ):
         """
@@ -38,11 +41,12 @@ class ExperimentWidget(QtWidgets.QWidget):
             module: Python module that contains cls.
             cls: Python class name as a string (that descends from QWidget).
                 An instance of this class will be created when the user tries
-                to load the widget and it will be added to the pyqtgraph :code:`DockArea`.
+                to load the widget and it will be added to the pyqtgraph DockArea.
             fun_name: Name of function within cls to run.
             args: Args to pass to cls.
             kwargs: Keyword args to pass to cls.
             title: Window title.
+            kill: Add a kill button to allow the user to forcibly kill the subprocess running the experiment function.
             layout: Additional Qt layout to place between the parameters and run/stop/kill buttons.
         """
         super().__init__()
@@ -99,7 +103,7 @@ class ExperimentWidget(QtWidgets.QWidget):
         self.setLayout(params_layout)
 
     def run(self):
-        """Run the experiment function."""
+        """Run the experiment function in a subprocess."""
 
         if self.run_proc.running():
             logging.info(
@@ -121,7 +125,7 @@ class ExperimentWidget(QtWidgets.QWidget):
         self.run_proc.run(fun, msg_queue=self.queue, **self.params_widget.all_params())
 
     def stop(self):
-        """Stop the sweep process."""
+        """Stop the experiment subprocess."""
         if self.queue is not None and self.run_proc.running():
             self.queue.put('stop')
         else:
@@ -130,7 +134,7 @@ class ExperimentWidget(QtWidgets.QWidget):
             )
 
     def kill(self):
-        """Kill the sweep process."""
+        """Kill the experiment subprocess."""
         if self.run_proc.running():
             self.run_proc.kill()
         else:

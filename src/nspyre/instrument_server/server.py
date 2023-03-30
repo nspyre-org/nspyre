@@ -1,6 +1,7 @@
 """
-This module starts a process running an RPyC server. Clients may connect and
-access devices, or command the server to add, remove, or restart devices.
+This module provides a wrapper around an `RPyC <https://rpyc.readthedocs.io/en/latest/>`__ server.
+Clients may connect and access devices, or command the server to add, remove, 
+or restart devices.
 """
 import logging
 import threading
@@ -26,16 +27,16 @@ else:
     # monkey-patch fix for pint module
     register_quantity_brining(Q_)
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
-# default instrument server port
-INSERV_DEFAULT_PORT = 42068
+INSTRUMENT_SERVER_DEFAULT_PORT = 42068
+"""Default instrument server port."""
 
-# rpyc send/receive timeout in s (don't set to None)
 RPYC_SYNC_TIMEOUT = 30
+"""RPyC send/receive timeout in seconds (don't set to None)."""
 
 # event used for waiting until the rpyc server thread has finished
-RPYC_SERVER_STOP_EVENT = threading.Event()
+_RPYC_SERVER_STOP_EVENT = threading.Event()
 
 
 class InstrumentServerError(Exception):
@@ -49,60 +50,20 @@ class InstrumentServerDeviceExistsError(InstrumentServerError):
 class InstrumentServer(ClassicService):
     """RPyC service that loads devices and exposes them to the client.
 
-    The RPyC service (https://rpyc.readthedocs.io/en/latest/) starts a new
+    The `RPyC <https://rpyc.readthedocs.io/en/latest/>`__ service starts a new
     thread running an RPyC server. Clients may connect and access devices or
     command the server to add, remove, or restart devices (through the
-    :class:`.InstrumentGateway`).
-
-    Typical usage example:
-
-    .. code-block:: python
-
-        from nspyre import InstrumentServer, InstrumentServerDeviceExistsError, InstrumentGateway, InstrumentGatewayError
-
-        port = 4000
-
-        # first try connecting to an existing instrument server, if one is already running
-        try:
-            inserv = InstrumentGateway(port=port)
-            inserv.connect()
-        except InstrumentGatewayError:
-            # if no server was running, start one
-            inserv = InstrumentServer(port=port)
-            inserv.start()
-
-        # add some devices to the server (if they aren't already added)
-
-        # sig gen
-        try:
-            inserv.add('sg', '~/my_project/drivers/siggen.py', 'SigGen')
-        except InstrumentServerDeviceExistsError:
-            pass
-
-        # NI DAQ
-        try:
-            inserv.add('daq', '~/my_project/drivers/daq.py', 'NIDAQ')
-        except InstrumentServerDeviceExistsError:
-            pass
-
-        # flip pellicle
-        try:
-            inserv.add('pel', '~/my_project/drivers/flip_pel.py', 'FlipPellicle')
-        except InstrumentServerDeviceExistsError:
-            pass
-
-        while True:
-            time.sleep(1)
+    :py:class:`~nspyre.instrument_server.gateway.InstrumentGateway`).
 
     """
 
     def __init__(
-        self, port: int = INSERV_DEFAULT_PORT, sync_timeout: float = RPYC_SYNC_TIMEOUT
+        self, port: int = INSTRUMENT_SERVER_DEFAULT_PORT, sync_timeout: float = RPYC_SYNC_TIMEOUT
     ):
         """
         Args:
-            port: port number to use for the RPyC server
-            sync_timeout: Time to wait for requests / function calls to finish
+            port: Port number to use for the RPyC server.
+            sync_timeout: Time to wait for requests / function calls to finish.
         """
 
         super().__init__()
@@ -211,7 +172,7 @@ class InstrumentServer(ClassicService):
         }
         self._devs[name] = (instance, config)
 
-        logger.info(f'added device "{name}" with args: {args} kwargs: {kwargs}')
+        _logger.info(f'added device "{name}" with args: {args} kwargs: {kwargs}')
 
     def remove(self, name: str):
         """Remove a device from the instrument server.
@@ -233,7 +194,7 @@ class InstrumentServer(ClassicService):
         except AttributeError:
             pass
 
-        logger.info(f'deleted device "{name}"')
+        _logger.info(f'deleted device "{name}"')
 
     def restart(self, name: str):
         """Restart the specified device by deleting it and creating a new instance.
@@ -287,7 +248,7 @@ class InstrumentServer(ClassicService):
 
     def _rpyc_server_thread(self):
         """Thread for running the RPyC server asynchronously"""
-        logger.info('starting InstrumentServer RPyC server...')
+        _logger.info('starting InstrumentServer RPyC server...')
         self._rpyc_server = ThreadedServer(
             self,
             hostname='127.0.0.1',
@@ -301,8 +262,8 @@ class InstrumentServer(ClassicService):
             },
         )
         self._rpyc_server.start()
-        logger.info('RPyC server stopped')
-        RPYC_SERVER_STOP_EVENT.set()
+        _logger.info('RPyC server stopped')
+        _RPYC_SERVER_STOP_EVENT.set()
 
     def stop(self):
         """Stop the RPyC server.
@@ -315,21 +276,21 @@ class InstrumentServer(ClassicService):
                 'Can\'t stop the rpyc server because there isn\'t one running.'
             )
 
-        logger.info('removing devices...')
+        _logger.info('removing devices...')
         for d in list(self._devs):
             self.remove(d)
 
-        logger.info('stopping RPyC server...')
+        _logger.info('stopping RPyC server...')
         self._rpyc_server.close()
-        RPYC_SERVER_STOP_EVENT.wait()
-        RPYC_SERVER_STOP_EVENT.clear()
+        _RPYC_SERVER_STOP_EVENT.wait()
+        _RPYC_SERVER_STOP_EVENT.clear()
         self._rpyc_server = None
 
     def devs(self):
-        """Get all of the devices on the InstrumentSever.
+        """Return all of the devices on the InstrumentSever.
 
         Returns:
-            dict: the device name as keys and device object as values
+            dict: The device names as keys and device objects as values.
         """
         devs = {}
         for d in self._devs:
@@ -351,11 +312,11 @@ class InstrumentServer(ClassicService):
 
     def on_connect(self, conn: Connection):
         """Called when a client connects to the RPyC server."""
-        logger.info(f'client {conn} connected')
+        _logger.info(f'client {conn} connected')
 
     def on_disconnect(self, conn: Connection):
         """Called when a client disconnects from the RPyC server."""
-        logger.info(f'client {conn} disconnected')
+        _logger.info(f'client {conn} disconnected')
 
     def __enter__(self):
         """Python context manager setup"""

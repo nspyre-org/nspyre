@@ -5,6 +5,7 @@ from pyqtgraph.Qt import QtWidgets
 
 
 class QHLine(QtWidgets.QFrame):
+    """A simple Qt Widget the displays a horizontal line."""
     def __init__(self):
         super(QHLine, self).__init__()
         self.setFrameShape(QtWidgets.QFrame.Shape.HLine)
@@ -12,6 +13,7 @@ class QHLine(QtWidgets.QFrame):
 
 
 class QVLine(QtWidgets.QFrame):
+    """A simple Qt Widget the displays a vertical line."""
     def __init__(self):
         super(QVLine, self).__init__()
         self.setFrameShape(QtWidgets.QFrame.Shape.VLine)

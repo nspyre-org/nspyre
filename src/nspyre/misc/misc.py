@@ -15,28 +15,7 @@ from typing import Type
 
 import numpy as np
 
-logger = logging.getLogger(__name__)
-
-
-# root directory of nspyre
-NSPYRE_ROOT = Path(__file__).parent.parent
-
-
-def join_nspyre_path(path) -> Path:
-    """Return a path from a path given relative to the nspyre root
-    directory.
-
-    Args:
-        path: Path object relative to the nspyre root.
-
-    Returns:
-        The absolute path.
-    """
-    return (NSPYRE_ROOT / path).resolve()
-
-
-# images
-LOGO_PATH = str(join_nspyre_path('gui/images/spyre.png'))
+_logger = logging.getLogger(__name__)
 
 
 def _deprecated(reason):
@@ -151,7 +130,7 @@ def _load_class_from_file(file_path: Path, class_name: str) -> Type:
     return loaded_class
 
 
-def total_sizeof(o, handlers=None):
+def _total_sizeof(o, handlers=None):
     """Returns the approximate memory footprint an object and all of its contents.
     Taken from https://code.activestate.com/recipes/577504/.
 
@@ -224,12 +203,12 @@ class ProcessRunner:
         """
         if self.running():
             if self.should_kill:
-                logger.info('Previous function is still running. Killing it...')
+                _logger.info('Previous function is still running. Killing it...')
                 self.kill()
             else:
                 raise RuntimeError('Previous function is still running.')
 
-        logger.info(
+        _logger.info(
             f'Running process function [{fun}] with args: [{args}] kwargs: [{kwargs}].'
         )
         self.proc = Process(target=fun, args=args, kwargs=kwargs, daemon=True)
@@ -242,7 +221,7 @@ class ProcessRunner:
     def kill(self):
         """Kill the process."""
         if self.proc:
-            logger.info('Killing process.')
+            _logger.info('Killing process.')
             self.proc.terminate()
             self.proc.join()
             self.proc = None

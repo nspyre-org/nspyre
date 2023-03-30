@@ -23,7 +23,7 @@ def streaming_pickle_diff(obj: Any) -> tuple:
         Tuple of the form (obj pickled, diffs dictionary)
     """
     file = io.BytesIO()
-    pickler = _StreamingPickler(file)
+    pickler = StreamingPickler(file)
     # pickle the given object
     pickler.dump(obj)
     return (file.getvalue(), pickler.diff_stream_data)
@@ -72,11 +72,11 @@ def streaming_load_pickle_diff(
         Unpickled object.
     """
     file = io.BytesIO(obj_pickle)
-    unpickler = _StreamingUnpickler(file, stream_obj_db, diffs)
+    unpickler = StreamingUnpickler(file, stream_obj_db, diffs)
     return unpickler.load()
 
 
-class _StreamingPickler(pickle.Pickler):
+class StreamingPickler(pickle.Pickler):
     """Special pickler for streamed objects."""
 
     def __init__(self, file):
@@ -105,7 +105,7 @@ class _StreamingPickler(pickle.Pickler):
             return None
 
 
-class _StreamingUnpickler(pickle.Unpickler):
+class StreamingUnpickler(pickle.Unpickler):
     """Special unpickler for streamed objects."""
 
     def __init__(self, file, stream_obj_db, diff):
@@ -127,7 +127,7 @@ class _StreamingUnpickler(pickle.Unpickler):
             if uid not in self.stream_obj_db:
                 self.stream_obj_db[uid] = StreamingList([])  # TODO
             diff_ops = self.diff_stream_data[uid]
-            self.stream_obj_db[uid].merge(diff_ops)
+            self.stream_obj_db[uid]._merge(diff_ops)
             return self.stream_obj_db[uid]
         else:
             # Always raises an error if you cannot return the correct object.

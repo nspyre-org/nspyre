@@ -1,5 +1,5 @@
 """
-This module provides an interface to control devices on an :py:class:`~nspyre.inserv.inserv.InstrumentServer`.
+This module provides an interface to control devices on an :py:class:`~nspyre.instrument_server.server.InstrumentServer`.
 """
 import logging
 import time
@@ -14,72 +14,37 @@ except ImportError:
 else:
     # monkey-patch fix for pint module
     register_quantity_brining(Q_)
-from .inserv import INSERV_DEFAULT_PORT
-from .inserv import RPYC_SYNC_TIMEOUT
+from .server import INSTRUMENT_SERVER_DEFAULT_PORT
+from .server import RPYC_SYNC_TIMEOUT
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
-# rpyc connection timeout in s (None for no timeout)
 RPYC_CONN_TIMEOUT = 30
-
+"""RPyC connection timeout in seconds (None for no timeout)."""
 
 class InstrumentGatewayError(Exception):
-    """Raised for failures related to the :py:class:`.InstrumentGateway`."""
+    """Raised for failures related to the :py:class:`~nspyre.instrument_server.server.InstrumentServer`."""
 
 
 class InstrumentGateway:
-    """Create a connection to an :py:class:`~nspyre.inserv.inserv.InstrumentServer` and access it's devices.
-
-    Typical usage example:
-
-        First start the :py:class:`~nspyre.inserv.inserv.InstrumentServer` from the console on machine A:
-
-        .. code-block:: console
-
-            $ python script_that_creates_server.py
-
-        Then run the following python program on machine B:
-
-        .. code-block:: python
-
-            from nspyre import InstrumentGateway
-
-            # machine A ip address = '192.168.1.20'
-            with InstrumentGateway(addr='192.168.1.20') as gw:
-                try:
-                    # machine A must contain a python file at this location containing a class with the name "SigGen"
-                    gw.add('sg', '~/my_project/drivers/sig_gen.py', 'SigGen')
-                except InstrumentServerDeviceExistsError:
-                    # the device has already been added to the instrument server
-                    pass
-                try:
-                    # machine A must contain a python file at this location containing a class with the name "Multimeter"
-                    gw.add('multimeter', '~/my_project/drivers/meter.py', 'Multimeter')
-                except InstrumentServerDeviceExistsError:
-                    # the device has already been added to the instrument server
-                    pass
-
-                gw.sg.amplitude = 1.0
-                print(gw.multimeter.voltage)
-
-    """
+    """Create a connection to an :py:class:`~nspyre.instrument_server.server.InstrumentServer` and access it's devices."""
 
     def __init__(
         self,
         addr: str = 'localhost',
-        port: int = INSERV_DEFAULT_PORT,
+        port: int = INSTRUMENT_SERVER_DEFAULT_PORT,
         conn_timeout: float = 0.0,
         sync_timeout: float = RPYC_SYNC_TIMEOUT,
     ):
         """
         Args:
-            addr: Network address of the :py:class:`~nspyre.inserv.inserv.InstrumentServer`.
-            port: Port number of the :py:class:`~nspyre.inserv.inserv.InstrumentServer`.
+            addr: Network address of the :py:class:`~nspyre.instrument_server.server.InstrumentServer`.
+            port: Port number of the :py:class:`~nspyre.instrument_server.server.InstrumentServer`.
             conn_timeout: Lower bound on the time to wait for the connection to be established.
             sync_timeout: Time to wait for requests / function calls to finish
 
         Raises:
-            InstrumentGatewayError: Connection to the :py:class:`~nspyre.inserv.inserv.InstrumentServer` failed.
+            InstrumentGatewayError: Connection to the :py:class:`~nspyre.instrument_server.server.InstrumentServer` failed.
         """
         self.addr = addr
         self.port = port
@@ -89,15 +54,15 @@ class InstrumentGateway:
         self._thread = None
 
     def connect(self):
-        """Attempt connection to an :py:class:`~nspyre.inserv.inserv.InstrumentServer`.
+        """Attempt connection to an :py:class:`~nspyre.instrument_server.server.InstrumentServer`.
 
         Raises:
-            InstrumentGatewayError: Connection to the :py:class:`~nspyre.inserv.inserv.InstrumentServer` failed.
+            InstrumentGatewayError: Connection to the :py:class:`~nspyre.instrument_server.server.InstrumentServer` failed.
         """
         timeout = time.time() + self.conn_timeout
         while True:
             try:
-                # connect to the rpyc server running on the instrument server
+                # connect to the instrument server rpyc server 
                 self._connection = rpyc.connect(
                     self.addr,
                     self.port,
@@ -114,7 +79,7 @@ class InstrumentGateway:
                 # this allows the instrument server to have full access to this client's object dictionaries - appears necessary for lantz
                 self._connection._config['allow_all_attrs'] = True
             except OSError as exc:
-                logger.debug(
+                _logger.debug(
                     f'Gateway couldn\'t connect to instrument server at "{self.addr}:{self.port}"- retrying...'
                 )
                 if time.time() > timeout:
@@ -124,32 +89,31 @@ class InstrumentGateway:
                 # rate limit retrying connection
                 time.sleep(0.5)
             else:
-                logger.info(
+                _logger.info(
                     f'Gateway connected to instrument server at "{self.addr}:{self.port}"'
                 )
                 break
 
     def disconnect(self):
-        """Disconnect from the :py:class:`~nspyre.inserv.inserv.InstrumentServer`."""
+        """Disconnect from the :py:class:`~nspyre.instrument_server.server.InstrumentServer`."""
         # TODO - not sure if we want a background thread or not
         # self._thread.stop()
         self._thread = None
         self._connection.close()
         self._connection = None
-        logger.info(f'Gateway disconnected from server at {self.addr}:{self.port}')
+        _logger.info(f'Gateway disconnected from server at {self.addr}:{self.port}')
 
     def reconnect(self):
-        """Disconnect then connect to the :py:class:`~nspyre.inserv.inserv.InstrumentServer`.
+        """Disconnect then connect to the :py:class:`~nspyre.instrument_server.server.InstrumentServer` again.
 
         Raises:
-            InstrumentGatewayError: Connection to the :py:class:`~nspyre.inserv.inserv.InstrumentServer` failed.
+            InstrumentGatewayError: Connection to the :py:class:`~nspyre.instrument_server.server.InstrumentServer` failed.
         """
         self.disconnect()
         self.connect()
 
     def __getattr__(self, attr: str):
-        """Allow the user to access the server objects directly using
-        gateway.device notation, e.g. gateway.sg.amplitude"""
+        """Allow the user to access the server objects directly using gateway.device notation, e.g. gateway.sg.amplitude"""
         if self._connection:
             try:
                 return getattr(self._connection.root, attr)

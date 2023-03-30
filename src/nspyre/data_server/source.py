@@ -1,26 +1,25 @@
-"""For sourcing data to the data server."""
 import asyncio
 import concurrent.futures
 import logging
 
-from .asyncio_worker import AsyncioWorker
-from .data_server import _CustomSock
-from .data_server import _squash_queue
-from .data_server import DATASERV_PORT
-from .data_server import FAST_TIMEOUT
-from .data_server import KEEPALIVE_TIMEOUT
-from .data_server import NEGOTIATION_SOURCE
-from .data_server import NEGOTIATION_TIMEOUT
-from .data_server import OPS_TIMEOUT
-from .data_server import QUEUE_SIZE
-from .streaming_pickle import streaming_pickle_diff
-from .streaming_pickle import streaming_serialize
+from ._asyncio_worker import _AsyncioWorker
+from .server import _CustomSock
+from .server import _squash_queue
+from .server import DATASERV_PORT
+from .server import _FAST_TIMEOUT
+from .server import _KEEPALIVE_TIMEOUT
+from .server import _NEGOTIATION_SOURCE
+from .server import _NEGOTIATION_TIMEOUT
+from .server import _OPS_TIMEOUT
+from .server import _QUEUE_SIZE
+from ._streaming_pickle import streaming_pickle_diff
+from ._streaming_pickle import streaming_serialize
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
-class DataSource(AsyncioWorker):
-    """For sourcing data to the data server. See DataSink.pop() for typical usage example."""
+class DataSource(_AsyncioWorker):
+    """For sourcing data to the :py:class:`~nspyre.data_server.server.DataServer`. See :py:meth:`~nspyre.data_server.sink.DataSink.pop` for typical usage example."""
 
     def __init__(
         self,
@@ -52,19 +51,19 @@ class DataSource(AsyncioWorker):
         """asyncio main loop"""
         try:
             # asyncio queue for buffering pickles to send to the server
-            self._queue = asyncio.Queue(maxsize=QUEUE_SIZE)
+            self._queue = asyncio.Queue(maxsize=_QUEUE_SIZE)
             while True:
                 try:
                     # connect to the data server
                     sock_reader, sock_writer = await asyncio.wait_for(
                         asyncio.open_connection(self._addr, self._port),
-                        timeout=NEGOTIATION_TIMEOUT,
+                        timeout=_NEGOTIATION_TIMEOUT,
                     )
                 except OSError as err:
-                    logger.warning(
+                    _logger.warning(
                         f'Source failed connecting to data server [{(self._addr, self._port)}].'
                     )
-                    await asyncio.sleep(FAST_TIMEOUT)
+                    await asyncio.sleep(_FAST_TIMEOUT)
                     if self._auto_reconnect:
                         continue
                     else:
@@ -73,28 +72,28 @@ class DataSource(AsyncioWorker):
                         ) from err
 
                 sock = _CustomSock(sock_reader, sock_writer)
-                logger.info(f'Source connected to data server [{sock.addr}].')
+                _logger.info(f'Source connected to data server [{sock.addr}].')
 
                 try:
                     # notify the server that this is a data source client
                     await asyncio.wait_for(
-                        sock.send_msg(NEGOTIATION_SOURCE),
-                        timeout=NEGOTIATION_TIMEOUT,
+                        sock.send_msg(_NEGOTIATION_SOURCE),
+                        timeout=_NEGOTIATION_TIMEOUT,
                     )
                     # send the dataset name
                     await asyncio.wait_for(
                         sock.send_msg(self._name.encode()),
-                        timeout=NEGOTIATION_TIMEOUT,
+                        timeout=_NEGOTIATION_TIMEOUT,
                     )
                 except (ConnectionError, asyncio.TimeoutError) as err:
-                    logger.warning(
+                    _logger.warning(
                         f'Source failed negotiation process with data server [{sock.addr}] - attempting reconnect.'
                     )
                     try:
                         await sock.close()
                     except IOError:
                         pass
-                    await asyncio.sleep(FAST_TIMEOUT)
+                    await asyncio.sleep(_FAST_TIMEOUT)
                     if self._auto_reconnect:
                         continue
                     else:
@@ -102,7 +101,7 @@ class DataSource(AsyncioWorker):
                             f'Failed connecting to data server [{(self._addr, self._port)}].'
                         ) from err
 
-                logger.debug(
+                _logger.debug(
                     f'Source finished negotiation with data server [{sock.addr}].'
                 )
 
@@ -113,34 +112,34 @@ class DataSource(AsyncioWorker):
                     try:
                         # get pickle data from the queue
                         pickle_diff = await asyncio.wait_for(
-                            self._queue.get(), timeout=KEEPALIVE_TIMEOUT
+                            self._queue.get(), timeout=_KEEPALIVE_TIMEOUT
                         )
-                        logger.debug(
+                        _logger.debug(
                             f'Source dequeued pickle diff - sending to data server [{sock.addr}].'
                         )
                     except asyncio.TimeoutError:
                         # if there's no data available, send a keepalive message
                         new_data = b''
-                        logger.debug('Source sending keepalive to data server.')
+                        _logger.debug('Source sending keepalive to data server.')
                     else:
                         new_data = streaming_serialize(pickle_diff)
-                        logger.debug(
+                        _logger.debug(
                             f'Source sending pickle of [{len(new_data)}] bytes to data server [{sock.addr}].'
                         )
 
                     # send the data to the server
                     try:
                         await asyncio.wait_for(
-                            sock.send_msg(new_data), timeout=OPS_TIMEOUT
+                            sock.send_msg(new_data), timeout=_OPS_TIMEOUT
                         )
-                        logger.debug(
+                        _logger.debug(
                             f'Source sent pickle of [{len(new_data)}] bytes to data server [{sock.addr}].'
                         )
                         if new_data:
                             # mark that the queue data has been fully processed
                             self._queue.task_done()
                     except (ConnectionError, asyncio.TimeoutError):
-                        logger.warning(
+                        _logger.warning(
                             f'Source failed sending to data server [{sock.addr}] - attempting reconnect.'
                         )
                         try:
@@ -153,7 +152,7 @@ class DataSource(AsyncioWorker):
             # release the main thread if there's a connection error
             self._sem.release()
         except asyncio.CancelledError as exc:
-            logger.debug(
+            _logger.debug(
                 f'Source stopped - closing connection with data server [{sock.addr}].'
             )
             try:
@@ -178,14 +177,14 @@ class DataSource(AsyncioWorker):
                 # the server isn't accepting data fast enough
                 # so we will empty the queue and place only this most recent
                 # piece of data on it
-                logger.debug(
+                _logger.debug(
                     f'Data server [{(self._addr, self._port)}] can\'t keep up with source.'
                 )
                 if not _squash_queue(self._queue, pickle_diff):
                     raise RuntimeError('Maximum diff size exceeded.') from err
-            logger.debug('Source queued pickle.')
+            _logger.debug('Source queued pickle.')
         except asyncio.CancelledError:
-            logger.debug('Source push cancelled.')
+            _logger.debug('Source push cancelled.')
             raise
 
     def push(self, data):
@@ -198,7 +197,7 @@ class DataSource(AsyncioWorker):
         """
         # pickle the data and generate diffs
         pickle_diff = streaming_pickle_diff(data)
-        logger.debug(f'Source pushing object [{data}].')
+        _logger.debug(f'Source pushing object [{data}].')
         # put it on the queue
         future = asyncio.run_coroutine_threadsafe(
             self._push(pickle_diff), self._event_loop
@@ -207,7 +206,7 @@ class DataSource(AsyncioWorker):
         try:
             future.result()
         except concurrent.futures.TimeoutError:
-            logger.error(
+            _logger.error(
                 '_push timed out (this shouldn\'t happen since timeout is handled by _push itself).'
             )
             future.cancel()

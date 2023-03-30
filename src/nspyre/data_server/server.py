@@ -2,19 +2,21 @@
 The nspyre data server transports arbitrary python objects over a TCP/IP socket
 to a set of local or remote network clients, and keeps those objects up to date
 as they are modified. For each data set on the data server, there is a single
-data "source", and a set of data "sinks". The source pushes data to the data
-server and each of the sinks pops data from the data server.
+data :py:class:`~nspyre.data_server.data_source.DataSource`, and a set of data 
+:py:class:`~nspyre.data_server.data_sink.DataSink`. The source pushes data to 
+the data server and each of the sinks pops data from the data server.
 
 Objects are serialized by the source then pushed to the server. Each sink
 receives a copy of the serialized objects, then deserializes them locally. If
-the user makes use of "Streaming" objects such as the StreamingList, the source
+the user makes use of "Streaming" objects such as the 
+:py:class:`~nspyre.data_server.streaming_list.StreamingList`, the source
 will only serialize the operations that have been performed on the streaming
 object since the last serialization. The sink can then reconstruct the pushed
 data using a local copy of the last version of the object, and the diff
 received from the data server. This is more efficient when data sets start
 becoming larger and serialization performance is a bottleneck.
 
-Example usage:
+The data server can be started using the command-line interface, e.g.:
 
 .. code-block:: console
 
@@ -27,48 +29,48 @@ import selectors
 import socket
 from typing import Dict
 
-from ..misc.misc import total_sizeof
-from .streaming_pickle import streaming_deserialize
-from .streaming_pickle import streaming_load_pickle_diff
-from .streaming_pickle import streaming_pickle_diff
-from .streaming_pickle import streaming_serialize
+from ..misc.misc import _total_sizeof
+from ._streaming_pickle import streaming_deserialize
+from ._streaming_pickle import streaming_load_pickle_diff
+from ._streaming_pickle import streaming_pickle_diff
+from ._streaming_pickle import streaming_serialize
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
-# default port to host the data server on
 DATASERV_PORT = 30000
+"""Default port to host the data server on."""
 
 # if no data is available, any socket sender should send an empty message with an
-# interval given by KEEPALIVE_TIMEOUT (s)
-KEEPALIVE_TIMEOUT = 3
+# interval given by _KEEPALIVE_TIMEOUT (s)
+_KEEPALIVE_TIMEOUT = 3
 # time (s) that the sender has to do work before it should give up
 # in order to prevent a timeout on its associated receiver
-OPS_TIMEOUT = 10
+_OPS_TIMEOUT = 10
 # timeout (s) for receive connections
-TIMEOUT = (KEEPALIVE_TIMEOUT + OPS_TIMEOUT) + 1
+_TIMEOUT = (_KEEPALIVE_TIMEOUT + _OPS_TIMEOUT) + 1
 
 # maximum size of the data queue
-QUEUE_SIZE = 5
+_QUEUE_SIZE = 5
 
 # indicates that the client is requesting some data about the server
-NEGOTIATION_INFO = b'\xDE'
+_NEGOTIATION_INFO = b'\xDE'
 # TODO runtime control of the data server (maybe with rpyc?)
-# NEGOTIATION_CMD = b'\xAD'
+# _NEGOTIATION_CMD = b'\xAD'
 # indicates that the client will source data to the server
-NEGOTIATION_SOURCE = b'\xBE'
+_NEGOTIATION_SOURCE = b'\xBE'
 # indicates that the client will sink data from the server
-NEGOTIATION_SINK = b'\xEF'
+_NEGOTIATION_SINK = b'\xEF'
 # timeout (s) for send/recv operations during the client negotiation phase
-NEGOTIATION_TIMEOUT = TIMEOUT
+_NEGOTIATION_TIMEOUT = _TIMEOUT
 
 # timeout for relatively quick operations
-FAST_TIMEOUT = 1.0
+_FAST_TIMEOUT = 1.0
 
 # length (bytes) of the header section that identifies how large the payload is
-HEADER_MSG_LEN = 8
+_HEADER_MSG_LEN = 8
 
 # maximum size of a diff (bytes)
-MAX_DIFF = 10 * 1e9
+_MAX_DIFF = 10 * 1e9
 
 
 class _CustomSock:
@@ -76,7 +78,7 @@ class _CustomSock:
     recv_msg() and send_msg() use the following packet structure:
     |                      HEADER       | PAYLOAD
     | message length (excluding header) | message
-    |        HEADER_MSG_LEN             | variable length
+    |        _HEADER_MSG_LEN             | variable length
     """
 
     def __init__(self, sock_reader, sock_writer):
@@ -91,13 +93,13 @@ class _CustomSock:
 
         # the header bytes we receive from the client should identify
         # the length of the message payload
-        msg_len_bytes = await self.sock_reader.readexactly(HEADER_MSG_LEN)
+        msg_len_bytes = await self.sock_reader.readexactly(_HEADER_MSG_LEN)
         msg_len = int.from_bytes(msg_len_bytes, byteorder='little')
 
         # get the payload
         msg = await self.sock_reader.readexactly(msg_len)
 
-        logger.debug(f'received [{msg_len}] bytes from [{self.addr}]')
+        _logger.debug(f'received [{msg_len}] bytes from [{self.addr}]')
 
         return msg
 
@@ -106,31 +108,31 @@ class _CustomSock:
         then sending the rest of the message"""
 
         # calculate the payload length and package it into bytes
-        msg_len_bytes = len(msg).to_bytes(HEADER_MSG_LEN, byteorder='little')
+        msg_len_bytes = len(msg).to_bytes(_HEADER_MSG_LEN, byteorder='little')
 
         # send the header + payload
         self.sock_writer.write(msg_len_bytes + msg)
         await self.sock_writer.drain()
 
-        logger.debug(f'sent [{len(msg)}] bytes to {self.addr}')
+        _logger.debug(f'sent [{len(msg)}] bytes to {self.addr}')
 
     async def close(self):
         """Fully close a socket connection"""
         self.sock_writer.close()
         await self.sock_writer.wait_closed()
-        logger.debug(f'closed socket [{self.addr}]')
+        _logger.debug(f'closed socket [{self.addr}]')
 
 
-def _squash_queue(queue, item, max_diff=MAX_DIFF):
+def _squash_queue(queue, item, _MAX_DIFF=_MAX_DIFF):
     """Combine all streaming pickle diff entries in an asyncio queue into a single entry.
 
     Args:
         queue: Asyncio queue.
         item: streaming pickle entry to be squashed with the rest of the entries in the queue.
-        max_diff: maximum size (bytes) for the squashed diff object.
+        _MAX_DIFF: maximum size (bytes) for the squashed diff object.
 
     Returns:
-        True on success, False if max_diff is exceeded.
+        True on success, False if _MAX_DIFF is exceeded.
     """
     # collect all of the items to be squashed
     queue_entries = []
@@ -150,7 +152,7 @@ def _squash_queue(queue, item, max_diff=MAX_DIFF):
             else:
                 # there is a new streaming object entry, so add it to the new_diffs
                 new_diffs[uid] = diffs[uid]
-    if total_sizeof(new_diffs) > max_diff:
+    if _total_sizeof(new_diffs) > _MAX_DIFF:
         return False
     # place the squashed item onto the queue
     queue.put_nowait((item[0], new_diffs))
@@ -158,10 +160,10 @@ def _squash_queue(queue, item, max_diff=MAX_DIFF):
 
 
 async def _cleanup_event_loop(loop):
-    """End all tasks in an event loop and exit"""
+    """End all tasks in an event loop and exit."""
 
     if not loop.is_running():
-        logger.warning('Ignoring loop cleanup request because the loop isn\'t running.')
+        _logger.warning('Ignoring loop cleanup request because the loop isn\'t running.')
         return
 
     # gather all of the tasks except this one
@@ -217,7 +219,7 @@ class _DataSet:
         # create the sink task
         task = asyncio.create_task(self._sink_coro(event_loop, sink_id))
         # create a queue for the sink
-        queue: asyncio.Queue = asyncio.Queue(maxsize=QUEUE_SIZE)
+        queue: asyncio.Queue = asyncio.Queue(maxsize=_QUEUE_SIZE)
         # add the sink data to the DataSet
         sink_dict = {
             'task': task,
@@ -244,18 +246,18 @@ class _DataSet:
             while True:
                 try:
                     new_pickle = await asyncio.wait_for(
-                        sock.recv_msg(), timeout=TIMEOUT
+                        sock.recv_msg(), timeout=_TIMEOUT
                     )
                 except (asyncio.IncompleteReadError, asyncio.TimeoutError) as exc:
                     # if there was a timeout / problem receiving the message
                     # the source client is dead and will be terminated
-                    logger.debug(
+                    _logger.debug(
                         f'source [{sock.addr}] disconnected or hasn\'t sent a keepalive message - dropping connection'
                     )
                     raise asyncio.CancelledError from exc
 
                 if len(new_pickle):
-                    logger.debug(
+                    _logger.debug(
                         f'source [{sock.addr}] received pickle of [{len(new_pickle)}] bytes'
                     )
                     # deserialize the pickled pickle & diffs
@@ -271,24 +273,24 @@ class _DataSet:
                             queue.put_nowait(pickle_diff)
                         except asyncio.QueueFull:
                             # the sink isn't consuming data fast enough
-                            logger.debug(
+                            _logger.debug(
                                 f'sink [{sink["sock"].addr}] can\'t keep up with data source'
                             )
                             if not _squash_queue(queue, pickle_diff):
-                                logger.warning(
+                                _logger.warning(
                                     f'Cancelling sink [{sink_id}] because the max diff size was exceede.'
                                 )
                                 self.sinks[sink_id]['task'].cancel()
-                        logger.debug(
+                        _logger.debug(
                             f'source [{sock.addr}] queued pickle for sink [{sink["sock"].addr}]'
                         )
                 else:
                     # the server just sent a keepalive signal
-                    logger.debug(f'source [{sock.addr}] received keepalive')
+                    _logger.debug(f'source [{sock.addr}] received keepalive')
         except asyncio.CancelledError as exc:
             raise asyncio.CancelledError from exc
         finally:
-            logger.info(f'dropped source [{sock.addr}]')
+            _logger.info(f'dropped source [{sock.addr}]')
             self.source = None
 
     async def _sink_coro(
@@ -304,13 +306,13 @@ class _DataSet:
                 try:
                     # get pickle data from the queue
                     pickle_diff = await asyncio.wait_for(
-                        queue.get(), timeout=KEEPALIVE_TIMEOUT
+                        queue.get(), timeout=_KEEPALIVE_TIMEOUT
                     )
                     queue.task_done()
-                    logger.debug(f'sink [{sock.addr}] got pickle diff from queue')
+                    _logger.debug(f'sink [{sock.addr}] got pickle diff from queue')
                 except asyncio.TimeoutError:
                     # if there's no data available, send a keepalive message
-                    logger.debug(
+                    _logger.debug(
                         f'sink [{sock.addr}] no data available - sending keepalive'
                     )
                     new_pickle = b''
@@ -320,11 +322,11 @@ class _DataSet:
                 try:
                     await asyncio.wait_for(
                         sock.send_msg(new_pickle),
-                        timeout=OPS_TIMEOUT / 4,
+                        timeout=_OPS_TIMEOUT / 4,
                     )
-                    logger.debug(f'sink [{sock.addr}] sent [{len(new_pickle)}] bytes')
+                    _logger.debug(f'sink [{sock.addr}] sent [{len(new_pickle)}] bytes')
                 except (ConnectionError, asyncio.TimeoutError) as exc:
-                    logger.info(
+                    _logger.info(
                         f'sink [{sock.addr}] disconnected or isn\'t accepting data - dropping connection'
                     )
                     raise asyncio.CancelledError from exc
@@ -332,15 +334,12 @@ class _DataSet:
             raise asyncio.CancelledError from exc
         finally:
             self.sinks.pop(sink_id)
-            logger.debug(f'dropped sink [{sock.addr}]')
+            _logger.debug(f'dropped sink [{sock.addr}]')
 
 
 class DataServer:
     """
-    The server has a set of DataSet objects. Each has 1 data source, and any
-    number of data sinks. Pickled object data from the source is received on
-    its socket, then transferred to the FIFO of every sink. The pickle is then
-    sent out on the sink's socket.
+    The server has a set of DataSet objects. Each has 1 data source, and any number of data sinks. Pickled object data from the source is received on its socket, then transferred to the FIFO of every sink. The pickle is then sent out on the sink's socket.
     E.g.::
 
         self.datasets = {
@@ -366,7 +365,10 @@ class DataServer:
     """
 
     def __init__(self, port: int = DATASERV_PORT):
-        """port: TCP/IP port of the data server"""
+        """
+        Args:
+            port: TCP/IP port of the data server
+        """
         self.port = port
         # a dictionary with string identifiers mapping to DataSet objects
         self.datasets: Dict[str, _DataSet] = {}
@@ -385,7 +387,7 @@ class DataServer:
             self.event_loop.run_forever()
         finally:
             self.event_loop.close()
-            logger.info('data server closed')
+            _logger.info('data server closed')
 
     def stop(self):
         """Stop the asyncio event loop."""
@@ -410,7 +412,7 @@ class DataServer:
         )
 
         addr = server.sockets[0].getsockname()
-        logger.info(f'Serving on {addr}')
+        _logger.info(f'Serving on {addr}')
 
         async with server:
             await server.serve_forever()
@@ -422,17 +424,17 @@ class DataServer:
         # custom socket wrapper for sending / receiving structured messages
         sock = _CustomSock(sock_reader, sock_writer)
 
-        logger.info(f'new client connection from [{sock.addr}]')
+        _logger.info(f'new client connection from [{sock.addr}]')
 
         try:
             try:
                 # the first message we receive from the client should identify
                 # what kind of client it is
                 client_type = await asyncio.wait_for(
-                    sock.recv_msg(), timeout=NEGOTIATION_TIMEOUT
+                    sock.recv_msg(), timeout=_NEGOTIATION_TIMEOUT
                 )
             except (asyncio.IncompleteReadError, asyncio.TimeoutError):
-                logger.warning(
+                _logger.warning(
                     f'connection with client [{sock.addr}] failed before it '
                     'identified itself during the negotiation phase'
                 )
@@ -443,17 +445,17 @@ class DataServer:
                 return
 
             # info client
-            if client_type == NEGOTIATION_INFO:
-                logger.info(f'client [{sock.addr}] is type [info]')
+            if client_type == _NEGOTIATION_INFO:
+                _logger.info(f'client [{sock.addr}] is type [info]')
                 # the client is requesting general info about the server
                 # tell the client which datasets are available
                 data = ','.join(list(self.datasets.keys())).encode()
                 try:
                     await asyncio.wait_for(
-                        sock.send_msg(data), timeout=NEGOTIATION_TIMEOUT
+                        sock.send_msg(data), timeout=_NEGOTIATION_TIMEOUT
                     )
                 except (ConnectionError, asyncio.TimeoutError):
-                    logger.warning(
+                    _logger.warning(
                         f'server failed sending data to [info] client [{sock.addr}]'
                     )
                 try:
@@ -463,16 +465,16 @@ class DataServer:
                 return
 
             # data source client
-            elif client_type == NEGOTIATION_SOURCE:
-                logger.info(f'client [{sock.addr}] is type [source]')
+            elif client_type == _NEGOTIATION_SOURCE:
+                _logger.info(f'client [{sock.addr}] is type [source]')
                 # the client will be a data source for a dataset on the server
                 # first we need know which dataset it will provide data for
                 try:
                     dataset_name_bytes = await asyncio.wait_for(
-                        sock.recv_msg(), timeout=NEGOTIATION_TIMEOUT
+                        sock.recv_msg(), timeout=_NEGOTIATION_TIMEOUT
                     )
                 except (asyncio.IncompleteReadError, asyncio.TimeoutError):
-                    logger.warning(
+                    _logger.warning(
                         f'failed getting the data set name from client [{sock.addr}]'
                     )
                     try:
@@ -490,7 +492,7 @@ class DataServer:
                 # the server already contains a dataset with this name
                 if self.datasets[dataset_name].source:
                     # the dataset already has a source
-                    logger.warning(
+                    _logger.warning(
                         f'client [{sock.addr}] wants to source data for data set [{dataset_name}], but it already has a source - dropping connection'
                     )
                     try:
@@ -499,7 +501,7 @@ class DataServer:
                         pass
                     return
                 else:
-                    logger.info(
+                    _logger.info(
                         f'client [{sock.addr}] sourcing data for data set [{dataset_name}]'
                     )
                     # the dataset exists and it's original source is gone, so the client
@@ -507,15 +509,15 @@ class DataServer:
                     await self.datasets[dataset_name].run_source(sock)
 
             # data sink client
-            elif client_type == NEGOTIATION_SINK:
-                logger.info(f'client [{sock.addr}] is type [sink]')
+            elif client_type == _NEGOTIATION_SINK:
+                _logger.info(f'client [{sock.addr}] is type [sink]')
                 # get the dataset name
                 try:
                     dataset_name_bytes = await asyncio.wait_for(
-                        sock.recv_msg(), timeout=NEGOTIATION_TIMEOUT
+                        sock.recv_msg(), timeout=_NEGOTIATION_TIMEOUT
                     )
                 except (asyncio.IncompleteReadError, asyncio.TimeoutError):
-                    logger.warning(
+                    _logger.warning(
                         f'failed getting the data set name from client [{sock.addr}]'
                     )
                     try:
@@ -527,14 +529,14 @@ class DataServer:
                 dataset_name = dataset_name_bytes.decode()
 
                 if dataset_name in self.datasets:
-                    logger.info(
+                    _logger.info(
                         f'client [{sock.addr}] sinking data from data set [{dataset_name}]'
                     )
                     # add the client to the sinks for the requested dataset
                     await self.datasets[dataset_name].run_sink(self.event_loop, sock)
                 else:
                     # the requested dataset isn't available on the server
-                    logger.warning(
+                    _logger.warning(
                         f'client [{sock.addr}] wants to sink data from data set [{dataset_name}], but it doesn\'t exist - dropping connection'
                     )
                     try:
@@ -545,7 +547,7 @@ class DataServer:
             # unknown client type
             else:
                 # the client gave an invalid connection type
-                logger.error(
+                _logger.error(
                     f'client [{sock.addr}] provided an invalid connection type [{client_type}] - dropping connection'
                 )
                 try:
@@ -554,9 +556,9 @@ class DataServer:
                     pass
                 return
         except ConnectionResetError:
-            logger.debug(f'client [{sock.addr}] forcibly closed - closing connection')
+            _logger.debug(f'client [{sock.addr}] forcibly closed - closing connection')
         except asyncio.CancelledError as exc:
-            logger.debug(
+            _logger.debug(
                 f'communication with client [{sock.addr}] cancelled - closing connection'
             )
             try:

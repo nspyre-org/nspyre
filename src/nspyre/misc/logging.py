@@ -6,9 +6,8 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any
 
-# max size of a log file (in bytes) before creating a new one
 LOG_FILE_MAX_SIZE = 100e6
-
+"""Max size of a log file (in bytes) before creating a new one."""
 
 class _StreamToLog(TextIOBase):
     """Fake stream object that redirects writes to a logger"""
@@ -56,8 +55,8 @@ def nspyre_init_logger(
         log_level: Log messages of lower severity than this will not be sent \
             to stdout/err (e.g. :code:`logging.INFO`).
         log_path: If a file, log to that file. If a directory, generate a log \
-            file name and create a new log file in that directory. If \
-            :code:`None`, only log to stdout/err.
+            file name containing the prefix and date/time, and create a new \
+            log file in that directory. If :code:`None`, only log to stdout/err.
         log_path_level: Logging level for the log file. Leave as :code:`None` \
             for same as log_level.
         prefix: If a directory was specified for log_path, prepend this string \

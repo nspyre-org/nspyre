@@ -1,8 +1,10 @@
 # nspyre
-[![License](https://img.shields.io/github/license/nspyre-org/nspyre)](https://github.com/nspyre-org/nspyre/blob/master/LICENSE)
-[![Documentation](https://readthedocs.org/projects/nspyre/badge/?version=latest)](https://nspyre.readthedocs.io/en/latest/?badge=latest)
-[![Pypi](https://img.shields.io/pypi/v/nspyre)](https://pypi.org/project/nspyre/)
+
+[![GitHub](https://img.shields.io/github/v/release/nspyre-org/nspyre?label=GitHub)](https://github.com/nspyre-org/nspyre/)
+[![PyPi version](https://img.shields.io/pypi/v/nspyre)](https://pypi.org/project/nspyre/)
 [![conda-forge version](https://img.shields.io/conda/v/conda-forge/nspyre)](https://github.com/conda-forge/nspyre-feedstock)
+[![License](https://img.shields.io/github/license/nspyre-org/nspyre)](https://github.com/nspyre-org/nspyre/blob/master/LICENSE)
+[![Docs build](https://readthedocs.org/projects/nspyre/badge/?version=latest)](https://nspyre.readthedocs.io/en/latest/?badge=latest)
 [![conda-forge platform](https://img.shields.io/conda/pn/conda-forge/nspyre)](https://github.com/conda-forge/nspyre-feedstock)
 [![DOI](https://zenodo.org/badge/220515183.svg)](https://zenodo.org/badge/latestdoi/220515183)
 

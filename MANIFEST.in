@@ -9,7 +9,7 @@ include src/nspyre/gui/style/style.qss
 recursive-include tests *.py
 
 # Documentation
-include docs/Makefile docs/make.bat docs/requirements.txt
+include docs/Makefile docs/environment.yml
 recursive-include docs *.css
 recursive-include docs *.png
 recursive-include docs *.py

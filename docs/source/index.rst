@@ -1,23 +1,34 @@
 Welcome to nspyre's documentation!
 ==================================
 
-.. image:: https://img.shields.io/github/license/nspyre-org/nspyre
-   :target: https://github.com/nspyre-org/nspyre/blob/master/LICENSE
+.. GitHub
+.. image:: https://img.shields.io/github/v/release/nspyre-org/nspyre?label=GitHub
+   :target: https://github.com/nspyre-org/nspyre/
 
-.. image:: https://readthedocs.org/projects/nspyre/badge/?version=latest
-   :target: https://nspyre.readthedocs.io/en/latest/?badge=latest
-
+.. PyPi version
 .. image:: https://img.shields.io/pypi/v/nspyre
    :target: https://pypi.org/project/nspyre/
 
+.. conda-forge version
 .. image:: https://img.shields.io/conda/v/conda-forge/nspyre
    :target: https://github.com/conda-forge/nspyre-feedstock
 
+.. License
+.. image:: https://img.shields.io/github/license/nspyre-org/nspyre
+   :target: https://github.com/nspyre-org/nspyre/blob/master/LICENSE
+
+.. Docs build
+.. image:: https://readthedocs.org/projects/nspyre/badge/?version=latest
+   :target: https://nspyre.readthedocs.io/en/latest/?badge=latest
+
+.. conda-forge platform
 .. image:: https://img.shields.io/conda/pn/conda-forge/nspyre
    :target: https://github.com/conda-forge/nspyre-feedstock
 
+.. DOI
 .. image:: https://zenodo.org/badge/220515183.svg
    :target: https://zenodo.org/badge/latestdoi/220515183
+
 
 (N)etworked (S)cientific (Py)thon (R)esearch (E)nvironment
 

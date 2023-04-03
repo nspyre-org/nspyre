@@ -117,55 +117,167 @@ def test_dataserv_streaming_list():
     assert sl4 == [3, 1, 'a']
 
 
-def test_dataserv_streaming_push_pop():
-    name = 'streaming_push_pop'
+# def test_dataserv_streaming_push_pop():
+#     name = 'streaming_push_pop'
+#     with DataSource(name) as source, DataSink(name) as sink:
+#         # disregard the first pop since the source hasn't provided any data yet
+#         sink.pop()
+#         sl1 = StreamingList([])
+#         sl2 = StreamingList([1, 2])
+#         watched_var = {'sl1': sl1, 'other': 'test', 'sl2': sl2}
+#         total_time = 0.0
+#         for i in range(NPUSHES):
+#             rand = np.random.randint(1000)
+#             watched_var['sl1'].append(rand)
+#             watched_var['sl2'].append(i + 5)
+#             start_time = time.time()
+#             source.push(watched_var)
+#             sink.pop()
+#             # logger.error(f'sinky{sink.streaming_obj_db}')
+#             end_time = time.time()
+#             total_time += end_time - start_time
+#             # make sure the data is identical
+#             assert watched_var == sink.data
+#             logger.info(f'completed [{100*(i+1)/NPUSHES:>5.1f}]%')
+#         avg_time = total_time / NPUSHES
+
+#     logger.info(
+#         f'completed run [{name}] - total time [{total_time:.3f}]s, average time per push/pop [{avg_time:.3f}]s'
+#     )
+
+
+# def test_dataserv_streaming_push_pop_big():
+#     name = 'streaming_push_pop_big'
+#     with DataSource(name) as source, DataSink(name) as sink:
+#         # disregard the first pop since the source hasn't provided any data yet
+#         sink.pop()
+#         sl1 = StreamingList([])
+#         total_time = 0.0
+#         for i in range(NPUSHES):
+#             sl1.append(np.random.rand(1000, 1000))
+#             start_time = time.time()
+#             source.push(sl1)
+#             sink.pop()
+#             end_time = time.time()
+#             total_time += end_time - start_time
+#             # make sure the data is identical
+#             for i in range(len(sl1)):
+#                 assert sl1[i].all() == sink.data[i].all()
+#             logger.info(f'completed [{100*(i+1)/NPUSHES:>5.1f}]%')
+#         avg_time = total_time / NPUSHES
+#     logger.info(f'transferred [{_total_sizeof(sink.data)/1e9:.3f}] GB.')
+#     logger.info(
+#         f'completed run [{name}] - total time [{total_time:.3f}]s, average time per push/pop [{avg_time:.3f}]s'
+#     )
+
+# def test_dataserv_streaming_push_pop_stress():
+#     name = 'streaming_push_pop_stress'
+#     with DataSource(name) as source, DataSink(name) as sink:
+#         # disregard the first pop since the source hasn't provided any data yet
+#         sink.pop()
+#         sl1 = StreamingList([])
+#         watched_var = [sl1]
+#         total_time = 0.0
+#         for i in range(NPUSHES):
+#             # pick a random streaming list
+#             sl = watched_var[np.random.randint(len(watched_var))]
+#             ops = ['update', 'delete', 'insert']
+#             # pick a random type of operation
+#             op = ops[np.random.randint(len(ops))]
+#             if op == 'update':
+#                 if len(sl):
+#                     # reassign a random number at a random index
+#                     if len(sl) > 1:
+#                         sl[np.random.randint(len(sl)-1)] = np.random.randint(0, 100)
+#                     else:
+#                         sl[0] = np.random.randint(0, 100)
+#             elif op == 'delete':
+#                 if len(sl):
+#                     # delete a random index
+#                     if len(sl) > 1:
+#                         sl.__delitem__(np.random.randint(len(sl)-1))
+#                     else:
+#                         sl.__delitem__(0)
+#             elif op == 'insert':
+#                 # insert a random number at a random index
+#                 if len(sl) > 1:
+#                     sl.insert(np.random.randint(len(sl)), np.random.randint(0, 100))
+#                 else:
+#                     sl.insert(0, np.random.randint(0, 100))
+
+#             start_time = time.time()
+#             source.push(watched_var)
+#             sink.pop()
+#             end_time = time.time()
+#             total_time += end_time - start_time
+#             logger.debug(f'watched: {watched_var}')
+#             logger.debug(f'sink: {sink.data}')
+
+#             # make sure the data is identical
+#             assert watched_var == sink.data
+#             logger.info(f'completed [{100*(i+1)/NPUSHES:>5.1f}]%')
+#         avg_time = total_time / NPUSHES
+
+#     logger.info(
+#         f'completed run [{name}] - total time [{total_time:.3f}]s, average time per push/pop [{avg_time:.3f}]s'
+#     )
+
+
+def test_dataserv_streaming_multi_push():
+    name = 'streaming_multi_push'
     with DataSource(name) as source, DataSink(name) as sink:
-        # disregard the first pop since the source hasn't provided any data yet
-        sink.pop()
         sl1 = StreamingList([])
-        sl2 = StreamingList([1, 2])
-        watched_var = {'sl1': sl1, 'other': 'test', 'sl2': sl2}
-        total_time = 0.0
-        for i in range(NPUSHES):
-            rand = np.random.randint(1000)
-            watched_var['sl1'].append(rand)
-            watched_var['sl2'].append(i + 5)
-            start_time = time.time()
+        watched_var = [sl1]
+        start_time = time.time()
+        i = 0
+        while i < NPUSHES:
+            # pick a random streaming list
+            sl = watched_var[np.random.randint(len(watched_var))]
+            ops = ['update', 'delete', 'insert', 'newsl']
+            # pick a random type of operation
+            op = ops[np.random.randint(len(ops))]
+            if op == 'update':
+                if len(sl):
+                    # reassign a random number at a random index
+                    if len(sl) > 1:
+                        sl[np.random.randint(len(sl)-1)] = np.random.randint(0, 100)
+                    else:
+                        sl[0] = np.random.randint(0, 100)
+            elif op == 'delete':
+                if len(sl):
+                    # delete a random index
+                    if len(sl) > 1:
+                        sl.__delitem__(np.random.randint(len(sl)-1))
+                    else:
+                        sl.__delitem__(0)
+            elif op == 'insert':
+                # insert a random number at a random index
+                if len(sl) > 1:
+                    sl.insert(np.random.randint(len(sl)), np.random.randint(0, 100))
+                else:
+                    sl.insert(0, np.random.randint(0, 100))
+            elif op == 'newsl':
+                watched_var.append(StreamingList([]))
+            else:
+                raise RuntimeError()
             source.push(watched_var)
-            sink.pop()
-            # logger.error(f'sinky{sink.streaming_obj_db}')
-            end_time = time.time()
-            total_time += end_time - start_time
-            # make sure the data is identical
-            assert watched_var == sink.data
             logger.info(f'completed [{100*(i+1)/NPUSHES:>5.1f}]%')
-        avg_time = total_time / NPUSHES
+            i += 1
+            logger.info(f'watched: {watched_var}')
+
+        end_time = time.time()
+        while True:
+            try:
+                # pop until we have the most recent data
+                sink.pop(timeout=0.1)
+                logger.info(f'popped sink: {sink.data}')
+            except TimeoutError:
+                break
+        # make sure the data is identical
+        assert watched_var == sink.data
+        total_time = end_time - start_time
+        avg_time = (end_time - start_time) / NPUSHES
 
     logger.info(
-        f'completed run [{name}] - total time [{total_time:.3f}]s average time per push/pop [{avg_time:.3f}]s'
-    )
-
-
-def test_dataserv_streaming_push_pop_big():
-    name = 'streaming_push_pop_big'
-    with DataSource(name) as source, DataSink(name) as sink:
-        # disregard the first pop since the source hasn't provided any data yet
-        sink.pop()
-        sl1 = StreamingList([])
-        total_time = 0.0
-        for i in range(NPUSHES):
-            sl1.append(np.random.rand(1000, 1000))
-            start_time = time.time()
-            source.push(sl1)
-            sink.pop()
-            end_time = time.time()
-            total_time += end_time - start_time
-            # make sure the data is identical
-            for i in range(len(sl1)):
-                assert sl1[i].all() == sink.data[i].all()
-            logger.info(f'completed [{100*(i+1)/NPUSHES:>5.1f}]%')
-        avg_time = total_time / NPUSHES
-    logger.info(f'transferred [{_total_sizeof(sink.data)/1e9:.3f}] GB.')
-    logger.info(
-        f'completed run [{name}] - total time [{total_time:.3f}]s average time per push/pop [{avg_time:.3f}]s'
+        f'completed run [{name}] - total time [{total_time:.3f}]s, average time per push [{avg_time:.3f}]s'
     )

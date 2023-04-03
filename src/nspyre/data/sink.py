@@ -5,22 +5,22 @@ from typing import Any
 from typing import Dict
 
 from ._asyncio_worker import _AsyncioWorker
+from ._streaming_pickle import streaming_deserialize
+from ._streaming_pickle import streaming_load_pickle_diff
 from .server import _CustomSock
-from .server import _squash_queue
-from .server import DATASERV_PORT
 from .server import _FAST_TIMEOUT
 from .server import _NEGOTIATION_SINK
 from .server import _NEGOTIATION_TIMEOUT
 from .server import _QUEUE_SIZE
+from .server import _squash_queue
 from .server import _TIMEOUT
-from ._streaming_pickle import streaming_deserialize
-from ._streaming_pickle import streaming_load_pickle_diff
+from .server import DATASERV_PORT
 
 _logger = logging.getLogger(__name__)
 
 
 class DataSink(_AsyncioWorker):
-    """For sinking data from the :py:class:`~nspyre.data_server.server.DataServer`. :py:attr:`~nspyre.data_server.sink.DataSink.data` can be used to directly access the python object pushed by the source.
+    """For sinking data from the :py:class:`~nspyre.data.server.DataServer`. :py:attr:`~nspyre.data.sink.DataSink.data` can be used to directly access the python object pushed by the source.
     E.g.:
 
     First, start the data server:
@@ -81,7 +81,7 @@ class DataSink(_AsyncioWorker):
         # name of the dataset
         self._name = name
         self.data: Any = None
-        """The object pushed by the :py:class:`~nspyre.data_server.source.DataSource`."""
+        """The object pushed by the :py:class:`~nspyre.data.source.DataSource`."""
 
         # store the streaming objects
         self.streaming_obj_db: Dict[str, Any] = {}
@@ -224,7 +224,7 @@ class DataSink(_AsyncioWorker):
 
     def pop(self, timeout=None):
         """Block waiting for an updated version of the data from the data
-        server. Once the data is received, the internal :py:attr:`~nspyre.data_server.sink.DataSink.data` attribute
+        server. Once the data is received, the internal :py:attr:`~nspyre.data.sink.DataSink.data` attribute
         will be updated and the function will return.
 
         Typical usage example:
@@ -283,7 +283,7 @@ class DataSink(_AsyncioWorker):
 
         Raises:
             TimeoutError: A timeout occured.
-            RuntimeError: 
+            RuntimeError:
         """
         if not self.is_running():
             raise RuntimeError(

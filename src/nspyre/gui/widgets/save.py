@@ -7,7 +7,7 @@ from typing import Union
 import numpy as np
 from pyqtgraph.Qt import QtWidgets
 
-from ...data_server.sink import DataSink
+from ...data.sink import DataSink
 
 _HOME = Path.home()
 
@@ -46,8 +46,7 @@ def save_pickle(filename: Union[str, Path], data: Any):
 
 
 class SaveWidget(QtWidgets.QWidget):
-    """Qt widget that saves data from the :py:class:`~nspyre.data_server.server.DataServer`
-    to a file."""
+    """Qt widget that saves data from the :py:class:`~nspyre.data.server.DataServer` to a file."""
 
     def __init__(
         self,

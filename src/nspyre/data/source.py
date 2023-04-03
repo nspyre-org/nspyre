@@ -3,23 +3,23 @@ import concurrent.futures
 import logging
 
 from ._asyncio_worker import _AsyncioWorker
+from ._streaming_pickle import streaming_pickle_diff
+from ._streaming_pickle import streaming_serialize
 from .server import _CustomSock
-from .server import _squash_queue
-from .server import DATASERV_PORT
 from .server import _FAST_TIMEOUT
 from .server import _KEEPALIVE_TIMEOUT
 from .server import _NEGOTIATION_SOURCE
 from .server import _NEGOTIATION_TIMEOUT
 from .server import _OPS_TIMEOUT
 from .server import _QUEUE_SIZE
-from ._streaming_pickle import streaming_pickle_diff
-from ._streaming_pickle import streaming_serialize
+from .server import _squash_queue
+from .server import DATASERV_PORT
 
 _logger = logging.getLogger(__name__)
 
 
 class DataSource(_AsyncioWorker):
-    """For sourcing data to the :py:class:`~nspyre.data_server.server.DataServer`. See :py:meth:`~nspyre.data_server.sink.DataSink.pop` for typical usage example."""
+    """For sourcing data to the :py:class:`~nspyre.data.server.DataServer`. See :py:meth:`~nspyre.data.sink.DataSink.pop` for typical usage example."""
 
     def __init__(
         self,

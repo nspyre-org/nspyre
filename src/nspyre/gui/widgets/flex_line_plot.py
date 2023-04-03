@@ -7,20 +7,21 @@ from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
-from ...data_server.sink import DataSink
-from .line_plot_widget import LinePlotWidget
+from ...data.sink import DataSink
+from .line_plot import LinePlotWidget
 
 _logger = logging.getLogger(__name__)
 
 
 class FlexLinePlotWidget(QtWidgets.QWidget):
-    """A Qt plotting widget that connects to an arbitrary data set stored in 
-    the :py:class:`~nspyre.data_server.server.DataServer`, collects and 
-    processes the data, and offers a variety of user-controlled plotting options.
+    """Qt widget for flexible plotting of user data. 
+    It connects to an arbitrary data set stored in the :py:class:`~nspyre.data.server.DataServer`,
+    collects and processes the data, and offers a variety of user-controlled 
+    plotting options.
 
     The user should push a dictionary containing the following key/value pairs 
-    to the corresponding :py:class:`~nspyre.data_server.source.DataSource` 
-    object sourcing data to the :py:class:`~nspyre.data_server.server.DataServer`:
+    to the corresponding :py:class:`~nspyre.data.source.DataSource` 
+    object sourcing data to the :py:class:`~nspyre.data.server.DataServer`:
 
     - key: :code:`title`, value: Plot title string
     - key: :code:`xlabel`, value: X label string
@@ -30,7 +31,8 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         The two rows represent the x and y axes, respectively, of the plot, and \
         the n columns each represent a data point.
 
-    An example is given below:
+    You may use np.NaN values in the data arrays to represent invalid entries, 
+    which won't contribute to the data averaging. An example is given below:
 
     .. code-block:: python
 
@@ -57,8 +59,8 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
 
         layout = QtWidgets.QVBoxLayout()
 
-        # lineplot widget
-        self.flex_line_plot = _FlexLinePlotWidget()
+        self.line_plot = _FlexLinePlotWidget()
+        """Underlying LinePlotWidget."""
 
         # lineedit and button for selecting the data source
         datasource_layout = QtWidgets.QHBoxLayout()
@@ -80,15 +82,15 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
 
         # plot name
         plot_name_layout = QtWidgets.QHBoxLayout()
-        plot_name_layout.addWidget(QtWidgets.QLabel('Name'))
+        plot_name_layout.addWidget(QtWidgets.QLabel('Plot Name'))
         self.plot_name_lineedit = QtWidgets.QLineEdit('avg')
         plot_name_layout.addWidget(self.plot_name_lineedit)
         plot_add_layout.addLayout(plot_name_layout)
 
         # plot series
         plot_data_series_layout = QtWidgets.QHBoxLayout()
-        plot_data_series_layout.addWidget(QtWidgets.QLabel('Series'))
-        self.plot_series_lineedit = QtWidgets.QLineEdit('mydata')
+        plot_data_series_layout.addWidget(QtWidgets.QLabel('Data Series'))
+        self.plot_series_lineedit = QtWidgets.QLineEdit('series1')
         plot_data_series_layout.addWidget(self.plot_series_lineedit)
         plot_add_layout.addLayout(plot_data_series_layout)
 
@@ -168,7 +170,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         # splitter
         splitter = QtWidgets.QSplitter()
         splitter.setOrientation(QtCore.Qt.Orientation.Vertical)
-        splitter.addWidget(self.flex_line_plot)
+        splitter.addWidget(self.line_plot)
         splitter.addWidget(settings_widget)
 
         # main layout
@@ -185,10 +187,10 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         # get the selected plot name
         name = selected_item.text()
         # retrieve all of the associated info for this plot
-        series = self.flex_line_plot.plot_settings[name]['series']
-        scan_i = self.flex_line_plot.plot_settings[name]['scan_i']
-        scan_j = self.flex_line_plot.plot_settings[name]['scan_j']
-        processing = self.flex_line_plot.plot_settings[name]['processing']
+        series = self.line_plot.plot_settings[name]['series']
+        scan_i = self.line_plot.plot_settings[name]['scan_i']
+        scan_j = self.line_plot.plot_settings[name]['scan_j']
+        processing = self.line_plot.plot_settings[name]['processing']
         # update the plot settings GUI elements
         self.plot_name_lineedit.setText(name)
         self.add_plot_scan_i_textbox.setText(scan_i)
@@ -224,16 +226,16 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         """Called when the user clicks the update button."""
         name, series, scan_i, scan_j, processing = self._get_plot_settings()
         # set the plot settings
-        self.flex_line_plot.update_plot_settings(
+        self.line_plot.update_plot_settings(
             name, series, scan_i, scan_j, processing
         )
-        self.flex_line_plot.force_update = True
+        self.line_plot.force_update = True
 
     def _add_plot_clicked(self):
         """Called when the user clicks the add button."""
         name, series, scan_i, scan_j, processing = self._get_plot_settings()
         self.add_plot(name, series, scan_i, scan_j, processing)
-        self.flex_line_plot.force_update = True
+        self.line_plot.force_update = True
 
     def add_plot(
         self, name: str, series: str, scan_i: str, scan_j: str, processing: str
@@ -243,9 +245,9 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name for the new plot.
             series: The data series name pushed by the \
-                :py:class:`~nspyre.data_server.source.DataSource`, e.g. \
+                :py:class:`~nspyre.data.source.DataSource`, e.g. \
                 :code:`channel_1` for the example given in \
-                :py:class:`~nspyre.gui.widgets.flex_line_plot_widget.FlexLinePlotWidget`
+                :py:class:`~nspyre.gui.widgets.flex_line_plot.FlexLinePlotWidget`
             scan_i: String value of the scan to start plotting from.
             scan_j: String value of the scan to stop plotting at. \
                 Use Python list indexing notation, e.g.:
@@ -257,13 +259,13 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             processing: 'Average' to average the x and y values of scans i
                 through j, 'Append' to concatenate them.
         """
-        if name in self.flex_line_plot.plot_settings:
+        if name in self.line_plot.plot_settings:
             raise ValueError(f'Plot [{name}] already exists.')
-        with self.flex_line_plot.mutex:
+        with self.line_plot.mutex:
             # add the plot to the pyqtgraph plotwidget
-            self.flex_line_plot.add_plot(name)
+            self.line_plot.add_plot(name)
             # set the plot settings
-            self.flex_line_plot.plot_settings[name] = {
+            self.line_plot.plot_settings[name] = {
                 'series': series,
                 'scan_i': scan_i,
                 'scan_j': scan_j,
@@ -275,7 +277,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
 
     def _find_plot_item(self, name):
         """Return the index of the list widget plot item with the given name."""
-        if name not in self.flex_line_plot.plot_settings:
+        if name not in self.line_plot.plot_settings:
             raise ValueError(f'Plot [{name}] does not exist.')
 
         # search for the list widget item whose text is the same as name
@@ -305,13 +307,13 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name of the subplot.
         """
-        with self.flex_line_plot.mutex:
+        with self.line_plot.mutex:
             # remove the plot name from the list of plots
             self.plots_list_widget.takeItem(self._find_plot_item(name))
             # remove the plot settings
-            self.flex_line_plot.plot_settings.pop(name)
+            self.line_plot.plot_settings.pop(name)
             # remove the plot from the pyqtgraph plotwidget
-            self.flex_line_plot.remove_plot(name)
+            self.line_plot.remove_plot(name)
 
     def _hide_plot_clicked(self):
         """Called when the user clicks the hide button."""
@@ -327,9 +329,9 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name of the subplot.
         """
-        with self.flex_line_plot.mutex:
-            self.flex_line_plot.plot_settings[name]['hidden'] = True
-            self.flex_line_plot.hide(name)
+        with self.line_plot.mutex:
+            self.line_plot.plot_settings[name]['hidden'] = True
+            self.line_plot.hide(name)
             # change the list widget item color scheme
             idx = self._find_plot_item(name)
             self.plots_list_widget.item(idx).setForeground(QtCore.Qt.GlobalColor.gray)
@@ -351,9 +353,9 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name of the subplot.
         """
-        with self.flex_line_plot.mutex:
-            self.flex_line_plot.plot_settings[name]['hidden'] = False
-            self.flex_line_plot.show(name)
+        with self.line_plot.mutex:
+            self.line_plot.plot_settings[name]['hidden'] = False
+            self.line_plot.show(name)
             # return list widget item to normal color scheme
             # text
             idx = self._find_plot_item(name)
@@ -364,7 +366,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
 
     def _update_source_clicked(self):
         """Called when the user clicks the connect button."""
-        self.flex_line_plot.new_source(self.datasource_lineedit.text())
+        self.line_plot.new_source(self.datasource_lineedit.text())
 
 
 class _FlexLinePlotWidget(LinePlotWidget):
@@ -528,13 +530,15 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                             data_subset, axis=1
                                         )
                                     elif processing == 'Average':
+                                        # create a single numpy array
+                                        stacked_data = np.stack(data_subset)
+                                        # mask the NaN entries
+                                        masked_data = np.ma.array(stacked_data, mask=np.isnan(stacked_data))
                                         # average the numpy arrays
-                                        processed_data = np.average(
-                                            np.stack(data_subset), axis=0
-                                        )
+                                        processed_data = np.ma.average(masked_data, axis=0)
                                     else:
                                         raise ValueError(
-                                            f'processing has unsupported value [{processing}].'
+                                            f'Processing has unsupported value [{processing}].'
                                         )
                             else:
                                 raise ValueError(

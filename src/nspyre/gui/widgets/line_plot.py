@@ -20,8 +20,7 @@ from ._widget_update_thread import WidgetUpdateThread
 
 
 class LinePlotWidget(QtWidgets.QWidget):
-    """Qt widget that generates a pyqtgraph 1D line plot with some reasonable
-    default settings and a variety of added features."""
+    """Qt widget that generates a pyqtgraph 1D line plot with some reasonable default settings and a variety of added features."""
 
     new_data = QtCore.Signal(str)
     """Qt Signal emitted when new data is available."""
@@ -57,9 +56,9 @@ class LinePlotWidget(QtWidgets.QWidget):
         # layout for storing plot
         self.layout = QtWidgets.QVBoxLayout()
 
-        # pyqtgraph widget for displaying a plot and related
-        # items like axes, legends, etc.
         self.plot_widget = PlotWidget()
+        # TODO can't figure out how to generate a hyperlink in the docs for this
+        """pyqtgraph PlotWidget for displaying the plot."""
         if downsample:
             self.plot_widget.getPlotItem().setDownsampling(
                 ds=True, auto=True, mode='mean'
@@ -108,6 +107,10 @@ class LinePlotWidget(QtWidgets.QWidget):
         # start the thread
         self.update_thread.start()
 
+    def plot_item(self):
+        """Return the pyqtgraph `PlotItem <https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/plotitem.html#pyqtgraph.PlotItem>`__."""
+        return self.plot_widget.getPlotItem()
+
     def set_title(self, title: str):
         """Set the plot title.
 
@@ -118,7 +121,7 @@ class LinePlotWidget(QtWidgets.QWidget):
 
     def setup(self):
         """Subclasses should override this function to perform any setup code \
-        before the :py:meth:`~nspyre.gui.widgets.line_plot_widget.LinePlotWidget.update` \
+        before the :py:meth:`~nspyre.gui.widgets.line_plot.LinePlotWidget.update` \
         function is called from a new thread."""
         pass
 
@@ -129,7 +132,7 @@ class LinePlotWidget(QtWidgets.QWidget):
 
     def teardown(self):
         """Subclasses should override this function to perform any teardown code. \
-        The thread calling :py:meth:`~nspyre.gui.widgets.line_plot_widget.LinePlotWidget.update` \
+        The thread calling :py:meth:`~nspyre.gui.widgets.line_plot.LinePlotWidget.update` \
         isn't guaranteed to have exited yet."""
         pass
 
@@ -314,7 +317,7 @@ class LinePlotWidget(QtWidgets.QWidget):
 
     def stop(self):
         """Stop the plot updating thread and run the \
-        :py:meth:`~nspyre.gui.widgets.line_plot_widget.LinePlotWidget.teardown` \
+        :py:meth:`~nspyre.gui.widgets.line_plot.LinePlotWidget.teardown` \
         code."""
         self.update_thread.update_func = None
         self.teardown()

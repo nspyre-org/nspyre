@@ -6,7 +6,7 @@ from typing import Union
 
 from pyqtgraph.Qt import QtWidgets
 
-from ...data_server.source import DataSource
+from ...data.source import DataSource
 
 _HOME = Path.home()
 
@@ -40,8 +40,8 @@ def load_pickle(filename: Union[str, Path]) -> Any:
 
 
 class LoadWidget(QtWidgets.QWidget):
-    """Qt widget that loads data from a file and pushes it to the 
-    :py:class:`~nspyre.data_server.server.DataServer`."""
+    """Qt widget that loads data from a file and pushes it to the \
+    :py:class:`~nspyre.data.server.DataServer`."""
 
     def __init__(
         self, additional_filetypes=None, load_dialog_dir: Union[str, Path] = None

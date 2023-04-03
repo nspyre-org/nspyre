@@ -40,11 +40,11 @@ _RPYC_SERVER_STOP_EVENT = threading.Event()
 
 
 class InstrumentServerError(Exception):
-    """Raised for failures related to the InstrumentServer."""
+    """Raised for failures related to the :py:class:`~nspyre.instrument.server.InstrumentServer`."""
 
 
 class InstrumentServerDeviceExistsError(InstrumentServerError):
-    """Raised if attempting to add a device that already exists to the InstrumentServer."""
+    """Raised if attempting to add a device that already exists to the :py:class:`~nspyre.instrument.server.InstrumentServer`."""
 
 
 class InstrumentServer(ClassicService):
@@ -53,12 +53,14 @@ class InstrumentServer(ClassicService):
     The `RPyC <https://rpyc.readthedocs.io/en/latest/>`__ service starts a new
     thread running an RPyC server. Clients may connect and access devices or
     command the server to add, remove, or restart devices (through the
-    :py:class:`~nspyre.instrument_server.gateway.InstrumentGateway`).
+    :py:class:`~nspyre.instrument.gateway.InstrumentGateway`).
 
     """
 
     def __init__(
-        self, port: int = INSTRUMENT_SERVER_DEFAULT_PORT, sync_timeout: float = RPYC_SYNC_TIMEOUT
+        self,
+        port: int = INSTRUMENT_SERVER_DEFAULT_PORT,
+        sync_timeout: float = RPYC_SYNC_TIMEOUT,
     ):
         """
         Args:
@@ -119,7 +121,7 @@ class InstrumentServer(ClassicService):
         kwargs = obtain(kwargs)
 
         if name in self._devs:
-            raise InstrumentServerDeviceExistsError(f'device "{name}" already exists')
+            raise ValueError(f'Device [{name}] already exists on the InstrumentServer.')
 
         if import_or_file == 'file':
             # load the class from a file on disk
@@ -128,8 +130,8 @@ class InstrumentServer(ClassicService):
                 dev_class = _load_class_from_file(dev_class_path, class_name)
             except Exception as exc:
                 raise InstrumentServerError(
-                    f'The specified class "{class_name}" from file "{class_path}" for'
-                    f' device "{name}" couldn\'t be loaded'
+                    f'The specified class [{class_name}] from file [{class_path}] for'
+                    f' device [{name}] couldn\'t be loaded.'
                 ) from exc
         elif import_or_file == 'import':
             # load the class from a python module
@@ -138,13 +140,13 @@ class InstrumentServer(ClassicService):
                 dev_class = _load_class_from_str(dev_class_mod)
             except Exception as exc:
                 raise InstrumentServerError(
-                    f'The specified class "{dev_class_mod}" for device "{name}"'
-                    ' couldn\'t be loaded',
+                    f'The specified class [{dev_class_mod}] for device [{name}]'
+                    ' couldn\'t be loaded.',
                 ) from exc
         else:
             raise ValueError(
                 'argument import_or_file must be "file" or "import"; got'
-                f' "{import_or_file}"'
+                f' "{import_or_file}".'
             )
 
         # create an instance of the device
@@ -152,8 +154,8 @@ class InstrumentServer(ClassicService):
             instance = dev_class(*args, **kwargs)
         except Exception as exc:
             raise InstrumentServerError(
-                f'Failed to create an instance of device "{name}" of class'
-                f' "{dev_class}"',
+                f'Failed to create an instance of device [{name}] of class'
+                f' [{dev_class}].',
             ) from exc
 
         # initialize the driver if it implements an __enter__ function
@@ -172,7 +174,7 @@ class InstrumentServer(ClassicService):
         }
         self._devs[name] = (instance, config)
 
-        _logger.info(f'added device "{name}" with args: {args} kwargs: {kwargs}')
+        _logger.info(f'Added device [{name}] with args: {args} kwargs: {kwargs}.')
 
     def remove(self, name: str):
         """Remove a device from the instrument server.
@@ -186,7 +188,7 @@ class InstrumentServer(ClassicService):
         try:
             dev, _ = self._devs.pop(name)
         except Exception as exc:
-            raise InstrumentServerError(f'Failed deleting device "{name}"') from exc
+            raise InstrumentServerError(f'Failed deleting device [{name}].') from exc
 
         # teardown the driver if it implements an __exit__ function
         try:
@@ -194,7 +196,7 @@ class InstrumentServer(ClassicService):
         except AttributeError:
             pass
 
-        _logger.info(f'deleted device "{name}"')
+        _logger.info(f'Deleted device [{name}].')
 
     def restart(self, name: str):
         """Restart the specified device by deleting it and creating a new instance.
@@ -238,7 +240,7 @@ class InstrumentServer(ClassicService):
         """
         if self._rpyc_server:
             raise InstrumentServerError(
-                'Can\'t start the rpyc server because one is already running.'
+                'Can\'t start the RPyC server because one is already running.'
             )
         thread = threading.Thread(target=self._rpyc_server_thread)
         thread.start()
@@ -248,7 +250,7 @@ class InstrumentServer(ClassicService):
 
     def _rpyc_server_thread(self):
         """Thread for running the RPyC server asynchronously"""
-        _logger.info('starting InstrumentServer RPyC server...')
+        _logger.info('Starting InstrumentServer RPyC server...')
         self._rpyc_server = ThreadedServer(
             self,
             hostname='127.0.0.1',
@@ -262,7 +264,7 @@ class InstrumentServer(ClassicService):
             },
         )
         self._rpyc_server.start()
-        _logger.info('RPyC server stopped')
+        _logger.info('RPyC server stopped.')
         _RPYC_SERVER_STOP_EVENT.set()
 
     def stop(self):
@@ -273,14 +275,14 @@ class InstrumentServer(ClassicService):
         """
         if not self._rpyc_server:
             raise InstrumentServerError(
-                'Can\'t stop the rpyc server because there isn\'t one running.'
+                'Can\'t stop the RPyC server because there isn\'t one running.'
             )
 
-        _logger.info('removing devices...')
+        _logger.info('Removing devices...')
         for d in list(self._devs):
             self.remove(d)
 
-        _logger.info('stopping RPyC server...')
+        _logger.info('Stopping RPyC server...')
         self._rpyc_server.close()
         _RPYC_SERVER_STOP_EVENT.wait()
         _RPYC_SERVER_STOP_EVENT.clear()
@@ -312,11 +314,11 @@ class InstrumentServer(ClassicService):
 
     def on_connect(self, conn: Connection):
         """Called when a client connects to the RPyC server."""
-        _logger.info(f'client {conn} connected')
+        _logger.info(f'Client {conn} connected.')
 
     def on_disconnect(self, conn: Connection):
         """Called when a client disconnects from the RPyC server."""
-        _logger.info(f'client {conn} disconnected')
+        _logger.info(f'Client {conn} disconnected.')
 
     def __enter__(self):
         """Python context manager setup"""

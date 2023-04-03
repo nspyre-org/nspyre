@@ -9,6 +9,7 @@ from typing import Any
 LOG_FILE_MAX_SIZE = 100e6
 """Max size of a log file (in bytes) before creating a new one."""
 
+
 class _StreamToLog(TextIOBase):
     """Fake stream object that redirects writes to a logger"""
 

@@ -86,7 +86,7 @@ setup(
             'sphinx',
             'sphinx-copybutton',
             'sphinx_rtd_theme',
-            'sphinx-autoapi'
+            'sphinx-autoapi',
         ],
         'tests': [
             'pytest',

@@ -1,7 +1,6 @@
 """
 A collection of miscellaneous functionality for Qt GUIs.
 """
-
 import logging
 from pdb import set_trace
 

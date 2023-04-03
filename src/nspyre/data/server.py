@@ -2,14 +2,14 @@
 The nspyre data server transports arbitrary python objects over a TCP/IP socket
 to a set of local or remote network clients, and keeps those objects up to date
 as they are modified. For each data set on the data server, there is a single
-data :py:class:`~nspyre.data_server.data_source.DataSource`, and a set of data 
-:py:class:`~nspyre.data_server.data_sink.DataSink`. The source pushes data to 
+data :py:class:`~nspyre.data.source.DataSource`, and a set of data 
+:py:class:`~nspyre.data.sink.DataSink`. The source pushes data to 
 the data server and each of the sinks pops data from the data server.
 
 Objects are serialized by the source then pushed to the server. Each sink
 receives a copy of the serialized objects, then deserializes them locally. If
 the user makes use of "Streaming" objects such as the 
-:py:class:`~nspyre.data_server.streaming_list.StreamingList`, the source
+:py:class:`~nspyre.data.streaming_list.StreamingList`, the source
 will only serialize the operations that have been performed on the streaming
 object since the last serialization. The sink can then reconstruct the pushed
 data using a local copy of the last version of the object, and the diff
@@ -50,7 +50,7 @@ _OPS_TIMEOUT = 10
 _TIMEOUT = (_KEEPALIVE_TIMEOUT + _OPS_TIMEOUT) + 1
 
 # maximum size of the data queue
-_QUEUE_SIZE = 5
+_QUEUE_SIZE = 10
 
 # indicates that the client is requesting some data about the server
 _NEGOTIATION_INFO = b'\xDE'
@@ -163,7 +163,9 @@ async def _cleanup_event_loop(loop):
     """End all tasks in an event loop and exit."""
 
     if not loop.is_running():
-        _logger.warning('Ignoring loop cleanup request because the loop isn\'t running.')
+        _logger.warning(
+            'Ignoring loop cleanup request because the loop isn\'t running.'
+        )
         return
 
     # gather all of the tasks except this one

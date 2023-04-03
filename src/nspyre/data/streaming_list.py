@@ -25,7 +25,7 @@ class StreamingList(list):
         Args:
             idx: index that was modified
         """
-        self._diff_op('u', idx, super()[idx])
+        self._diff_op('u', idx, self[idx])
 
     def _diff_op(self, op, *args):
         """Add an entry to the diff_ops list."""

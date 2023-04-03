@@ -44,6 +44,20 @@ release = find_version(source_version_file)
 
 # -- General configuration ---------------------------------------------------
 
+# check for broken internal links
+nitpicky = True
+nitpick_ignore = [
+    ('py:class', 'types.ModuleType'),
+    ('py:class', 'pathlib.Path'),
+]
+nitpick_ignore_regex = [
+    (r'py:.*', r'pyqtgraph.*'),
+    (r'py:.*', r'rpyc.*'),
+]
+
+# suppress warnings related to autoapi resolving references
+suppress_warnings = ['autoapi.python_import_resolution']
+
 # Sphinx extension module names
 extensions = [
     'autoapi.extension',

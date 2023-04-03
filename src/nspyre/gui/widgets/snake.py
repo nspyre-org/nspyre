@@ -8,7 +8,7 @@ _HERE = Path(__file__).parent
 
 
 class sssss(QtWidgets.QWidget):
-    """QWidget that displays the nspyre logo."""
+    """Qt widget that displays the nspyre logo."""
 
     def __init__(self, size=300):
         """

@@ -6,7 +6,7 @@ from pyqtgraph.Qt import QtWidgets
 
 
 class ParamsWidget(QtWidgets.QWidget):
-    """Create a simple GUI widget containing a list of parameters.
+    """Qt widget containing a list of parameters for the user to enter.
 
     Typical usage example:
 
@@ -56,7 +56,7 @@ class ParamsWidget(QtWidgets.QWidget):
             ...
 
             def doSomething(self):
-                print(f'Making a pulse with power = {self.params_widget.pulse_power} V, length = {self.params_widget.pulse_length} V'
+                print(f'Scanning from = {self.params_widget.start_freq} Hz to = {self.params_widget.stop_freq} Hz.'
 
     """
 

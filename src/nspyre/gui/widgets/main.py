@@ -11,7 +11,7 @@ from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
-from .snake_widget import sssss
+from .snake import sssss
 
 
 class MainWidgetItem:
@@ -79,10 +79,10 @@ class _MainWidgetItemContainer(QtGui.QStandardItem):
 
 
 class MainWidget(QtWidgets.QWidget):
-    """Qt widget that displays a hierarchy of widgets for the user to run, and 
-    a pyqtgraph :code:`DockArea` where they are displayed. The widgets 
-    dictionary passed to __init__ can contain sub-dictionaries in order to 
-    group widgets together.
+    """Qt widget for loading other QWidgets. 
+    It displays a hierarchy of widgets for the user to select and launch, and a 
+    pyqtgraph :code:`DockArea` where they are displayed. The widgets dictionary 
+    passed to __init__ can contain sub-dictionaries in order to group widgets together.
 
     Typical usage example:
 
@@ -101,7 +101,7 @@ class MainWidget(QtWidgets.QWidget):
             'Experiments': {
                 'ODMR': MainWidgetItem(my_module, 'ODMRWidget'),
             },
-            'Plot': MainWidgetItem(nspyre.gui.widgets.flex_line_plot_widget, 'FlexLinePlotWidget'),
+            'Plot': MainWidgetItem(nspyre.gui.widgets.flex_line_plot, 'FlexLinePlotWidget'),
             'Data': {
                 'Save': MainWidgetItem(nspyre.gui.widgets.save_widget, 'SaveWidget'),
                 'Load': MainWidgetItem(nspyre.gui.widgets.load_widget, 'LoadWidget'),

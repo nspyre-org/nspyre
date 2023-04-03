@@ -444,7 +444,6 @@ this very *Contributing* section of the documentation. Lastly, there are many
 resources already available online and you should avail yourself of them:
 
 * `reStructuredText Primer (recommended guide) <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_
-* `A ReStructuredText Primer (by docutils -- the maintainers) <https://docutils.readthedocs.io/en/sphinx-docs/user/rst/quickstart.html>`_
 * `Cheatsheet <https://github.com/ralsina/rst-cheatsheet/blob/master/rst-cheatsheet.rst>`_
 * `QuickStart used for above guide <https://www.writethedocs.org/guide/writing/reStructuredText/>`_
 * `Detailed guide from the LSST project <https://developer.lsst.io/restructuredtext/style.html>`_
@@ -475,11 +474,10 @@ reStructuredText
   
   - `(Another) reStructuredText CheetSheet <https://cheat.readthedocs.io/en/latest/rst.html>`_
   - `Sphinx Primer on reST roles <https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html>`_
-  - `An Introduction to reStructuredText (complete specification) <https://docutils.readthedocs.io/en/sphinx-docs/ref/rst/introduction.html>`_
+  - `An Introduction to reStructuredText <https://sphinx-intro-tutorial.readthedocs.io/en/latest/>`_
 
 Miscellaneous
 -------------
   
   - `Continuous Integration <https://www.writethedocs.org/guide/tools/testing/>`_
-  - `Workshop tutorial on just about everything you need to contribute <https://dont-be-afraid-to-commit.readthedocs.io/en/latest/contributing.html>`_
   - `Open Source Contribution Guide <https://www.contribution-guide.org>`_

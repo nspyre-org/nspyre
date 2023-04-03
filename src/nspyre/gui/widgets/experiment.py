@@ -1,24 +1,24 @@
-
 import logging
 from functools import partial
 from importlib import reload
 from multiprocessing import Queue
+import queue
 from types import ModuleType
 
 from pyqtgraph.Qt import QtWidgets
 
 from ...misc.misc import ProcessRunner
-from .params_widget import ParamsWidget
+from .params import ParamsWidget
 
 
 class ExperimentWidget(QtWidgets.QWidget):
-    """Qt widget for automatically generating a GUI for a simple experiment. 
-    Parameters can be entered by the user in a 
-    :py:class:`~nspyre.gui.widgets.params_widget.ParamsWidget`. Buttons are 
-    generated for the user to run, stop, and kill the experiment process. The 
-    keyword argument :code:`msg_queue` containing a multiprocessing Queue 
-    object is passed to the function. The Queue is used to pass messages to the 
-    subprocess running the experiment function. When the user presses the stop 
+    """Qt widget for automatically generating a GUI for a simple experiment.
+    Parameters can be entered by the user in a
+    :py:class:`~nspyre.gui.widgets.params.ParamsWidget`. Buttons are
+    generated for the user to run, stop, and kill the experiment process. The
+    keyword argument :code:`msg_queue` containing a multiprocessing Queue
+    object is passed to the function. The Queue is used to pass messages to the
+    subprocess running the experiment function. When the user presses the stop
     button, the string :code:`stop` is pushed to the Queue.
     """
 
@@ -37,7 +37,7 @@ class ExperimentWidget(QtWidgets.QWidget):
         """
         Args:
             params_config: Dictionary that is passed to the constructor of
-                :py:class:`~nspyre.gui.widgets.params_widget.ParamsWidget`.
+                :py:class:`~nspyre.gui.widgets.params.ParamsWidget`.
             module: Python module that contains cls.
             cls: Python class name as a string (that descends from QWidget).
                 An instance of this class will be created when the user tries
@@ -74,8 +74,9 @@ class ExperimentWidget(QtWidgets.QWidget):
         self.run_proc = ProcessRunner()
         run_button.clicked.connect(self.run)
 
-        # multiprocessing queue to pass to the experiment subprocess and use for communication with the
-        self.queue = None
+        self.queue = Queue()
+        """multiprocessing Queue to pass to the experiment subprocess and use \
+        for communication with the subprocess."""
 
         # stop button
         stop_button = QtWidgets.QPushButton('Stop')
@@ -111,8 +112,6 @@ class ExperimentWidget(QtWidgets.QWidget):
             )
             return
 
-        self.queue = Queue()
-
         # reload the module at runtime in case any changes were made to the code
         reload(self.module)
         # get the experiment class
@@ -126,7 +125,7 @@ class ExperimentWidget(QtWidgets.QWidget):
 
     def stop(self):
         """Stop the experiment subprocess."""
-        if self.queue is not None and self.run_proc.running():
+        if self.run_proc.running():
             self.queue.put('stop')
         else:
             logging.info(
@@ -141,3 +140,23 @@ class ExperimentWidget(QtWidgets.QWidget):
             logging.info(
                 'Not killing the experiment process because it is not running.'
             )
+
+def experiment_widget_process_queue(msg_queue):
+    """Reads messages sent to a multiprocessing Queue by :py:class:`~nspyre.gui.widgets.experiment.ExperimentWidget`.
+
+    Args:
+        msg_queue: multiprocessing Queue object.
+
+    Returns:
+        True if a stop has been requested, otherwise False.
+    """
+    # check for messages from the GUI
+    if msg_queue is not None:
+        try:
+            # try to get a message from the queue
+            o = msg_queue.get_nowait()
+        except queue.Empty:
+            # no message was available so we can continue
+            return None
+        else:
+            return o

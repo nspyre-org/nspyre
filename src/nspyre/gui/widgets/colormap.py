@@ -10,13 +10,13 @@ from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
-
 from ..style._style import nspyre_font
 from ._widget_update_thread import WidgetUpdateThread
 
 
 class ColorMapWidget(QtWidgets.QWidget):
-    """Qt Widget for displaying 2D data using pyqtgraph ImageView."""
+    """Qt widget for displaying 2D data using pyqtgraph ImageView."""
+
     new_data = QtCore.Signal()
     """Qt Signal emitted when new data is available."""
 

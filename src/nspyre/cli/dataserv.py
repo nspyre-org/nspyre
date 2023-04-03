@@ -10,7 +10,7 @@ from cmd import Cmd
 from pathlib import Path
 from threading import Thread
 
-from ..data_server.server import DataServer
+from ..data.server import DataServer
 from ..misc.logging import LOG_FILE_MAX_SIZE
 from ..misc.logging import nspyre_init_logger
 
@@ -56,11 +56,11 @@ class _DataservCmdPrompt(Cmd):
         return True
 
 
-def data_server_cli(dataserv):
+def serve_data_server_cli(dataserv):
     """Run a command-line interface to allow user interaction with the data server.
 
     Args:
-        dataserv: :py:class:`~nspyre.data_server.server.DataServer` object.
+        dataserv: :py:class:`~nspyre.data.server.DataServer` object.
     """
     # start the shell prompt event loop
     dataserv_cmd = _DataservCmdPrompt(dataserv)
@@ -145,7 +145,7 @@ def _main():
     # start the shell prompt event loop in a new thread, since DataServer
     # must be run in the main thread
     # daemon=True so that the program will exit when the data server is stopped with a signal - otherwise the cmd loop will hang forever
-    cmd_prompt_thread = Thread(target=data_server_cli, args=(dataserv,), daemon=True)
+    cmd_prompt_thread = Thread(target=serve_data_server_cli, args=(dataserv,), daemon=True)
     cmd_prompt_thread.start()
 
     # start the data server event loop

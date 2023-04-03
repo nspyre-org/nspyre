@@ -10,10 +10,10 @@ from cmd import Cmd
 from pathlib import Path
 from typing import Union
 
-from ..instrument_server.gateway import InstrumentGateway
-from ..instrument_server.gateway import InstrumentGatewayError
-from ..instrument_server.server import InstrumentServer
-from ..instrument_server.server import InstrumentServerError
+from ..instrument.gateway import InstrumentGateway
+from ..instrument.gateway import InstrumentGatewayError
+from ..instrument.server import InstrumentServer
+from ..instrument.server import InstrumentServerError
 from ..misc.logging import LOG_FILE_MAX_SIZE
 from ..misc.logging import nspyre_init_logger
 
@@ -24,8 +24,8 @@ def serve_instrument_server_cli(inserv):
     """Run a command-line interface to allow user interaction with the instrument server.
 
     Args:
-        inserv: :py:class:`~nspyre.instrument_server.server.InstrumentServer` or
-            :py:class:`~nspyre.instrument_server.gateway.InstrumentGateway` object.
+        inserv: :py:class:`~nspyre.instrument.server.InstrumentServer` or
+            :py:class:`~nspyre.instrument.gateway.InstrumentGateway` object.
     """
     # start the shell prompt event loop
     cmd_prompt = _InservCmdPrompt(inserv)
@@ -102,10 +102,10 @@ class _InservCmdPrompt(Cmd):
         The instrument gateway/server object can be accessed via
         :code:`self.inserv`. If the instrument server was created in this
         session, :code:`self.inserv` will be an
-        :py:class:`~nspyre.instrument_server.server.InstrumentServer` object. If a server
+        :py:class:`~nspyre.instrument.server.InstrumentServer` object. If a server
         was connected to, it will be an
-        :py:class:`~nspyre.instrument_server.gateway.InstrumentGateway`. See
-        :py:class:`~nspyre.instrument_server.server.InstrumentServer`/:py:class:`~nspyre.instrument_server.gateway.InstrumentGateway`
+        :py:class:`~nspyre.instrument.gateway.InstrumentGateway`. See
+        :py:class:`~nspyre.instrument.server.InstrumentServer`/:py:class:`~nspyre.instrument.gateway.InstrumentGateway`
         documentation for details on how to add/manipulate drivers."""
         if arg_string:
             print('Expected 0 args')
@@ -127,7 +127,7 @@ def start_instrument_server(drivers):
     """Start an instrument server and serve a CLI.
 
     Args:
-        drivers: a list of dictionaries, where each dictionary contains keyword arguments to the InstrumentServer :py:func:`~nspyre.instrument_server.server.InstrumentServer.add` method."""
+        drivers: a list of dictionaries, where each dictionary contains keyword arguments to the InstrumentServer :py:func:`~nspyre.instrument.server.InstrumentServer.add` method."""
 
     # parse command-line arguments
     arg_parser = argparse.ArgumentParser(

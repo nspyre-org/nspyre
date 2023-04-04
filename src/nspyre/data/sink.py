@@ -182,8 +182,10 @@ class DataSink(_AsyncioWorker):
                     pickle_diff = deserialize_pickle_diff(new_data)
 
                     try:
-                        # put pickle on the queue
-                        self._queue.put_nowait(pickle_diff)
+                        # if the server doesn't have any real data yet, ignore the first pop
+                        if pickle_diff.pkl != b'':
+                            # put pickle on the queue
+                            self._queue.put_nowait(pickle_diff)
                     except asyncio.QueueFull:
                         # the user isn't consuming data fast enough so we will empty the queue and place only this most recent pickle on it
                         _logger.debug(
@@ -221,7 +223,7 @@ class DataSink(_AsyncioWorker):
             pickle_diff = await asyncio.wait_for(self._queue.get(), timeout=timeout)
         except asyncio.exceptions.CancelledError:
             _logger.debug('pop cancelled')
-            return b''
+            return None
         except asyncio.exceptions.TimeoutError as err:
             raise TimeoutError('pop timed out') from err
         else:
@@ -311,7 +313,7 @@ class DataSink(_AsyncioWorker):
         else:
             _logger.debug('pop returning new data')
             # update data object
-            if pickle_diff != b'':
+            if pickle_diff is not None:
                 self.data = streaming_load_pickle_diff(
                     self.streaming_obj_db, pickle_diff
                 )

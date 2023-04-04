@@ -16,11 +16,6 @@ def test_dataserv_push_pop():
     pushing then popping an object repeatedly."""
     name = 'push_pop'
     with DataSource(name) as source, DataSink(name) as sink:
-        # disregard the first pop since the source hasn't provided any data yet
-        sink.pop()
-        # allow time for the server to set up the data sink
-        time.sleep(0.1)
-
         # example data set 2D array
         # array size
         n = 1000
@@ -60,10 +55,6 @@ def test_dataserv_push_multipop(name: str = 'push_multipop'):
     pushing an object, then popping it from two different sinks"""
     name = 'push_multipop'
     with DataSource(name) as source, DataSink(name) as sink1, DataSink(name) as sink2:
-        # disregard the first pop since the source hasn't provided any data yet
-        sink1.pop()
-        sink2.pop()
-
         # example data set 2D array
         # array size
         n = 1000

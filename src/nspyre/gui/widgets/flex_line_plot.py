@@ -372,8 +372,9 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
 class _FlexLinePlotWidget(LinePlotWidget):
     """See FlexLinePlotWidget."""
 
-    def __init__(self):
+    def __init__(self, timeout=1):
         super().__init__()
+        self.timeout = timeout
         self.sink = None
         # mutex for protecting access to the data sink and plot settings
         self.mutex = Lock()
@@ -394,7 +395,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                 'hidden': hidden,
             }
 
-    def new_source(self, data_source_name, timeout=1):
+    def new_source(self, data_source_name):
         # connect to a new data set
         with self.mutex:
             self.teardown()
@@ -408,7 +409,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
             try:
                 self.sink = DataSink(self.data_source_name)
                 self.sink.__enter__()
-                self.sink.pop(timeout=timeout)
+                self.sink.pop(timeout=self.timeout)
                 # set title
                 try:
                     title = self.sink.title
@@ -473,7 +474,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
         try:
             if self.sink is not None:
                 if not self.force_update:
-                    self.sink.pop(timeout=0.1)
+                    self.sink.pop(timeout=self.timeout)
                 with self.mutex:
                     # check again to be sure
                     if self.sink is not None:

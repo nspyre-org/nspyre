@@ -72,27 +72,27 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         datasource_layout.addWidget(self.update_button)
 
         # contains plot settings
-        plot_settings_layout = QtWidgets.QHBoxLayout()
+        plot_config_layout = QtWidgets.QHBoxLayout()
 
         # add new subplot layout
-        plot_add_layout = QtWidgets.QVBoxLayout()
+        plot_settings_layout = QtWidgets.QVBoxLayout()
         plot_settings_label = QtWidgets.QLabel('Plot Settings')
         plot_settings_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
-        plot_add_layout.addWidget(plot_settings_label)
+        plot_settings_layout.addWidget(plot_settings_label)
 
         # plot name
         plot_name_layout = QtWidgets.QHBoxLayout()
         plot_name_layout.addWidget(QtWidgets.QLabel('Plot Name'))
         self.plot_name_lineedit = QtWidgets.QLineEdit('avg')
         plot_name_layout.addWidget(self.plot_name_lineedit)
-        plot_add_layout.addLayout(plot_name_layout)
+        plot_settings_layout.addLayout(plot_name_layout)
 
         # plot series
         plot_data_series_layout = QtWidgets.QHBoxLayout()
         plot_data_series_layout.addWidget(QtWidgets.QLabel('Data Series'))
         self.plot_series_lineedit = QtWidgets.QLineEdit('series1')
         plot_data_series_layout.addWidget(self.plot_series_lineedit)
-        plot_add_layout.addLayout(plot_data_series_layout)
+        plot_settings_layout.addLayout(plot_data_series_layout)
 
         # scan indices layout
         scan_indices_layout = QtWidgets.QHBoxLayout()
@@ -103,7 +103,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         self.add_plot_scan_j_textbox = QtWidgets.QLineEdit()
         scan_indices_layout.addWidget(self.add_plot_scan_j_textbox)
 
-        plot_add_layout.addLayout(scan_indices_layout)
+        plot_settings_layout.addLayout(scan_indices_layout)
 
         # average / append
         plot_processing_layout = QtWidgets.QHBoxLayout()
@@ -120,12 +120,12 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         # default to average
         self.plot_processing_dropdown.setCurrentIndex(0)
         plot_processing_layout.addWidget(self.plot_processing_dropdown)
-        plot_add_layout.addLayout(plot_processing_layout)
+        plot_settings_layout.addLayout(plot_processing_layout)
 
-        plot_add_layout.addStretch()
-        plot_settings_layout.addLayout(plot_add_layout)
+        plot_settings_layout.addStretch()
+        plot_config_layout.addLayout(plot_settings_layout)
         # set to minimum size
-        plot_add_layout.setSizeConstraint(
+        plot_settings_layout.setSizeConstraint(
             QtWidgets.QLayout.SizeConstraint.SetMinimumSize
         )
 
@@ -152,20 +152,28 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         self.remove_button.clicked.connect(self._remove_plot_clicked)
         plot_actions_layout.addWidget(self.remove_button)
         plot_actions_layout.addStretch()
-        plot_settings_layout.addLayout(plot_actions_layout)
+        plot_config_layout.addLayout(plot_actions_layout)
+
+        # contains plots and label
+        plots_layout = QtWidgets.QVBoxLayout()
+
+        plots_label = QtWidgets.QLabel('Plots')
+        plots_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
+        plots_layout.addWidget(plots_label)
 
         # list of plots
         self.plots_list_widget = QtWidgets.QListWidget()
         self.plots_list_widget.currentItemChanged.connect(self._plot_selection_changed)
-        plot_settings_layout.addWidget(self.plots_list_widget)
+        plots_layout.addWidget(self.plots_list_widget)
+        plot_config_layout.addLayout(plots_layout)
 
-        # layout for containing the data source selection layout and the plot settings layout
-        settings_layout = QtWidgets.QVBoxLayout()
-        settings_layout.addLayout(datasource_layout)
-        settings_layout.addLayout(plot_settings_layout)
+        # layout for containing the data source selection layout and the plot config layout
+        top_layout = QtWidgets.QVBoxLayout()
+        top_layout.addLayout(datasource_layout)
+        top_layout.addLayout(plot_config_layout)
         # widget for containing the settings layout
         settings_widget = QtWidgets.QWidget()
-        settings_widget.setLayout(settings_layout)
+        settings_widget.setLayout(top_layout)
 
         # splitter
         splitter = QtWidgets.QSplitter()

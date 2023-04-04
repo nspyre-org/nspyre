@@ -4,7 +4,8 @@ import logging
 
 from ._asyncio_worker import _AsyncioWorker
 from ._streaming_pickle import streaming_pickle_diff
-from ._streaming_pickle import streaming_serialize
+from ._streaming_pickle import serialize_pickle_diff
+from ._streaming_pickle import _squash_pickle_diff_queue
 from .server import _CustomSock
 from .server import _FAST_TIMEOUT
 from .server import _KEEPALIVE_TIMEOUT
@@ -12,7 +13,6 @@ from .server import _NEGOTIATION_SOURCE
 from .server import _NEGOTIATION_TIMEOUT
 from .server import _OPS_TIMEOUT
 from .server import _QUEUE_SIZE
-from .server import _squash_queue
 from .server import DATASERV_PORT
 
 _logger = logging.getLogger(__name__)
@@ -122,7 +122,7 @@ class DataSource(_AsyncioWorker):
                         new_data = b''
                         _logger.debug('Source sending keepalive to data server.')
                     else:
-                        new_data = streaming_serialize(pickle_diff)
+                        new_data = serialize_pickle_diff(pickle_diff)
                         _logger.debug(
                             f'Source sending pickle of [{len(new_data)}] bytes to data server [{sock.addr}].'
                         )
@@ -165,7 +165,7 @@ class DataSource(_AsyncioWorker):
     async def _push(self, pickle_diff):
         """Coroutine that puts a pickle onto the queue.
         Args:
-            pickle_diff: tuple returned by streaming_pickle_diff()
+            pickle_diff: PickleDiff returned by :py:meth:`~nspyre.data._streaming_pickle.streaming_pickle_diff`.
 
         Returns:
             True if successful, False otherwise
@@ -175,13 +175,15 @@ class DataSource(_AsyncioWorker):
                 self._queue.put_nowait(pickle_diff)
             except asyncio.QueueFull as err:
                 # the server isn't accepting data fast enough
-                # so we will empty the queue and place only this most recent
-                # piece of data on it
+                # so we will empty the queue and merge all of its entries
                 _logger.debug(
                     f'Data server [{(self._addr, self._port)}] can\'t keep up with source.'
                 )
-                if not _squash_queue(self._queue, pickle_diff):
-                    raise RuntimeError('Maximum diff size exceeded.') from err
+                if not _squash_pickle_diff_queue(self._queue, pickle_diff):
+                    raise RuntimeError('Maximum diff size exceeded. This is a \
+                        consequence of memory build-up due to the data server \
+                        not being able to keep up with the data rate. Reduce \
+                        the data rate to allow the data server to catch up.') from err
             _logger.debug('Source queued pickle.')
         except asyncio.CancelledError:
             _logger.debug('Source push cancelled.')

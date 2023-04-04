@@ -24,16 +24,16 @@ The data server can be started using the command-line interface, e.g.:
 
 """
 import asyncio
+from copy import deepcopy
 import logging
 import selectors
 import socket
 from typing import Dict
 
-from ..misc.misc import _total_sizeof
-from ._streaming_pickle import streaming_deserialize
-from ._streaming_pickle import streaming_load_pickle_diff
-from ._streaming_pickle import streaming_pickle_diff
-from ._streaming_pickle import streaming_serialize
+from ._streaming_pickle import deserialize_pickle_diff
+from ._streaming_pickle import serialize_pickle_diff
+from ._streaming_pickle import _squash_pickle_diff_queue
+from ._streaming_pickle import PickleDiff
 
 _logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ _OPS_TIMEOUT = 10
 _TIMEOUT = (_KEEPALIVE_TIMEOUT + _OPS_TIMEOUT) + 1
 
 # maximum size of the data queue
-_QUEUE_SIZE = 10
+_QUEUE_SIZE = 5
 
 # indicates that the client is requesting some data about the server
 _NEGOTIATION_INFO = b'\xDE'
@@ -69,16 +69,13 @@ _FAST_TIMEOUT = 1.0
 # length (bytes) of the header section that identifies how large the payload is
 _HEADER_MSG_LEN = 8
 
-# maximum size of a diff (bytes)
-_MAX_DIFF = 10 * 1e9
-
 
 class _CustomSock:
     """Tiny socket wrapper class that implements a custom messaging protocol.
     recv_msg() and send_msg() use the following packet structure:
     |                      HEADER       | PAYLOAD
     | message length (excluding header) | message
-    |        _HEADER_MSG_LEN             | variable length
+    |        _HEADER_MSG_LEN            | variable length
     """
 
     def __init__(self, sock_reader, sock_writer):
@@ -123,42 +120,6 @@ class _CustomSock:
         _logger.debug(f'closed socket [{self.addr}]')
 
 
-def _squash_queue(queue, item, _MAX_DIFF=_MAX_DIFF):
-    """Combine all streaming pickle diff entries in an asyncio queue into a single entry.
-
-    Args:
-        queue: Asyncio queue.
-        item: streaming pickle entry to be squashed with the rest of the entries in the queue.
-        _MAX_DIFF: maximum size (bytes) for the squashed diff object.
-
-    Returns:
-        True on success, False if _MAX_DIFF is exceeded.
-    """
-    # collect all of the items to be squashed
-    queue_entries = []
-    for _ in range(queue.qsize()):
-        queue_entries.append(queue.get_nowait())
-        queue.task_done()
-    queue_entries.append(item)
-    # squashed diff operations
-    new_diffs = {}
-    for _, diffs in queue_entries:
-        for uid in diffs:
-            # iterate through each
-            if uid in new_diffs:
-                # new_diffs already has a record for the streaming object given
-                # by uid, so we will combine their diffs
-                new_diffs[uid].extend(diffs[uid])
-            else:
-                # there is a new streaming object entry, so add it to the new_diffs
-                new_diffs[uid] = diffs[uid]
-    if _total_sizeof(new_diffs) > _MAX_DIFF:
-        return False
-    # place the squashed item onto the queue
-    queue.put_nowait((item[0], new_diffs))
-    return True
-
-
 async def _cleanup_event_loop(loop):
     """End all tasks in an event loop and exit."""
 
@@ -200,10 +161,8 @@ class _DataSet:
         #           'queue': sink FIFO/queue},
         # ('192.168.1.5', 19859): ... }
         self.sinks = {}
-        # store the most up-to-date data
-        self.data = {}
-        # store the streaming objects
-        self.streaming_obj_db = {}
+        # for storing the full history of the data
+        self.pickle_diff = None
 
     async def run_sink(
         self,
@@ -229,8 +188,8 @@ class _DataSet:
             'queue': queue,
         }
         self.sinks[sink_id] = sink_dict
-        # push the current data to the sink so it has a starting point
-        queue.put_nowait(streaming_pickle_diff(self.data))
+        # push the full current data to the sink so it has a starting point
+        queue.put_nowait(self.pickle_diff)
         await task
 
     async def run_source(self, sock: _CustomSock):
@@ -240,14 +199,14 @@ class _DataSet:
         await task
 
     async def _source_coro(self):
-        """Receive data from a source client and transfer it to the client queues."""
+        """Receive data from a source client and transfer it to the sink client queues."""
         sock = self.source['sock']
-        # reset the streaming object db since there is a new source
-        self.streaming_obj_db = {}
+        # reset the PickleDiff since there is a new source
+        self.pickle_diff = PickleDiff()
         try:
             while True:
                 try:
-                    new_pickle = await asyncio.wait_for(
+                    new_data = await asyncio.wait_for(
                         sock.recv_msg(), timeout=_TIMEOUT
                     )
                 except (asyncio.IncompleteReadError, asyncio.TimeoutError) as exc:
@@ -258,30 +217,33 @@ class _DataSet:
                     )
                     raise asyncio.CancelledError from exc
 
-                if len(new_pickle):
+                if len(new_data):
                     _logger.debug(
-                        f'source [{sock.addr}] received pickle of [{len(new_pickle)}] bytes'
+                        f'source [{sock.addr}] received pickle of [{len(new_data)}] bytes'
                     )
-                    # deserialize the pickled pickle & diffs
-                    pickle_diff = streaming_deserialize(new_pickle)
-                    # unpickle the obj using diffs
-                    self.data = streaming_load_pickle_diff(
-                        self.streaming_obj_db, *pickle_diff
-                    )
+                    # deserialize the PickleDiff
+                    new_pickle_diff = deserialize_pickle_diff(new_data)
+                    # combine the new pickle diff with what is stored on the server
+                    self.pickle_diff.squash(new_pickle_diff)
                     for sink_id in self.sinks:
                         sink = self.sinks[sink_id]
                         queue = sink['queue']
                         try:
-                            queue.put_nowait(pickle_diff)
+                            queue.put_nowait(new_pickle_diff)
                         except asyncio.QueueFull:
                             # the sink isn't consuming data fast enough
                             _logger.debug(
                                 f'sink [{sink["sock"].addr}] can\'t keep up with data source'
                             )
-                            if not _squash_queue(queue, pickle_diff):
+                            if not _squash_pickle_diff_queue(queue, new_pickle_diff):
                                 _logger.warning(
-                                    f'Cancelling sink [{sink_id}] because the max diff size was exceede.'
-                                )
+                                    f'Cancelling sink [{sink_id}] because the \
+                                    max diff size was exceeded. This is a \
+                                    consequence of memory build-up due to the \
+                                    sink not being able to keep up with the \
+                                    data rate. Reduce the data rate or \
+                                    increase the client processing throughput.'
+                                    )
                                 self.sinks[sink_id]['task'].cancel()
                         _logger.debug(
                             f'source [{sock.addr}] queued pickle for sink [{sink["sock"].addr}]'
@@ -317,16 +279,16 @@ class _DataSet:
                     _logger.debug(
                         f'sink [{sock.addr}] no data available - sending keepalive'
                     )
-                    new_pickle = b''
+                    new_data = b''
                 else:
-                    new_pickle = streaming_serialize(pickle_diff)
+                    new_data = serialize_pickle_diff(pickle_diff)
 
                 try:
                     await asyncio.wait_for(
-                        sock.send_msg(new_pickle),
+                        sock.send_msg(new_data),
                         timeout=_OPS_TIMEOUT / 4,
                     )
-                    _logger.debug(f'sink [{sock.addr}] sent [{len(new_pickle)}] bytes')
+                    _logger.debug(f'sink [{sock.addr}] sent [{len(new_data)}] bytes')
                 except (ConnectionError, asyncio.TimeoutError) as exc:
                     _logger.info(
                         f'sink [{sock.addr}] disconnected or isn\'t accepting data - dropping connection'

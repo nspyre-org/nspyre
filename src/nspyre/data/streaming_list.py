@@ -25,6 +25,10 @@ class StreamingList(list):
         Args:
             idx: index that was modified
         """
+        try:
+            self[idx]
+        except IndexError as err:
+            raise ValueError(f'Invalid index [{idx}].') from err
         self._diff_op('u', idx, self[idx])
 
     def _diff_op(self, op, *args):

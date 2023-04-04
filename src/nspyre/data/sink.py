@@ -5,14 +5,14 @@ from typing import Any
 from typing import Dict
 
 from ._asyncio_worker import _AsyncioWorker
-from ._streaming_pickle import streaming_deserialize
+from ._streaming_pickle import deserialize_pickle_diff
 from ._streaming_pickle import streaming_load_pickle_diff
+from ._streaming_pickle import _squash_pickle_diff_queue
 from .server import _CustomSock
 from .server import _FAST_TIMEOUT
 from .server import _NEGOTIATION_SINK
 from .server import _NEGOTIATION_TIMEOUT
 from .server import _QUEUE_SIZE
-from .server import _squash_queue
 from .server import _TIMEOUT
 from .server import DATASERV_PORT
 
@@ -157,7 +157,7 @@ class DataSink(_AsyncioWorker):
                 while True:
                     try:
                         # get data from the server
-                        new_pickle = await asyncio.wait_for(
+                        new_data = await asyncio.wait_for(
                             sock.recv_msg(), timeout=_TIMEOUT
                         )
                     except (asyncio.IncompleteReadError, asyncio.TimeoutError):
@@ -171,15 +171,15 @@ class DataSink(_AsyncioWorker):
                             pass
                         break
 
-                    if not new_pickle:
+                    if not new_data:
                         # keepalive message
                         continue
 
                     _logger.debug(
-                        f'sink received pickle of [{len(new_pickle)}] bytes from data server [{sock.addr}]'
+                        f'sink received pickle of [{len(new_data)}] bytes from data server [{sock.addr}]'
                     )
 
-                    pickle_diff = streaming_deserialize(new_pickle)
+                    pickle_diff = deserialize_pickle_diff(new_data)
 
                     try:
                         # put pickle on the queue
@@ -189,8 +189,14 @@ class DataSink(_AsyncioWorker):
                         _logger.debug(
                             'pop() isn\'t being called frequently enough to keep up with data source'
                         )
-                        _squash_queue(self._queue, pickle_diff)
-                    _logger.debug(f'sink queued pickle of [{len(new_pickle)}] bytes')
+                        if not _squash_pickle_diff_queue(self._queue, pickle_diff):
+                            raise RuntimeError(f'Maximum diff size exceeded. \
+                                This is a consequence of memory build-up due \
+                                to the sink not being able to keep up with \
+                                the data rate. Reduce the data rate or \
+                                increase the client processing throughput.'
+                            )
+                    _logger.debug(f'sink queued pickle of [{len(new_data)}] bytes')
                 await asyncio.sleep(_FAST_TIMEOUT)
 
         except ConnectionError as err:
@@ -307,7 +313,7 @@ class DataSink(_AsyncioWorker):
             # update data object
             if pickle_diff != b'':
                 self.data = streaming_load_pickle_diff(
-                    self.streaming_obj_db, *pickle_diff
+                    self.streaming_obj_db, pickle_diff
                 )
             else:
                 # no data due to a timeout

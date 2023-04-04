@@ -1,5 +1,5 @@
 """
-Creates an interface that allows the user to easily launch Qt widgets. The 
+Creates an interface that allows the user to easily launch Qt widgets. The
 widgets are placed in a pyqtgraph :code:`DockArea`.
 """
 from importlib import reload
@@ -79,9 +79,9 @@ class _MainWidgetItemContainer(QtGui.QStandardItem):
 
 
 class MainWidget(QtWidgets.QWidget):
-    """Qt widget for loading other QWidgets. 
-    It displays a hierarchy of widgets for the user to select and launch, and a 
-    pyqtgraph :code:`DockArea` where they are displayed. The widgets dictionary 
+    """Qt widget for loading other QWidgets.
+    It displays a hierarchy of widgets for the user to select and launch, and a
+    pyqtgraph :code:`DockArea` where they are displayed. The widgets dictionary
     passed to __init__ can contain sub-dictionaries in order to group widgets together.
 
     Typical usage example:

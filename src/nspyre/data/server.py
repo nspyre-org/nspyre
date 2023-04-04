@@ -2,13 +2,13 @@
 The nspyre data server transports arbitrary python objects over a TCP/IP socket
 to a set of local or remote network clients, and keeps those objects up to date
 as they are modified. For each data set on the data server, there is a single
-data :py:class:`~nspyre.data.source.DataSource`, and a set of data 
-:py:class:`~nspyre.data.sink.DataSink`. The source pushes data to 
+data :py:class:`~nspyre.data.source.DataSource`, and a set of data
+:py:class:`~nspyre.data.sink.DataSink`. The source pushes data to
 the data server and each of the sinks pops data from the data server.
 
 Objects are serialized by the source then pushed to the server. Each sink
 receives a copy of the serialized objects, then deserializes them locally. If
-the user makes use of "Streaming" objects such as the 
+the user makes use of "Streaming" objects such as the
 :py:class:`~nspyre.data.streaming_list.StreamingList`, the source
 will only serialize the operations that have been performed on the streaming
 object since the last serialization. The sink can then reconstruct the pushed
@@ -24,16 +24,15 @@ The data server can be started using the command-line interface, e.g.:
 
 """
 import asyncio
-from copy import deepcopy
 import logging
 import selectors
 import socket
 from typing import Dict
 
-from ._streaming_pickle import deserialize_pickle_diff
-from ._streaming_pickle import serialize_pickle_diff
 from ._streaming_pickle import _squash_pickle_diff_queue
+from ._streaming_pickle import deserialize_pickle_diff
 from ._streaming_pickle import PickleDiff
+from ._streaming_pickle import serialize_pickle_diff
 
 _logger = logging.getLogger(__name__)
 
@@ -206,9 +205,7 @@ class _DataSet:
         try:
             while True:
                 try:
-                    new_data = await asyncio.wait_for(
-                        sock.recv_msg(), timeout=_TIMEOUT
-                    )
+                    new_data = await asyncio.wait_for(sock.recv_msg(), timeout=_TIMEOUT)
                 except (asyncio.IncompleteReadError, asyncio.TimeoutError) as exc:
                     # if there was a timeout / problem receiving the message
                     # the source client is dead and will be terminated
@@ -243,7 +240,7 @@ class _DataSet:
                                     sink not being able to keep up with the \
                                     data rate. Reduce the data rate or \
                                     increase the client processing throughput.'
-                                    )
+                                )
                                 self.sinks[sink_id]['task'].cancel()
                         _logger.debug(
                             f'source [{sock.addr}] queued pickle for sink [{sink["sock"].addr}]'

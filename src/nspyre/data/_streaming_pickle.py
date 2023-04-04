@@ -8,22 +8,24 @@ import pickle
 from typing import Any
 from typing import Dict
 
-from .streaming_list import StreamingList
 from ..misc.misc import _total_sizeof
+from .streaming_list import StreamingList
 
 # maximum size of a diff (bytes)
 _MAX_DIFF = 500e6
 
+
 class PickleDiff:
-    """Represents a serialized object, where some of sub-objects are special 
-    streaming-capable objects. For streaming objects, a set of diffs is used 
+    """Represents a serialized object, where some of sub-objects are special
+    streaming-capable objects. For streaming objects, a set of diffs is used
     to reconstruct the object."""
+
     def __init__(self, pkl: bytes = None, diffs: Dict = None):
         """
         Args:
             pkl: Byte string from pickle operation.
-            diffs: Dict where keys are uid and values are lists of diffs as 
-                dictated by the corresponding class-specific code in 
+            diffs: Dict where keys are uid and values are lists of diffs as
+                dictated by the corresponding class-specific code in
                 :py:meth:`~nspyre.data._streaming_pickle.StreamingPickler.persistent_id`.
         """
         if pkl is None:
@@ -55,6 +57,7 @@ class PickleDiff:
 
     def __str__(self):
         return f'PickleDiff pkl: {self.pkl} diffs: {self.diffs}'
+
 
 def _squash_pickle_diff_queue(queue, item, MAX_DIFF=_MAX_DIFF):
     """Combine all PickleDiff entries in an asyncio queue into a single entry.
@@ -146,7 +149,7 @@ class StreamingUnpickler(pickle.Unpickler):
             )
 
 
-def streaming_pickle_diff(obj: Any) -> tuple:
+def streaming_pickle_diff(obj: Any) -> PickleDiff:
     """Special streaming pickle function. For special Streaming objects,
     extract the differences since the last pickle. These differences are
     returned separately from the main pickle data.
@@ -162,6 +165,7 @@ def streaming_pickle_diff(obj: Any) -> tuple:
     # pickle the given object
     pickler.dump(obj)
     return PickleDiff(file.getvalue(), pickler.diff_stream_data)
+
 
 def streaming_load_pickle_diff(stream_obj_db: Dict, pickle_diff: PickleDiff) -> Any:
     """Special streaming unpickle function. For special Streaming objects, only
@@ -205,4 +209,3 @@ def deserialize_pickle_diff(pickle_diffs: bytes) -> Any:
         Dictionary containing the differences since the last pickle.
     """
     return pickle.loads(pickle_diffs)
-

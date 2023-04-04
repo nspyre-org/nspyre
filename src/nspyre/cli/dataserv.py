@@ -145,7 +145,9 @@ def _main():
     # start the shell prompt event loop in a new thread, since DataServer
     # must be run in the main thread
     # daemon=True so that the program will exit when the data server is stopped with a signal - otherwise the cmd loop will hang forever
-    cmd_prompt_thread = Thread(target=serve_data_server_cli, args=(dataserv,), daemon=True)
+    cmd_prompt_thread = Thread(
+        target=serve_data_server_cli, args=(dataserv,), daemon=True
+    )
     cmd_prompt_thread.start()
 
     # start the data server event loop

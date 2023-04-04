@@ -1,8 +1,8 @@
 import logging
 
-# from ..misc.misc import QObject
-# from ..misc.misc import Qt_GUI
-
+from ..gui import QObject
+from ..gui import Qt_GUI
+from ..gui import QtCore
 
 _logger = logging.getLogger(__name__)
 
@@ -11,7 +11,7 @@ class Subsystem(QObject):
     """Generalized experimental subsystem that allows for management of
     dependencies between subsystems for boot sequencing."""
 
-    if gui:
+    if Qt_GUI:
         # for when the subsystem is booted / shutdown
         state_changed = QtCore.Signal(bool)
 

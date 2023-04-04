@@ -14,13 +14,13 @@ _logger = logging.getLogger(__name__)
 
 
 class FlexLinePlotWidget(QtWidgets.QWidget):
-    """Qt widget for flexible plotting of user data. 
+    """Qt widget for flexible plotting of user data.
     It connects to an arbitrary data set stored in the :py:class:`~nspyre.data.server.DataServer`,
-    collects and processes the data, and offers a variety of user-controlled 
+    collects and processes the data, and offers a variety of user-controlled
     plotting options.
 
-    The user should push a dictionary containing the following key/value pairs 
-    to the corresponding :py:class:`~nspyre.data.source.DataSource` 
+    The user should push a dictionary containing the following key/value pairs
+    to the corresponding :py:class:`~nspyre.data.source.DataSource`
     object sourcing data to the :py:class:`~nspyre.data.server.DataServer`:
 
     - key: :code:`title`, value: Plot title string
@@ -31,7 +31,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         The two rows represent the x and y axes, respectively, of the plot, and \
         the n columns each represent a data point.
 
-    You may use np.NaN values in the data arrays to represent invalid entries, 
+    You may use np.NaN values in the data arrays to represent invalid entries,
     which won't contribute to the data averaging. An example is given below:
 
     .. code-block:: python
@@ -234,9 +234,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         """Called when the user clicks the update button."""
         name, series, scan_i, scan_j, processing = self._get_plot_settings()
         # set the plot settings
-        self.line_plot.update_plot_settings(
-            name, series, scan_i, scan_j, processing
-        )
+        self.line_plot.update_plot_settings(name, series, scan_i, scan_j, processing)
         self.line_plot.force_update = True
 
     def _add_plot_clicked(self):
@@ -542,9 +540,13 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                         # create a single numpy array
                                         stacked_data = np.stack(data_subset)
                                         # mask the NaN entries
-                                        masked_data = np.ma.array(stacked_data, mask=np.isnan(stacked_data))
+                                        masked_data = np.ma.array(
+                                            stacked_data, mask=np.isnan(stacked_data)
+                                        )
                                         # average the numpy arrays
-                                        processed_data = np.ma.average(masked_data, axis=0)
+                                        processed_data = np.ma.average(
+                                            masked_data, axis=0
+                                        )
                                     else:
                                         raise ValueError(
                                             f'Processing has unsupported value [{processing}].'

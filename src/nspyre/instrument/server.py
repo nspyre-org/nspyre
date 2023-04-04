@@ -1,6 +1,6 @@
 """
 This module provides a wrapper around an `RPyC <https://rpyc.readthedocs.io/en/latest/>`__ server.
-Clients may connect and access devices, or command the server to add, remove, 
+Clients may connect and access devices, or command the server to add, remove,
 or restart devices.
 """
 import logging

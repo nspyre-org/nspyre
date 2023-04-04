@@ -1,5 +1,5 @@
 [flake8]
-ignore = E501, B950, W503, C901, E203
+ignore = E501, B950, W503, C901, E203, F403
 # for compaptibility with black
 max-line-length = 88
 # ignore C901 for now 

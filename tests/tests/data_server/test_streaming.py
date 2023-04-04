@@ -5,11 +5,13 @@ import numpy as np
 from nspyre import DataSink
 from nspyre import DataSource
 from nspyre.data.streaming_list import StreamingList
-from nspyre.misc.misc import _total_sizeof
+
+# from nspyre.misc.misc import _total_sizeof
 
 logger = logging.getLogger(__name__)
 
 NPUSHES = 1000
+
 
 def test_dataserv_streaming_list():
     sl1 = StreamingList(['a', 'b', 'c'])
@@ -143,6 +145,7 @@ def test_dataserv_streaming_push_pop():
         f'completed run [{name}] - total time [{total_time:.3f}]s, average time per push/pop [{avg_time:.3f}]s'
     )
 
+
 # TODO debug apparent performance issue on this test
 # def test_dataserv_streaming_push_pop_big():
 #     name = 'streaming_push_pop_big'
@@ -165,6 +168,7 @@ def test_dataserv_streaming_push_pop():
 #         f'[{name}] transferred [{_total_sizeof(sink.data)/1e9:.3f}] GB in [{total_time:.3f}]s, average time per push/pop [{avg_time:.3f}]s'
 #     )
 
+
 def test_dataserv_streaming_push_pop_stress():
     name = 'streaming_push_pop_stress'
     with DataSource(name) as source, DataSink(name) as sink:
@@ -181,14 +185,14 @@ def test_dataserv_streaming_push_pop_stress():
                 if len(sl):
                     # reassign a random number at a random index
                     if len(sl) > 1:
-                        sl[np.random.randint(len(sl)-1)] = np.random.randint(0, 100)
+                        sl[np.random.randint(len(sl) - 1)] = np.random.randint(0, 100)
                     else:
                         sl[0] = np.random.randint(0, 100)
             elif op == 'delete':
                 if len(sl):
                     # delete a random index
                     if len(sl) > 1:
-                        sl.__delitem__(np.random.randint(len(sl)-1))
+                        sl.__delitem__(np.random.randint(len(sl) - 1))
                     else:
                         sl.__delitem__(0)
             elif op == 'insert':
@@ -231,14 +235,14 @@ def test_dataserv_streaming_multi_push():
                 if len(sl):
                     # reassign a random number at a random index
                     if len(sl) > 1:
-                        sl[np.random.randint(len(sl)-1)] = np.random.randint(0, 100)
+                        sl[np.random.randint(len(sl) - 1)] = np.random.randint(0, 100)
                     else:
                         sl[0] = np.random.randint(0, 100)
             elif op == 'delete':
                 if len(sl):
                     # delete a random index
                     if len(sl) > 1:
-                        sl.__delitem__(np.random.randint(len(sl)-1))
+                        sl.__delitem__(np.random.randint(len(sl) - 1))
                     else:
                         sl.__delitem__(0)
             elif op == 'insert':

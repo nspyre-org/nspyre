@@ -3,7 +3,6 @@ repos:
     rev: v4.3.0 # https://github.com/pre-commit/pre-commit-hooks/tags
     hooks:
     -   id: check-added-large-files
-    -   id: check-docstring-first
     -   id: check-executables-have-shebangs
     -   id: check-merge-conflict
     -   id: check-shebang-scripts-are-executable
@@ -49,6 +48,6 @@ repos:
   hooks:
     -   id: sphinx
         name: Sphinx (docs)
-        entry: make -C docs html
+        entry: make -C docs fast
         language: system
         pass_filenames: false

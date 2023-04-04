@@ -127,7 +127,9 @@ def start_instrument_server(drivers):
     """Start an instrument server and serve a CLI.
 
     Args:
-        drivers: a list of dictionaries, where each dictionary contains keyword arguments to the InstrumentServer :py:func:`~nspyre.instrument.server.InstrumentServer.add` method."""
+        drivers: a list of dictionaries, where each dictionary contains keyword
+            arguments to the InstrumentServer
+            :py:meth:`~nspyre.instrument.server.InstrumentServer.add` method."""
 
     # parse command-line arguments
     arg_parser = argparse.ArgumentParser(
@@ -239,9 +241,13 @@ def start_instrument_server(drivers):
 
         inserv.start()
 
+    # add the provided drivers
+    for d in drivers:
+        inserv.add(**drivers[d])
+
     # start the shell prompt event loop
     serve_instrument_server_cli(inserv)
 
 
 if __name__ == '__main__':
-    start_instrument_server()
+    start_instrument_server([])

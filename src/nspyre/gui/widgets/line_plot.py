@@ -1,7 +1,6 @@
 """
 A wrapper for pyqtgraph PlotWidget.
 """
-import logging
 import time
 from functools import partial
 from typing import Any

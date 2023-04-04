@@ -1,4 +1,7 @@
+from typing import Any
 from typing import Dict
+
+from rpyc.utils.classic import obtain
 
 from ..gui import QObject
 from .gateway import InstrumentGateway
@@ -17,7 +20,7 @@ from .gateway import InstrumentGateway
 
 
 class _InstrumentManagerDevice:
-    def __init__(name: str, gateway: InstrumentGateway):
+    def __init__(self, name: str, gateway: InstrumentGateway):
         """Wrapper for a device residing in an :py:class:`~nspyre.instrument.gateway.InstrumentGateway`.
 
         Args:
@@ -48,9 +51,9 @@ class _InstrumentManagerDevice:
 
 class InstrumentManager(QObject):
     def __init__(self, *register_gateway_args, **register_gateway_kwargs):
-        """For consolidating connections to multiple instrument gateways. 
-        If only connecting to a single :py:class:`~nspyre.instrument.gateway.InstrumentGateway`, 
-        you can simply pass the arguments and keyword arguments that you'd 
+        """For consolidating connections to multiple instrument gateways.
+        If only connecting to a single :py:class:`~nspyre.instrument.gateway.InstrumentGateway`,
+        you can simply pass the arguments and keyword arguments that you'd
         normally pass to the gateway here.
 
         Args:
@@ -81,9 +84,14 @@ class InstrumentManager(QObject):
                 Otherwise their name on the :py:class:`~nspyre.instrument.manager.InstrumentManager` \
                 will be the same as that on the :py:class:`~nspyre.instrument.server.InstrumentServer`.
         """
-        gw = InstrumentGateway(*args, **kwargs)
+        gw = InstrumentGateway(*gateway_args, **gateway_kwargs)
 
-        gw_devs = obtain(gw._devs)
+        if name_mapping is None:
+            name_mapping = {}
+        if exclude is None:
+            exclude = []
+
+        gw_devs: Dict[str, Any] = obtain(gw._devs)
         for gw_dev_name in gw_devs:
             if default_exclude and gw_dev_name not in name_mapping:
                 continue

@@ -5,9 +5,10 @@ from typing import Any
 from typing import Dict
 
 from ._asyncio_worker import _AsyncioWorker
-from ._streaming_pickle import deserialize_pickle_diff
-from ._streaming_pickle import streaming_load_pickle_diff
 from ._streaming_pickle import _squash_pickle_diff_queue
+from ._streaming_pickle import deserialize_pickle_diff
+from ._streaming_pickle import PickleDiff
+from ._streaming_pickle import streaming_load_pickle_diff
 from .server import _CustomSock
 from .server import _FAST_TIMEOUT
 from .server import _NEGOTIATION_SINK
@@ -186,18 +187,19 @@ class DataSink(_AsyncioWorker):
                         if pickle_diff.pkl != b'':
                             # put pickle on the queue
                             self._queue.put_nowait(pickle_diff)
-                    except asyncio.QueueFull:
+                    except asyncio.QueueFull as err:
                         # the user isn't consuming data fast enough so we will empty the queue and place only this most recent pickle on it
                         _logger.debug(
                             'pop() isn\'t being called frequently enough to keep up with data source'
                         )
                         if not _squash_pickle_diff_queue(self._queue, pickle_diff):
-                            raise RuntimeError(f'Maximum diff size exceeded. \
+                            raise RuntimeError(
+                                'Maximum diff size exceeded. \
                                 This is a consequence of memory build-up due \
                                 to the sink not being able to keep up with \
                                 the data rate. Reduce the data rate or \
                                 increase the client processing throughput.'
-                            )
+                            ) from err
                     _logger.debug(f'sink queued pickle of [{len(new_data)}] bytes')
                 await asyncio.sleep(_FAST_TIMEOUT)
 
@@ -216,14 +218,14 @@ class DataSink(_AsyncioWorker):
                 pass
             raise err
 
-    async def _pop(self, timeout) -> bytes:
+    async def _pop(self, timeout) -> PickleDiff:
         """Coroutine that gets data from the queue."""
         try:
             # get pickle data from the queue
             pickle_diff = await asyncio.wait_for(self._queue.get(), timeout=timeout)
         except asyncio.exceptions.CancelledError:
             _logger.debug('pop cancelled')
-            return None
+            return PickleDiff()
         except asyncio.exceptions.TimeoutError as err:
             raise TimeoutError('pop timed out') from err
         else:
@@ -313,7 +315,7 @@ class DataSink(_AsyncioWorker):
         else:
             _logger.debug('pop returning new data')
             # update data object
-            if pickle_diff is not None:
+            if pickle_diff.pkl != b'':
                 self.data = streaming_load_pickle_diff(
                     self.streaming_obj_db, pickle_diff
                 )

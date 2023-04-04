@@ -1,8 +1,8 @@
 import logging
+import queue
 from functools import partial
 from importlib import reload
 from multiprocessing import Queue
-import queue
 from types import ModuleType
 
 from pyqtgraph.Qt import QtWidgets
@@ -74,7 +74,7 @@ class ExperimentWidget(QtWidgets.QWidget):
         self.run_proc = ProcessRunner()
         run_button.clicked.connect(self.run)
 
-        self.queue = Queue()
+        self.queue: Queue = Queue()
         """multiprocessing Queue to pass to the experiment subprocess and use \
         for communication with the subprocess."""
 
@@ -140,6 +140,7 @@ class ExperimentWidget(QtWidgets.QWidget):
             logging.info(
                 'Not killing the experiment process because it is not running.'
             )
+
 
 def experiment_widget_process_queue(msg_queue):
     """Reads messages sent to a multiprocessing Queue by :py:class:`~nspyre.gui.widgets.experiment.ExperimentWidget`.

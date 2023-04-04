@@ -49,6 +49,7 @@ nitpicky = True
 nitpick_ignore = [
     ('py:class', 'types.ModuleType'),
     ('py:class', 'pathlib.Path'),
+    ('py:class', 'multiprocessing.Queue'),
 ]
 nitpick_ignore_regex = [
     (r'py:.*', r'pyqtgraph.*'),

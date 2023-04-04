@@ -248,6 +248,8 @@ def start_instrument_server(drivers):
     # start the shell prompt event loop
     serve_instrument_server_cli(inserv)
 
+def _main():
+    start_instrument_server([])
 
 if __name__ == '__main__':
-    start_instrument_server([])
+    _main()

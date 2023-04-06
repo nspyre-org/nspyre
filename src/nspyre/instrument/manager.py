@@ -50,7 +50,7 @@ class _InstrumentManagerDevice:
 
 
 class InstrumentManager(QObject):
-    def __init__(self, *register_gateway_args, **register_gateway_kwargs):
+    def __init__(self, *register_gateway_args, register_gateway=True, **register_gateway_kwargs):
         """For consolidating connections to multiple instrument gateways.
         If only connecting to a single :py:class:`~nspyre.instrument.gateway.InstrumentGateway`,
         you can simply pass the arguments and keyword arguments that you'd
@@ -58,11 +58,13 @@ class InstrumentManager(QObject):
 
         Args:
             register_gateway_args: See arguments for :py:meth:`~nspyre.instrument.manager.InstrumentManager.register_gateway`.
+            register_gateway: if True, call :py:meth:`~nspyre.instrument.manager.InstrumentManager.register_gateway`.
             register_gateway_kwargs: See keyword arguments for :py:meth:`~nspyre.instrument.manager.InstrumentManager.register_gateway`.
         """
         # mapping between a unique device name key and _InstrumentManagerDevice value
         self.devs = {}
-        self.register_gateway(*register_gateway_args, **register_gateway_kwargs)
+        if register_gateway:
+            self.register_gateway(*register_gateway_args, **register_gateway_kwargs)
 
     def register_gateway(
         self,

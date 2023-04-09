@@ -4,7 +4,7 @@ import logging
 from typing import Any
 from typing import Dict
 
-from ._asyncio_worker import _AsyncioWorker
+from ._asyncio_worker import AsyncioWorker
 from ._streaming_pickle import _squash_pickle_diff_queue
 from ._streaming_pickle import deserialize_pickle_diff
 from ._streaming_pickle import PickleDiff
@@ -20,7 +20,7 @@ from .server import DATASERV_PORT
 _logger = logging.getLogger(__name__)
 
 
-class DataSink(_AsyncioWorker):
+class DataSink(AsyncioWorker):
     """For sinking data from the :py:class:`~nspyre.data.server.DataServer`. :py:attr:`~nspyre.data.sink.DataSink.data` can be used to directly access the python object pushed by the source.
     E.g.:
 
@@ -92,6 +92,16 @@ class DataSink(_AsyncioWorker):
         self._port = port
         # whether the sink should try to reconnect to the data server
         self._auto_reconnect = auto_reconnect
+
+    def connect(self):
+        """Connect to the data server."""
+        # do this just to generate docs
+        super().connect()
+
+    def disconnect(self):
+        """Disconnect from the data server."""
+        # do this just to generate docs
+        super().disconnect()
 
     async def _main(self):
         """asyncio main loop"""
@@ -293,7 +303,7 @@ class DataSink(_AsyncioWorker):
 
         Raises:
             TimeoutError: A timeout occured.
-            RuntimeError:
+            RuntimeError: The sink isn't properly initialized.
         """
         if not self.is_running():
             raise RuntimeError(

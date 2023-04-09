@@ -4,7 +4,7 @@ will only serialize/deserialize the differences since the most recent pickle.
 This can be used to efficiently stream data e.g. over a network connection.
 """
 import io
-import pickle
+from pickle import Pickler, Unpickler, UnpicklingError, dumps, loads
 from typing import Any
 from typing import Dict
 
@@ -87,7 +87,7 @@ def _squash_pickle_diff_queue(queue, item, MAX_DIFF=_MAX_DIFF):
     return True
 
 
-class StreamingPickler(pickle.Pickler):
+class StreamingPickler(Pickler):
     """Special pickler for streamed objects."""
 
     def __init__(self, file):
@@ -116,7 +116,7 @@ class StreamingPickler(pickle.Pickler):
             return None
 
 
-class StreamingUnpickler(pickle.Unpickler):
+class StreamingUnpickler(Unpickler):
     """Special unpickler for streamed objects."""
 
     def __init__(self, file, stream_obj_db, diff):
@@ -144,7 +144,7 @@ class StreamingUnpickler(pickle.Unpickler):
             # Always raises an error if you cannot return the correct object.
             # Otherwise, the unpickler will think None is the object referenced
             # by the persistent ID.
-            raise pickle.UnpicklingError(
+            raise UnpicklingError(
                 f'Persistent object type [{type_tag}] is not supported.'
             )
 
@@ -196,7 +196,7 @@ def serialize_pickle_diff(pickle_diffs: PickleDiff) -> bytes:
     Returns:
         Serialized pickle, diffs.
     """
-    return pickle.dumps(pickle_diffs)
+    return dumps(pickle_diffs)
 
 
 def deserialize_pickle_diff(pickle_diffs: bytes) -> Any:
@@ -208,4 +208,4 @@ def deserialize_pickle_diff(pickle_diffs: bytes) -> Any:
     Returns:
         Dictionary containing the differences since the last pickle.
     """
-    return pickle.loads(pickle_diffs)
+    return loads(pickle_diffs)

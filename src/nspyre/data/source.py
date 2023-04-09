@@ -2,7 +2,7 @@ import asyncio
 import concurrent.futures
 import logging
 
-from ._asyncio_worker import _AsyncioWorker
+from ._asyncio_worker import AsyncioWorker
 from ._streaming_pickle import _squash_pickle_diff_queue
 from ._streaming_pickle import serialize_pickle_diff
 from ._streaming_pickle import streaming_pickle_diff
@@ -18,7 +18,7 @@ from .server import DATASERV_PORT
 _logger = logging.getLogger(__name__)
 
 
-class DataSource(_AsyncioWorker):
+class DataSource(AsyncioWorker):
     """For sourcing data to the :py:class:`~nspyre.data.server.DataServer`. See :py:meth:`~nspyre.data.sink.DataSink.pop` for typical usage example."""
 
     def __init__(
@@ -28,7 +28,8 @@ class DataSource(_AsyncioWorker):
         port: int = DATASERV_PORT,
         auto_reconnect: bool = False,
     ):
-        """
+        """Initialize using a with statement.
+
         Args:
             name: Name of the data set.
             addr: Network address of the data server.
@@ -46,6 +47,16 @@ class DataSource(_AsyncioWorker):
         self._port = port
         # whether the source should try to reconnect to the data server
         self._auto_reconnect = auto_reconnect
+
+    def connect(self):
+        """Connect to the data server."""
+        # do this just to generate docs
+        super().connect()
+
+    def disconnect(self):
+        """Disconnect from the data server."""
+        # do this just to generate docs
+        super().disconnect()
 
     async def _main(self):
         """asyncio main loop"""

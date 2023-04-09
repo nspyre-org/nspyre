@@ -77,6 +77,7 @@ autoapi_options = [
     'show-module-summary',
     'imported-members',
 ]
+autoapi_ignore_classes = ['pickle.Pickler']
 autoapi_keep_files = True
 autodoc_typehints = 'description'
 autoapi_python_class_content = 'both'

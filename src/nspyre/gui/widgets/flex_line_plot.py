@@ -9,6 +9,7 @@ from pyqtgraph.Qt import QtWidgets
 
 from ...data.sink import DataSink
 from .line_plot import LinePlotWidget
+from .layout import arrange_layout
 
 _logger = logging.getLogger(__name__)
 
@@ -56,8 +57,6 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
 
     def __init__(self):
         super().__init__()
-
-        layout = QtWidgets.QVBoxLayout()
 
         self.line_plot = _FlexLinePlotWidget()
         """Underlying LinePlotWidget."""
@@ -154,13 +153,16 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         plot_actions_layout.addStretch()
         plot_config_layout.addLayout(plot_actions_layout)
 
-        # contains plots and label
+        # contains plots, label, hide/show buttons
         plots_layout = QtWidgets.QVBoxLayout()
 
         plots_label = QtWidgets.QLabel('Plots')
         plots_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         plots_layout.addWidget(plots_label)
 
+        # plots list + hide/show buttons
+        plot_list_control_buttons_layout = QtWidgets.QHBoxLayout()
+        
         # list of plots
         self.plots_list_widget = QtWidgets.QListWidget()
         self.plots_list_widget.currentItemChanged.connect(self._plot_selection_changed)
@@ -168,20 +170,40 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         plot_config_layout.addLayout(plots_layout)
 
         # layout for containing the data source selection layout and the plot config layout
-        top_layout = QtWidgets.QVBoxLayout()
-        top_layout.addLayout(datasource_layout)
-        top_layout.addLayout(plot_config_layout)
+        plot_control_top_layout = QtWidgets.QVBoxLayout()
+        plot_control_top_layout.addLayout(datasource_layout)
+        plot_control_top_layout.addLayout(plot_config_layout)
         # widget for containing the settings layout
-        settings_widget = QtWidgets.QWidget()
-        settings_widget.setLayout(top_layout)
+        plot_control_top_widget = QtWidgets.QWidget()
+        plot_control_top_widget.setLayout(plot_control_top_layout)
+
+        settings_layout_config = {
+        'type': QtWidgets.QVBoxLayout,
+        'subs': [
+            l1,
+            l2,
+            {'type': QtWidgets.QHBoxLayout,
+            'subs': [
+                l3,
+                l4,
+                {
+                    'type': QtWidgets.QVBoxLayout,
+                    'subs': [
+                    l5,
+                    l6,
+                ]}
+            ]}
+        ]}
+        settings_layout = arrange_layout(settings_layout_config)
 
         # splitter
         splitter = QtWidgets.QSplitter()
         splitter.setOrientation(QtCore.Qt.Orientation.Vertical)
         splitter.addWidget(self.line_plot)
-        splitter.addWidget(settings_widget)
+        splitter.addWidget(settings_layout)
 
         # main layout
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(splitter)
 
         self.setLayout(layout)

@@ -9,10 +9,10 @@ from threading import Thread
 
 from .server import _cleanup_event_loop
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
-class _AsyncioWorker:
+class AsyncioWorker:
     """Implements functionality for an asyncio event loop running in a separate thread."""
 
     def __init__(self):
@@ -23,7 +23,7 @@ class _AsyncioWorker:
         # semaphore to block until the event loop is ready to start serving requests
         self._sem = None
 
-    def start(self):
+    def connect(self):
         """Start the :code:`asyncio` event loop."""
         selector = selectors.SelectSelector()
         self._event_loop = asyncio.SelectorEventLoop(selector)
@@ -34,7 +34,7 @@ class _AsyncioWorker:
         self._sem.acquire()
         self._check_exc()
 
-    def stop(self, timeout=3):
+    def disconnect(self, timeout=3):
         """Stop the :code:`asyncio` event loop.
 
         Args:
@@ -49,7 +49,7 @@ class _AsyncioWorker:
             try:
                 future.result(timeout=timeout)
             except concurrent.futures.TimeoutError:
-                logger.info(
+                _logger.info(
                     'Timed out waiting for the DataSource queue to be empty. Stopping anyway...'
                 )
                 future.cancel()
@@ -70,7 +70,7 @@ class _AsyncioWorker:
     def _event_loop_thread(self):
         """Run the asyncio event loop - this may be run in a separate thread because
         we aren't starting any subprocesses or responding to signals."""
-        logger.debug(f'started DataSource event loop thread {self._thread}')
+        _logger.debug(f'started DataSource event loop thread {self._thread}')
         self._event_loop.set_debug(True)
         asyncio.set_event_loop(self._event_loop)
         try:
@@ -78,7 +78,7 @@ class _AsyncioWorker:
             self._event_loop.run_forever()
         finally:
             self._event_loop.close()
-            logger.info(f'source [{(self._addr, self._port)}] closed')
+            _logger.info(f'source [{(self._addr, self._port)}] closed')
 
     def _main_helper(self):
         """Callback function to start _main."""
@@ -96,15 +96,15 @@ class _AsyncioWorker:
 
     def __enter__(self):
         """Python context manager setup."""
-        self.start()
+        self.connect()
         return self
 
     def __exit__(self, *args):
         """Python context manager teardown."""
-        self.stop()
+        self.disconnect()
 
     def __del__(self):
         if self.is_running():
-            logger.warning(
-                f'{self} event loop is still running. Did you forget to call stop()?'
+            _logger.warning(
+                f'{self} event loop is still running. Did you forget to call disconnect()?'
             )

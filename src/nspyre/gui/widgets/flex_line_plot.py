@@ -9,7 +9,7 @@ from pyqtgraph.Qt import QtWidgets
 
 from ...data.sink import DataSink
 from .line_plot import LinePlotWidget
-from .layout import arrange_layout
+from .layout import tree_layout
 
 _logger = logging.getLogger(__name__)
 
@@ -62,13 +62,9 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         """Underlying LinePlotWidget."""
 
         # lineedit and button for selecting the data source
-        datasource_layout = QtWidgets.QHBoxLayout()
         self.datasource_lineedit = QtWidgets.QLineEdit()
-        self.update_button = QtWidgets.QPushButton('Connect')
-        self.update_button.clicked.connect(self._update_source_clicked)
-        datasource_layout.addWidget(QtWidgets.QLabel('Data Set'))
-        datasource_layout.addWidget(self.datasource_lineedit)
-        datasource_layout.addWidget(self.update_button)
+        update_button = QtWidgets.QPushButton('Connect')
+        update_button.clicked.connect(self._update_source_clicked)
 
         # contains plot settings
         plot_config_layout = QtWidgets.QHBoxLayout()
@@ -128,30 +124,23 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             QtWidgets.QLayout.SizeConstraint.SetMinimumSize
         )
 
-        # subplot show/hide/add/del buttons
-        plot_actions_layout = QtWidgets.QVBoxLayout()
         # show button
-        self.show_button = QtWidgets.QPushButton('Show')
-        self.show_button.clicked.connect(self._show_plot_clicked)
-        plot_actions_layout.addWidget(self.show_button)
+        show_button = QtWidgets.QPushButton('Show')
+        show_button.clicked.connect(self._show_plot_clicked)
         # hide button
-        self.hide_button = QtWidgets.QPushButton('Hide')
-        self.hide_button.clicked.connect(self._hide_plot_clicked)
-        plot_actions_layout.addWidget(self.hide_button)
+        hide_button = QtWidgets.QPushButton('Hide')
+        hide_button.clicked.connect(self._hide_plot_clicked)
+
         # update button
-        self.add_plot_button = QtWidgets.QPushButton('Update')
-        self.add_plot_button.clicked.connect(self._update_plot_clicked)
-        plot_actions_layout.addWidget(self.add_plot_button)
+        update_plot_button = QtWidgets.QPushButton('Update')
+        update_plot_button.clicked.connect(self._update_plot_clicked)
         # add button
-        self.add_plot_button = QtWidgets.QPushButton('Add')
-        self.add_plot_button.clicked.connect(self._add_plot_clicked)
-        plot_actions_layout.addWidget(self.add_plot_button)
+        add_plot_button = QtWidgets.QPushButton('Add')
+        add_plot_button.clicked.connect(self._add_plot_clicked)
         # del button
-        self.remove_button = QtWidgets.QPushButton('Remove')
-        self.remove_button.clicked.connect(self._remove_plot_clicked)
-        plot_actions_layout.addWidget(self.remove_button)
-        plot_actions_layout.addStretch()
-        plot_config_layout.addLayout(plot_actions_layout)
+        remove_button = QtWidgets.QPushButton('Remove')
+        remove_button.clicked.connect(self._remove_plot_clicked)
+        # TODO plot_actions_layout.addStretch()
 
         # contains plots, label, hide/show buttons
         plots_layout = QtWidgets.QVBoxLayout()
@@ -160,47 +149,42 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         plots_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         plots_layout.addWidget(plots_label)
 
-        # plots list + hide/show buttons
-        plot_list_control_buttons_layout = QtWidgets.QHBoxLayout()
-        
-        # list of plots
+        # list of plots TODO
         self.plots_list_widget = QtWidgets.QListWidget()
         self.plots_list_widget.currentItemChanged.connect(self._plot_selection_changed)
-        plots_layout.addWidget(self.plots_list_widget)
-        plot_config_layout.addLayout(plots_layout)
 
-        # layout for containing the data source selection layout and the plot config layout
-        plot_control_top_layout = QtWidgets.QVBoxLayout()
-        plot_control_top_layout.addLayout(datasource_layout)
-        plot_control_top_layout.addLayout(plot_config_layout)
-        # widget for containing the settings layout
-        plot_control_top_widget = QtWidgets.QWidget()
-        plot_control_top_widget.setLayout(plot_control_top_layout)
-
-        settings_layout_config = {
-        'type': QtWidgets.QVBoxLayout,
-        'subs': [
-            l1,
-            l2,
-            {'type': QtWidgets.QHBoxLayout,
-            'subs': [
-                l3,
-                l4,
-                {
-                    'type': QtWidgets.QVBoxLayout,
-                    'subs': [
-                    l5,
-                    l6,
-                ]}
-            ]}
-        ]}
-        settings_layout = arrange_layout(settings_layout_config)
+        settings_layout_config = {'type': QtWidgets.QVBoxLayout,
+            'data_source': {'type': QtWidgets.QHBoxLayout,
+                'label': QtWidgets.QLabel('Data Set'),
+                'edit': self.datasource_lineedit,
+                'button': update_button,
+            },
+            'plot_config': {'type': QtWidgets.QHBoxLayout,
+                'plot_settings': QtWidgets.QLabel('TEST1'),
+                'plot_settings_buttons': {'type': QtWidgets.QHBoxLayout,
+                    'update': update_plot_button,
+                    'add': add_plot_button,
+                    'remove': remove_button,
+                },
+                'plots': {'type': QtWidgets.QVBoxLayout,
+                    'label': plots_label,
+                    'list': self.plots_list_widget,
+                },
+                'plot_list_buttons': {'type': QtWidgets.QHBoxLayout,
+                    'show': show_button,
+                    'hide': hide_button,
+                },
+            }
+        }
+        self.layout_tree = tree_layout(settings_layout_config)
 
         # splitter
         splitter = QtWidgets.QSplitter()
         splitter.setOrientation(QtCore.Qt.Orientation.Vertical)
         splitter.addWidget(self.line_plot)
-        splitter.addWidget(settings_layout)
+        layout_container = QtWidgets.QWidget()
+        layout_container.setLayout(self.layout_tree.layout)
+        splitter.addWidget(layout_container)
 
         # main layout
         layout = QtWidgets.QVBoxLayout()

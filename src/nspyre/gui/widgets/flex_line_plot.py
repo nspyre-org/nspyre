@@ -61,72 +61,53 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         self.line_plot = _FlexLinePlotWidget()
         """Underlying LinePlotWidget."""
 
-        # lineedit and button for selecting the data source
+        # data source lineedit
         self.datasource_lineedit = QtWidgets.QLineEdit()
+
+        # data source connect button
         update_button = QtWidgets.QPushButton('Connect')
         update_button.clicked.connect(self._update_source_clicked)
 
-        # contains plot settings
-        plot_config_layout = QtWidgets.QHBoxLayout()
-
-        # add new subplot layout
-        plot_settings_layout = QtWidgets.QVBoxLayout()
+        # plot settings label
         plot_settings_label = QtWidgets.QLabel('Plot Settings')
         plot_settings_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
-        plot_settings_layout.addWidget(plot_settings_label)
 
-        # plot name
-        plot_name_layout = QtWidgets.QHBoxLayout()
-        plot_name_layout.addWidget(QtWidgets.QLabel('Plot Name'))
+        # plot name lineedit
         self.plot_name_lineedit = QtWidgets.QLineEdit('avg')
-        plot_name_layout.addWidget(self.plot_name_lineedit)
-        plot_settings_layout.addLayout(plot_name_layout)
 
-        # plot series
-        plot_data_series_layout = QtWidgets.QHBoxLayout()
-        plot_data_series_layout.addWidget(QtWidgets.QLabel('Data Series'))
+        # data series lineedit
         self.plot_series_lineedit = QtWidgets.QLineEdit('series1')
-        plot_data_series_layout.addWidget(self.plot_series_lineedit)
-        plot_settings_layout.addLayout(plot_data_series_layout)
 
-        # scan indices layout
-        scan_indices_layout = QtWidgets.QHBoxLayout()
-        scan_indices_layout.addWidget(QtWidgets.QLabel('Scan'))
+        # scan indices lineedits
         self.add_plot_scan_i_textbox = QtWidgets.QLineEdit()
-        scan_indices_layout.addWidget(self.add_plot_scan_i_textbox)
-        scan_indices_layout.addWidget(QtWidgets.QLabel(' to '))
         self.add_plot_scan_j_textbox = QtWidgets.QLineEdit()
-        scan_indices_layout.addWidget(self.add_plot_scan_j_textbox)
 
-        plot_settings_layout.addLayout(scan_indices_layout)
-
-        # average / append
-        plot_processing_layout = QtWidgets.QHBoxLayout()
+        # avg/append label
         plot_processing_label = QtWidgets.QLabel('Processing')
         plot_processing_label.setSizePolicy(
             QtWidgets.QSizePolicy(
                 QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed
             )
         )
-        plot_processing_layout.addWidget(plot_processing_label)
+
+        # avg/append dropdown
         self.plot_processing_dropdown = QtWidgets.QComboBox()
         self.plot_processing_dropdown.addItem('Average')  # index 0
         self.plot_processing_dropdown.addItem('Append')  # index 1
         # default to average
         self.plot_processing_dropdown.setCurrentIndex(0)
-        plot_processing_layout.addWidget(self.plot_processing_dropdown)
-        plot_settings_layout.addLayout(plot_processing_layout)
 
-        plot_settings_layout.addStretch()
-        plot_config_layout.addLayout(plot_settings_layout)
-        # set to minimum size
-        plot_settings_layout.setSizeConstraint(
-            QtWidgets.QLayout.SizeConstraint.SetMinimumSize
-        )
+        # plot_settings_layout.addStretch()
+        # plot_config_layout.addLayout(plot_settings_layout)
+        # # set to minimum size
+        # plot_settings_layout.setSizeConstraint(
+        #     QtWidgets.QLayout.SizeConstraint.SetMinimumSize
+        # )
 
         # show button
         show_button = QtWidgets.QPushButton('Show')
         show_button.clicked.connect(self._show_plot_clicked)
+
         # hide button
         hide_button = QtWidgets.QPushButton('Hide')
         hide_button.clicked.connect(self._hide_plot_clicked)
@@ -134,49 +115,85 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         # update button
         update_plot_button = QtWidgets.QPushButton('Update')
         update_plot_button.clicked.connect(self._update_plot_clicked)
+
         # add button
         add_plot_button = QtWidgets.QPushButton('Add')
         add_plot_button.clicked.connect(self._add_plot_clicked)
+
         # del button
         remove_button = QtWidgets.QPushButton('Remove')
         remove_button.clicked.connect(self._remove_plot_clicked)
-        # TODO plot_actions_layout.addStretch()
 
-        # contains plots, label, hide/show buttons
-        plots_layout = QtWidgets.QVBoxLayout()
-
+        # plots label
         plots_label = QtWidgets.QLabel('Plots')
         plots_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
-        plots_layout.addWidget(plots_label)
 
-        # list of plots TODO
+        # list of plots
         self.plots_list_widget = QtWidgets.QListWidget()
         self.plots_list_widget.currentItemChanged.connect(self._plot_selection_changed)
 
+        # spacer
+        fixed_spacer = QtWidgets.QLabel('')
+        fixed_spacer.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
+
+        # spacer
+        expanding_spacer = QtWidgets.QLabel('')
+        expanding_spacer.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+
+        # layout
         settings_layout_config = {'type': QtWidgets.QVBoxLayout,
             'data_source': {'type': QtWidgets.QHBoxLayout,
                 'label': QtWidgets.QLabel('Data Set'),
                 'edit': self.datasource_lineedit,
                 'button': update_button,
             },
-            'plot_config': {'type': QtWidgets.QHBoxLayout,
-                'plot_settings': QtWidgets.QLabel('TEST1'),
-                'plot_settings_buttons': {'type': QtWidgets.QHBoxLayout,
+            'config': {'type': QtWidgets.QHBoxLayout,
+                'plot': {'type': QtWidgets.QVBoxLayout,
+                        'label': plot_settings_label,
+                        'settings': {'type': QtWidgets.QVBoxLayout,
+                            'name': {'type': QtWidgets.QHBoxLayout,
+                                'label': QtWidgets.QLabel('Plot Name'),
+                                'edit': self.plot_name_lineedit,
+                            },
+                            'series': {'type': QtWidgets.QHBoxLayout,
+                                'label': QtWidgets.QLabel('Data Series'),
+                                'edit': self.plot_series_lineedit,
+                            },
+                            'index': {'type': QtWidgets.QHBoxLayout,
+                                'l1': QtWidgets.QLabel('Scan'),
+                                'i': self.add_plot_scan_i_textbox,
+                                'l2': QtWidgets.QLabel(' to '),
+                                'j': self.add_plot_scan_j_textbox,
+                            },
+                            'processing': {'type': QtWidgets.QHBoxLayout,
+                                'label': plot_processing_label,
+                                'dropdown': self.plot_processing_dropdown,
+                            },
+                        'spacer': expanding_spacer,
+                        },
+                    },
+                'settings_buttons': {'type': QtWidgets.QVBoxLayout,
+                    'spacer_t': fixed_spacer,
                     'update': update_plot_button,
                     'add': add_plot_button,
                     'remove': remove_button,
+                    'spacer_b': expanding_spacer,
                 },
                 'plots': {'type': QtWidgets.QVBoxLayout,
                     'label': plots_label,
                     'list': self.plots_list_widget,
                 },
-                'plot_list_buttons': {'type': QtWidgets.QHBoxLayout,
+                'list_buttons': {'type': QtWidgets.QVBoxLayout,
+                    'spacer_t': fixed_spacer,
                     'show': show_button,
                     'hide': hide_button,
+                    'spacer_b': expanding_spacer,
                 },
             }
         }
         self.layout_tree = tree_layout(settings_layout_config)
+        # TODO miminize size of show/hide/update buttons
+        # fixed_spacer.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
 
         # splitter
         splitter = QtWidgets.QSplitter()

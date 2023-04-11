@@ -82,7 +82,7 @@ def tree_layout(config):
             child_object = tree_layout(child_object)
             layout.addLayout(child_object.layout)
         else:
-            raise ValueError('subs list may only contain QtWidget, QLayout, or dict.')
+            raise ValueError('May only contain QtWidget, QLayout, or dict.')
         children[child_name] = child_object
 
     return LayoutTreeNode(layout, children)

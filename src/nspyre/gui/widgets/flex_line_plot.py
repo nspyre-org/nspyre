@@ -491,14 +491,14 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
     def update(self):
         # update the plot data
-        # plot immediately if this is the first time, otherwise wait for new
-        # data to be available from the sink with pop()
         try:
             if self.sink is not None:
-                if not self.force_update:
-                    self.sink.pop(timeout=self.timeout)
-                self.force_update = False
                 with self.mutex:
+                    if not self.force_update:
+                        # wait for new data to be available from the sink
+                        self.sink.pop(timeout=self.timeout)
+                    self.force_update = False
+
                     # check again to be sure
                     if self.sink is not None:
                         for plot_name in self.plot_settings:

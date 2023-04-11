@@ -476,6 +476,8 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     self.add_plot(plot_name)
                     if self.plot_settings[plot_name]['hidden']:
                         self.hide(plot_name)
+                # force plot the data since we used the first pop() to extract the plot info
+                self.force_update = True
             except (TimeoutError, RuntimeError) as err:
                 self.teardown()
                 raise RuntimeError(
@@ -495,6 +497,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
             if self.sink is not None:
                 if not self.force_update:
                     self.sink.pop(timeout=self.timeout)
+                self.force_update = False
                 with self.mutex:
                     # check again to be sure
                     if self.sink is not None:
@@ -574,7 +577,6 @@ class _FlexLinePlotWidget(LinePlotWidget):
                             self.set_data(
                                 plot_name, processed_data[0], processed_data[1]
                             )
-                self.force_update = False
             else:
                 time.sleep(0.1)
         except TimeoutError:

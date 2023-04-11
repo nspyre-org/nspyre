@@ -69,7 +69,11 @@ def tree_layout(config):
     if not issubclass(layout_class, QtWidgets.QLayout):
         raise ValueError('Value associated with "type" must be a QtWidgets.QLayout.')
 
-    layout = layout_class()
+    try:
+        layout = layout_class()
+    except Exception as err:
+        raise Exception(f'Failed creating instance of {layout_class}.') from err
+
     children = {}
 
     for child_name in config:

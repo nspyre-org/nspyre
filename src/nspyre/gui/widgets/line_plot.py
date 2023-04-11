@@ -5,6 +5,7 @@ import time
 from functools import partial
 from typing import Any
 from typing import Dict
+from threading import Lock
 
 from pyqtgraph import mkColor
 from pyqtgraph import PlotWidget
@@ -17,6 +18,15 @@ from ..style._colors import cyclic_colors
 from ..style._style import nspyre_font
 from ._widget_update_thread import WidgetUpdateThread
 
+class _PlotWidget(QtWidgets.QWidget):
+    """Represent a single plot within a plot widget."""
+    def __init__(self, plot):
+        super().__init__()
+        self.x = []
+        self.y = []
+        self.plot = plot
+        self.sem = QtCore.QSemaphore(n=1)
+        self.mutex = Lock()
 
 class LinePlotWidget(QtWidgets.QWidget):
     """Qt widget that generates a pyqtgraph 1D line plot with some reasonable default settings and a variety of added features."""
@@ -89,7 +99,7 @@ class LinePlotWidget(QtWidgets.QWidget):
             self.plot_widget.addLegend(labelTextSize=f'{font.pointSize()}pt')
 
         # a dict mapping data set names (str) and a sub-dict containing the x data, y data, semaphore, and pyqtgraph PlotDataItem associated with each line plot
-        self.plots: Dict[str, Dict[str, Any]] = {}
+        self.plots: Dict[str, _PlotWidget] = {}
 
         self.setLayout(self.layout)
 
@@ -179,12 +189,7 @@ class LinePlotWidget(QtWidgets.QWidget):
             symbolSize=symbolSize,
             name=name,
         )
-        self.plots[name] = {
-            'x': [],
-            'y': [],
-            'plot': plt,
-            'sem': QtCore.QSemaphore(n=1),
-        }
+        self.plots[name] = _PlotWidget(plt)
 
     def remove_plot(self, name: str):
         """Remove a plot from the display and delete it's associated data.
@@ -197,17 +202,13 @@ class LinePlotWidget(QtWidgets.QWidget):
         """
         if name not in self.plots:
             raise ValueError(f'A plot with the name [{name}] does not exist.')
-        # acquire the semaphore to make it isn't currently plotting
-        sem = self.plots[name]['sem']
-        sem.acquire()
-        # check again in case the plot was just deleted
-        if name not in self.plots:
-            raise ValueError(f'A plot with the name [{name}] does not exist.')
-        plt = self.plots[name]['plot']
-        if plt in self.plot_widget.listDataItems():
-            self.plot_widget.removeItem(plt)
-        del self.plots[name]
-        sem.release()
+
+        with self.plots[name].mutex:
+            # remove the plot from PlotWidget if it isn't already hidden
+            if self.plots[name].plot in self.plot_widget.listDataItems():
+                self.plot_widget.removeItem(self.plots[name].plot)
+            # remove the plot from internal plot storage
+            del self.plots[name]
 
     def hide(self, name: str):
         """Remove a plot from the display, keeping its data.
@@ -220,15 +221,13 @@ class LinePlotWidget(QtWidgets.QWidget):
         """
         if name not in self.plots:
             raise ValueError(f'A plot with the name [{name}] does not exist.')
-        # acquire the semaphore to make sure the plot isn't currently being manipulated
-        self.plots[name]['sem'].acquire()
-        plt = self.plots[name]['plot']
-        if plt in self.plot_widget.listDataItems():
-            self.plot_widget.removeItem(plt)
-            self.plots[name]['sem'].release()
-        else:
-            self.plots[name]['sem'].release()
-            raise ValueError(f'The plot [{name}] is already hidden.')
+
+        with self.plots[name].mutex:
+            # remove the plot from PlotWidget
+            if self.plots[name].plot in self.plot_widget.listDataItems():
+                self.plot_widget.removeItem(self.plots[name].plot)
+            else:
+                raise ValueError(f'The plot [{name}] is already hidden.')
 
     def show(self, name: str):
         """Display a previously hidden plot.
@@ -241,16 +240,12 @@ class LinePlotWidget(QtWidgets.QWidget):
         """
         if name not in self.plots:
             raise ValueError(f'A plot with the name [{name}] does not exist.')
-        self.plots[name]['sem'].acquire()
-        # check again in case the plot was just deleted
-        if name not in self.plots:
-            raise ValueError(f'A plot with the name [{name}] does not exist.')
-        if self.plots[name]['plot'] in self.plot_widget.listDataItems():
-            self.plots[name]['sem'].release()
-            raise ValueError(f'The plot [{name}] is already shown.')
-        else:
-            self.plot_widget.addItem(self.plots[name]['plot'])
-            self.plots[name]['sem'].release()
+
+        with self.plots[name].mutex:
+            if self.plots[name].plot in self.plot_widget.listDataItems():
+                raise ValueError(f'The plot [{name}] is already shown.')
+            else:
+                self.plot_widget.addItem(self.plots[name].plot)
 
     def set_data(self, name: str, xdata, ydata):
         """Queue up x/y data to update a line plot. Threadsafe.
@@ -267,10 +262,11 @@ class LinePlotWidget(QtWidgets.QWidget):
             raise ValueError(f'A plot with the name [{name}] does not exist.')
 
         # block until any previous calls to set_data have been fully processed
-        self.plots[name]['sem'].acquire()
-        # set the new x and y data
-        self.plots[name]['x'] = xdata
-        self.plots[name]['y'] = ydata
+        self.plots[name].sem.acquire()
+        with self.plots[name].mutex:
+            # set the new x and y data
+            self.plots[name].x = xdata
+            self.plots[name].y = ydata
         # notify the watcher
         try:
             self.parent()
@@ -284,13 +280,14 @@ class LinePlotWidget(QtWidgets.QWidget):
     def _process_data(self, name):
         """Update a line plot triggered by set_data."""
         try:
-            self.plots[name]['plot'].setData(
-                self.plots[name]['x'], self.plots[name]['y']
-            )
+            with self.plots[name].mutex:
+                self.plots[name].plot.setData(
+                    self.plots[name].x, self.plots[name].y
+                )
         except Exception as exc:
             raise exc
         finally:
-            self.plots[name]['sem'].release()
+            self.plots[name].sem.release()
 
     # TODO
     # def add_zoom_region(self):

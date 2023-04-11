@@ -65,8 +65,8 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         self.datasource_lineedit = QtWidgets.QLineEdit()
 
         # data source connect button
-        update_button = QtWidgets.QPushButton('Connect')
-        update_button.clicked.connect(self._update_source_clicked)
+        connect_button = QtWidgets.QPushButton('Connect')
+        connect_button.clicked.connect(self._update_source_clicked)
 
         # plot settings label
         plot_settings_label = QtWidgets.QLabel('Plot Settings')
@@ -96,13 +96,6 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         self.plot_processing_dropdown.addItem('Append')  # index 1
         # default to average
         self.plot_processing_dropdown.setCurrentIndex(0)
-
-        # plot_settings_layout.addStretch()
-        # plot_config_layout.addLayout(plot_settings_layout)
-        # # set to minimum size
-        # plot_settings_layout.setSizeConstraint(
-        #     QtWidgets.QLayout.SizeConstraint.SetMinimumSize
-        # )
 
         # show button
         show_button = QtWidgets.QPushButton('Show')
@@ -145,7 +138,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             'data_source': {'type': QtWidgets.QHBoxLayout,
                 'label': QtWidgets.QLabel('Data Set'),
                 'edit': self.datasource_lineedit,
-                'button': update_button,
+                'button': connect_button,
             },
             'config': {'type': QtWidgets.QHBoxLayout,
                 'plot': {'type': QtWidgets.QVBoxLayout,
@@ -192,8 +185,8 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             }
         }
         self.layout_tree = tree_layout(settings_layout_config)
-        # TODO miminize size of show/hide/update buttons
-        # fixed_spacer.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
+        # make the plots (index 2) take up all extra space (stretch=1)
+        self.layout_tree.config.layout.setStretch(2, 1)
 
         # splitter
         splitter = QtWidgets.QSplitter()
@@ -408,7 +401,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
         # mutex for protecting access to the data sink and plot settings
         self.mutex = Lock()
         self.plot_settings = {}
-        # flag indicating that this is the first pop from the sink
+        # flag indicating that the plots should be updated
         self.force_update = False
 
     def update_plot_settings(self, name, series, scan_i, scan_j, processing):
@@ -483,8 +476,6 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     self.add_plot(plot_name)
                     if self.plot_settings[plot_name]['hidden']:
                         self.hide(plot_name)
-                # flag indicating that this is the first pop from the sink
-                self.force_update = True
             except (TimeoutError, RuntimeError) as err:
                 self.teardown()
                 raise RuntimeError(

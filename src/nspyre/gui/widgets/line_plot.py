@@ -4,10 +4,12 @@ A wrapper for pyqtgraph PlotWidget.
 import time
 from functools import partial
 from threading import Lock
-from typing import Dict
+import logging
+from typing import Any
 
 from pyqtgraph import mkColor
 from pyqtgraph import PlotWidget
+from pyqtgraph import PlotDataItem
 from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
@@ -17,23 +19,153 @@ from ..style._colors import cyclic_colors
 from ..style._style import nspyre_font
 from ._widget_update_thread import WidgetUpdateThread
 
+_logger = logging.getLogger(__name__)
 
-class _PlotWidget(QtWidgets.QWidget):
-    """Represent a single plot within a plot widget."""
+class PlotSeriesData(QtWidgets.Object):
+    """Container for the data of a single data series within a LinePlotWidget."""
+
+    updated = QtCore.Signal()
 
     def __init__(self, plot):
+        """
+        Args:
+            plot:
+        """
         super().__init__()
         self.x = []
+        """X data array."""
         self.y = []
-        self.plot = plot
-        self.sem = QtCore.QSemaphore(n=1)
+        """Y data array."""
+        self.plot: PlotDataItem = plot
+        """pyqtgraph PlotDataItem associated with the data."""
+        self.hidden: bool = False
+        """Whether the plot is hidden."""
+
+        # for blocking set_data until the data has been processed
+        self._sem = QtCore.QSemaphore(n=1)
+
+class LinePlotWidgetData(QtCore.QObject):
+    """Manages all plot data series for a LinePlotWidget. All methods are thread-safe."""
+
+    added_plot = QtCore.Signal(str, PlotSeriesData)
+    removed_plot = QtCore.Signal(str, PlotSeriesData)
+    hid_plot = QtCore.Signal(str, PlotSeriesData)
+    showed_plot = QtCore.Signal(str, PlotSeriesData)
+
+    def __init__(self):
+        super().__init__()
+        # a dict mapping data set names (str) to a PlotSeriesData associated with each line plot
+        self.plots: Dict[str, PlotSeriesData] = {}
+        # mutex to lock access to the plots
         self.mutex = Lock()
+
+    @QtCore.pyqtSlot(str, result=object)
+    def get_plot(self, name: str) -> PlotSeriesData:
+        """Retrieve plot series data object.
+
+        Args:
+            name: Name of the plot to return data for.
+
+        Returns:
+            PlotSeriesData containing the plot data.
+        """
+        with self.mutex:
+            if name not in self.plots:
+                _logger.info(f'A plot with the name [{name}] does not exist. Ignoring get_plot request.')
+                return
+            return self.plots[name]
+
+    @QtCore.pyqtSlot(str, object)
+    def add_plot(self, name: str, plot: PlotDataItem):
+        """Add a new plot.
+
+        Args:
+            name: Name of the new plot.
+            plot: pyqtgraph PlotDataItem associated with the new plot.
+        """
+        with self.mutex:
+            if name in self.plots:
+                _logger.info(f'A plot with the name [{name}] already exists. Ignoring add_plot request.')
+                return
+            self.plots[name] = PlotSeriesData(plot)
+            self.added_plot.emit(name, self.plots[name])
+
+    @QtCore.pyqtSlot(str)
+    def remove_plot(self, name: str):
+        """Remove a plot from the display and delete it's associated data.
+
+        Args:
+            name: Name of the plot.
+        """
+        with self.mutex:
+            if name not in self.plots:
+                _logger.info(f'A plot with the name [{name}] does not exist. Ignoring remove_plot request.')
+                return
+
+            # remove the plot from internal plot storage
+            del self.plots[name]
+
+            self.removed_plot.emit(name, self.plots[name])
+
+    @QtCore.pyqtSlot(str)
+    def hide_plot(self, name: str):
+        """Hide a plot.
+
+        Args:
+            name: Name of the plot.
+        """
+        with self.mutex:
+            if name not in self.plots:
+                _logger.info(f'A plot with the name [{name}] does not exist. Ignoring hide_plot request.')
+                return
+
+            self.plots[name].hidden = True
+            self.hid_plot.emit(name, self.plots[name])
+
+    @QtCore.pyqtSlot(str)
+    def show_plot(self, name: str):
+        """Show a previously hidden plot.
+
+        Args:
+            name: Name of the plot.
+        """
+        with self.mutex:
+            if name not in self.plots:
+                _logger.info(f'A plot with the name [{name}] does not exist. Ignoring show_plot request.')
+                return
+
+            self.plots[name].hidden = False
+            self.showed_plot.emit(name, self.plots[name])
+
+    @QtCore.pyqtSlot(str, object, object, QtCore.Signal)
+    def set_data(self, name: str, xdata: Any, ydata: Any, signal: QtCore.Signal):
+        """Queue up x/y data to update a plot series.
+
+        Args:
+            name: Name of the plot.
+            xdata: Array-like of data for the x-axis.
+            ydata: Array-like of data for the y-axis.
+            signal: signal to emit when the data is ready. Will emit() the associated PlotSeriesData.
+        """
+        with self.mutex:
+            if name not in self.plots:
+                _logger.info(f'A plot with the name [{name}] does not exist. Ignoring set_data request.')
+                return
+
+            # block until any previous calls to set_data have been fully processed
+            self.plots[name]._sem.acquire()
+            # set the new x and y data
+            self.plots[name].x = xdata
+            self.plots[name].y = ydata
+
+            # signal that new data is ready
+            signal.emit(self.plots[name])
 
 
 class LinePlotWidget(QtWidgets.QWidget):
     """Qt widget that generates a pyqtgraph 1D line plot with some reasonable default settings and a variety of added features."""
 
-    new_data = QtCore.Signal(str)
+    new_data = QtCore.Signal(PlotSeriesData)
     """Qt Signal emitted when new data is available."""
 
     def __init__(
@@ -100,8 +232,21 @@ class LinePlotWidget(QtWidgets.QWidget):
         if legend:
             self.plot_widget.addLegend(labelTextSize=f'{font.pointSize()}pt')
 
-        # a dict mapping data set names (str) and a sub-dict containing the x data, y data, semaphore, and pyqtgraph PlotDataItem associated with each line plot
-        self.plots: Dict[str, _PlotWidget] = {}
+        # manages the plot data in a thread-safe way
+        self.plot_data = _LinePlotWidgetData()
+        # new thread for plot_data
+        self.plot_data_thread = QtCore.QThread()
+        # run plot_data in new thread
+        self.plot_data.moveToThread(self.plot_data_thread)
+        # delete thread resources when finished
+        # TODO
+        # self.worker.finished.connect(self.worker.deleteLater)
+        # self.thread.finished.connect(self.thread.deleteLater)
+        self.plot_data_thread.start()
+        # take appropriate actions when the plot data is changed
+        self.plot_data.showed_plot.connect(self._showed_plot)
+        self.plot_data.hid_plot.connect(self._hid_plot)
+        self.plot_data.removed_plot.connect(self._hid_plot)
 
         self.setLayout(self.layout)
 
@@ -163,7 +308,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         symbol: str = 's',
         symbolSize: int = 5,
     ):
-        """Add a new plot to the PlotWidget.
+        """Add a new plot to the PlotWidget. Thread-safe.
 
         Args:
             name: Name of the plot.
@@ -176,9 +321,6 @@ class LinePlotWidget(QtWidgets.QWidget):
         Raises:
             ValueError: An error with the supplied arguments.
         """
-        if name in self.plots:
-            raise ValueError(f'A plot with the name {name} already exists.')
-
         if not pen:
             pen = self._next_color()
 
@@ -191,103 +333,63 @@ class LinePlotWidget(QtWidgets.QWidget):
             symbolSize=symbolSize,
             name=name,
         )
-        self.plots[name] = _PlotWidget(plt)
+        QtCore.QMetaObject.invokeMethod(self.plot_data, 'add_plot', QtCore.Q_ARG(str, name), QtCore.Q_ARG(object, plt))
 
     def remove_plot(self, name: str):
-        """Remove a plot from the display and delete it's associated data.
+        """Remove a plot from the display and delete it's associated data. Thread-safe.
 
         Args:
             name: Name of the plot.
-
-        Raises:
-            ValueError: An error with the supplied arguments.
         """
-        if name not in self.plots:
-            raise ValueError(f'A plot with the name [{name}] does not exist.')
+        QtCore.QMetaObject.invokeMethod(self.plot_data, 'remove_plot', QtCore.Q_ARG(str, name))
 
-        with self.plots[name].mutex:
-            # remove the plot from PlotWidget if it isn't already hidden
-            if self.plots[name].plot in self.plot_widget.listDataItems():
-                self.plot_widget.removeItem(self.plots[name].plot)
-            # remove the plot from internal plot storage
-            del self.plots[name]
-
-    def hide(self, name: str):
-        """Remove a plot from the display, keeping its data.
+    def hide_plot(self, name: str):
+        """Remove a plot from the display, keeping its data. Thread-safe.
 
         Args:
             name: Name of the plot.
-
-        Raises:
-            ValueError: An error with the supplied arguments.
         """
-        if name not in self.plots:
-            raise ValueError(f'A plot with the name [{name}] does not exist.')
+        QtCore.QMetaObject.invokeMethod(self.plot_data, 'hide_plot', QtCore.Q_ARG(str, name))
 
-        with self.plots[name].mutex:
-            # remove the plot from PlotWidget
-            if self.plots[name].plot in self.plot_widget.listDataItems():
-                self.plot_widget.removeItem(self.plots[name].plot)
-            else:
-                raise ValueError(f'The plot [{name}] is already hidden.')
+    def _hid_plot(self, name: str, plot_series_data: PlotSeriesData):
+        """Callback to remove a plot from PlotWidget display."""
+        self.plot_widget.removeItem(plot_series_data.plot)
 
-    def show(self, name: str):
-        """Display a previously hidden plot.
+    def show_plot(self, name: str):
+        """Display a previously hidden plot. Thread-safe.
 
         Args:
             name: Name of the plot.
-
-        Raises:
-            ValueError: An error with the supplied arguments.
         """
-        if name not in self.plots:
-            raise ValueError(f'A plot with the name [{name}] does not exist.')
+        QtCore.QMetaObject.invokeMethod(self.plot_data, 'show_plot', QtCore.Q_ARG(str, name))
 
-        with self.plots[name].mutex:
-            if self.plots[name].plot in self.plot_widget.listDataItems():
-                raise ValueError(f'The plot [{name}] is already shown.')
-            else:
-                self.plot_widget.addItem(self.plots[name].plot)
+    def _showed_plot(self, name: str, plot_series_data: PlotSeriesData):
+        """Callback to add a plot to PlotWidget display."""
+        self.plot_widget.addItem(plot_series_data.plot)
 
-    def set_data(self, name: str, xdata, ydata):
-        """Queue up x/y data to update a line plot. Threadsafe.
+    def set_data(self, name: str, xdata: Any, ydata: Any):
+        """Queue up x/y data to update a line plot.
 
         Args:
             name: Name of the plot.
             xdata: Array-like of data for the x-axis.
             ydata: Array-like of data for the y-axis.
-
-        Raises:
-            ValueError: An error with the supplied arguments.
         """
-        if name not in self.plots:
-            raise ValueError(f'A plot with the name [{name}] does not exist.')
+        self.plot_data.set_data(name, xdata, ydata, self.new_data)
 
-        # block until any previous calls to set_data have been fully processed
-        self.plots[name].sem.acquire()
-        with self.plots[name].mutex:
-            # set the new x and y data
-            self.plots[name].x = xdata
-            self.plots[name].y = ydata
-        # notify the watcher
-        try:
-            self.parent()
-        except RuntimeError:
-            # this Qt object has already been deleted
-            return
-        else:
-            # notify that new data is available
-            self.new_data.emit(name)
+    def _process_data(self, plot_series_data: PlotSeriesData):
+        """Update a line plot triggered by set_data.
 
-    def _process_data(self, name):
-        """Update a line plot triggered by set_data."""
+        Args:
+            plot_series_data: PlotSeriesData to update the plot for.
+        """
         try:
-            with self.plots[name].mutex:
-                self.plots[name].plot.setData(self.plots[name].x, self.plots[name].y)
+            with self.plot_data.mutex:
+                plot_series_data.plot.setData(plot_series_data.x, plot_series_data.y)
         except Exception as exc:
             raise exc
         finally:
-            self.plots[name].sem.release()
+            plot_series_data._sem.release()
 
     # TODO
     # def add_zoom_region(self):

@@ -202,7 +202,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             },
         }
         self.layout_tree = tree_layout(settings_layout_config)
-        # make the plots (index 2) take up all extra space (stretch=1)
+        # make the plots list (index=2) take up all extra space (stretch=1)
         self.layout_tree.config.layout.setStretch(2, 1)
 
         # splitter
@@ -227,11 +227,20 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             return
         # get the selected plot name
         name = selected_item.text()
+
+        # TODO
+        # ret = QtCore.QMetaObject.invokeMethod(self.plot_data, 
+        #     'get_plot', 
+        #     QtCore.Qt.ConnectionType.BlockingQueuedConnection, 
+        #     QtCore.Q_RETURN_ARG(object), 
+        #     QtCore.Q_ARG(str, name))
+
         # retrieve all of the associated info for this plot
         series = self.line_plot.plot_settings[name]['series']
         scan_i = self.line_plot.plot_settings[name]['scan_i']
         scan_j = self.line_plot.plot_settings[name]['scan_j']
         processing = self.line_plot.plot_settings[name]['processing']
+
         # update the plot settings GUI elements
         self.plot_name_lineedit.setText(name)
         self.add_plot_scan_i_textbox.setText(scan_i)
@@ -272,6 +281,12 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
 
     def _add_plot_clicked(self):
         """Called when the user clicks the add button."""
+
+
+        # TODO
+        import pdb; pdb.set_trace()
+
+
         name, series, scan_i, scan_j, processing = self._get_plot_settings()
         self.add_plot(name, series, scan_i, scan_j, processing)
         self.line_plot.force_update = True
@@ -414,9 +429,10 @@ class _FlexLinePlotWidget(LinePlotWidget):
     def __init__(self, timeout=1):
         super().__init__()
         self.timeout = timeout
-        self.sink = None
         # mutex for protecting access to the data sink and plot settings
         self.mutex = Lock()
+        # DataSink for pulling plot data from the data server
+        self.sink = None
         self.plot_settings = {}
         # flag indicating that the plots should be updated
         self.force_update = False
@@ -524,7 +540,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                             scan_j = self.plot_settings[plot_name]['scan_j']
                             processing = self.plot_settings[plot_name]['processing']
 
-                            # pick out the particulary data series
+                            # pick out the particular data series
                             try:
                                 data = self.sink.datasets[series]
                             except KeyError:

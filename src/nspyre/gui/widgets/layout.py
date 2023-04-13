@@ -1,11 +1,17 @@
 from typing import Dict
 
-from pyqtgraph.Qt import QtCore
-from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
+
 class LayoutTreeNode:
+    """Node in the tree returned by tree_layout()."""
+
     def __init__(self, layout, children):
+        """
+        Args:
+            layout: TODO
+            children: TODO
+        """
         self.layout = layout
         self.children = children
 
@@ -16,15 +22,16 @@ class LayoutTreeNode:
             # raise the default python error when an attribute isn't found
             return self.__getattribute__(attr)
 
-def tree_layout(config):
+
+def tree_layout(config: Dict):
     """Arrange a tree of provided widgets into corresponding Qt layout objects.
 
     Args:
         config: Tree of dictionaries describing the layout structure.
-            Each dictionary (node) must contain a :code:`'type'` key and a 
-            :code:`'subs'` key. The value associated with :code:`'type'` 
+            Each dictionary (node) must contain a :code:`'type'` key and a
+            :code:`'subs'` key. The value associated with :code:`'type'`
             should be a :code:`QtWidgets.QLayout`. The value associated
-            with :code:`'subs'` should be a list containing QWidgets, 
+            with :code:`'subs'` should be a list containing QWidgets,
             QLayouts, and more sub-dictionaries with the given structure.
 
     Example usage:
@@ -41,7 +48,7 @@ def tree_layout(config):
         'type': QtWidgets.QVBoxLayout,
         'l1': l1,
         'l2': l2,
-        'sub': 
+        'sub':
             {'type': QtWidgets.QHBoxLayout,
             'subs': [
                 l3,
@@ -64,7 +71,7 @@ def tree_layout(config):
     try:
         layout_class = config.pop('type')
     except KeyError as err:
-        raise ValueError('All entries must contain a "type" key.')
+        raise ValueError('All entries must contain a "type" key.') from err
 
     if not issubclass(layout_class, QtWidgets.QLayout):
         raise ValueError('Value associated with "type" must be a QtWidgets.QLayout.')

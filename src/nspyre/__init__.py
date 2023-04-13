@@ -6,7 +6,9 @@ from .data import DataSource
 from .data import StreamingList
 from .gui import *
 from .instrument import InstrumentGateway
+from .instrument import InstrumentGatewayDevice
 from .instrument import InstrumentGatewayError
+from .instrument import InstrumentManager
 from .instrument import InstrumentServer
 from .instrument import InstrumentServerDeviceExistsError
 from .instrument import InstrumentServerError

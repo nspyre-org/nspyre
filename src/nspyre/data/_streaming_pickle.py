@@ -4,7 +4,11 @@ will only serialize/deserialize the differences since the most recent pickle.
 This can be used to efficiently stream data e.g. over a network connection.
 """
 import io
-from pickle import Pickler, Unpickler, UnpicklingError, dumps, loads
+from pickle import dumps
+from pickle import loads
+from pickle import Pickler
+from pickle import Unpickler
+from pickle import UnpicklingError
 from typing import Any
 from typing import Dict
 

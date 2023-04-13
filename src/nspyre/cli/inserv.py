@@ -123,18 +123,19 @@ class _InservCmdPrompt(Cmd):
         raise SystemExit
 
 
-def start_instrument_server(drivers):
+def start_instrument_server(drivers=None, inserv_kwargs=None):
     """Start an instrument server and serve a CLI.
 
     Args:
-        drivers: a list of dictionaries, where each dictionary contains keyword
+        drivers: A list of dictionaries, where each dictionary contains keyword
             arguments to the InstrumentServer
-            :py:meth:`~nspyre.instrument.server.InstrumentServer.add` method."""
+            :py:meth:`~nspyre.instrument.server.InstrumentServer.add` method.
+        inserv_kwargs: Keyword args to pass to InstrumentServer, as in :code:`InstrumentServer(**inserv_kwargs)`.
+    """
 
     # parse command-line arguments
     arg_parser = argparse.ArgumentParser(
-        prog='nspyre-inserv',
-        description='Start or connect to an nspyre instrument server. By default, an attempt will be made to connect to an existing server. To create a new server, use the -s option.',
+        description='Start or connect to an nspyre instrument server. By default, an attempt will be made to connect to an existing server.',
     )
     arg_parser.add_argument(
         '-a',
@@ -162,7 +163,7 @@ def start_instrument_server(drivers):
         '-s',
         '--start',
         action='store_true',
-        help='start a new instrument server',
+        help='don\'t attempt connecting - just start a new instrument server',
     )
     arg_parser.add_argument(
         '-v',
@@ -201,7 +202,8 @@ def start_instrument_server(drivers):
             nspyre_init_logger(log_level)
 
     # keyword args to pass to the inserv / gateway instantiation
-    inserv_kwargs = {}
+    if inserv_kwargs is None:
+        inserv_kwargs = {}
     if cmd_args.address:
         inserv_kwargs['addr'] = cmd_args.address
     if cmd_args.port:
@@ -216,16 +218,8 @@ def start_instrument_server(drivers):
         try:
             inserv = InstrumentGateway(**inserv_kwargs)
             inserv.connect()
-        except InstrumentGatewayError as exc:
-            _logger.exception(exc)
-            answer = input(
-                'Failed connecting to the Instrument Server. Create one? [Y/n] '
-            )
-            if answer in ['y', 'Y', '']:
-                new_server = True
-            else:
-                _logger.info('exiting...')
-                return
+        except InstrumentGatewayError:
+            new_server = True
 
     if new_server:
         # start a new instrument server
@@ -241,15 +235,24 @@ def start_instrument_server(drivers):
 
         inserv.start()
 
-    # add the provided drivers
-    for d in drivers:
-        inserv.add(**drivers[d])
+    try:
+        # add the provided drivers
+        if drivers is None:
+            for d in drivers:
+                inserv.add(**d)
 
-    # start the shell prompt event loop
-    serve_instrument_server_cli(inserv)
+        # start the shell prompt event loop
+        serve_instrument_server_cli(inserv)
+    except Exception as err:
+        raise err
+    finally:
+        if new_server:
+            inserv.stop()
+
 
 def _main():
-    start_instrument_server([])
+    start_instrument_server()
+
 
 if __name__ == '__main__':
     _main()

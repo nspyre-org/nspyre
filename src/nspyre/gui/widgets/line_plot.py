@@ -3,9 +3,8 @@ A wrapper for pyqtgraph PlotWidget.
 """
 import time
 from functools import partial
-from typing import Any
-from typing import Dict
 from threading import Lock
+from typing import Dict
 
 from pyqtgraph import mkColor
 from pyqtgraph import PlotWidget
@@ -18,8 +17,10 @@ from ..style._colors import cyclic_colors
 from ..style._style import nspyre_font
 from ._widget_update_thread import WidgetUpdateThread
 
+
 class _PlotWidget(QtWidgets.QWidget):
     """Represent a single plot within a plot widget."""
+
     def __init__(self, plot):
         super().__init__()
         self.x = []
@@ -27,6 +28,7 @@ class _PlotWidget(QtWidgets.QWidget):
         self.plot = plot
         self.sem = QtCore.QSemaphore(n=1)
         self.mutex = Lock()
+
 
 class LinePlotWidget(QtWidgets.QWidget):
     """Qt widget that generates a pyqtgraph 1D line plot with some reasonable default settings and a variety of added features."""
@@ -281,9 +283,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         """Update a line plot triggered by set_data."""
         try:
             with self.plots[name].mutex:
-                self.plots[name].plot.setData(
-                    self.plots[name].x, self.plots[name].y
-                )
+                self.plots[name].plot.setData(self.plots[name].x, self.plots[name].y)
         except Exception as exc:
             raise exc
         finally:

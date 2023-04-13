@@ -8,8 +8,8 @@ from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
 from ...data.sink import DataSink
-from .line_plot import LinePlotWidget
 from .layout import tree_layout
+from .line_plot import LinePlotWidget
 
 _logger = logging.getLogger(__name__)
 
@@ -127,62 +127,79 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
 
         # spacer
         fixed_spacer = QtWidgets.QLabel('')
-        fixed_spacer.setSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
+        fixed_spacer.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed
+        )
 
         # spacer
         expanding_spacer = QtWidgets.QLabel('')
-        expanding_spacer.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+        expanding_spacer.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding,
+            QtWidgets.QSizePolicy.Policy.Expanding,
+        )
 
         # layout
-        settings_layout_config = {'type': QtWidgets.QVBoxLayout,
-            'data_source': {'type': QtWidgets.QHBoxLayout,
+        settings_layout_config = {
+            'type': QtWidgets.QVBoxLayout,
+            'data_source': {
+                'type': QtWidgets.QHBoxLayout,
                 'label': QtWidgets.QLabel('Data Set'),
                 'edit': self.datasource_lineedit,
                 'button': connect_button,
             },
-            'config': {'type': QtWidgets.QHBoxLayout,
-                'plot': {'type': QtWidgets.QVBoxLayout,
-                        'label': plot_settings_label,
-                        'settings': {'type': QtWidgets.QVBoxLayout,
-                            'name': {'type': QtWidgets.QHBoxLayout,
-                                'label': QtWidgets.QLabel('Plot Name'),
-                                'edit': self.plot_name_lineedit,
-                            },
-                            'series': {'type': QtWidgets.QHBoxLayout,
-                                'label': QtWidgets.QLabel('Data Series'),
-                                'edit': self.plot_series_lineedit,
-                            },
-                            'index': {'type': QtWidgets.QHBoxLayout,
-                                'l1': QtWidgets.QLabel('Scan'),
-                                'i': self.add_plot_scan_i_textbox,
-                                'l2': QtWidgets.QLabel(' to '),
-                                'j': self.add_plot_scan_j_textbox,
-                            },
-                            'processing': {'type': QtWidgets.QHBoxLayout,
-                                'label': plot_processing_label,
-                                'dropdown': self.plot_processing_dropdown,
-                            },
-                        'spacer': expanding_spacer,
+            'config': {
+                'type': QtWidgets.QHBoxLayout,
+                'plot': {
+                    'type': QtWidgets.QVBoxLayout,
+                    'label': plot_settings_label,
+                    'settings': {
+                        'type': QtWidgets.QVBoxLayout,
+                        'name': {
+                            'type': QtWidgets.QHBoxLayout,
+                            'label': QtWidgets.QLabel('Plot Name'),
+                            'edit': self.plot_name_lineedit,
                         },
+                        'series': {
+                            'type': QtWidgets.QHBoxLayout,
+                            'label': QtWidgets.QLabel('Data Series'),
+                            'edit': self.plot_series_lineedit,
+                        },
+                        'index': {
+                            'type': QtWidgets.QHBoxLayout,
+                            'l1': QtWidgets.QLabel('Scan'),
+                            'i': self.add_plot_scan_i_textbox,
+                            'l2': QtWidgets.QLabel(' to '),
+                            'j': self.add_plot_scan_j_textbox,
+                        },
+                        'processing': {
+                            'type': QtWidgets.QHBoxLayout,
+                            'label': plot_processing_label,
+                            'dropdown': self.plot_processing_dropdown,
+                        },
+                        'spacer': expanding_spacer,
                     },
-                'settings_buttons': {'type': QtWidgets.QVBoxLayout,
+                },
+                'settings_buttons': {
+                    'type': QtWidgets.QVBoxLayout,
                     'spacer_t': fixed_spacer,
                     'update': update_plot_button,
                     'add': add_plot_button,
                     'remove': remove_button,
                     'spacer_b': expanding_spacer,
                 },
-                'plots': {'type': QtWidgets.QVBoxLayout,
+                'plots': {
+                    'type': QtWidgets.QVBoxLayout,
                     'label': plots_label,
                     'list': self.plots_list_widget,
                 },
-                'list_buttons': {'type': QtWidgets.QVBoxLayout,
+                'list_buttons': {
+                    'type': QtWidgets.QVBoxLayout,
                     'spacer_t': fixed_spacer,
                     'show': show_button,
                     'hide': hide_button,
                     'spacer_b': expanding_spacer,
                 },
-            }
+            },
         }
         self.layout_tree = tree_layout(settings_layout_config)
         # make the plots (index 2) take up all extra space (stretch=1)

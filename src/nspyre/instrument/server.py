@@ -83,9 +83,9 @@ class InstrumentServer(ClassicService):
         name: str,
         class_path: str,
         class_name: str,
-        *args,
+        args: list = None,
         import_or_file: str = 'file',
-        **kwargs,
+        kwargs: Dict = None,
     ):
         """Create an instance of the specified class and add it to the instrument server.
 
@@ -218,9 +218,9 @@ class InstrumentServer(ClassicService):
             name,
             class_path,
             class_name,
-            *args,
+            args=args,
             import_or_file=import_or_file,
-            **kwargs,
+            kwargs=kwargs,
         )
 
     def restart_all(self):

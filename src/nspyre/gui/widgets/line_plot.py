@@ -18,6 +18,7 @@ from ..style._colors import colors
 from ..style._colors import cyclic_colors
 from ..style._style import nspyre_font
 from ._widget_update_thread import WidgetUpdateThread
+from ..qt_data import QThreadSafeData
 
 _logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ class PlotSeriesData(QtWidgets.Object):
         # for blocking set_data until the data has been processed
         self._sem = QtCore.QSemaphore(n=1)
 
-class LinePlotWidgetData(QtCore.QObject):
+class LinePlotWidgetData(QThreadSafeData):
     """Manages all plot data series for a LinePlotWidget. All methods are thread-safe."""
 
     added_plot = QtCore.Signal(str, PlotSeriesData)
@@ -56,24 +57,6 @@ class LinePlotWidgetData(QtCore.QObject):
         super().__init__()
         # a dict mapping data set names (str) to a PlotSeriesData associated with each line plot
         self.plots: Dict[str, PlotSeriesData] = {}
-        # mutex to lock access to the plots
-        self.mutex = Lock()
-
-    @QtCore.pyqtSlot(str, result=object)
-    def get_plot(self, name: str) -> PlotSeriesData:
-        """Retrieve plot series data object.
-
-        Args:
-            name: Name of the plot to return data for.
-
-        Returns:
-            PlotSeriesData containing the plot data.
-        """
-        with self.mutex:
-            if name not in self.plots:
-                _logger.info(f'A plot with the name [{name}] does not exist. Ignoring get_plot request.')
-                return
-            return self.plots[name]
 
     @QtCore.pyqtSlot(str, object)
     def add_plot(self, name: str, plot: PlotDataItem):
@@ -368,7 +351,8 @@ class LinePlotWidget(QtWidgets.QWidget):
         self.plot_widget.addItem(plot_series_data.plot)
 
     def set_data(self, name: str, xdata: Any, ydata: Any):
-        """Queue up x/y data to update a line plot.
+        """Queue up x/y data to update a line plot. This should not be called 
+        from the main thread or it may cause a deadlock.
 
         Args:
             name: Name of the plot.
@@ -391,6 +375,13 @@ class LinePlotWidget(QtWidgets.QWidget):
         finally:
             plot_series_data._sem.release()
 
+    def stop(self):
+        """Stop the plot updating thread and run the \
+        :py:meth:`~nspyre.gui.widgets.line_plot.LinePlotWidget.teardown` \
+        code."""
+        self.update_thread.update_func = None
+        self.teardown()
+
     # TODO
     # def add_zoom_region(self):
     #     """Create a GUI element for selecting a plot subregion. Returns a new PlotWidget that contains a view with it's x span linked to the area selected by the plot subregion."""
@@ -412,10 +403,3 @@ class LinePlotWidget(QtWidgets.QWidget):
     #     # lr.sigRegionChanged.connect(updatePlot)
     #     # p9.sigXRangeChanged.connect(updateRegion)
     #     # updatePlot()
-
-    def stop(self):
-        """Stop the plot updating thread and run the \
-        :py:meth:`~nspyre.gui.widgets.line_plot.LinePlotWidget.teardown` \
-        code."""
-        self.update_thread.update_func = None
-        self.teardown()

@@ -228,7 +228,6 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         # get the selected plot name
         name = selected_item.text()
 
-        # TODO
         # ret = QtCore.QMetaObject.invokeMethod(self.plot_data, 
         #     'get_plot', 
         #     QtCore.Qt.ConnectionType.BlockingQueuedConnection, 

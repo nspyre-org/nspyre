@@ -16,7 +16,7 @@ if Qt_GUI:
     from .app import nspyre_palette
     from .app import nspyre_style_sheet
     from .app import nspyreApp
-    from .misc import qt_set_trace
+    from .debug import qt_set_trace
     from .style import colors
     from .style import cyclic_colors
     from .widgets import ColorMapWidget

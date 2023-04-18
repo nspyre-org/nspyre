@@ -120,6 +120,11 @@ class InstrumentServer(ClassicService):
         args = obtain(args)
         kwargs = obtain(kwargs)
 
+        if args is None:
+            args = []
+        if kwargs is None:
+            kwargs = {}
+
         if name in self._devs:
             raise ValueError(f'Device [{name}] already exists on the InstrumentServer.')
 

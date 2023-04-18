@@ -237,7 +237,7 @@ def start_instrument_server(drivers=None, inserv_kwargs=None):
 
     try:
         # add the provided drivers
-        if drivers is None:
+        if drivers is not None:
             for d in drivers:
                 inserv.add(**d)
 

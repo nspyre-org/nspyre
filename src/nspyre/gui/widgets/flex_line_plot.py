@@ -1,12 +1,14 @@
 import logging
 import time
 from threading import Lock
+from functools import partial
 
 import numpy as np
 from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
+from ..threadsafe_data import QThreadSafeData
 from ...data.sink import DataSink
 from .layout import tree_layout
 from .line_plot import LinePlotWidget
@@ -228,23 +230,14 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         # get the selected plot name
         name = selected_item.text()
 
-        # ret = QtCore.QMetaObject.invokeMethod(self.plot_data, 
-        #     'get_plot', 
-        #     QtCore.Qt.ConnectionType.BlockingQueuedConnection, 
-        #     QtCore.Q_RETURN_ARG(object), 
-        #     QtCore.Q_ARG(str, name))
-
         # retrieve all of the associated info for this plot
-        series = self.line_plot.plot_settings[name]['series']
-        scan_i = self.line_plot.plot_settings[name]['scan_i']
-        scan_j = self.line_plot.plot_settings[name]['scan_j']
-        processing = self.line_plot.plot_settings[name]['processing']
+        series, scan_i, scan_j, processing, _  = self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.get_settings, name)
 
         # update the plot settings GUI elements
         self.plot_name_lineedit.setText(name)
+        self.plot_series_lineedit.setText(series)
         self.add_plot_scan_i_textbox.setText(scan_i)
         self.add_plot_scan_j_textbox.setText(scan_j)
-        self.plot_series_lineedit.setText(series)
         self.plot_processing_dropdown.setCurrentText(processing)
 
     def _get_plot_settings(self):
@@ -275,20 +268,12 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         """Called when the user clicks the update button."""
         name, series, scan_i, scan_j, processing = self._get_plot_settings()
         # set the plot settings
-        self.line_plot.update_plot_settings(name, series, scan_i, scan_j, processing)
-        self.line_plot.force_update = True
+        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.update_settings, name, series, scan_i, scan_j, processing, blocking=False)
 
     def _add_plot_clicked(self):
         """Called when the user clicks the add button."""
-
-
-        # TODO
-        import pdb; pdb.set_trace()
-
-
         name, series, scan_i, scan_j, processing = self._get_plot_settings()
         self.add_plot(name, series, scan_i, scan_j, processing)
-        self.line_plot.force_update = True
 
     def add_plot(
         self, name: str, series: str, scan_i: str, scan_j: str, processing: str
@@ -312,28 +297,13 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             processing: 'Average' to average the x and y values of scans i
                 through j, 'Append' to concatenate them.
         """
-        if name in self.line_plot.plot_settings:
-            raise ValueError(f'Plot [{name}] already exists.')
-        with self.line_plot.mutex:
-            # add the plot to the pyqtgraph plotwidget
-            self.line_plot.add_plot(name)
-            # set the plot settings
-            self.line_plot.plot_settings[name] = {
-                'series': series,
-                'scan_i': scan_i,
-                'scan_j': scan_j,
-                'processing': processing,
-                'hidden': False,
-            }
-            # add the plot name to the list of plots
-            self.plots_list_widget.addItem(name)
+        self.line_plot.add_plot(name)
+        # TODO how to ensure previous line has completed before running next?
+        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.add_plot, name, series, scan_i, scan_j, processing, False, blocking=False)
+        self.plots_list_widget.addItem(name)
 
     def _find_plot_item(self, name):
         """Return the index of the list widget plot item with the given name."""
-        if name not in self.line_plot.plot_settings:
-            raise ValueError(f'Plot [{name}] does not exist.')
-
-        # search for the list widget item whose text is the same as name
         list_widget_index = None
         for i in range(self.plots_list_widget.count()):
             if self.plots_list_widget.item(i).text() == name:
@@ -360,13 +330,13 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name of the subplot.
         """
-        with self.line_plot.mutex:
-            # remove the plot name from the list of plots
-            self.plots_list_widget.takeItem(self._find_plot_item(name))
-            # remove the plot settings
-            self.line_plot.plot_settings.pop(name)
-            # remove the plot from the pyqtgraph plotwidget
-            self.line_plot.remove_plot(name)
+        # remove the plot name from the list of plots
+        self.plots_list_widget.takeItem(self._find_plot_item(name))
+        # remove the plot settings
+        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.remove_plot, name, blocking=False)
+        # TODO how to ensure previous line has completed before running next?
+        # remove the plot from the pyqtgraph plotwidget
+        self.line_plot.remove_plot(name)
 
     def _hide_plot_clicked(self):
         """Called when the user clicks the hide button."""
@@ -382,15 +352,16 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name of the subplot.
         """
-        with self.line_plot.mutex:
-            self.line_plot.plot_settings[name]['hidden'] = True
-            self.line_plot.hide(name)
-            # change the list widget item color scheme
-            idx = self._find_plot_item(name)
-            self.plots_list_widget.item(idx).setForeground(QtCore.Qt.GlobalColor.gray)
-            self.plots_list_widget.item(idx).setBackground(
-                self.palette().color(QtGui.QPalette.ColorRole.Mid)
-            )
+        # update the settings
+        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.hide_plot, name, blocking=False)
+        # hide the plot in the pyqtgraph plotting widget
+        self.line_plot.hide_plot(name)
+        # change the list widget item color scheme
+        idx = self._find_plot_item(name)
+        self.plots_list_widget.item(idx).setForeground(QtCore.Qt.GlobalColor.gray)
+        self.plots_list_widget.item(idx).setBackground(
+            self.palette().color(QtGui.QPalette.ColorRole.Mid)
+        )
 
     def _show_plot_clicked(self):
         """Called when the user clicks the show button."""
@@ -406,210 +377,302 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name of the subplot.
         """
-        with self.line_plot.mutex:
-            self.line_plot.plot_settings[name]['hidden'] = False
-            self.line_plot.show(name)
-            # return list widget item to normal color scheme
-            # text
-            idx = self._find_plot_item(name)
-            normal_text_color = self.palette().color(QtGui.QPalette.ColorRole.Text)
-            normal_bg_color = self.palette().color(QtGui.QPalette.ColorRole.Base)
-            self.plots_list_widget.item(idx).setForeground(normal_text_color)
-            self.plots_list_widget.item(idx).setBackground(normal_bg_color)
+        # update the settings
+        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.show_plot, name, blocking=False)
+        # show the plot in the pyqtgraph plotting widget
+        self.line_plot.show_plot(name)
+        # return list widget item to normal color scheme
+        idx = self._find_plot_item(name)
+        normal_text_color = self.palette().color(QtGui.QPalette.ColorRole.Text)
+        normal_bg_color = self.palette().color(QtGui.QPalette.ColorRole.Base)
+        self.plots_list_widget.item(idx).setForeground(normal_text_color)
+        self.plots_list_widget.item(idx).setBackground(normal_bg_color)
 
     def _update_source_clicked(self):
         """Called when the user clicks the connect button."""
         self.line_plot.new_source(self.datasource_lineedit.text())
 
+class _FlexLinePlotSeriesSettings:
+    """Container class to hold the settings for a single plot."""
+    def __init__(self, series, scan_i, scan_j, processing, hidden):
+        self.series: str = series
+        self.scan_i: str = scan_i
+        self.scan_j: str = scan_j
+        self.processing: str = processing
+        self.hidden = hidden
+
+class _FlexLinePlotSettings(QThreadSafeData):
+    """Container class to hold the plot settings for a _FlexLinePlotWidget."""
+
+    def __init__(self):
+        super().__init__()
+        self.series_settings: Dict[str, _FlexLinePlotSeriesSettings] = {}
+        # DataSink for pulling plot data from the data server
+        self.sink = None
+        # protect access to the sink
+        self.sink_mutex = Lock()
+        # flag indicating that the plots should be updated
+        self.force_update = False
+
+    def get_settings(self, name):
+        with self.mutex:
+            settings = self.series_settings[name]
+            return (settings.series, settings.scan_i, settings.scan_j, settings.processing, settings.hidden)
+
+    def add_plot(self, name, series, scan_i, scan_j, processing, hidden):
+        with self.mutex:
+            if name in self.series_settings:
+                _logger.info(
+                    f'A plot with the name [{name}] already exists. Ignoring add_plot request.'
+                )
+                return
+            self.series_settings[name] = _FlexLinePlotSeriesSettings(series, scan_i, scan_j, processing, hidden)
+            self.force_update = True
+
+    def remove_plot(self, name):
+        with self.mutex:
+            if name not in self.series_settings:
+                _logger.info(
+                    f'A plot with the name [{name}] does not exist. Ignoring remove_plot request.'
+                )
+                return
+            del self.series_settings[name]
+
+    def hide_plot(self, name):
+        with self.mutex:
+            if name not in self.series_settings:
+                _logger.info(
+                    f'A plot with the name [{name}] does not exist. Ignoring hide_plot request.'
+                )
+                return
+            self.series_settings[name].hidden = True
+
+    def show_plot(self, name):
+        with self.mutex:
+            if name not in self.series_settings:
+                _logger.info(
+                    f'A plot with the name [{name}] does not exist. Ignoring show_plot request.'
+                )
+                return
+            self.series_settings[name].hidden = False
+
+    def update_settings(self, name, series, scan_i, scan_j, processing):
+        with self.mutex:
+            if name not in self.series_settings:
+                _logger.info(
+                    f'A plot with the name [{name}] does not exist. Ignoring update_settings request.'
+                )
+                return
+            self.series_settings.series = series
+            self.series_settings.scan_i = scan_i
+            self.series_settings.scan_j = scan_j
+            self.series_settings.processing = processing
+            self.force_update = True
 
 class _FlexLinePlotWidget(LinePlotWidget):
     """See FlexLinePlotWidget."""
 
+    # args: title, xlabel, ylabel
+    _new_source_callback_sig = QtCore.Signal(str, str, str)
+
     def __init__(self, timeout=1):
         super().__init__()
         self.timeout = timeout
-        # mutex for protecting access to the data sink and plot settings
-        self.mutex = Lock()
-        # DataSink for pulling plot data from the data server
-        self.sink = None
-        self.plot_settings = {}
-        # flag indicating that the plots should be updated
-        self.force_update = False
+        self.plot_settings = _FlexLinePlotSettings()
+        self._new_source_callback_sig.connect(self._new_source_callback)
+        # clean up when the object is destroyed
+        self.destroyed.connect(partial(self.teardown))
 
-    def update_plot_settings(self, name, series, scan_i, scan_j, processing):
-        with self.mutex:
-            if name not in self.plot_settings:
-                raise ValueError(f'Plot [{name}] does not exist.')
-            hidden = self.plot_settings[name]['hidden']
-            self.plot_settings[name] = {
-                'series': series,
-                'scan_i': scan_i,
-                'scan_j': scan_j,
-                'processing': processing,
-                'hidden': hidden,
-            }
+    def new_source(self, data_set_name: str):
+        """Connect to a new data set on the data server.
 
-    def new_source(self, data_source_name):
+        Args:
+            data_set_name: Name of the new data set.
+        """
+        # run on the plot_settings thread since we'll need to acquire mutexes
+        self.plot_settings.run_safe(self._new_source, data_set_name)
+
+    def _new_source(self, data_set_name: str):
         # connect to a new data set
-        with self.mutex:
-            self.teardown()
-            self.data_source_name = data_source_name
-
-            # clear previous plots
-            self.plot_widget.getPlotItem().clear()
-            self.plots = {}
-
-            # try to get the plot title and x/y labels
+        with self.plot_settings.sink_mutex:
+            self.clear_plots()
             try:
-                self.sink = DataSink(self.data_source_name)
-                self.sink.__enter__()
-                self.sink.pop(timeout=self.timeout)
+                # connect to the new data source
+                self.plot_settings.sink = DataSink(data_set_name)
+                self.plot_settings.sink.connect()
+
+                # try to get the plot title and x/y labels
+                self.plot_settings.sink.pop(timeout=self.timeout)
                 # set title
                 try:
-                    title = self.sink.title
+                    title = self.plot_settings.sink.title
                 except AttributeError:
                     _logger.info(
-                        f'Data source [{data_source_name}] has no "title" attribute - skipping...'
+                        f'Data source [{data_set_name}] has no "title" attribute - skipping...'
                     )
                 else:
-                    self.set_title(title)
+                    title = None
+
                 # set xlabel
                 try:
-                    xlabel = self.sink.xlabel
+                    xlabel = self.plot_settings.sink.xlabel
                 except AttributeError:
                     _logger.info(
-                        f'Data source [{data_source_name}] has no "xlabel" attribute - skipping...'
+                        f'Data source [{data_set_name}] has no "xlabel" attribute - skipping...'
                     )
                 else:
-                    self.xaxis.setLabel(text=xlabel)
+                    xlabel = None
+
                 # set ylabel
                 try:
-                    ylabel = self.sink.ylabel
+                    ylabel = self.plot_settings.sink.ylabel
                 except AttributeError:
                     _logger.info(
-                        f'Data source [{data_source_name}] has no "ylabel" attribute - skipping...'
+                        f'Data source [{data_set_name}] has no "ylabel" attribute - skipping...'
                     )
                 else:
-                    self.yaxis.setLabel(text=ylabel)
+                    ylabel = None
+
+                # try to access datasets
                 try:
-                    dsets = self.sink.datasets
+                    dsets = self.plot_settings.sink.datasets
                 except AttributeError as err:
                     raise RuntimeError(
-                        f'Data source [{data_source_name}] has no "datasets" attribute - exiting...'
+                        f'Data source [{data_set_name}] has no "datasets" attribute - exiting...'
                     ) from err
                 else:
                     if not isinstance(dsets, dict):
-                        _logger.error(
-                            f'Data source [{data_source_name}] "datasets" attribute is not a dictionary - exiting...'
-                        )
-                        raise RuntimeError
+                        raise RuntimeError(f'Data source [{data_set_name}] "datasets" attribute is not a dictionary - exiting...')
+
+                # set the new title/labels in the main thread
+                self._new_source_callback_sig.emit(title, xlabel, ylabel)
+
                 # add the existing plots
-                for plot_name in self.plot_settings:
-                    self.add_plot(plot_name)
-                    if self.plot_settings[plot_name]['hidden']:
-                        self.hide(plot_name)
+                with self.plot_settings.mutex:
+                    for plot_name in self.plot_settings.series_settings:
+                        self.add_plot(plot_name)
+                        if self.plot_settings.series_settings[plot_name].hidden:
+                            self.hide(plot_name)
                 # force plot the data since we used the first pop() to extract the plot info
-                self.force_update = True
+                self.plot_settings.force_update = True
             except (TimeoutError, RuntimeError) as err:
                 self.teardown()
                 raise RuntimeError(
-                    f'Could not connect to new data source [{data_source_name}]'
+                    f'Could not connect to new data source [{data_set_name}]'
                 ) from err
 
+    def _new_source_callback(self, title, xlabel, ylabel):
+        """Callback for when a new data source connects."""
+        if title is not None:
+            self.set_title(title)
+        if xlabel is not None:
+            self.xaxis.setLabel(text=xlabel)
+        if ylabel is not None:
+            self.yaxis.setLabel(text=ylabel)
+
     def teardown(self):
-        if self.sink is not None:
-            self.sink.__exit__(None, None, None)
-            self.sink = None
+        """Clean up."""
+        # run on the plot_settings thread since we'll need to acquire mutexes
+        self.plot_settings.run_safe(self._close_source)
+
+    def _close_source(self):
+        """Disconnect from the data source."""
+        with self.plot_settings.sink_mutex:
+            if self.plot_settings.sink is not None:
+                self.plot_settings.sink.disconnect()
+                self.plot_settings.sink = None
 
     def update(self):
-        # update the plot data
-        try:
-            if self.sink is not None:
-                with self.mutex:
-                    if not self.force_update:
-                        # wait for new data to be available from the sink
-                        self.sink.pop(timeout=self.timeout)
-                    self.force_update = False
+        """Update the plot if there is new data available."""
+        with self.plot_settings.sink_mutex:
+            if self.plot_settings.sink is None:
+                # rate limit how often update() runs if there is no sink connected
+                time.sleep(0.01)
+                return
 
-                    # check again to be sure
-                    if self.sink is not None:
-                        for plot_name in self.plot_settings:
-                            series = self.plot_settings[plot_name]['series']
-                            scan_i = self.plot_settings[plot_name]['scan_i']
-                            scan_j = self.plot_settings[plot_name]['scan_j']
-                            processing = self.plot_settings[plot_name]['processing']
+            if not self.plot_settings.force_update:
+                try:
+                    # wait for new data to be available from the sink
+                    self.plot_settings.sink.pop(timeout=self.timeout)
+                except TimeoutError:
+                    return
+            self.plot_settings.force_update = False
 
-                            # pick out the particular data series
-                            try:
-                                data = self.sink.datasets[series]
-                            except KeyError:
-                                _logger.error(
-                                    f'Data series [{series}] does not exist in data set [{self.data_source_name}]'
-                                )
-                                continue
+            with self.plot_settings.mutex:
+                for plot_name in self.plot_settings.series_settings:
+                    settings = self.plot_settings.series_settings[plot_name]
+                    series = settings.series
+                    scan_i = settings.scan_i
+                    scan_j = settings.scan_j
+                    processing = settings.processing
 
-                            if isinstance(data, list):
-                                if len(data) == 0:
-                                    continue
-                                else:
-                                    # check for numpy array
-                                    if not isinstance(data[0], np.ndarray):
-                                        raise ValueError(
-                                            f'Data series [{series}] must be a list of numpy arrays, but the first list element has type [{type(data[0])}].'
-                                        )
-                                    # check numpy array shape
-                                    if data[0].shape[0] != 2 or len(data[0].shape) != 2:
-                                        raise ValueError(
-                                            f'Data series [{series}] first list element has shape {data.shape}, but should be (2, n).'
-                                        )
+                    # pick out the particular data series
+                    try:
+                        data = self.plot_settings.sink.datasets[series]
+                    except KeyError:
+                        _logger.error(
+                            f'Data series [{series}] does not exist in data set [{self.data_set_name}]'
+                        )
+                        continue
 
-                                    try:
-                                        if scan_i == '' and scan_j == '':
-                                            data_subset = data[:]
-                                        elif scan_j == '':
-                                            data_subset = data[int(scan_i) :]
-                                        elif scan_i == '':
-                                            data_subset = data[: int(scan_j)]
-                                        else:
-                                            data_subset = data[
-                                                int(scan_i) : int(scan_j)
-                                            ]
-                                    except IndexError:
-                                        _logger.warning(
-                                            f'Data series [{series}] invalid scan indices [{scan_i}, {scan_j}]'
-                                        )
-                                        continue
+                    if not isinstance(data, list):
+                        raise ValueError(
+                            f'Data series [{series}] must be a list of numpy arrays, but has type [{type(data)}].'
+                        )
 
-                                    if processing == 'Append':
-                                        # concatenate the numpy arrays
-                                        processed_data = np.concatenate(
-                                            data_subset, axis=1
-                                        )
-                                    elif processing == 'Average':
-                                        # create a single numpy array
-                                        stacked_data = np.stack(data_subset)
-                                        # mask the NaN entries
-                                        masked_data = np.ma.array(
-                                            stacked_data, mask=np.isnan(stacked_data)
-                                        )
-                                        # average the numpy arrays
-                                        processed_data = np.ma.average(
-                                            masked_data, axis=0
-                                        )
-                                    else:
-                                        raise ValueError(
-                                            f'Processing has unsupported value [{processing}].'
-                                        )
-                            else:
-                                raise ValueError(
-                                    f'Data series [{series}] must be a list of numpy arrays, but has type [{type(data)}].'
-                                )
-
-                            # update the plot
-                            self.set_data(
-                                plot_name, processed_data[0], processed_data[1]
+                    if len(data) == 0:
+                        continue
+                    else:
+                        # check for numpy array
+                        if not isinstance(data[0], np.ndarray):
+                            raise ValueError(
+                                f'Data series [{series}] must be a list of numpy arrays, but the first list element has type [{type(data[0])}].'
                             )
-            else:
-                time.sleep(0.1)
-        except TimeoutError:
-            pass
+                        # check numpy array shape
+                        if data[0].shape[0] != 2 or len(data[0].shape) != 2:
+                            raise ValueError(
+                                f'Data series [{series}] first list element has shape {data.shape}, but should be (2, n).'
+                            )
+
+                        try:
+                            if scan_i == '' and scan_j == '':
+                                data_subset = data[:]
+                            elif scan_j == '':
+                                data_subset = data[int(scan_i) :]
+                            elif scan_i == '':
+                                data_subset = data[: int(scan_j)]
+                            else:
+                                data_subset = data[
+                                    int(scan_i) : int(scan_j)
+                                ]
+                        except IndexError:
+                            _logger.warning(
+                                f'Data series [{series}] invalid scan indices [{scan_i}, {scan_j}]'
+                            )
+                            continue
+
+                        if processing == 'Append':
+                            # concatenate the numpy arrays
+                            processed_data = np.concatenate(
+                                data_subset, axis=1
+                            )
+                        elif processing == 'Average':
+                            # create a single numpy array
+                            stacked_data = np.stack(data_subset)
+                            # mask the NaN entries
+                            masked_data = np.ma.array(
+                                stacked_data, mask=np.isnan(stacked_data)
+                            )
+                            # average the numpy arrays
+                            processed_data = np.ma.average(
+                                masked_data, axis=0
+                            )
+                        else:
+                            raise ValueError(
+                                f'Processing has unsupported value [{processing}].'
+                            )
+
+                    # update the plot
+                    self.set_data(
+                        plot_name, processed_data[0], processed_data[1]
+                    )

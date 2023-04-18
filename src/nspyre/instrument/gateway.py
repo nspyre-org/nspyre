@@ -3,6 +3,7 @@ This module provides an interface to control devices on an :py:class:`~nspyre.in
 """
 import logging
 import time
+from inspect import getmembers
 
 import rpyc
 
@@ -16,11 +17,29 @@ else:
     register_quantity_brining(Q_)
 from .server import INSTRUMENT_SERVER_DEFAULT_PORT
 from .server import RPYC_SYNC_TIMEOUT
+from .server import InstrumentServer
 
 _logger = logging.getLogger(__name__)
 
 RPYC_CONN_TIMEOUT = 30
 """RPyC connection timeout in seconds (None for no timeout)."""
+
+def _members_list(cls) -> str:
+    """Return a list of attributes for a provided class.
+
+    Args:
+        cls: The class to provide attributes for.
+
+    Returns:
+        A list of members.
+    """
+    member_tuples = getmembers(cls)
+    members = []
+    for m, _ in member_tuples:
+        members.append(m)
+    return members
+
+_server_members = _members_list(InstrumentServer)
 
 
 class InstrumentGatewayError(Exception):
@@ -124,8 +143,8 @@ class InstrumentGateway:
         """Allow the user to access the server objects directly using gateway.device notation, e.g. gateway.sg.amplitude"""
         try:
             if self.is_connected():
-                if attr[0] == '_':
-                    # the user is trying to access an attribute of the actual instrument server
+                if attr in _server_members or attr[0] == '_':
+                    # the user is trying to access an attribute of the instrument server
                     return getattr(self._connection.root, attr)
                 else:
                     # the user is trying to access a device - return a nice wrapper for the device

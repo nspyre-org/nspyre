@@ -22,7 +22,7 @@ class QThreadSafeData(QtCore.QObject):
         # start the thread to handle requests
         self.thread.start()
 
-    def run_safe(self, fun, *args, blocking=True, **kwargs):
+    def run_safe(self, fun, *args, blocking=False, **kwargs):
         """Run a function in a thread-safe way.
 
         Args:

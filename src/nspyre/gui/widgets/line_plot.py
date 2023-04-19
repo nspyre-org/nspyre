@@ -333,7 +333,7 @@ class LinePlotWidget(QtWidgets.QWidget):
             symbolSize=kwargs['symbolSize'],
             name=kwargs['name'],
         )
-        self.plot_data.run_safe(self.plot_data.add_plot, kwargs['name'], plt, blocking=False)
+        self.plot_data.run_safe(self.plot_data.add_plot, kwargs['name'], plt)
 
     def remove_plot(self, name: str):
         """Remove a plot from the display and delete it's associated data. Thread-safe.
@@ -341,11 +341,11 @@ class LinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name of the plot.
         """
-        self.plot_data.run_safe(self.plot_data.remove_plot, name, blocking=False)
+        self.plot_data.run_safe(self.plot_data.remove_plot, name)
 
     def clear_plots(self):
         """Remove all plots and delete their associated data. Thread-safe."""
-        self.plot_data.run_safe(self.plot_data.clear_plots, blocking=False)
+        self.plot_data.run_safe(self.plot_data.clear_plots)
 
     def _cleared_plots(self):
         """Callback to remove all plots from PlotWidget display."""
@@ -357,7 +357,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name of the plot.
         """
-        self.plot_data.run_safe(self.plot_data.hide_plot, name, blocking=False)
+        self.plot_data.run_safe(self.plot_data.hide_plot, name)
 
     def _hid_plot(self, name: str, plot_series_data: PlotSeriesData):
         """Callback to remove a plot from PlotWidget display."""
@@ -369,7 +369,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name of the plot.
         """
-        self.plot_data.run_safe(self.plot_data.show_plot, name, blocking=False)
+        self.plot_data.run_safe(self.plot_data.show_plot, name)
 
     def _showed_plot(self, name: str, plot_series_data: PlotSeriesData):
         """Callback to add a plot to PlotWidget display."""

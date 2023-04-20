@@ -25,6 +25,9 @@ class AsyncioWorker:
 
     def connect(self):
         """Start the :code:`asyncio` event loop."""
+        if self.is_running():
+            raise RuntimeError(f'Cannot connect() because an event loop is already running.')
+
         selector = selectors.SelectSelector()
         self._event_loop = asyncio.SelectorEventLoop(selector)
         self._sem = Semaphore(value=0)
@@ -61,7 +64,7 @@ class AsyncioWorker:
                 _cleanup_event_loop(self._event_loop), self._event_loop
             )
         else:
-            raise RuntimeError('tried stopping the source but it isn\'t running!')
+            raise RuntimeError('Tried to disconnect but it isn\'t running!')
 
     def is_running(self):
         """Return True if the event loop is running."""

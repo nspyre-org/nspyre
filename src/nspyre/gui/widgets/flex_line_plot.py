@@ -301,12 +301,12 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             processing: 'Average' to average the x and y values of scans i
                 through j, 'Append' to concatenate them.
         """
-        self.line_plot.add_plot(name)
         self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.add_plot, name, series, scan_i, scan_j, processing, False)
 
     def _add_plot_callback(self, name: str):
         """Called after a plot is added."""
         self.plots_list_widget.addItem(name)
+        self.line_plot.add_plot(name)
 
     def _find_plot_item(self, name):
         """Return the index of the list widget plot item with the given name."""
@@ -490,10 +490,10 @@ class _FlexLinePlotSettings(QThreadSafeData):
                     f'A plot with the name [{name}] does not exist. Ignoring update_settings request.'
                 )
                 return
-            self.series_settings.series = series
-            self.series_settings.scan_i = scan_i
-            self.series_settings.scan_j = scan_j
-            self.series_settings.processing = processing
+            self.series_settings[name].series = series
+            self.series_settings[name].scan_i = scan_i
+            self.series_settings[name].scan_j = scan_j
+            self.series_settings[name].processing = processing
             self.force_update = True
             self.updated_plot.emit(name)
 
@@ -508,8 +508,6 @@ class _FlexLinePlotWidget(LinePlotWidget):
         self.timeout = timeout
         self.plot_settings = _FlexLinePlotSettings()
         self._new_source_callback_sig.connect(self._new_source_callback)
-        # clean up when the object is destroyed
-        self.destroyed.connect(partial(self.teardown))
 
     def new_source(self, data_set_name: str):
         """Connect to a new data set on the data server.
@@ -612,19 +610,25 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
     def update(self):
         """Update the plot if there is new data available."""
+        if not hasattr(self, 'plot_settings'):
+            # update thread started before init was finished
+            time.sleep(0.01)
+            return
+
         with self.plot_settings.sink_mutex:
             if self.plot_settings.sink is None:
                 # rate limit how often update() runs if there is no sink connected
-                time.sleep(0.01)
+                time.sleep(0.1)
                 return
 
-            if not self.plot_settings.force_update:
+            if self.plot_settings.force_update:
+                self.plot_settings.force_update = False
+            else:
                 try:
                     # wait for new data to be available from the sink
                     self.plot_settings.sink.pop(timeout=self.timeout)
                 except TimeoutError:
                     return
-            self.plot_settings.force_update = False
 
             with self.plot_settings.mutex:
                 for plot_name in self.plot_settings.series_settings:

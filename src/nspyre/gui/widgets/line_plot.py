@@ -25,17 +25,13 @@ _logger = logging.getLogger(__name__)
 
 class PlotSeriesData(QtCore.QObject):
     """Container for the data of a single data series within a LinePlotWidget."""
-    def __init__(self, plot):
-        """
-        Args:
-            plot: pyqtgraph PlotDataItem to associate with the data.
-        """
+    def __init__(self):
         super().__init__()
         self.x = []
         """X data array."""
         self.y = []
         """Y data array."""
-        self.plot: PlotDataItem = plot
+        self.plot_data_item: PlotDataItem = None
         """pyqtgraph PlotDataItem associated with the data."""
         self.hidden: bool = False
         """Whether the plot is hidden."""
@@ -50,19 +46,20 @@ class LinePlotData(QThreadSafeData):
     hid_plot = QtCore.Signal(str, PlotSeriesData)
     showed_plot = QtCore.Signal(str, PlotSeriesData)
 
-    def __init__(self):
+    def __init__(self, plot_widget):
         super().__init__()
+        self.plot_widget = plot_widget
         self.plots: Dict[str, PlotSeriesData] = {}
         """A dict mapping data set names (str) to a PlotSeriesData associated with each line plot."""
         # for blocking set_data until the data has been processed
         self.sem = QtCore.QSemaphore(n=1)
 
-    def add_plot(self, name: str, plot: PlotDataItem):
+    def add_plot(self, name: str, **kwargs):
         """Add a new plot.
 
         Args:
-            name: Name of the new plot.
-            plot: pyqtgraph PlotDataItem associated with the new plot.
+            name: Name for the plot.
+            kwargs: Additional keyword args to pass to PlotDataItem().
         """
         with self.mutex:
             if name in self.plots:
@@ -70,8 +67,13 @@ class LinePlotData(QThreadSafeData):
                     f'A plot with the name [{name}] already exists. Ignoring add_plot request.'
                 )
                 return
-            self.plots[name] = PlotSeriesData(plot)
+            self.plots[name] = PlotSeriesData()
+            self.run_main(self._add_plot, name, kwargs, blocking=True)
             self.added_plot.emit(name, self.plots[name])
+
+    def _add_plot(self, name, kwargs):
+        """Helper for add_plot."""
+        self.plots[name].plot_data_item = self.plot_widget.plot(name=name, **kwargs)
 
     def remove_plot(self, name: str):
         """Remove a plot from the display and delete it's associated data.
@@ -154,15 +156,13 @@ class LinePlotData(QThreadSafeData):
             self.plots[name].y = ydata
 
             # signal that new data is ready
-            signal.emit(self.plots[name])
+            signal.emit(name, self.plots[name])
 
 
 class LinePlotWidget(QtWidgets.QWidget):
     """Qt widget that generates a pyqtgraph 1D line plot with some reasonable default settings and a variety of added features."""
 
-    _add_plot_helper = QtCore.Signal(dict)
-
-    new_data = QtCore.Signal(PlotSeriesData)
+    new_data = QtCore.Signal(str, PlotSeriesData)
     """Qt Signal emitted when new data is available."""
 
     def __init__(
@@ -229,7 +229,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         if legend:
             self.plot_widget.addLegend(labelTextSize=f'{font.pointSize()}pt')
 
-        self.plot_data = LinePlotData()
+        self.plot_data = LinePlotData(self.plot_widget)
         """Instance of LinePlotData to manage plot data in a thread-safe way."""
 
         # take appropriate actions when the plot data is changed
@@ -238,16 +238,10 @@ class LinePlotWidget(QtWidgets.QWidget):
         self.plot_data.hid_plot.connect(self._hid_plot)
         self.plot_data.removed_plot.connect(self._hid_plot)
 
-        # handle in main thread using a callback
-        self._add_plot_helper.connect(self._add_plot)
-
         self.setLayout(self.layout)
 
-        # plot setup code
-        self.setup()
-
         # clean up when the widget is destroyed
-        self.destroyed.connect(partial(self.teardown))
+        self.destroyed.connect(partial(self.stop))
 
         # thread for updating the plot data
         self.update_thread = WidgetUpdateThread(self.update)
@@ -255,6 +249,9 @@ class LinePlotWidget(QtWidgets.QWidget):
         self.new_data.connect(self._process_data)
         # start the thread
         self.update_thread.start()
+
+        # plot setup code
+        self.setup()
 
     def plot_item(self):
         """Return the pyqtgraph `PlotItem <https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/plotitem.html#pyqtgraph.PlotItem>`__."""
@@ -300,6 +297,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         symbolPen=(255, 255, 255, 100),
         symbol: str = 's',
         symbolSize: int = 5,
+        **kwargs,
     ):
         """Add a new plot to the PlotWidget. Thread-safe.
 
@@ -310,30 +308,11 @@ class LinePlotWidget(QtWidgets.QWidget):
             symbolPen: See https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/plotdataitem.html.
             symbol: See https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/plotdataitem.html.
             symbolSize: See https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/plotdataitem.html.
+            kwargs: Additional keyword args to pass to PlotDataItem().
         """
         if not pen:
             pen = self._next_color()
-        # run the helper using a signal so that it runs in the main GUI thread
-        self._add_plot_helper.emit({
-            'name': name,
-            'pen': pen,
-            'symbolBrush': symbolBrush,
-            'symbolPen': symbolPen,
-            'symbol': symbol,
-            'symbolSize': symbolSize,
-        })
-
-    def _add_plot(self, kwargs):
-        """Helper for add_plot."""
-        plt = self.plot_widget.plot(
-            pen=kwargs['pen'],
-            symbolBrush=kwargs['symbolBrush'],
-            symbolPen=kwargs['symbolPen'],
-            symbol=kwargs['symbol'],
-            symbolSize=kwargs['symbolSize'],
-            name=kwargs['name'],
-        )
-        self.plot_data.run_safe(self.plot_data.add_plot, kwargs['name'], plt)
+        self.plot_data.run_safe(self.plot_data.add_plot, name, pen=pen, symbolBrush=symbolBrush, symbolPen=symbolPen, symbol=symbol, symbolSize=symbolSize, **kwargs)
 
     def remove_plot(self, name: str):
         """Remove a plot from the display and delete it's associated data. Thread-safe.
@@ -361,7 +340,7 @@ class LinePlotWidget(QtWidgets.QWidget):
 
     def _hid_plot(self, name: str, plot_series_data: PlotSeriesData):
         """Callback to remove a plot from PlotWidget display."""
-        self.plot_widget.removeItem(plot_series_data.plot)
+        self.plot_widget.removeItem(plot_series_data.plot_data_item)
 
     def show_plot(self, name: str):
         """Display a previously hidden plot. Thread-safe.
@@ -373,7 +352,7 @@ class LinePlotWidget(QtWidgets.QWidget):
 
     def _showed_plot(self, name: str, plot_series_data: PlotSeriesData):
         """Callback to add a plot to PlotWidget display."""
-        self.plot_widget.addItem(plot_series_data.plot)
+        self.plot_widget.addItem(plot_series_data.plot_data_item)
 
     def set_data(self, name: str, xdata: Any, ydata: Any, blocking: bool = True):
         """Queue up x/y data to update a line plot. Thread-safe.
@@ -388,15 +367,19 @@ class LinePlotWidget(QtWidgets.QWidget):
             self.plot_data.set_data, name, xdata, ydata, self.new_data, blocking=blocking
         )
 
-    def _process_data(self, plot_series_data: PlotSeriesData):
+    def _process_data(self, name: str, plot_series_data: PlotSeriesData):
         """Update a line plot triggered by set_data.
 
         Args:
+            name: Name of plot series.
             plot_series_data: PlotSeriesData to update the plot for.
         """
         try:
             with self.plot_data.mutex:
-                plot_series_data.plot.setData(plot_series_data.x, plot_series_data.y)
+                if name in self.plot_data.plots:
+                    plot_series_data.plot_data_item.setData(plot_series_data.x, plot_series_data.y)
+                else:
+                    _logger.debug(f'Not updating [{name}] because the plot does not exist.')
         except Exception as exc:
             raise exc
         finally:

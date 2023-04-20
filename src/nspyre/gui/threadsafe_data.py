@@ -96,7 +96,8 @@ class QThreadSafeData(QtCore.QObject):
                         QtCore.Q_ARG(tuple, args),
                         QtCore.Q_ARG(dict, kwargs),
                     )
-                return wrapper_list[0]
+                if len(wrapper_list):
+                    return wrapper_list[0]
             else:
                 QtCore.QMetaObject.invokeMethod(
                         self,

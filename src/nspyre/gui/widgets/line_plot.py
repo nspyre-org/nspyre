@@ -40,25 +40,19 @@ class PlotSeriesData(QtCore.QObject):
 class LinePlotData(QThreadSafeData):
     """Manages all plot data series for a LinePlotWidget."""
 
-    added_plot = QtCore.Signal(str, PlotSeriesData)
-    removed_plot = QtCore.Signal(str, PlotSeriesData)
-    cleared_plots = QtCore.Signal()
-    hid_plot = QtCore.Signal(str, PlotSeriesData)
-    showed_plot = QtCore.Signal(str, PlotSeriesData)
-
     def __init__(self, plot_widget):
         super().__init__()
-        self.plot_widget = plot_widget
         self.plots: Dict[str, PlotSeriesData] = {}
         """A dict mapping data set names (str) to a PlotSeriesData associated with each line plot."""
         # for blocking set_data until the data has been processed
         self.sem = QtCore.QSemaphore(n=1)
 
-    def add_plot(self, name: str, **kwargs):
+    def add_plot(self, name: str, callback=None, **kwargs):
         """Add a new plot.
 
         Args:
             name: Name for the plot.
+            callback: Callback function to run (blocking) in the main thread.
             kwargs: Additional keyword args to pass to PlotDataItem().
         """
         with self.mutex:
@@ -68,18 +62,15 @@ class LinePlotData(QThreadSafeData):
                 )
                 return
             self.plots[name] = PlotSeriesData()
-            self.run_main(self._add_plot, name, kwargs, blocking=True)
-            self.added_plot.emit(name, self.plots[name])
+            if callback is not None:
+                self.run_main(callback, name, self.plots[name], kwargs, blocking=True)
 
-    def _add_plot(self, name, kwargs):
-        """Helper for add_plot."""
-        self.plots[name].plot_data_item = self.plot_widget.plot(name=name, **kwargs)
-
-    def remove_plot(self, name: str):
+    def remove_plot(self, name: str, callback=None):
         """Remove a plot from the display and delete it's associated data.
 
         Args:
             name: Name of the plot.
+            callback: Callback function to run (blocking) in the main thread.
         """
         with self.mutex:
             if name not in self.plots:
@@ -88,22 +79,29 @@ class LinePlotData(QThreadSafeData):
                 )
                 return
 
+            if callback is not None:
+                self.run_main(callback, name, self.plots[name], blocking=True)
+
             # remove the plot from internal plot storage
             del self.plots[name]
 
-            self.removed_plot.emit(name, self.plots[name])
-
-    def clear_plots(self):
-        """Remove all plots and delete their associated data."""
+    def clear_plots(self, callback=None):
+        """Remove all plots and delete their associated data.
+        
+        Args:
+            callback: Callback function to run (blocking) in the main thread.
+        """
         with self.mutex:
             self.plots = {}
-            self.cleared_plots.emit()
+            if callback is not None:
+                self.run_main(callback, blocking=True)
 
-    def hide_plot(self, name: str):
+    def hide_plot(self, name: str, callback=None):
         """Hide a plot.
 
         Args:
             name: Name of the plot.
+            callback: Callback function to run (blocking) in the main thread.
         """
         with self.mutex:
             if name not in self.plots:
@@ -113,13 +111,16 @@ class LinePlotData(QThreadSafeData):
                 return
 
             self.plots[name].hidden = True
-            self.hid_plot.emit(name, self.plots[name])
 
-    def show_plot(self, name: str):
+            if callback is not None:
+                self.run_main(callback, name, self.plots[name], blocking=True)
+
+    def show_plot(self, name: str, callback=None):
         """Show a previously hidden plot.
 
         Args:
             name: Name of the plot.
+            callback: Callback function to run (blocking) in the main thread.
         """
         with self.mutex:
             if name not in self.plots:
@@ -129,16 +130,18 @@ class LinePlotData(QThreadSafeData):
                 return
 
             self.plots[name].hidden = False
-            self.showed_plot.emit(name, self.plots[name])
 
-    def set_data(self, name: str, xdata: Any, ydata: Any, signal: QtCore.Signal):
+            if callback is not None:
+                self.run_main(callback, name, self.plots[name], blocking=True)
+
+    def set_data(self, name: str, xdata: Any, ydata: Any, callback=None):
         """Queue up x/y data to update a plot series.
 
         Args:
             name: Name of the plot.
             xdata: Array-like of data for the x-axis.
             ydata: Array-like of data for the y-axis.
-            signal: signal to emit when the data is ready. Will emit() the associated PlotSeriesData.
+            callback: Callback function to run (blocking) in the main thread.
         """
         # block until any previous calls to set_data have been fully processed
         self.sem.acquire()
@@ -155,15 +158,12 @@ class LinePlotData(QThreadSafeData):
             self.plots[name].x = xdata
             self.plots[name].y = ydata
 
-            # signal that new data is ready
-            signal.emit(name, self.plots[name])
+            if callback is not None:
+                self.run_main(callback, name, self.plots[name], blocking=True)
 
 
 class LinePlotWidget(QtWidgets.QWidget):
     """Qt widget that generates a pyqtgraph 1D line plot with some reasonable default settings and a variety of added features."""
-
-    new_data = QtCore.Signal(str, PlotSeriesData)
-    """Qt Signal emitted when new data is available."""
 
     def __init__(
         self,
@@ -232,12 +232,6 @@ class LinePlotWidget(QtWidgets.QWidget):
         self.plot_data = LinePlotData(self.plot_widget)
         """Instance of LinePlotData to manage plot data in a thread-safe way."""
 
-        # take appropriate actions when the plot data is changed
-        self.plot_data.showed_plot.connect(self._showed_plot)
-        self.plot_data.cleared_plots.connect(self._cleared_plots)
-        self.plot_data.hid_plot.connect(self._hid_plot)
-        self.plot_data.removed_plot.connect(self._hid_plot)
-
         self.setLayout(self.layout)
 
         # clean up when the widget is destroyed
@@ -245,8 +239,6 @@ class LinePlotWidget(QtWidgets.QWidget):
 
         # thread for updating the plot data
         self.update_thread = WidgetUpdateThread(self.update)
-        # process new data when a signal is generated by the update thread
-        self.new_data.connect(self._process_data)
         # start the thread
         self.update_thread.start()
 
@@ -312,7 +304,11 @@ class LinePlotWidget(QtWidgets.QWidget):
         """
         if not pen:
             pen = self._next_color()
-        self.plot_data.run_safe(self.plot_data.add_plot, name, pen=pen, symbolBrush=symbolBrush, symbolPen=symbolPen, symbol=symbol, symbolSize=symbolSize, **kwargs)
+        self.plot_data.run_safe(self.plot_data.add_plot, name, callback=self._add_plot_callback, pen=pen, symbolBrush=symbolBrush, symbolPen=symbolPen, symbol=symbol, symbolSize=symbolSize, **kwargs)
+
+    def _add_plot_callback(self, name: str, plot_series_data: PlotSeriesData, kwargs):
+        """Helper for add_plot."""
+        plot_series_data.plot_data_item = self.plot_widget.plot(name=name, **kwargs)
 
     def remove_plot(self, name: str):
         """Remove a plot from the display and delete it's associated data. Thread-safe.
@@ -320,15 +316,15 @@ class LinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name of the plot.
         """
-        self.plot_data.run_safe(self.plot_data.remove_plot, name)
+        self.plot_data.run_safe(self.plot_data.remove_plot, name, callback=self._hide_plot_callback)
 
     def clear_plots(self):
         """Remove all plots and delete their associated data. Thread-safe."""
-        self.plot_data.run_safe(self.plot_data.clear_plots)
+        self.plot_data.run_safe(self.plot_data.clear_plots, callback=self._clear_plots_callback)
 
-    def _cleared_plots(self):
-        """Callback to remove all plots from PlotWidget display."""
-        self.plot_item().clear()
+    def _clear_plots_callback(self):
+        """Helper for clear_plots."""
+        self.plot_widget.getPlotItem().clear()
 
     def hide_plot(self, name: str):
         """Remove a plot from the display, keeping its data. Thread-safe.
@@ -336,9 +332,9 @@ class LinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name of the plot.
         """
-        self.plot_data.run_safe(self.plot_data.hide_plot, name)
+        self.plot_data.run_safe(self.plot_data.hide_plot, name, callback=self._hide_plot_callback)
 
-    def _hid_plot(self, name: str, plot_series_data: PlotSeriesData):
+    def _hide_plot_callback(self, name: str, plot_series_data: PlotSeriesData):
         """Callback to remove a plot from PlotWidget display."""
         self.plot_widget.removeItem(plot_series_data.plot_data_item)
 
@@ -348,9 +344,9 @@ class LinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name of the plot.
         """
-        self.plot_data.run_safe(self.plot_data.show_plot, name)
+        self.plot_data.run_safe(self.plot_data.show_plot, name, callback=self._show_plot_callback)
 
-    def _showed_plot(self, name: str, plot_series_data: PlotSeriesData):
+    def _show_plot_callback(self, name: str, plot_series_data: PlotSeriesData):
         """Callback to add a plot to PlotWidget display."""
         self.plot_widget.addItem(plot_series_data.plot_data_item)
 
@@ -364,26 +360,18 @@ class LinePlotWidget(QtWidgets.QWidget):
             blocking: Whether this method should block until the data has been queued.
         """
         self.plot_data.run_safe(
-            self.plot_data.set_data, name, xdata, ydata, self.new_data, blocking=blocking
+            self.plot_data.set_data, name, xdata, ydata, blocking=blocking, callback=self._set_data_callback
         )
 
-    def _process_data(self, name: str, plot_series_data: PlotSeriesData):
+    def _set_data_callback(self, name: str, plot_series_data: PlotSeriesData):
         """Update a line plot triggered by set_data.
 
         Args:
             name: Name of plot series.
             plot_series_data: PlotSeriesData to update the plot for.
         """
-        try:
-            with self.plot_data.mutex:
-                if name in self.plot_data.plots:
-                    plot_series_data.plot_data_item.setData(plot_series_data.x, plot_series_data.y)
-                else:
-                    _logger.debug(f'Not updating [{name}] because the plot does not exist.')
-        except Exception as exc:
-            raise exc
-        finally:
-            self.plot_data.sem.release()
+        plot_series_data.plot_data_item.setData(plot_series_data.x, plot_series_data.y)
+        self.plot_data.sem.release()
 
     def stop(self):
         """Stop the plot updating thread and run the

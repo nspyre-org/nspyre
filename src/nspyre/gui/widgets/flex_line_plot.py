@@ -16,6 +16,104 @@ from .line_plot import LinePlotWidget
 _logger = logging.getLogger(__name__)
 
 
+class _FlexLinePlotSeriesSettings:
+    """Container class to hold the settings for a single plot."""
+    def __init__(self, series, scan_i, scan_j, processing, hidden):
+        self.series: str = series
+        self.scan_i: str = scan_i
+        self.scan_j: str = scan_j
+        self.processing: str = processing
+        self.hidden = hidden
+
+class _FlexLinePlotSettings(QThreadSafeData):
+    """Container class to hold the plot settings for a _FlexLinePlotWidget."""
+
+    def __init__(self):
+        super().__init__()
+        self.series_settings: Dict[str, _FlexLinePlotSeriesSettings] = {}
+        # DataSink for pulling plot data from the data server
+        self.sink = None
+        # protect access to the sink
+        self.sink_mutex = Lock()
+        # flag indicating that the plots should be updated
+        self.force_update = False
+
+    def get_settings(self, name, callback=None):
+        with self.mutex:
+            settings = self.series_settings[name]
+            if callback is not None:
+                self.run_main(callback, name, settings, blocking=True)
+
+    def add_plot(self, name, series, scan_i, scan_j, processing, hidden, callback=None):
+        with self.mutex:
+            if name in self.series_settings:
+                _logger.info(
+                    f'A plot with the name [{name}] already exists. Ignoring add_plot request.'
+                )
+                return
+            self.series_settings[name] = _FlexLinePlotSeriesSettings(series, scan_i, scan_j, processing, hidden)
+            self.force_update = True
+            if callback is not None:
+                self.run_main(callback, name, blocking=True)
+
+    def remove_plot(self, name, callback=None):
+        with self.mutex:
+            if name not in self.series_settings:
+                _logger.info(
+                    f'A plot with the name [{name}] does not exist. Ignoring remove_plot request.'
+                )
+                return
+
+            if callback is not None:
+                self.run_main(callback, name, blocking=True)
+
+            del self.series_settings[name]
+
+    def hide_plot(self, name, callback=None):
+        with self.mutex:
+            if name not in self.series_settings:
+                _logger.info(
+                    f'A plot with the name [{name}] does not exist. Ignoring hide_plot request.'
+                )
+                return
+            if self.series_settings[name].hidden:
+                _logger.info(
+                    f'The plot [{name}] is already hidden. Ignoring hide_plot request.'
+                )
+                return
+            self.series_settings[name].hidden = True
+            if callback is not None:
+                self.run_main(callback, name, blocking=True)
+
+    def show_plot(self, name, callback=None):
+        with self.mutex:
+            if name not in self.series_settings:
+                _logger.info(
+                    f'A plot with the name [{name}] does not exist. Ignoring show_plot request.'
+                )
+                return
+            if not self.series_settings[name].hidden:
+                _logger.info(
+                    f'The plot [{name}] is already shown. Ignoring show_plot request.'
+                )
+                return
+            self.series_settings[name].hidden = False
+            if callback is not None:
+                self.run_main(callback, name, blocking=True)
+
+    def update_settings(self, name, series, scan_i, scan_j, processing):
+        with self.mutex:
+            if name not in self.series_settings:
+                _logger.info(
+                    f'A plot with the name [{name}] does not exist. Ignoring update_settings request.'
+                )
+                return
+            self.series_settings[name].series = series
+            self.series_settings[name].scan_i = scan_i
+            self.series_settings[name].scan_j = scan_j
+            self.series_settings[name].processing = processing
+            self.force_update = True
+
 class FlexLinePlotWidget(QtWidgets.QWidget):
     """Qt widget for flexible plotting of user data.
     It connects to an arbitrary data set stored in the :py:class:`~nspyre.data.server.DataServer`,
@@ -102,12 +200,10 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         # show button
         show_button = QtWidgets.QPushButton('Show')
         show_button.clicked.connect(self._show_plot_clicked)
-        self.line_plot.plot_settings.showed_plot.connect(self._show_plot_callback)
 
         # hide button
         hide_button = QtWidgets.QPushButton('Hide')
         hide_button.clicked.connect(self._hide_plot_clicked)
-        self.line_plot.plot_settings.hid_plot.connect(self._hide_plot_callback)
 
         # update button
         update_plot_button = QtWidgets.QPushButton('Update')
@@ -116,12 +212,10 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         # add button
         add_plot_button = QtWidgets.QPushButton('Add')
         add_plot_button.clicked.connect(self._add_plot_clicked)
-        self.line_plot.plot_settings.added_plot.connect(self._add_plot_callback)
 
         # del button
         remove_button = QtWidgets.QPushButton('Remove')
         remove_button.clicked.connect(self._remove_plot_clicked)
-        self.line_plot.plot_settings.removed_plot.connect(self._remove_plot_callback)
 
         # plots label
         plots_label = QtWidgets.QLabel('Plots')
@@ -130,7 +224,6 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         # list of plots
         self.plots_list_widget = QtWidgets.QListWidget()
         self.plots_list_widget.currentItemChanged.connect(self._plot_selection_changed)
-        self.line_plot.plot_settings.got_settings.connect(self._plot_selection_changed_callback)
 
         # spacer
         fixed_spacer = QtWidgets.QLabel('')
@@ -234,15 +327,15 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             return
         # get the selected plot name
         name = selected_item.text()
-        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.get_settings, name)
+        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.get_settings, name, callback=self._plot_selection_changed_callback)
 
-    def _plot_selection_changed_callback(self, name: str, series: str, scan_i: str, scan_j: str, processing: str, hidden: bool):
+    def _plot_selection_changed_callback(self, name: str, settings: _FlexLinePlotSeriesSettings):
         """Called after the selection is changed to update the plot settings GUI elements."""
         self.plot_name_lineedit.setText(name)
-        self.plot_series_lineedit.setText(series)
-        self.add_plot_scan_i_textbox.setText(scan_i)
-        self.add_plot_scan_j_textbox.setText(scan_j)
-        self.plot_processing_dropdown.setCurrentText(processing)
+        self.plot_series_lineedit.setText(settings.series)
+        self.add_plot_scan_i_textbox.setText(settings.scan_i)
+        self.add_plot_scan_j_textbox.setText(settings.scan_j)
+        self.plot_processing_dropdown.setCurrentText(settings.processing)
 
     def _get_plot_settings(self):
         """Retrieve the user-entered plot settings from the GUI and check them for errors."""
@@ -301,10 +394,10 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             processing: 'Average' to average the x and y values of scans i
                 through j, 'Append' to concatenate them.
         """
-        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.add_plot, name, series, scan_i, scan_j, processing, False)
+        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.add_plot, name, series, scan_i, scan_j, processing, False, callback=self._add_plot_callback)
 
     def _add_plot_callback(self, name: str):
-        """Called after a plot is added."""
+        """Called in main thread after a plot is added."""
         self.plots_list_widget.addItem(name)
         self.line_plot.add_plot(name)
 
@@ -336,13 +429,13 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name of the subplot.
         """
-        # remove the plot name from the list of plots
-        self.plots_list_widget.takeItem(self._find_plot_item(name))
         # remove the plot settings
-        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.remove_plot, name)
+        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.remove_plot, name, callback=self._remove_plot_callback)
 
     def _remove_plot_callback(self, name: str):
-        """Called after a plot is removed."""
+        """Called in main thread after a plot is removed."""
+        # remove the plot name from the list of plots
+        self.plots_list_widget.takeItem(self._find_plot_item(name))
         # remove the plot from the pyqtgraph plotwidget
         self.line_plot.remove_plot(name)
 
@@ -361,10 +454,10 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             name: Name of the subplot.
         """
         # update the settings
-        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.hide_plot, name)
+        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.hide_plot, name, callback=self._hide_plot_callback)
 
     def _hide_plot_callback(self, name: str):
-        """Called after a plot is hidden."""
+        """Called in main thread after a plot is hidden."""
         # hide the plot in the pyqtgraph plotting widget
         self.line_plot.hide_plot(name)
         # change the list widget item color scheme
@@ -389,7 +482,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             name: Name of the subplot.
         """
         # update the settings
-        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.show_plot, name)
+        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.show_plot, name, callback=self._show_plot_callback)
 
     def _show_plot_callback(self, name: str):
         """Called after a plot is shown."""
@@ -406,108 +499,13 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         """Called when the user clicks the connect button."""
         self.line_plot.new_source(self.datasource_lineedit.text())
 
-class _FlexLinePlotSeriesSettings:
-    """Container class to hold the settings for a single plot."""
-    def __init__(self, series, scan_i, scan_j, processing, hidden):
-        self.series: str = series
-        self.scan_i: str = scan_i
-        self.scan_j: str = scan_j
-        self.processing: str = processing
-        self.hidden = hidden
-
-class _FlexLinePlotSettings(QThreadSafeData):
-    """Container class to hold the plot settings for a _FlexLinePlotWidget."""
-
-    # args: name, series, scan_i, scan_j, processing, hidden
-    got_settings = QtCore.Signal(str, str, str, str, str, bool)
-    added_plot = QtCore.Signal(str)
-    removed_plot = QtCore.Signal(str)
-    hid_plot = QtCore.Signal(str)
-    showed_plot = QtCore.Signal(str)
-    updated_plot = QtCore.Signal(str)
-
-    def __init__(self):
-        super().__init__()
-        self.series_settings: Dict[str, _FlexLinePlotSeriesSettings] = {}
-        # DataSink for pulling plot data from the data server
-        self.sink = None
-        # protect access to the sink
-        self.sink_mutex = Lock()
-        # flag indicating that the plots should be updated
-        self.force_update = False
-
-    def get_settings(self, name):
-        with self.mutex:
-            settings = self.series_settings[name]
-            self.got_settings.emit(name, settings.series, settings.scan_i, settings.scan_j, settings.processing, settings.hidden)
-            return (settings.series, settings.scan_i, settings.scan_j, settings.processing, settings.hidden)
-
-    def add_plot(self, name, series, scan_i, scan_j, processing, hidden):
-        with self.mutex:
-            if name in self.series_settings:
-                _logger.info(
-                    f'A plot with the name [{name}] already exists. Ignoring add_plot request.'
-                )
-                return
-            self.series_settings[name] = _FlexLinePlotSeriesSettings(series, scan_i, scan_j, processing, hidden)
-            self.force_update = True
-            self.added_plot.emit(name)
-
-    def remove_plot(self, name):
-        with self.mutex:
-            if name not in self.series_settings:
-                _logger.info(
-                    f'A plot with the name [{name}] does not exist. Ignoring remove_plot request.'
-                )
-                return
-            del self.series_settings[name]
-            self.removed_plot.emit(name)
-
-    def hide_plot(self, name):
-        with self.mutex:
-            if name not in self.series_settings:
-                _logger.info(
-                    f'A plot with the name [{name}] does not exist. Ignoring hide_plot request.'
-                )
-                return
-            self.series_settings[name].hidden = True
-            self.hid_plot.emit(name)
-
-    def show_plot(self, name):
-        with self.mutex:
-            if name not in self.series_settings:
-                _logger.info(
-                    f'A plot with the name [{name}] does not exist. Ignoring show_plot request.'
-                )
-                return
-            self.series_settings[name].hidden = False
-            self.showed_plot.emit(name)
-
-    def update_settings(self, name, series, scan_i, scan_j, processing):
-        with self.mutex:
-            if name not in self.series_settings:
-                _logger.info(
-                    f'A plot with the name [{name}] does not exist. Ignoring update_settings request.'
-                )
-                return
-            self.series_settings[name].series = series
-            self.series_settings[name].scan_i = scan_i
-            self.series_settings[name].scan_j = scan_j
-            self.series_settings[name].processing = processing
-            self.force_update = True
-            self.updated_plot.emit(name)
-
 class _FlexLinePlotWidget(LinePlotWidget):
     """See FlexLinePlotWidget."""
 
-    # args: title, xlabel, ylabel
-    _new_source_callback_sig = QtCore.Signal(str, str, str)
-
-    def __init__(self, timeout=1):
+    def __init__(self, timeout=0.1):
         super().__init__()
         self.timeout = timeout
         self.plot_settings = _FlexLinePlotSettings()
-        self._new_source_callback_sig.connect(self._new_source_callback)
 
     def new_source(self, data_set_name: str):
         """Connect to a new data set on the data server.
@@ -529,6 +527,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
                 # try to get the plot title and x/y labels
                 self.plot_settings.sink.pop(timeout=self.timeout)
+
                 # set title
                 try:
                     title = self.plot_settings.sink.title
@@ -571,7 +570,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                         raise RuntimeError(f'Data source [{data_set_name}] "datasets" attribute is not a dictionary - exiting...')
 
                 # set the new title/labels in the main thread
-                self._new_source_callback_sig.emit(title, xlabel, ylabel)
+                self.plot_settings.run_main(self._new_source_callback, title, xlabel, ylabel, blocking=True)
 
                 # add the existing plots
                 with self.plot_settings.mutex:
@@ -579,6 +578,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                         self.add_plot(plot_name)
                         if self.plot_settings.series_settings[plot_name].hidden:
                             self.hide_plot(plot_name)
+
                 # force plot the data since we used the first pop() to extract the plot info
                 self.plot_settings.force_update = True
             except (TimeoutError, RuntimeError) as err:

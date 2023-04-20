@@ -502,7 +502,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
 class _FlexLinePlotWidget(LinePlotWidget):
     """See FlexLinePlotWidget."""
 
-    def __init__(self, timeout=0.1):
+    def __init__(self, timeout=1):
         super().__init__()
         self.timeout = timeout
         self.plot_settings = _FlexLinePlotSettings()

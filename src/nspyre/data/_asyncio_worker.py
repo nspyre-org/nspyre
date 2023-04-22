@@ -23,11 +23,11 @@ class AsyncioWorker:
         # semaphore to block until the event loop is ready to start serving requests
         self._sem = None
 
-    def connect(self):
+    def start(self):
         """Start the :code:`asyncio` event loop."""
         if self.is_running():
             raise RuntimeError(
-                'Cannot connect() because an event loop is already running.'
+                'Cannot start() because an event loop is already running.'
             )
 
         selector = selectors.SelectSelector()
@@ -39,7 +39,7 @@ class AsyncioWorker:
         self._sem.acquire()
         self._check_exc()
 
-    def disconnect(self, timeout=3):
+    def stop(self, timeout=3):
         """Stop the :code:`asyncio` event loop.
 
         Args:
@@ -66,7 +66,7 @@ class AsyncioWorker:
                 _cleanup_event_loop(self._event_loop), self._event_loop
             )
         else:
-            raise RuntimeError('Tried to disconnect but it isn\'t running!')
+            raise RuntimeError('Tried to stop but it isn\'t running!')
 
     def is_running(self):
         """Return True if the event loop is running."""
@@ -101,15 +101,15 @@ class AsyncioWorker:
 
     def __enter__(self):
         """Python context manager setup."""
-        self.connect()
+        self.start()
         return self
 
     def __exit__(self, *args):
         """Python context manager teardown."""
-        self.disconnect()
+        self.stop()
 
     def __del__(self):
         if self.is_running():
             _logger.warning(
-                f'{self} event loop is still running. Did you forget to call disconnect()?'
+                f'{self} event loop is still running. Did you forget to call stop()?'
             )

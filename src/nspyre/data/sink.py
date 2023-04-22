@@ -93,15 +93,15 @@ class DataSink(AsyncioWorker):
         # whether the sink should try to reconnect to the data server
         self._auto_reconnect = auto_reconnect
 
-    def connect(self):
+    def start(self):
         """Connect to the data server."""
         # do this just to generate docs
-        super().connect()
+        super().start()
 
-    def disconnect(self):
+    def stop(self):
         """Disconnect from the data server."""
         # do this just to generate docs
-        super().disconnect()
+        super().stop()
 
     async def _main(self):
         """asyncio main loop"""

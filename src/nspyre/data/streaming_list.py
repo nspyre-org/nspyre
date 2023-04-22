@@ -1,7 +1,7 @@
 class StreamingList(list):
     """List-like object that can be streamed efficiently through the data server."""
 
-    def __init__(self, iterable):
+    def __init__(self, iterable=None):
         """
         Args:
             iterable: iterable object to initialize the contents of the list

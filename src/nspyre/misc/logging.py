@@ -6,7 +6,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any
 
-LOG_FILE_MAX_SIZE = 100e6
+LOG_FILE_MAX_SIZE = 10e6
 """Max size of a log file (in bytes) before creating a new one."""
 
 

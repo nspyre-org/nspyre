@@ -24,7 +24,8 @@ _logger = logging.getLogger(__name__)
 RPYC_CONN_TIMEOUT = 30
 """RPyC connection timeout in seconds (None for no timeout)."""
 
-def _members_list(cls) -> str:
+
+def _members_list(cls) -> list:
     """Return a list of attributes for a provided class.
 
     Args:
@@ -38,6 +39,7 @@ def _members_list(cls) -> str:
     for m, _ in member_tuples:
         members.append(m)
     return members
+
 
 _server_members = _members_list(InstrumentServer)
 

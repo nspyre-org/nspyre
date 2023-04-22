@@ -36,7 +36,7 @@ from ._streaming_pickle import serialize_pickle_diff
 
 _logger = logging.getLogger(__name__)
 
-DATASERV_PORT = 30000
+DATASERV_PORT = 30101
 """Default port to host the data server on."""
 
 # if no data is available, any socket sender should send an empty message with an

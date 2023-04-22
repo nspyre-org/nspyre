@@ -25,6 +25,7 @@ _logger = logging.getLogger(__name__)
 
 class PlotSeriesData(QtCore.QObject):
     """Container for the data of a single data series within a LinePlotWidget."""
+
     def __init__(self):
         super().__init__()
         self.x = []
@@ -87,7 +88,7 @@ class LinePlotData(QThreadSafeData):
 
     def clear_plots(self, callback=None):
         """Remove all plots and delete their associated data.
-        
+
         Args:
             callback: Callback function to run (blocking) in the main thread.
         """
@@ -304,7 +305,17 @@ class LinePlotWidget(QtWidgets.QWidget):
         """
         if not pen:
             pen = self._next_color()
-        self.plot_data.run_safe(self.plot_data.add_plot, name, callback=self._add_plot_callback, pen=pen, symbolBrush=symbolBrush, symbolPen=symbolPen, symbol=symbol, symbolSize=symbolSize, **kwargs)
+        self.plot_data.run_safe(
+            self.plot_data.add_plot,
+            name,
+            callback=self._add_plot_callback,
+            pen=pen,
+            symbolBrush=symbolBrush,
+            symbolPen=symbolPen,
+            symbol=symbol,
+            symbolSize=symbolSize,
+            **kwargs,
+        )
 
     def _add_plot_callback(self, name: str, plot_series_data: PlotSeriesData, kwargs):
         """Helper for add_plot."""
@@ -316,11 +327,15 @@ class LinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name of the plot.
         """
-        self.plot_data.run_safe(self.plot_data.remove_plot, name, callback=self._hide_plot_callback)
+        self.plot_data.run_safe(
+            self.plot_data.remove_plot, name, callback=self._hide_plot_callback
+        )
 
     def clear_plots(self):
         """Remove all plots and delete their associated data. Thread-safe."""
-        self.plot_data.run_safe(self.plot_data.clear_plots, callback=self._clear_plots_callback)
+        self.plot_data.run_safe(
+            self.plot_data.clear_plots, callback=self._clear_plots_callback
+        )
 
     def _clear_plots_callback(self):
         """Helper for clear_plots."""
@@ -332,7 +347,9 @@ class LinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name of the plot.
         """
-        self.plot_data.run_safe(self.plot_data.hide_plot, name, callback=self._hide_plot_callback)
+        self.plot_data.run_safe(
+            self.plot_data.hide_plot, name, callback=self._hide_plot_callback
+        )
 
     def _hide_plot_callback(self, name: str, plot_series_data: PlotSeriesData):
         """Callback to remove a plot from PlotWidget display."""
@@ -344,7 +361,9 @@ class LinePlotWidget(QtWidgets.QWidget):
         Args:
             name: Name of the plot.
         """
-        self.plot_data.run_safe(self.plot_data.show_plot, name, callback=self._show_plot_callback)
+        self.plot_data.run_safe(
+            self.plot_data.show_plot, name, callback=self._show_plot_callback
+        )
 
     def _show_plot_callback(self, name: str, plot_series_data: PlotSeriesData):
         """Callback to add a plot to PlotWidget display."""
@@ -360,7 +379,12 @@ class LinePlotWidget(QtWidgets.QWidget):
             blocking: Whether this method should block until the data has been queued.
         """
         self.plot_data.run_safe(
-            self.plot_data.set_data, name, xdata, ydata, blocking=blocking, callback=self._set_data_callback
+            self.plot_data.set_data,
+            name,
+            xdata,
+            ydata,
+            blocking=blocking,
+            callback=self._set_data_callback,
         )
 
     def _set_data_callback(self, name: str, plot_series_data: PlotSeriesData):

@@ -1,15 +1,15 @@
 import logging
 import time
 from threading import Lock
-from functools import partial
+from typing import Dict
 
 import numpy as np
 from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
-from ..threadsafe_data import QThreadSafeData
 from ...data.sink import DataSink
+from ..threadsafe_data import QThreadSafeData
 from .layout import tree_layout
 from .line_plot import LinePlotWidget
 
@@ -18,12 +18,14 @@ _logger = logging.getLogger(__name__)
 
 class _FlexLinePlotSeriesSettings:
     """Container class to hold the settings for a single plot."""
+
     def __init__(self, series, scan_i, scan_j, processing, hidden):
         self.series: str = series
         self.scan_i: str = scan_i
         self.scan_j: str = scan_j
         self.processing: str = processing
         self.hidden = hidden
+
 
 class _FlexLinePlotSettings(QThreadSafeData):
     """Container class to hold the plot settings for a _FlexLinePlotWidget."""
@@ -51,7 +53,9 @@ class _FlexLinePlotSettings(QThreadSafeData):
                     f'A plot with the name [{name}] already exists. Ignoring add_plot request.'
                 )
                 return
-            self.series_settings[name] = _FlexLinePlotSeriesSettings(series, scan_i, scan_j, processing, hidden)
+            self.series_settings[name] = _FlexLinePlotSeriesSettings(
+                series, scan_i, scan_j, processing, hidden
+            )
             self.force_update = True
             if callback is not None:
                 self.run_main(callback, name, blocking=True)
@@ -113,6 +117,7 @@ class _FlexLinePlotSettings(QThreadSafeData):
             self.series_settings[name].scan_j = scan_j
             self.series_settings[name].processing = processing
             self.force_update = True
+
 
 class FlexLinePlotWidget(QtWidgets.QWidget):
     """Qt widget for flexible plotting of user data.
@@ -327,9 +332,15 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             return
         # get the selected plot name
         name = selected_item.text()
-        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.get_settings, name, callback=self._plot_selection_changed_callback)
+        self.line_plot.plot_settings.run_safe(
+            self.line_plot.plot_settings.get_settings,
+            name,
+            callback=self._plot_selection_changed_callback,
+        )
 
-    def _plot_selection_changed_callback(self, name: str, settings: _FlexLinePlotSeriesSettings):
+    def _plot_selection_changed_callback(
+        self, name: str, settings: _FlexLinePlotSeriesSettings
+    ):
         """Called after the selection is changed to update the plot settings GUI elements."""
         self.plot_name_lineedit.setText(name)
         self.plot_series_lineedit.setText(settings.series)
@@ -365,7 +376,14 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         """Called when the user clicks the update button."""
         name, series, scan_i, scan_j, processing = self._get_plot_settings()
         # set the plot settings
-        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.update_settings, name, series, scan_i, scan_j, processing)
+        self.line_plot.plot_settings.run_safe(
+            self.line_plot.plot_settings.update_settings,
+            name,
+            series,
+            scan_i,
+            scan_j,
+            processing,
+        )
 
     def _add_plot_clicked(self):
         """Called when the user clicks the add button."""
@@ -394,7 +412,16 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             processing: 'Average' to average the x and y values of scans i
                 through j, 'Append' to concatenate them.
         """
-        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.add_plot, name, series, scan_i, scan_j, processing, False, callback=self._add_plot_callback)
+        self.line_plot.plot_settings.run_safe(
+            self.line_plot.plot_settings.add_plot,
+            name,
+            series,
+            scan_i,
+            scan_j,
+            processing,
+            False,
+            callback=self._add_plot_callback,
+        )
 
     def _add_plot_callback(self, name: str):
         """Called in main thread after a plot is added."""
@@ -430,7 +457,11 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             name: Name of the subplot.
         """
         # remove the plot settings
-        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.remove_plot, name, callback=self._remove_plot_callback)
+        self.line_plot.plot_settings.run_safe(
+            self.line_plot.plot_settings.remove_plot,
+            name,
+            callback=self._remove_plot_callback,
+        )
 
     def _remove_plot_callback(self, name: str):
         """Called in main thread after a plot is removed."""
@@ -454,7 +485,11 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             name: Name of the subplot.
         """
         # update the settings
-        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.hide_plot, name, callback=self._hide_plot_callback)
+        self.line_plot.plot_settings.run_safe(
+            self.line_plot.plot_settings.hide_plot,
+            name,
+            callback=self._hide_plot_callback,
+        )
 
     def _hide_plot_callback(self, name: str):
         """Called in main thread after a plot is hidden."""
@@ -482,7 +517,11 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
             name: Name of the subplot.
         """
         # update the settings
-        self.line_plot.plot_settings.run_safe(self.line_plot.plot_settings.show_plot, name, callback=self._show_plot_callback)
+        self.line_plot.plot_settings.run_safe(
+            self.line_plot.plot_settings.show_plot,
+            name,
+            callback=self._show_plot_callback,
+        )
 
     def _show_plot_callback(self, name: str):
         """Called after a plot is shown."""
@@ -498,6 +537,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
     def _update_source_clicked(self):
         """Called when the user clicks the connect button."""
         self.line_plot.new_source(self.datasource_lineedit.text())
+
 
 class _FlexLinePlotWidget(LinePlotWidget):
     """See FlexLinePlotWidget."""
@@ -567,10 +607,14 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     ) from err
                 else:
                     if not isinstance(dsets, dict):
-                        raise RuntimeError(f'Data source [{data_set_name}] "datasets" attribute is not a dictionary - exiting...')
+                        raise RuntimeError(
+                            f'Data source [{data_set_name}] "datasets" attribute is not a dictionary - exiting...'
+                        )
 
                 # set the new title/labels in the main thread
-                self.plot_settings.run_main(self._new_source_callback, title, xlabel, ylabel, blocking=True)
+                self.plot_settings.run_main(
+                    self._new_source_callback, title, xlabel, ylabel, blocking=True
+                )
 
                 # add the existing plots
                 with self.plot_settings.mutex:
@@ -674,9 +718,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                             elif scan_i == '':
                                 data_subset = data[: int(scan_j)]
                             else:
-                                data_subset = data[
-                                    int(scan_i) : int(scan_j)
-                                ]
+                                data_subset = data[int(scan_i) : int(scan_j)]
                         except IndexError:
                             _logger.warning(
                                 f'Data series [{series}] invalid scan indices [{scan_i}, {scan_j}]'
@@ -685,9 +727,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
                         if processing == 'Append':
                             # concatenate the numpy arrays
-                            processed_data = np.concatenate(
-                                data_subset, axis=1
-                            )
+                            processed_data = np.concatenate(data_subset, axis=1)
                         elif processing == 'Average':
                             # create a single numpy array
                             stacked_data = np.stack(data_subset)
@@ -696,15 +736,11 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                 stacked_data, mask=np.isnan(stacked_data)
                             )
                             # average the numpy arrays
-                            processed_data = np.ma.average(
-                                masked_data, axis=0
-                            )
+                            processed_data = np.ma.average(masked_data, axis=0)
                         else:
                             raise ValueError(
                                 f'Processing has unsupported value [{processing}].'
                             )
 
                     # update the plot
-                    self.set_data(
-                        plot_name, processed_data[0], processed_data[1]
-                    )
+                    self.set_data(plot_name, processed_data[0], processed_data[1])

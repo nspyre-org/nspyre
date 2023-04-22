@@ -182,25 +182,25 @@ class DataSource(AsyncioWorker):
             True if successful, False otherwise
         """
         try:
-            try:
-                self._queue.put_nowait(pickle_diff)
-            except asyncio.QueueFull as err:
-                # the server isn't accepting data fast enough
-                # so we will empty the queue and merge all of its entries
-                _logger.debug(
-                    f'Data server [{(self._addr, self._port)}] can\'t keep up with source.'
-                )
-                if not _squash_pickle_diff_queue(self._queue, pickle_diff):
-                    raise RuntimeError(
-                        'Maximum diff size exceeded. This is a \
-                        consequence of memory build-up due to the data server \
-                        not being able to keep up with the data rate. Reduce \
-                        the data rate to allow the data server to catch up.'
-                    ) from err
-            _logger.debug('Source queued pickle.')
+            self._queue.put_nowait(pickle_diff)
+        except asyncio.QueueFull as err:
+            # the server isn't accepting data fast enough
+            # so we will empty the queue and merge all of its entries
+            _logger.debug(
+                f'Data server [{(self._addr, self._port)}] can\'t keep up with source.'
+            )
+            if not _squash_pickle_diff_queue(self._queue, pickle_diff):
+                raise RuntimeError(
+                    'Maximum diff size exceeded. This is a \
+                    consequence of memory build-up due to the data server \
+                    not being able to keep up with the data rate. Reduce \
+                    the data rate to allow the data server to catch up.'
+                ) from err
         except asyncio.CancelledError:
             _logger.debug('Source push cancelled.')
             raise
+        else:
+            _logger.debug('Source queued pickle.')
 
     def push(self, data):
         """Push new data to the data server.
@@ -212,7 +212,6 @@ class DataSource(AsyncioWorker):
         """
         # pickle the data and generate diffs
         pickle_diff = streaming_pickle_diff(data)
-        _logger.debug(f'Source pushing object [{data}].')
         # put it on the queue
         future = asyncio.run_coroutine_threadsafe(
             self._push(pickle_diff), self._event_loop

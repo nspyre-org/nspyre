@@ -12,11 +12,10 @@ from pickle import UnpicklingError
 from typing import Any
 from typing import Dict
 
-from ..misc.misc import _total_sizeof
 from .streaming_list import StreamingList
 
-# maximum size of a diff (bytes)
-_MAX_DIFF = 500e6
+# maximum length of a diff
+_MAX_DIFF = 10e3
 
 
 class PickleDiff:
@@ -59,6 +58,12 @@ class PickleDiff:
                 # there is a new streaming object entry, so add it to the self.diffs
                 self.diffs[uid] = pd.diffs[uid]
 
+    def __len__(self):
+        total = 0
+        for d in self.diffs:
+            total += len(self.diffs[d])
+        return total
+
     def __str__(self):
         return f'PickleDiff pkl: {self.pkl} diffs: {self.diffs}'
 
@@ -69,7 +74,7 @@ def _squash_pickle_diff_queue(queue, item, MAX_DIFF=_MAX_DIFF):
     Args:
         queue: Asyncio queue.
         item: PickleDiff to be squashed with the rest of the entries in the queue.
-        MAX_DIFF: maximum size (bytes) for the squashed diff object.
+        MAX_DIFF: maximum length for the squashed diff object.
 
     Returns:
         True on success, False if MAX_DIFF is exceeded.
@@ -84,7 +89,7 @@ def _squash_pickle_diff_queue(queue, item, MAX_DIFF=_MAX_DIFF):
     new_pd = PickleDiff()
     for pd in queue_entries:
         new_pd.squash(pd)
-    if _total_sizeof(new_pd.diffs) > MAX_DIFF:
+    if len(new_pd) > MAX_DIFF:
         return False
     # place the squashed item onto the queue
     queue.put_nowait(new_pd)

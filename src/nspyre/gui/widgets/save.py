@@ -50,11 +50,13 @@ class SaveWidget(QtWidgets.QWidget):
 
     def __init__(
         self,
+        timeout: float = 10,
         additional_filetypes: dict = None,
         save_dialog_dir: Union[str, Path] = None,
     ):
         """
         Args:
+            timeout: Time to wait for retrieving data from the data server before timing out.
             additional_filetypes: Dictionary containing string keys that
                 represent a file type mapping to functions that will save data to a
                 file. The keys should have the form :code:`'FileType (*.extension1 *.extension2)'`,
@@ -63,6 +65,8 @@ class SaveWidget(QtWidgets.QWidget):
             save_dialog_dir: Directory where the file dialog begins. If :code:`None`, default to the user home directory.
         """
         super().__init__()
+
+        self.timeout = timeout
 
         if save_dialog_dir is None:
             self.save_dialog_dir: Union[str, Path] = _HOME
@@ -131,10 +135,10 @@ class SaveWidget(QtWidgets.QWidget):
         try:
             with DataSink(dataset) as sink:
                 # get the data from the dataserver
-                if sink.pop(timeout=0.1):
-                    # run the relevant save function
-                    save_fun = self.filetypes[selected_filter]
-                    save_fun(filename, sink.data)
+                sink.pop(timeout=self.timeout)
+                # run the relevant save function
+                save_fun = self.filetypes[selected_filter]
+                save_fun(filename, sink.data)
         except TimeoutError as err:
             raise RuntimeError(
                 f'Failed getting data set [{dataset}] from data server.'

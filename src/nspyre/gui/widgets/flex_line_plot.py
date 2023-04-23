@@ -563,7 +563,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
             try:
                 # connect to the new data source
                 self.plot_settings.sink = DataSink(data_set_name)
-                self.plot_settings.sink.connect()
+                self.plot_settings.sink.start()
 
                 # try to get the plot title and x/y labels
                 self.plot_settings.sink.pop(timeout=self.timeout)
@@ -649,7 +649,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
         """Disconnect from the data source."""
         with self.plot_settings.sink_mutex:
             if self.plot_settings.sink is not None:
-                self.plot_settings.sink.disconnect()
+                self.plot_settings.sink.stop()
                 self.plot_settings.sink = None
 
     def update(self):

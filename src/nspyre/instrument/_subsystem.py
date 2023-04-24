@@ -18,18 +18,20 @@ class Subsystem(QObject):
     def __init__(
         self,
         name,
-        pre_boot_fun=None,
-        boot_fun=None,
-        shutdown_fun=None,
+        pre_dep_boot=None,
+        post_dep_boot=None,
+        pre_dep_shutdown=None,
+        post_dep_shutdown=None,
         dependencies=None,
     ):
         """
         Args:
-            name: subsystem name
-            pre_boot_fun: function to run before booting any dependency subsystems; should take 1 argument, which is the subsystem object
-            boot_fun: function to run to boot the subsystem; should take 1 argument, which is the subsystem object
-            shutdown_fun: function to run to shutdown the subsystem; should take 1 argument, which is the subsystem object
-            dependencies: list of Subsystem objects this subsystem depends on; they will be booted (in order) before this subsystem, and shutdown (in reverse order) after this subsystem shuts down
+            name: Subsystem name.
+            pre_dep_boot: Function to run before booting any dependency subsystems; should take 1 argument, which is the subsystem object.
+            post_dep_boot: Function to run to boot the subsystem; should take 1 argument, which is the subsystem object.
+            pre_dep_shutdown: Function to run once shutdown is requested, but before shutting down any dependencies; should take 1 argument, which is the subsystem object.
+            post_dep_shutdown: Function to run after shutting down any dependencies; should take 1 argument, which is the subsystem object.
+            dependencies: List of Subsystem objects this subsystem depends on; they will be booted (in order) before this subsystem, and shutdown (in reverse order) after this subsystem shuts down.
         """
         super().__init__()
 
@@ -51,23 +53,14 @@ class Subsystem(QObject):
             for subsys in self.dependencies:
                 subsys.dependents.append(self)
 
-        self.pre_boot_fun = pre_boot_fun
-        self.boot_fun = boot_fun
-        self.shutdown_fun = shutdown_fun
+        self.pre_dep_boot = pre_dep_boot
+        self.post_dep_boot = post_dep_boot
+        self.pre_dep_shutdown = pre_dep_shutdown
+        self.post_dep_shutdown = post_dep_shutdown
         self.booted = False
 
     def __str__(self):
-        return f'{self.name} booted: {self.booted}'
-
-    def pre_dep_boot(self):
-        """Run once boot is requested, before booting any dependencies.
-        Subclasses may override this"""
-        pass
-
-    def post_dep_boot(self):
-        """Run once boot is requested, after booting any dependencies.
-        Subclasses may override this"""
-        pass
+        return f'{self.name} (booted={self.booted})'
 
     def boot(self, boot_dependencies=True):
         if self.booted:
@@ -77,8 +70,8 @@ class Subsystem(QObject):
             return
         _logger.info(f'Booting [{self.name}]...')
 
-        if self.pre_boot_fun is not None:
-            self.pre_boot_fun(self)
+        if self.pre_dep_boot is not None:
+            self.pre_dep_boot(self)
 
         # make sure all dependencies are booted before booting
         for subsys in self.dependencies:
@@ -91,17 +84,12 @@ class Subsystem(QObject):
                     )
                     return
 
-        if self.boot_fun is not None:
-            self.boot_fun(self)
+        if self.post_dep_boot is not None:
+            self.post_dep_boot(self)
 
         self.booted = True
         self.state_changed.emit(self.booted)
         _logger.info(f'Booted [{self.name}].')
-
-    def pre_dep_shutdown(self):
-        """Run once shutdown is requested, but before shutting down any dependencies.
-        Subclasses may override this"""
-        pass
 
     def shutdown(self, shutdown_dependencies=True):
         """Shutdown the subsystem.
@@ -124,8 +112,8 @@ class Subsystem(QObject):
                 )
                 return
 
-        if self.shutdown_fun is not None:
-            self.shutdown_fun(self)
+        if self.pre_dep_shutdown is not None:
+            self.pre_dep_shutdown(self)
 
         # remove all driver objects
         for d in self.drivers:
@@ -149,6 +137,9 @@ class Subsystem(QObject):
                             should_shutdown = False
                     if should_shutdown:
                         subsys.shutdown(shutdown_dependencies=True)
+
+        if self.post_dep_shutdown is not None:
+            self.post_dep_shutdown(self)
 
     def __getattr__(self, attr: str):
         if attr in self.drivers:

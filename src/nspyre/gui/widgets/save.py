@@ -56,7 +56,7 @@ class SaveWidget(QtWidgets.QWidget):
     ):
         """
         Args:
-            timeout: Time to wait for retrieving data from the data server before timing out.
+            timeout: Timeout for data sink pop().
             additional_filetypes: Dictionary containing string keys that
                 represent a file type mapping to functions that will save data to a
                 file. The keys should have the form :code:`'FileType (*.extension1 *.extension2)'`,
@@ -140,6 +140,6 @@ class SaveWidget(QtWidgets.QWidget):
                 save_fun = self.filetypes[selected_filter]
                 save_fun(filename, sink.data)
         except TimeoutError as err:
-            raise RuntimeError(
-                f'Failed getting data set [{dataset}] from data server.'
+            raise TimeoutError(
+                f'Timed out retreiving the data set [{dataset}] from data server. If the data set is very large, you may need to increase the SaveWidget timeout.'
             ) from err

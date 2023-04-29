@@ -11,7 +11,7 @@ _logger = logging.getLogger(__name__)
 class _ObjectOnMainThread(QtCore.QObject):
     def __init__(self):
         super().__init__()
-        # move to main thread
+        # move self to main thread
         self.moveToThread(QtWidgets.QApplication.instance().thread())
 
     def run(self, fun, args: tuple, kwargs: Dict, blocking: bool):
@@ -68,6 +68,9 @@ class QThreadSafeData(QtCore.QObject):
             kwargs: Keyword arguments to the function.
             blocking: If true, block until the function returns. Non-blocking
                 calls cannot return anything.
+
+        Returns:
+            Return value of the function.
         """
         return self.main_obj.run(fun, args, kwargs, blocking=blocking)
 
@@ -114,7 +117,7 @@ class QThreadSafeData(QtCore.QObject):
         # wrap the result in a list in order to have a standardized return type
         return [fun(*args, **kwargs)]
 
-    def get_safe(self, *attrs):
+    def get_safe(self, *attrs) -> tuple:
         """Retrieve object attributes in a (blocking) thread-safe way.
 
         Args:

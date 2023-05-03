@@ -12,6 +12,7 @@ from .instrument import InstrumentManager
 from .instrument import InstrumentServer
 from .instrument import InstrumentServerDeviceExistsError
 from .instrument import InstrumentServerError
+from .instrument import Subsystem
 from .misc import nspyre_init_logger
 from .misc import ProcessRunner
 from .misc import Q_

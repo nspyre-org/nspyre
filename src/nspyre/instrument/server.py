@@ -86,6 +86,7 @@ class InstrumentServer(ClassicService):
         args: list = None,
         import_or_file: str = 'file',
         kwargs: Dict = None,
+        local: bool = False,
     ):
         """Create an instance of the specified class and add it to the instrument server.
 
@@ -103,22 +104,28 @@ class InstrumentServer(ClassicService):
                 :code:`RTB2004(*args, **kwargs)`.
             kwargs: Keyword args to pass to the class during initialization,
                 as in :code:`RTB2004(*args, **kwargs)`.
+            local: If True, all arguments to this method are assumed to be
+                local variables not passed through an
+                :py:class:`~nspure.instrument.gateway.InstrumentGateway`. In 
+                this case, the arguments will be taken as-is. If False, all
+                arguments will be retrieved using rpyc.utils.classic.obtain
+                in order to ensure they are not netrefs.
 
         Raises:
             ValueError: An argument was invalid.
             InstrumentServerDeviceExistsError: Tried to add a device that already exists.
             InstrumentServerError: Anything else.
         """
-
-        # make sure that the arguments actually exist on the local machine
-        # and are not netrefs - otherwise there could be dangling references left over
-        # in the self._devs dictionary after the client disconnects
-        name = obtain(name)
-        class_path = obtain(class_path)
-        class_name = obtain(class_name)
-        import_or_file = obtain(import_or_file)
-        args = obtain(args)
-        kwargs = obtain(kwargs)
+        if not local:
+            # make sure that the arguments actually exist on the local machine
+            # and are not netrefs - otherwise there could be dangling references left over
+            # in the self._devs dictionary after the client disconnects
+            name = obtain(name)
+            class_path = obtain(class_path)
+            class_name = obtain(class_name)
+            import_or_file = obtain(import_or_file)
+            args = obtain(args)
+            kwargs = obtain(kwargs)
 
         if args is None:
             args = []

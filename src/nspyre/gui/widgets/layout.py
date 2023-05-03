@@ -34,30 +34,37 @@ def tree_layout(config: Dict) -> LayoutTreeNode:
 
     .. code-block:: python
 
-        label1 = QtWidgets.QLabel('Label1')
-        label2 = QtWidgets.QLabel('Label2')
-        label3 = QtWidgets.QLabel('Label3')
-        label4 = QtWidgets.QLabel('Label4')
-        label5 = QtWidgets.QLabel('Label5')
-        label6 = QtWidgets.QLabel('Label6')
-        layout_config = {
-            'type': QtWidgets.QVBoxLayout,
-            'l1': label1,
-            'l2': label2,
-            'sub_layout': {
-                'type': QtWidgets.QHBoxLayout,
-                'l3': label3,
-                'l4': label4,
-                'sub_sub_layout': {
+        from nspyre import tree_layout
+        from pyqtgraph.Qt import QtWidgets
+
+        class MyWidget(QtWidgets.QWidget):
+            def __init__(self):
+                super().__init__()
+                label1 = QtWidgets.QLabel('Label1')
+                label2 = QtWidgets.QLabel('Label2')
+                label3 = QtWidgets.QLabel('Label3')
+                label4 = QtWidgets.QLabel('Label4')
+                label5 = QtWidgets.QLabel('Label5')
+                label6 = QtWidgets.QLabel('Label6')
+                layout_config = {
                     'type': QtWidgets.QVBoxLayout,
-                    'l5': label5,
-                    'l6': label6,
+                    'l1': label1,
+                    'l2': label2,
+                    'sub_layout': {
+                        'type': QtWidgets.QHBoxLayout,
+                        'l3': label3,
+                        'l4': label4,
+                        'sub_sub_layout': {
+                            'type': QtWidgets.QVBoxLayout,
+                            'l5': label5,
+                            'l6': label6,
+                        }
+                    }
                 }
-            }
-        }
-        tree_root = tree_layout(layout_config)
-        print(tree_root.l1.text())
-        print(tree_root.sub_layout.sub_sub_layout.l5.text())
+                tree_root = tree_layout(layout_config)
+                self.setLayout(tree_root.layout)
+                print(tree_root.l1.text())
+                print(tree_root.sub_layout.sub_sub_layout.l5.text())
 
     Args:
         config: Tree of dictionaries describing the layout structure.

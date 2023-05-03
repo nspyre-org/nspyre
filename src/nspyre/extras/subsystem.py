@@ -1,12 +1,14 @@
 import logging
+import time
+from typing import Callable
 from typing import Dict
 from typing import Union
 
-from .server import InstrumentServer
-from .gateway import InstrumentGateway
 from ..gui import QObject
 from ..gui import Qt_GUI
 from ..gui import QtCore
+from ..instrument.gateway import InstrumentGateway
+from ..instrument.server import InstrumentServer
 
 _logger = logging.getLogger(__name__)
 
@@ -19,25 +21,24 @@ class Subsystem(QObject):
         booted_sig = QtCore.Signal()
         shutdown_sig = QtCore.Signal()
 
-    # TODO type hint for callable?
     def __init__(
         self,
         name: str,
-        pre_dep_boot=None,
-        post_dep_boot=None,
+        pre_dep_boot: Callable = None,
+        post_dep_boot: Callable = None,
         default_boot_timeout: float = 10,
         default_boot_inserv: Union[InstrumentServer, InstrumentGateway] = None,
         default_boot_add_args: list = None,
         default_boot_add_kwargs: Dict = None,
-        pre_dep_shutdown=None,
-        post_dep_shutdown=None,
+        pre_dep_shutdown: Callable = None,
+        post_dep_shutdown: Callable = None,
         dependencies: list = None,
     ):
         """
         Args:
             name: Subsystem name.
-            pre_dep_boot: Function to run before booting any dependency 
-                subsystems; should take 1 argument, which is the subsystem 
+            pre_dep_boot: Function to run before booting any dependency
+                subsystems; should take 1 argument, which is the subsystem
                 object.
             post_dep_boot: Function to run to boot the subsystem after booting
                 any dependency subsystems; should take 1 argument, which is the
@@ -78,7 +79,7 @@ class Subsystem(QObject):
             self.dependencies = dependencies
 
         # dependent subsystems
-        self.dependents = []
+        self.dependents: list[Subsystem] = []
         if dependencies is not None:
             # set self as a dependent for all dependencies
             for subsys in self.dependencies:
@@ -93,7 +94,7 @@ class Subsystem(QObject):
         else:
             self.default_boot_add_args = default_boot_add_args
         if default_boot_add_kwargs is None:
-            self.default_boot_add_kwargs = []
+            self.default_boot_add_kwargs = {}
         else:
             self.default_boot_add_kwargs = default_boot_add_kwargs
         self.pre_dep_shutdown = pre_dep_shutdown
@@ -103,28 +104,38 @@ class Subsystem(QObject):
     def __str__(self):
         return f'{self.name} (booted={self.booted})'
 
-    def default_boot(self):
-        """Tries to add the driver to the :py:class:`~nspyre.instrument.InstrumentServer`
-        in a loop, until :py:attr:`default_boot_timeout` has elapsed."""
-        if self.default_boot_inserv is None:
-            raise ValueError('If using default_boot, an InstrumentServer or InstrumentGateway must be provided using the default_boot_inserv keyword argument.')
-        timeout = time.time() + self.default_boot_timeout
-        while True:
-            try:
-                self.default_boot_inserv.add(*self.default_boot_add_args, **self.default_boot_add_kwargs)
-                break
-            except Exception as err:
-                if time.time() > timeout:
-                    raise TimeoutError(f'Failed initializing driver for subsystem [{self.name}].') from err
-                time.sleep(0.5)
-
-    def default_shutdown(self):
-        """Remove the driver from the :py:class:`~nspyre.instrument.InstrumentServer`."""
+    def _dev_name(self):
         if 'name' in self.default_boot_add_kwargs:
             name = self.default_boot_add_kwargs['name']
         else:
             name = self.default_boot_add_args[0]
-        self.default_boot_inserv.remove(name)
+        return name
+
+    def default_boot(self):
+        """Tries to add the driver to the :py:class:`~nspyre.instrument.InstrumentServer`
+        in a loop, until :code:`default_boot_timeout` has elapsed."""
+        if self.default_boot_inserv is None:
+            raise ValueError(
+                'If using default_boot, an InstrumentServer or InstrumentGateway must be provided using the default_boot_inserv keyword argument.'
+            )
+
+        timeout = time.time() + self.default_boot_timeout
+        while True:
+            try:
+                self.default_boot_inserv.add(
+                    *self.default_boot_add_args, **self.default_boot_add_kwargs
+                )
+                break
+            except Exception as err:
+                if time.time() > timeout:
+                    raise TimeoutError(
+                        f'Failed initializing driver for subsystem [{self.name}].'
+                    ) from err
+                time.sleep(0.5)
+
+    def default_shutdown(self):
+        """Remove the driver from the :py:class:`~nspyre.instrument.InstrumentServer`."""
+        self.default_boot_inserv.remove(self._dev_name())
 
     def boot(self, boot_dependencies: bool = True):
         if self.booted:
@@ -155,7 +166,7 @@ class Subsystem(QObject):
 
         self.booted = True
         if Qt_GUI:
-            self.booted_sig.emit(self.booted)
+            self.booted_sig.emit()
         _logger.info(f'Booted [{self.name}].')
 
     def shutdown(self, shutdown_dependencies: bool = True):

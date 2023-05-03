@@ -1,48 +1,33 @@
-from lantz.core import Action
-from lantz.core import Driver
-from lantz.core import Feat
-
-
-class FakeSigGen(Driver):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class FakeSigGen:
+    def __init__(self):
         self._amplitude = 0.0
         self._frequency = 1e3
         self._output_en = False
-        self._waveform = 0
+        self._waveform = 'sine'
 
-    @Feat(values={True, False})
     def output_enabled(self):
         return self._output_en
 
-    @output_enabled.setter
-    def output_enabled(self, value):
+    def set_output_enabled(self, value: bool):
         self._output_en = value
 
-    @Feat(values={'sine': 0, 'square': 1})
     def waveform(self):
         return self._waveform
 
-    @waveform.setter
-    def waveform(self, value):
+    def set_waveform(self, value):
         self._waveform = value
 
-    @Feat(units='Hz', limits=(1, 10e9))
     def frequency(self):
         return self._frequency
 
-    @frequency.setter
-    def frequency(self, value):
+    def set_frequency(self, value: float):
         self._frequency = value
 
-    @Feat(units='V', limits=(0, 10))
     def amplitude(self):
         return self._amplitude
 
-    @amplitude.setter
-    def amplitude(self, value):
+    def set_amplitude(self, value: float):
         self._amplitude = value
 
-    @Action()
     def calibrate(self):
         print('sig-gen calibration succeeded')

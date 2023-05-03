@@ -113,7 +113,7 @@ def _load_class_from_file(file_path: Path, class_name: str) -> Type:
 
     # confirm the file exists
     if not file_path.is_file():
-        raise FileNotFoundError(f'File "{file_path}" doesn\'t exist')
+        raise FileNotFoundError(f'File [{file_path}] doesn\'t exist')
 
     file_dir = file_path.parent
     file_name = file_path.stem

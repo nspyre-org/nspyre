@@ -11,7 +11,7 @@ class LayoutTreeNode:
 
         Args:
             layout: QLayout object for this node.
-            children: Dict with string keys mapped to values of either 
+            children: Dict with string keys mapped to values of either
                 :code:`QtWidgets.QWidget`, :code:`QtWidgets.QLayout`, or :py:class:`~nspyre.gui.widgets.layout.LayoutTreeNode`.
         """
         self.layout = layout
@@ -68,10 +68,10 @@ def tree_layout(config: Dict) -> LayoutTreeNode:
 
     Args:
         config: Tree of dictionaries describing the layout structure.
-            Each dictionary (node) must contain a :code:`'type'` key. The value 
-            associated with :code:`'type'` should be a :code:`QtWidgets.QLayout`. 
-            All other keys/values should be a string mapping to either a 
-            :code:`QtWidgets.QLayout`, :code:`QtWidgets.QWidget`, or another 
+            Each dictionary (node) must contain a :code:`'type'` key. The value
+            associated with :code:`'type'` should be a :code:`QtWidgets.QLayout`.
+            All other keys/values should be a string mapping to either a
+            :code:`QtWidgets.QLayout`, :code:`QtWidgets.QWidget`, or another
             dictionary with the given structure.
 
     Raises:

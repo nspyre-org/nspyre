@@ -4,6 +4,7 @@ widgets are placed in a pyqtgraph :code:`DockArea`.
 """
 from importlib import reload
 from types import ModuleType
+from typing import Dict
 
 from pyqtgraph.dockarea import Dock
 from pyqtgraph.dockarea import DockArea
@@ -113,10 +114,10 @@ class MainWidget(QtWidgets.QWidget):
 
     """
 
-    def __init__(self, widgets, font_size='18px'):
+    def __init__(self, widgets: Dict, font_size: str = '18px'):
         """
         Args:
-            widgets: Dictionary - see example usage for the required form.
+            widgets: See example usage for the required form.
             font_size: Dock label font size as a string (e.g. '14px').
         """
         super().__init__()
@@ -158,7 +159,7 @@ class MainWidget(QtWidgets.QWidget):
                         'Value in widgets dictionary must be a MainWidgetItem or another dictionary containing MainWidgetItem.'
                     )
 
-        parse_widgets(widgets, tree_root_node)
+        parse_widgets(self.widgets, tree_root_node)
         self.tree_widget.setModel(tree_model)
         self.tree_widget.collapseAll()
         self.tree_widget.doubleClicked.connect(self._tree_item_double_click)

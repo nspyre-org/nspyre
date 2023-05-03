@@ -86,7 +86,7 @@ class InstrumentServer(ClassicService):
         args: list = None,
         import_or_file: str = 'file',
         kwargs: Dict = None,
-        local: bool = False,
+        local_args: bool = False,
     ):
         """Create an instance of the specified class and add it to the instrument server.
 
@@ -104,9 +104,9 @@ class InstrumentServer(ClassicService):
                 :code:`RTB2004(*args, **kwargs)`.
             kwargs: Keyword args to pass to the class during initialization,
                 as in :code:`RTB2004(*args, **kwargs)`.
-            local: If True, all arguments to this method are assumed to be
+            local_args: If True, all arguments to this method are assumed to be
                 local variables not passed through an
-                :py:class:`~nspure.instrument.gateway.InstrumentGateway`. In 
+                :py:class:`~nspyre.instrument.gateway.InstrumentGateway`. In
                 this case, the arguments will be taken as-is. If False, all
                 arguments will be retrieved using rpyc.utils.classic.obtain
                 in order to ensure they are not netrefs.
@@ -116,7 +116,7 @@ class InstrumentServer(ClassicService):
             InstrumentServerDeviceExistsError: Tried to add a device that already exists.
             InstrumentServerError: Anything else.
         """
-        if not local:
+        if not local_args:
             # make sure that the arguments actually exist on the local machine
             # and are not netrefs - otherwise there could be dangling references left over
             # in the self._devs dictionary after the client disconnects
@@ -158,7 +158,7 @@ class InstrumentServer(ClassicService):
         else:
             raise ValueError(
                 'argument import_or_file must be "file" or "import"; got'
-                f' "{import_or_file}".'
+                f' [{import_or_file}].'
             )
 
         # create an instance of the device

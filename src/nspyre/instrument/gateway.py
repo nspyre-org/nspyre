@@ -149,8 +149,12 @@ class InstrumentGateway:
                     # the user is trying to access an attribute of the instrument server
                     return getattr(self._connection.root, attr)
                 else:
-                    # the user is trying to access a device - return a nice wrapper for the device
-                    return InstrumentGatewayDevice(attr, self)
+                    if hasattr(self._connection.root, attr):
+                        # the user is trying to access a device - return a nice wrapper for the device
+                        return InstrumentGatewayDevice(attr, self)
+                    else:
+                        # the device doesn't exist, so raise the default error
+                        return getattr(self._connection.root, attr)
             else:
                 raise EOFError
         except EOFError:

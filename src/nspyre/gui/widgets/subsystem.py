@@ -1,22 +1,26 @@
-"""
-GUI for controlling the subsystems of the biosensing2 setup.
-
-Copyright (c) 2022, Jacob Feder
-All rights reserved.
-"""
 import logging
+from collections.abc import Iterable
 
-from pyqtgraph.Qt import QtWidgets
 from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtWidgets
 
-from bs2.drivers.meta_driver import Subsystem
+from ...extras.subsystem import Subsystem
 
 logger = logging.getLogger(__name__)
 
-class SubsystemTreeItem(QtGui.QStandardItem):
-    """A leaf node in the QTreeView of the meta driver GUI which contains a 
-    Subsystem."""
-    def __init__(self, subsys: Subsystem, booted_color: QtGui.QColor=QtGui.QColor(127, 179, 0), shutdown_color: QtGui.QColor=QtGui.QColor(156, 0, 0)):
+DEFAULT_BOOTED_COLOR = QtGui.QColor(127, 179, 0)
+DEFAULT_SHUTDOWN_COLOR = QtGui.QColor(156, 0, 0)
+
+
+class _SubsystemTreeItem(QtGui.QStandardItem):
+    """A leaf node in the QTreeView of the subsystems GUI."""
+
+    def __init__(
+        self,
+        subsys: Subsystem,
+        booted_color: QtGui.QColor = DEFAULT_BOOTED_COLOR,
+        shutdown_color: QtGui.QColor = DEFAULT_SHUTDOWN_COLOR,
+    ):
         """
         Args:
             subsys: instance of Subsystem
@@ -28,49 +32,55 @@ class SubsystemTreeItem(QtGui.QStandardItem):
         self.booted_color = booted_color
         self.shutdown_color = shutdown_color
 
-    def state_changed(self, state):
-        """Change the item color based on the new subsystem state."""
-        if state:
-            self.setBackground(self.booted_color)
-        else:
-            self.setBackground(self.shutdown_color)
+    def booted(self):
+        """Change the item color to reflect booted state."""
+        self.setBackground(self.booted_color)
+
+    def shutdown(self):
+        """Change the item color to reflect shutdown state."""
+        self.setBackground(self.shutdown_color)
+
 
 class SubsystemsWidget(QtWidgets.QWidget):
-    """Qt widget for controlling the BS2 subsystems."""
+    """Qt widget for controlling subsystems."""
 
-    def __init__(self, driver):
+    def __init__(self, subsystems: Iterable[Subsystem]):
         """
         Args:
-            driver: an instance of the meta driver
+            subsystems: An iterable containing :py:class:`~nspyre.extras.subsystem.Subsystem` objects.
         """
         super().__init__()
-
-        self.drv = driver
 
         # top level layout
         layout = QtWidgets.QVBoxLayout()
 
-        # make a GUI element to show all the available widgets
+        # make a GUI element to show all the available subsystems
         self.subsys_tree_widget = QtWidgets.QTreeView()
         self.subsys_tree_widget.setHeaderHidden(True)
         tree_model = QtGui.QStandardItemModel()
         tree_root_node = tree_model.invisibleRootItem()
-        # recursive function to parse through the subsystems and add 
-        # them to the tree widget
+
+        # recursive function to parse through the subsystems and add them to the tree widget
         def parse_subsystems(subsys, parent):
             # make a tree item to represent this subsystem
-            node = SubsystemTreeItem(subsys)
+            node = _SubsystemTreeItem(subsys)
             # set the initial color of the subsystem in the GUI
-            node.state_changed(subsys.booted)
+            if subsys.booted:
+                node.booted()
+            else:
+                node.shutdown()
             # any subsequent changes to the subsystem state will trigger a color update
-            subsys.state_changed.connect(node.state_changed)
+            subsys.booted_sig.connect(node.booted)
+            subsys.shutdown_sig.connect(node.shutdown)
             # add the node to the tree
             parent.appendRow(node)
             # add all dependency nodes to the tree
             for s in subsys.dependencies:
                 parse_subsystems(s, node)
-        parse_subsystems(self.drv.subsystems['bs2'], tree_root_node)
-        parse_subsystems(self.drv.subsystems['other'], tree_root_node)
+
+        # add all of the subsystems to the tree
+        for s in subsystems:
+            parse_subsystems(s, tree_root_node)
         self.subsys_tree_widget.setModel(tree_model)
         self.subsys_tree_widget.collapseAll()
         self.subsys_tree_widget.doubleClicked.connect(self.tree_item_double_click)
@@ -123,14 +133,18 @@ class SubsystemsWidget(QtWidgets.QWidget):
         # get the currently selected tree index
         selected_tree_index = self.subsys_tree_widget.selectedIndexes()[0]
         # retrieve the item
-        tree_subsys_item = self.subsys_tree_widget.model().itemFromIndex(selected_tree_index)
+        tree_subsys_item = self.subsys_tree_widget.model().itemFromIndex(
+            selected_tree_index
+        )
         self.boot(tree_subsys_item.subsys)
 
     def shutdown_clicked(self):
         # get the currently selected tree index
         selected_tree_index = self.subsys_tree_widget.selectedIndexes()[0]
         # retrieve the item
-        tree_subsys_item = self.subsys_tree_widget.model().itemFromIndex(selected_tree_index)
+        tree_subsys_item = self.subsys_tree_widget.model().itemFromIndex(
+            selected_tree_index
+        )
         shutdown_dependencies = self.shutdown_dependencies_checkbox.isChecked()
         tree_subsys_item.subsys.shutdown(shutdown_dependencies=shutdown_dependencies)
 

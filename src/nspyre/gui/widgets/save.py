@@ -1,12 +1,11 @@
 from pathlib import Path
-from typing import Any
 from typing import Union
 
 from pyqtgraph.Qt import QtWidgets
 
-from ...data.sink import DataSink
 from ...data.save import save_json
 from ...data.save import save_pickle
+from ...data.sink import DataSink
 
 _HOME = Path.home()
 

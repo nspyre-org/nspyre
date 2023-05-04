@@ -17,8 +17,8 @@ from pyqtgraph.Qt import QtWidgets
 from ..style._colors import colors
 from ..style._colors import cyclic_colors
 from ..style._style import nspyre_font
-from ..threadsafe_data import QThreadSafeData
-from ._widget_update_thread import WidgetUpdateThread
+from ..threadsafe import QThreadSafeObject
+from .update_loop import UpdateLoop
 
 _logger = logging.getLogger(__name__)
 
@@ -38,15 +38,15 @@ class PlotSeriesData(QtCore.QObject):
         """Whether the plot is hidden."""
 
 
-class LinePlotData(QThreadSafeData):
+class LinePlotData(QThreadSafeObject):
     """Manages all plot data series for a LinePlotWidget."""
 
     def __init__(self, plot_widget):
-        super().__init__()
         self.plots: Dict[str, PlotSeriesData] = {}
         """A dict mapping data set names (str) to a PlotSeriesData associated with each line plot."""
         # for blocking set_data until the data has been processed
         self.sem = QtCore.QSemaphore(n=1)
+        super().__init__()
 
     def add_plot(self, name: str, callback=None, **kwargs):
         """Add a new plot.
@@ -238,13 +238,14 @@ class LinePlotWidget(QtWidgets.QWidget):
         # clean up when the widget is destroyed
         self.destroyed.connect(partial(self.stop))
 
-        # thread for updating the plot data
-        self.update_thread = WidgetUpdateThread(self.update)
-        # start the thread
-        self.update_thread.start()
+        # for updating the plot data
+        self.update_loop = UpdateLoop(self.update)
 
         # plot setup code
         self.setup()
+
+        # start the updating
+        self.update_loop.start()
 
     def plot_item(self):
         """Return the pyqtgraph `PlotItem <https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/plotitem.html#pyqtgraph.PlotItem>`__."""
@@ -400,7 +401,8 @@ class LinePlotWidget(QtWidgets.QWidget):
     def stop(self):
         """Stop the plot updating thread and run the
         :py:meth:`~nspyre.gui.widgets.line_plot.LinePlotWidget.teardown` code."""
-        self.update_thread.update_func = None
+        print('stopping lineplot')
+        self.update_loop.stop()
         self.teardown()
 
     # TODO

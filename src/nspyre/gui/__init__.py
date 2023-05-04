@@ -19,6 +19,7 @@ if Qt_GUI:
     from .debug import qt_set_trace
     from .style import colors
     from .style import cyclic_colors
+    from .threadsafe import QThreadSafeObject
     from .widgets import ColorMapWidget
     from .widgets import experiment_widget_process_queue
     from .widgets import ExperimentWidget

@@ -9,7 +9,7 @@ from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
 from ...data.sink import DataSink
-from ..threadsafe_data import QThreadSafeData
+from ..threadsafe import QThreadSafeObject
 from .layout import tree_layout
 from .line_plot import LinePlotWidget
 
@@ -27,11 +27,10 @@ class _FlexLinePlotSeriesSettings:
         self.hidden = hidden
 
 
-class _FlexLinePlotSettings(QThreadSafeData):
+class _FlexLinePlotSettings(QThreadSafeObject):
     """Container class to hold the plot settings for a _FlexLinePlotWidget."""
 
     def __init__(self):
-        super().__init__()
         self.series_settings: Dict[str, _FlexLinePlotSeriesSettings] = {}
         # DataSink for pulling plot data from the data server
         self.sink = None
@@ -39,6 +38,7 @@ class _FlexLinePlotSettings(QThreadSafeData):
         self.sink_mutex = Lock()
         # flag indicating that the plots should be updated
         self.force_update = False
+        super().__init__()
 
     def get_settings(self, name, callback=None):
         with self.mutex:
@@ -543,9 +543,9 @@ class _FlexLinePlotWidget(LinePlotWidget):
     """See FlexLinePlotWidget."""
 
     def __init__(self, timeout=1):
-        super().__init__()
         self.timeout = timeout
         self.plot_settings = _FlexLinePlotSettings()
+        super().__init__()
 
     def new_source(self, data_set_name: str):
         """Connect to a new data set on the data server.
@@ -654,11 +654,6 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
     def update(self):
         """Update the plot if there is new data available."""
-        if not hasattr(self, 'plot_settings'):
-            # update thread started before init was finished
-            time.sleep(0.01)
-            return
-
         with self.plot_settings.sink_mutex:
             if self.plot_settings.sink is None:
                 # rate limit how often update() runs if there is no sink connected

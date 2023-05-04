@@ -6,8 +6,10 @@ Usage:
 
 from nspyre.misc._stacktracer import trace_start, trace_stop
 
-trace_start('trace.html', interval=5)
 ...
+
+trace_start('trace.html', interval=1)
+app.exec()
 trace_stop()
 
 """
@@ -25,6 +27,10 @@ _tracer = None
 
 
 def stacktraces():
+
+    # TODO TEST
+    for thread in threading.enumerate(): 
+        print(thread.name)
     code = []
     for threadId, stack in sys._current_frames().items():
         code.append("\n# ThreadID: %s" % threadId)

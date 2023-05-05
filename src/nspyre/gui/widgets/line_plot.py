@@ -56,7 +56,7 @@ class LinePlotData(QThreadSafeObject):
             callback: Callback function to run (blocking) in the main thread.
             kwargs: Additional keyword args to pass to PlotDataItem().
         """
-        with self.mutex:
+        with QtCore.QMutexLocker(self.mutex):
             if name in self.plots:
                 _logger.info(
                     f'A plot with the name [{name}] already exists. Ignoring add_plot request.'
@@ -73,7 +73,7 @@ class LinePlotData(QThreadSafeObject):
             name: Name of the plot.
             callback: Callback function to run (blocking) in the main thread.
         """
-        with self.mutex:
+        with QtCore.QMutexLocker(self.mutex):
             if name not in self.plots:
                 _logger.info(
                     f'A plot with the name [{name}] does not exist. Ignoring remove_plot request.'
@@ -92,7 +92,7 @@ class LinePlotData(QThreadSafeObject):
         Args:
             callback: Callback function to run (blocking) in the main thread.
         """
-        with self.mutex:
+        with QtCore.QMutexLocker(self.mutex):
             self.plots = {}
             if callback is not None:
                 self.run_main(callback, blocking=True)
@@ -104,7 +104,7 @@ class LinePlotData(QThreadSafeObject):
             name: Name of the plot.
             callback: Callback function to run (blocking) in the main thread.
         """
-        with self.mutex:
+        with QtCore.QMutexLocker(self.mutex):
             if name not in self.plots:
                 _logger.info(
                     f'A plot with the name [{name}] does not exist. Ignoring hide_plot request.'
@@ -123,7 +123,7 @@ class LinePlotData(QThreadSafeObject):
             name: Name of the plot.
             callback: Callback function to run (blocking) in the main thread.
         """
-        with self.mutex:
+        with QtCore.QMutexLocker(self.mutex):
             if name not in self.plots:
                 _logger.info(
                     f'A plot with the name [{name}] does not exist. Ignoring show_plot request.'
@@ -147,7 +147,7 @@ class LinePlotData(QThreadSafeObject):
         # block until any previous calls to set_data have been fully processed
         self.sem.acquire()
 
-        with self.mutex:
+        with QtCore.QMutexLocker(self.mutex):
             if name not in self.plots:
                 _logger.info(
                     f'A plot with the name [{name}] does not exist. Ignoring set_data request.'
@@ -230,13 +230,15 @@ class LinePlotWidget(QtWidgets.QWidget):
         if legend:
             self.plot_widget.addLegend(labelTextSize=f'{font.pointSize()}pt')
 
-        self.plot_data = LinePlotData(self.plot_widget)
-        """Instance of LinePlotData to manage plot data in a thread-safe way."""
-
         self.setLayout(self.layout)
 
         # clean up when the widget is destroyed
-        self.destroyed.connect(partial(self.stop))
+        self.destroyed.connect(self._stop)
+        self.stopped = False
+
+        self.plot_data = LinePlotData(self.plot_widget)
+        """Instance of LinePlotData to manage plot data in a thread-safe way."""
+        self.plot_data.start()
 
         # for updating the plot data
         self.update_loop = UpdateLoop(self.update)
@@ -246,6 +248,14 @@ class LinePlotWidget(QtWidgets.QWidget):
 
         # start the updating
         self.update_loop.start()
+
+    def _stop(self):
+        """Stop the plot updating and data management threads, and run the
+        :py:meth:`~nspyre.gui.widgets.line_plot.LinePlotWidget.teardown` code."""
+        self.stopped = True
+        self.update_loop.stop()
+        self.plot_data.stop()
+        self.teardown()
 
     def plot_item(self):
         """Return the pyqtgraph `PlotItem <https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/plotitem.html#pyqtgraph.PlotItem>`__."""
@@ -260,19 +270,19 @@ class LinePlotWidget(QtWidgets.QWidget):
         self.plot_widget.setTitle(title, size=f'{self.font.pointSize()}pt')
 
     def setup(self):
-        """Subclasses should override this function to perform any setup code \
-        before the :py:meth:`~nspyre.gui.widgets.line_plot.LinePlotWidget.update` \
+        """Subclasses should override this function to perform any setup code
+        before the :py:meth:`~nspyre.gui.widgets.line_plot.LinePlotWidget.update`
         function is called from a new thread."""
         pass
 
-    def update(self):
-        """Subclasses should override this function to update the plot. This \
-        function will be called repeatedly from a new thread."""
+    def update(self) -> bool:
+        """Subclasses should override this function to update the plot. This
+        function will be called repeatedly from a new thread when it returns True."""
         time.sleep(1)
 
     def teardown(self):
-        """Subclasses should override this function to perform any teardown code. \
-        The thread calling :py:meth:`~nspyre.gui.widgets.line_plot.LinePlotWidget.update` \
+        """Subclasses should override this function to perform any teardown code.
+        The thread calling :py:meth:`~nspyre.gui.widgets.line_plot.LinePlotWidget.update`
         isn't guaranteed to have exited yet."""
         pass
 
@@ -370,7 +380,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         """Callback to add a plot to PlotWidget display."""
         self.plot_widget.addItem(plot_series_data.plot_data_item)
 
-    def set_data(self, name: str, xdata: Any, ydata: Any, blocking: bool = True):
+    def set_data(self, name: str, xdata: Any, ydata: Any, blocking:bool = True):
         """Queue up x/y data to update a line plot. Thread-safe.
 
         Args:
@@ -389,21 +399,18 @@ class LinePlotWidget(QtWidgets.QWidget):
         )
 
     def _set_data_callback(self, name: str, plot_series_data: PlotSeriesData):
-        """Update a line plot triggered by set_data.
+        """Update a line plot triggered by set_data. Runs in the main thread.
 
         Args:
             name: Name of plot series.
             plot_series_data: PlotSeriesData to update the plot for.
         """
-        plot_series_data.plot_data_item.setData(plot_series_data.x, plot_series_data.y)
+        try:
+            plot_series_data.plot_data_item.setData(plot_series_data.x, plot_series_data.y)
+        except Exception as err:
+            import pdb; pdb.set_trace()
+            print('TODO')
         self.plot_data.sem.release()
-
-    def stop(self):
-        """Stop the plot updating thread and run the
-        :py:meth:`~nspyre.gui.widgets.line_plot.LinePlotWidget.teardown` code."""
-        print('stopping lineplot')
-        self.update_loop.stop()
-        self.teardown()
 
     # TODO
     # def add_zoom_region(self):

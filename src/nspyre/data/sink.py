@@ -204,11 +204,11 @@ class DataSink(AsyncioWorker):
                         )
                         if not _squash_pickle_diff_queue(self._queue, pickle_diff):
                             raise RuntimeError(
-                                'Maximum diff size exceeded. \
-                                This is a consequence of memory build-up due \
-                                to the sink not being able to keep up with \
-                                the data rate. Reduce the data rate or \
-                                increase the client processing throughput.'
+                                'Maximum diff size exceeded. '
+                                'This is a consequence of memory build-up due '
+                                'to the sink not being able to keep up with '
+                                'the data rate. Reduce the data rate or '
+                                'increase the client processing throughput.'
                             ) from err
                     _logger.debug(f'sink queued pickle of [{len(new_data)}] bytes')
                 await asyncio.sleep(_FAST_TIMEOUT)

@@ -1,6 +1,5 @@
 import logging
 import time
-from threading import Lock
 from typing import Dict
 
 import numpy as np
@@ -35,19 +34,19 @@ class _FlexLinePlotSettings(QThreadSafeObject):
         # DataSink for pulling plot data from the data server
         self.sink = None
         # protect access to the sink
-        self.sink_mutex = Lock()
+        self.sink_mutex = QtCore.QMutex()
         # flag indicating that the plots should be updated
         self.force_update = False
         super().__init__()
 
     def get_settings(self, name, callback=None):
-        with self.mutex:
+        with QtCore.QMutexLocker(self.mutex):
             settings = self.series_settings[name]
             if callback is not None:
                 self.run_main(callback, name, settings, blocking=True)
 
     def add_plot(self, name, series, scan_i, scan_j, processing, hidden, callback=None):
-        with self.mutex:
+        with QtCore.QMutexLocker(self.mutex):
             if name in self.series_settings:
                 _logger.info(
                     f'A plot with the name [{name}] already exists. Ignoring add_plot request.'
@@ -61,7 +60,7 @@ class _FlexLinePlotSettings(QThreadSafeObject):
                 self.run_main(callback, name, blocking=True)
 
     def remove_plot(self, name, callback=None):
-        with self.mutex:
+        with QtCore.QMutexLocker(self.mutex):
             if name not in self.series_settings:
                 _logger.info(
                     f'A plot with the name [{name}] does not exist. Ignoring remove_plot request.'
@@ -74,7 +73,7 @@ class _FlexLinePlotSettings(QThreadSafeObject):
             del self.series_settings[name]
 
     def hide_plot(self, name, callback=None):
-        with self.mutex:
+        with QtCore.QMutexLocker(self.mutex):
             if name not in self.series_settings:
                 _logger.info(
                     f'A plot with the name [{name}] does not exist. Ignoring hide_plot request.'
@@ -90,7 +89,7 @@ class _FlexLinePlotSettings(QThreadSafeObject):
                 self.run_main(callback, name, blocking=True)
 
     def show_plot(self, name, callback=None):
-        with self.mutex:
+        with QtCore.QMutexLocker(self.mutex):
             if name not in self.series_settings:
                 _logger.info(
                     f'A plot with the name [{name}] does not exist. Ignoring show_plot request.'
@@ -106,7 +105,7 @@ class _FlexLinePlotSettings(QThreadSafeObject):
                 self.run_main(callback, name, blocking=True)
 
     def update_settings(self, name, series, scan_i, scan_j, processing):
-        with self.mutex:
+        with QtCore.QMutexLocker(self.mutex):
             if name not in self.series_settings:
                 _logger.info(
                     f'A plot with the name [{name}] does not exist. Ignoring update_settings request.'
@@ -545,7 +544,13 @@ class _FlexLinePlotWidget(LinePlotWidget):
     def __init__(self, timeout=1):
         self.timeout = timeout
         self.plot_settings = _FlexLinePlotSettings()
+        self.plot_settings.start()
         super().__init__()
+
+    def _stop(self):
+        """Stop the updating and plot data management threads."""
+        self.plot_settings.stop()
+        super()._stop()
 
     def new_source(self, data_set_name: str):
         """Connect to a new data set on the data server.
@@ -558,7 +563,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
     def _new_source(self, data_set_name: str):
         # connect to a new data set
-        with self.plot_settings.sink_mutex:
+        with QtCore.QMutexLocker(self.plot_settings.sink_mutex):
             self.clear_plots()
             try:
                 # connect to the new data source
@@ -617,7 +622,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                 )
 
                 # add the existing plots
-                with self.plot_settings.mutex:
+                with QtCore.QMutexLocker(self.plot_settings.mutex):
                     for plot_name in self.plot_settings.series_settings:
                         self.add_plot(plot_name)
                         if self.plot_settings.series_settings[plot_name].hidden:
@@ -647,14 +652,14 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
     def _close_source(self):
         """Disconnect from the data source."""
-        with self.plot_settings.sink_mutex:
+        with QtCore.QMutexLocker(self.plot_settings.sink_mutex):
             if self.plot_settings.sink is not None:
                 self.plot_settings.sink.stop()
                 self.plot_settings.sink = None
 
     def update(self):
         """Update the plot if there is new data available."""
-        with self.plot_settings.sink_mutex:
+        with QtCore.QMutexLocker(self.plot_settings.sink_mutex):
             if self.plot_settings.sink is None:
                 # rate limit how often update() runs if there is no sink connected
                 time.sleep(0.1)
@@ -669,7 +674,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                 except TimeoutError:
                     return
 
-            with self.plot_settings.mutex:
+            with QtCore.QMutexLocker(self.plot_settings.mutex):
                 for plot_name in self.plot_settings.series_settings:
                     settings = self.plot_settings.series_settings[plot_name]
                     series = settings.series

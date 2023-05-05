@@ -27,10 +27,6 @@ _tracer = None
 
 
 def stacktraces():
-
-    # TODO TEST
-    for thread in threading.enumerate(): 
-        print(thread.name)
     code = []
     for threadId, stack in sys._current_frames().items():
         code.append("\n# ThreadID: %s" % threadId)

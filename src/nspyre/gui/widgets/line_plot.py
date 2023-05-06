@@ -233,7 +233,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         self.setLayout(self.layout)
 
         # clean up when the widget is destroyed
-        self.destroyed.connect(self._stop)
+        self.destroyed.connect(partial(self._stop))
         self.stopped = False
 
         self.plot_data = LinePlotData(self.plot_widget)
@@ -408,8 +408,10 @@ class LinePlotWidget(QtWidgets.QWidget):
         try:
             plot_series_data.plot_data_item.setData(plot_series_data.x, plot_series_data.y)
         except Exception as err:
-            import pdb; pdb.set_trace()
-            print('TODO')
+            if self.stopped:
+                return
+            else:
+                raise err
         self.plot_data.sem.release()
 
     # TODO

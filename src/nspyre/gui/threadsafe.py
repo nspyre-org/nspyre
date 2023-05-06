@@ -80,6 +80,9 @@ class QThreadSafeObject(QtCore.QObject):
         self.thread = QtCore.QThread()
         """Thread to manage access requests for this object."""
 
+        # set to true if a stop is requested
+        self.stopped = False
+
         # move this object to the new thread
         self.moveToThread(self.thread)
 
@@ -93,14 +96,10 @@ class QThreadSafeObject(QtCore.QObject):
         """Start the internal thread to handle requests."""
         self.thread.start()
 
-    def stop(self, blocking: bool):
-        """Quit the internal thread.
-        Args:
-            blocking: If True, block until the thread has exitted.
-        """
+    def stop(self):
+        """Quit the internal thread."""
+        self.stopped = True
         self.thread.quit()
-        if blocking:
-            self.thread.wait()
 
     def run_main(self, fun, *args, blocking=False, **kwargs):
         """Run the given function on the main thread.
@@ -131,15 +130,21 @@ class QThreadSafeObject(QtCore.QObject):
             Return value of the function.
         """
         if blocking:
-            ret = QtCore.QMetaObject.invokeMethod(
-                self,
-                '_run_safe',
-                QtCore.Qt.ConnectionType.BlockingQueuedConnection,
-                QtCore.Q_RETURN_ARG(list),
-                QtCore.Q_ARG(object, fun),
-                QtCore.Q_ARG(tuple, args),
-                QtCore.Q_ARG(dict, kwargs),
-            )
+            try:
+                ret = QtCore.QMetaObject.invokeMethod(
+                    self,
+                    '_run_safe',
+                    QtCore.Qt.ConnectionType.BlockingQueuedConnection,
+                    QtCore.Q_RETURN_ARG(list),
+                    QtCore.Q_ARG(object, fun),
+                    QtCore.Q_ARG(tuple, args),
+                    QtCore.Q_ARG(dict, kwargs),
+                )
+            except Exception as err:
+                if self.stopped:
+                    return
+                else:
+                    raise err
             if len(ret) == 0:
                 # the function exitted prematurely
                 return
@@ -147,21 +152,28 @@ class QThreadSafeObject(QtCore.QObject):
                 # exited normally with return value
                 return ret[0]
         else:
-            QtCore.QMetaObject.invokeMethod(
-                self,
-                '_run_safe',
-                QtCore.Qt.ConnectionType.QueuedConnection,
-                QtCore.Q_ARG(object, fun),
-                QtCore.Q_ARG(tuple, args),
-                QtCore.Q_ARG(dict, kwargs),
-            )
+            try:
+                QtCore.QMetaObject.invokeMethod(
+                    self,
+                    '_run_safe',
+                    QtCore.Qt.ConnectionType.QueuedConnection,
+                    QtCore.Q_ARG(object, fun),
+                    QtCore.Q_ARG(tuple, args),
+                    QtCore.Q_ARG(dict, kwargs),
+                )
+            except Exception as err:
+                if self.stopped:
+                    return
+                else:
+                    raise err
 
     @QtCore.pyqtSlot(object, tuple, dict, result=list)
     def _run_safe(self, fun: Callable, args: tuple, kwargs: dict) -> list:
         try:
             result = fun(*args, **kwargs)
         except Exception as err:
-            self._error.emit(err)
+            if not self.stopped:
+                self._error.emit(err)
             return []
         # wrap the result in a list in order to have a standardized return type
         return [result]

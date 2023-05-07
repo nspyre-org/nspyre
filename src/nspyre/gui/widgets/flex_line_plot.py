@@ -707,7 +707,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                         data = self.plot_settings.sink.datasets[series]
                     except KeyError:
                         _logger.error(
-                            f'Data series [{series}] does not exist in data set [{self.data_set_name}]'
+                            f'Data series [{series}] does not exist.'
                         )
                         continue
 
@@ -741,7 +741,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                 data_subset = data[int(scan_i) : int(scan_j)]
                         except IndexError:
                             _logger.warning(
-                                f'Data series [{series}] invalid scan indices [{scan_i}, {scan_j}]'
+                                f'Data series [{series}] invalid scan indices [{scan_i}, {scan_j}].'
                             )
                             continue
 

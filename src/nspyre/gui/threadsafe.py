@@ -1,7 +1,6 @@
 import logging
 from typing import Callable
 from typing import Dict
-from collections.abc import Iterable
 
 from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtWidgets

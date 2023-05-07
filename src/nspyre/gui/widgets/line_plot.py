@@ -275,7 +275,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         function is called from a new thread."""
         pass
 
-    def update(self) -> bool:
+    def update(self):
         """Subclasses should override this function to update the plot. This
         function will be called repeatedly from a new thread when it returns True."""
         time.sleep(1)
@@ -380,7 +380,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         """Callback to add a plot to PlotWidget display."""
         self.plot_widget.addItem(plot_series_data.plot_data_item)
 
-    def set_data(self, name: str, xdata: Any, ydata: Any, blocking:bool = True):
+    def set_data(self, name: str, xdata: Any, ydata: Any, blocking: bool = True):
         """Queue up x/y data to update a line plot. Thread-safe.
 
         Args:
@@ -406,7 +406,9 @@ class LinePlotWidget(QtWidgets.QWidget):
             plot_series_data: PlotSeriesData to update the plot for.
         """
         try:
-            plot_series_data.plot_data_item.setData(plot_series_data.x, plot_series_data.y)
+            plot_series_data.plot_data_item.setData(
+                plot_series_data.x, plot_series_data.y
+            )
         except Exception as err:
             if self.stopped:
                 return

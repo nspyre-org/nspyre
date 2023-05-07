@@ -1,6 +1,8 @@
 import logging
 import time
+from typing import Callable
 from typing import Dict
+from typing import Optional
 
 import numpy as np
 from pyqtgraph.Qt import QtCore
@@ -159,10 +161,19 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
 
     """
 
-    def __init__(self):
+    def __init__(self, timeout: float = 1, data_processing_func: Callable = None):
+        """
+        Args:
+            timeout: Timeout for :py:meth:`~nspyre.data.sink.DataSink.pop`.
+            data_processing_func: Function to do any post-processing of the data
+                popped by the :py:class:`~nspyre.data.sink.DataSink`. Takes one
+                argument, which is the :py:class:`~nspyre.data.sink.DataSink`.
+        """
         super().__init__()
 
-        self.line_plot = _FlexLinePlotWidget()
+        self.line_plot = _FlexLinePlotWidget(
+            timeout=timeout, data_processing_func=data_processing_func
+        )
         """Underlying LinePlotWidget."""
 
         # data source lineedit
@@ -541,8 +552,14 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
 class _FlexLinePlotWidget(LinePlotWidget):
     """See FlexLinePlotWidget."""
 
-    def __init__(self, timeout=1):
+    def __init__(self, timeout: float, data_processing_func: Optional[Callable]):
+        """
+        Args:
+            timeout: see :py:class:`FlexLinePlotWidget`.
+            data_processing_func: see :py:class:`FlexLinePlotWidget`.
+        """
         self.timeout = timeout
+        self.data_processing_func = data_processing_func
         self.plot_settings = _FlexLinePlotSettings()
         self.plot_settings.start()
         super().__init__()
@@ -673,6 +690,9 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     self.plot_settings.sink.pop(timeout=self.timeout)
                 except TimeoutError:
                     return
+
+            if self.data_processing_func is not None:
+                self.data_processing_func(self.plot_settings.sink)
 
             with QtCore.QMutexLocker(self.plot_settings.mutex):
                 for plot_name in self.plot_settings.series_settings:

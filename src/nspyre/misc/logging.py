@@ -49,25 +49,31 @@ def nspyre_init_logger(
     log_path_level: int = 0,
     prefix: str = '',
     file_size: int = None,
+    remove_handlers: bool = True,
 ):
     """Initialize system-wide logging to stdout/err and, optionally, a file.
 
     Args:
-        log_level: Log messages of lower severity than this will not be sent \
+        log_level: Log messages of lower severity than this will not be sent
             to stdout/err (e.g. :code:`logging.INFO`).
-        log_path: If a file, log to that file. If a directory, generate a log \
-            file name containing the prefix and date/time, and create a new \
+        log_path: If a file, log to that file. If a directory, generate a log
+            file name containing the prefix and date/time, and create a new
             log file in that directory. If :code:`None`, only log to stdout/err.
-        log_path_level: Logging level for the log file. Leave as :code:`None` \
+        log_path_level: Logging level for the log file. Leave as :code:`None`
             for same as log_level.
-        prefix: If a directory was specified for log_path, prepend this string \
+        prefix: If a directory was specified for log_path, prepend this string
             to the log file name.
-        file_size: Maximum log file size (bytes). If this size is exceeded, \
-            the log file is rotated according to :code:`RotatingFileHandler` \
+        file_size: Maximum log file size (bytes). If this size is exceeded,
+            the log file is rotated according to :code:`RotatingFileHandler`
             (https://docs.python.org/3/library/logging.handlers.html).
+        remove_handlers: If true, remove any existing log handlers.
     """
-
     root_logger = logging.getLogger()
+
+    if remove_handlers:
+        # remove any previous root_logger handlers
+        root_logger.handlers.clear()
+
     # the root logger will accept all messages
     root_logger.setLevel(logging.DEBUG)
 
@@ -84,6 +90,11 @@ def nspyre_init_logger(
 
     # all stderr messages will now be redirected to a special logger
     stderr_logger = logging.getLogger('stderr')
+
+    if remove_handlers:
+        # remove any previous stderr_logger handlers
+        stderr_logger.handlers.clear()
+
     stderr_logger.propagate = False
     sys.stderr = _StreamToLog(stderr_logger, logging.CRITICAL, '\n')  # type: ignore
 

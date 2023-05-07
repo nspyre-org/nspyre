@@ -10,7 +10,9 @@ import warnings
 from collections import deque
 from itertools import chain
 from multiprocessing import Process
+from multiprocessing import Queue
 from pathlib import Path
+from typing import Dict
 from typing import Type
 
 import numpy as np
@@ -184,22 +186,18 @@ class ProcessRunner:
         """
         Args:
             kill: Whether to kill a previously running process that hasn't completed.
-
         """
         self.proc = None
         self.should_kill = kill
 
     def run(self, fun, *args, **kwargs):
         """Run the provided function in a separate process.
-
         Args:
             fun: Function to run.
             args: Arguments to pass to fun.
             kwargs: Keyword arguments to pass to fun.
-
         Raises:
             RuntimeError: The function from a previous call is still running.
-
         """
         if self.running():
             if self.should_kill:
@@ -225,3 +223,39 @@ class ProcessRunner:
             self.proc.terminate()
             self.proc.join()
             self.proc = None
+
+
+def run_experiment(
+    exp_cls: Type,
+    fun_name: str,
+    constructor_args: list,
+    constructor_kwargs: Dict,
+    queue_to_exp: Queue,
+    queue_from_exp: Queue,
+    fun_args: list,
+    fun_kwargs: Dict,
+):
+    """Create an instance of the experiment class and run the experiment function."""
+
+    # check if exp_cls takes keyword args 'queue_to_exp' or 'queue_from_exp',
+    # and add them to the kwargs if so
+    init_spec = inspect.getfullargspec(exp_cls.__init__)
+    if 'queue_to_exp' in init_spec.args or init_spec.varkw is not None:
+        constructor_kwargs['queue_to_exp'] = queue_to_exp
+    if 'queue_from_exp' in init_spec.args or init_spec.varkw is not None:
+        constructor_kwargs['queue_from_exp'] = queue_from_exp
+
+    # make an instance of the experiment
+    exp_instance = exp_cls(*constructor_args, **constructor_kwargs)
+
+    # call __enter__ if implemented
+    if hasattr(exp_instance, '__enter__'):
+        exp_instance.__enter__()
+
+    # get the method that runs the experiment from the class, and run it
+    fun = getattr(exp_instance, fun_name)
+    fun(**fun_kwargs)
+
+    # call __exit__ if implemented
+    if hasattr(exp_instance, '__exit__'):
+        exp_instance.__exit__()

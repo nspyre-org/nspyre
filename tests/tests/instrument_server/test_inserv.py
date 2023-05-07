@@ -4,16 +4,11 @@ This file tests the functionality of the instrument server and gateway.
 Author: Jacob Feder
 Date: 11/12/2020
 """
-import atexit
 import logging
-import subprocess
-import time
 
 import pytest
 from nspyre import InstrumentGateway
 from nspyre import InstrumentGatewayError
-from nspyre import Q_
-from rpyc.core.vinegar import GenericException
 
 logger = logging.getLogger(__name__)
 

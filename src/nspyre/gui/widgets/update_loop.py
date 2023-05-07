@@ -3,6 +3,7 @@ import time
 from typing import Callable
 
 from pyqtgraph.Qt import QtCore
+
 from ..threadsafe import QThreadSafeObject
 
 _logger = logging.getLogger(__name__)
@@ -14,7 +15,14 @@ class UpdateLoop(QThreadSafeObject):
     updated = QtCore.Signal()
     """Qt Signal emitted when the update function finished."""
 
-    def __init__(self, update_func: Callable, *args, report_fps: bool = False, fps_period: float = 1, **kwargs):
+    def __init__(
+        self,
+        update_func: Callable,
+        *args,
+        report_fps: bool = False,
+        fps_period: float = 1,
+        **kwargs,
+    ):
         """
         Args:
             update_func: Function to run repeatedly.
@@ -72,9 +80,9 @@ class UpdateLoop(QThreadSafeObject):
             self.fps_counter += 1
             now = time.time()
             # time difference since last FPS report
-            td = now - last_fps
+            td = now - self.last_fps
             if td > self.fps_period:
-                fps = fps_counter / td
+                fps = self.fps_counter / td
                 _logger.debug(f'plotting FPS: {fps:0.3f}')
                 self.last_fps = now
                 self.fps_counter = 0

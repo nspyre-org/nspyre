@@ -145,8 +145,7 @@ async def _cleanup_event_loop(loop):
 
 
 class _DataSet:
-    """Class that wraps a pipeline consisting of a data source and a list of
-    data sinks."""
+    """Wraps a pipeline consisting of a data source and a list of data sinks."""
 
     def __init__(self):
         # dict of the form

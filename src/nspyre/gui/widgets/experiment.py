@@ -8,6 +8,7 @@ from types import ModuleType
 from pyqtgraph.Qt import QtWidgets
 
 from ...misc.misc import ProcessRunner
+from ...misc.misc import run_experiment
 from .params import ParamsWidget
 
 
@@ -28,8 +29,10 @@ class ExperimentWidget(QtWidgets.QWidget):
         module: ModuleType,
         cls: str,
         fun_name: str,
-        args: list = None,
-        kwargs: dict = None,
+        constructor_args: list = None,
+        constructor_kwargs: dict = None,
+        fun_args: list = None,
+        fun_kwargs: dict = None,
         title: str = None,
         kill: bool = False,
         layout: QtWidgets.QLayout = None,
@@ -39,12 +42,19 @@ class ExperimentWidget(QtWidgets.QWidget):
             params_config: Dictionary that is passed to the constructor of
                 :py:class:`~nspyre.gui.widgets.params.ParamsWidget`.
             module: Python module that contains cls.
-            cls: Python class name as a string (that descends from QWidget).
-                An instance of this class will be created when the user tries
-                to load the widget and it will be added to the pyqtgraph DockArea.
-            fun_name: Name of function within cls to run.
-            args: Args to pass to cls.
-            kwargs: Keyword args to pass to cls.
+            cls: Python class name as a string. An instance of this class will
+                be created in a subprocess when the user presses the 'Run' button.
+                The :code:`__enter__` and :code:`__exit__` methods will be called
+                if implemented. In addition, if the class constructor takes
+                keyword arguments 'queue_to_exp' and/or 'queue_from_exp',
+                multiprocessing :code:`Queue` objects will be passed in that can
+                be used to communicate with the GUI.
+            fun_name: Name of function within cls to run. All of the values from
+                the ParamsWidget will be passed as keyword args to this function.
+            constructor_args: Args to pass to cls.
+            constructor_kwargs: Keyword args to pass to cls.
+            fun_args: Args to pass to cls.fun.
+            fun_kwargs: Keyword args to pass to cls.fun.
             title: Window title.
             kill: Add a kill button to allow the user to forcibly kill the subprocess running the experiment function.
             layout: Additional Qt layout to place between the parameters and run/stop/kill buttons.
@@ -57,15 +67,25 @@ class ExperimentWidget(QtWidgets.QWidget):
         self.module = module
         self.cls = cls
         self.fun_name = fun_name
-        if args is not None:
-            self.args = args
+        if constructor_args is not None:
+            self.constructor_args = constructor_args
         else:
-            self.args = []
+            self.constructor_args = []
 
-        if kwargs is not None:
-            self.kwargs = kwargs
+        if constructor_kwargs is not None:
+            self.constructor_kwargs = constructor_kwargs
         else:
-            self.kwargs = {}
+            self.constructor_kwargs = {}
+
+        if fun_args is not None:
+            self.fun_args = fun_args
+        else:
+            self.fun_args = []
+
+        if fun_kwargs is not None:
+            self.fun_kwargs = fun_kwargs
+        else:
+            self.fun_kwargs = {}
 
         self.params_widget = ParamsWidget(params_config)
 
@@ -74,15 +94,18 @@ class ExperimentWidget(QtWidgets.QWidget):
         self.run_proc = ProcessRunner()
         run_button.clicked.connect(self.run)
 
-        self.queue: Queue = Queue()
-        """multiprocessing Queue to pass to the experiment subprocess and use \
-        for communication with the subprocess."""
+        self.queue_to_exp: Queue = Queue()
+        """multiprocessing Queue to pass to the experiment subprocess and use
+        for sending messages to the subprocess."""
+        self.queue_from_exp: Queue = Queue()
+        """multiprocessing Queue to pass to the experiment subprocess and use
+        for receiving messages from the subprocess."""
 
         # stop button
         stop_button = QtWidgets.QPushButton('Stop')
         stop_button.clicked.connect(self.stop)
         # use a partial because the stop function may already be destroyed by the time this is called
-        self.destroyed.connect(partial(self.stop))
+        self.destroyed.connect(partial(self.stop, log=False))
 
         # kill button
         if kill:
@@ -116,21 +139,35 @@ class ExperimentWidget(QtWidgets.QWidget):
         reload(self.module)
         # get the experiment class
         exp_cls = getattr(self.module, self.cls)
-        # make an instance of the experiment
-        experiment = exp_cls(*self.args, **self.kwargs)
-        # get the function that runs the experiment
-        fun = getattr(experiment, self.fun_name)
+        # make a new dict that contains the function kwargs as well as the
+        # user-entered parameters
+        fun_kwargs = dict(self.fun_kwargs, **self.params_widget.all_params())
         # call the function in a new process
-        self.run_proc.run(fun, msg_queue=self.queue, **self.params_widget.all_params())
+        self.run_proc.run(
+            run_experiment,
+            exp_cls=exp_cls,
+            fun_name=self.fun_name,
+            constructor_args=self.constructor_args,
+            constructor_kwargs=self.constructor_kwargs,
+            queue_to_exp=self.queue_to_exp,
+            queue_from_exp=self.queue_from_exp,
+            fun_args=self.fun_args,
+            fun_kwargs=fun_kwargs,
+        )
 
-    def stop(self):
-        """Stop the experiment subprocess."""
+    def stop(self, log: bool = True):
+        """Stop the experiment subprocess.
+
+        Args:
+            log: if True, log when stop is called but the process isn't running.
+        """
         if self.run_proc.running():
-            self.queue.put('stop')
+            self.queue_to_exp.put('stop')
         else:
-            logging.info(
-                'Not stopping the experiment process because it is not running.'
-            )
+            if log:
+                logging.info(
+                    'Not stopping the experiment process because it is not running.'
+                )
 
     def kill(self):
         """Kill the experiment subprocess."""

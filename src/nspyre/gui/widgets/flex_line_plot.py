@@ -706,9 +706,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     try:
                         data = self.plot_settings.sink.datasets[series]
                     except KeyError:
-                        _logger.error(
-                            f'Data series [{series}] does not exist.'
-                        )
+                        _logger.error(f'Data series [{series}] does not exist.')
                         continue
 
                     if not isinstance(data, list):

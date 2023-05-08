@@ -137,3 +137,8 @@ class StreamingList(list):
     def copy(self):
         """See docs for Python list."""
         return StreamingList(super().copy())
+
+    def __reduce__(self):
+        """Custom pickling method. Required because this is a list subclass,
+        which seems to be handled differently."""
+        return (StreamingList, (super().copy(),))

@@ -85,6 +85,12 @@ class ColorMapWidget(QtWidgets.QWidget):
 
         self.setLayout(self.layout)
 
+
+        # TODO
+        self.destroyed.connect(partial(self._stop))
+
+
+
         # Plot setup code
         self.setup()
 
@@ -94,6 +100,11 @@ class ColorMapWidget(QtWidgets.QWidget):
         self.new_data.connect(self._process_data)
         # start the thread
         self.update_loop.start()
+
+    def _stop(self):
+        """ """
+        self.update_loop.stop()
+        # TODO teardown
 
     def _process_data(self):
         """Update the color map triggered by set_data."""

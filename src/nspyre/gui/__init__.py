@@ -7,7 +7,8 @@ except ModuleNotFoundError:
     _logger.info(
         'Not importing GUI functionality because the required packages are not installed.'
     )
-    Qt_GUI = False
+    Qt_GUI: bool = False
+    """True if the packages for a Qt GUI are installed."""
 else:
     Qt_GUI = True
 
@@ -35,6 +36,7 @@ if Qt_GUI:
     from .widgets import sssss
 
     QObject = QtCore.QObject
+    """If Qt GUI packages are installed, this is Qt :code:`QObject`, otherwise it is equal to python :code:`object`."""
 else:
     QObject = object
     QtCore = None

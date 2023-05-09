@@ -84,26 +84,28 @@ class InstrumentServer(ClassicService):
         class_path: str,
         class_name: str,
         args: list = None,
-        import_or_file: str = 'file',
         kwargs: Dict = None,
+        import_or_file: str = 'file',
         local_args: bool = False,
     ):
         """Create an instance of the specified class and add it to the instrument server.
 
         Args:
             name: Alias for the device.
-            class_path: If import_or_file is :code:`'file'`, path to the file
-                containing the class, e.g. :code:`'~/drivers/oscilloscopes/rtb2004.py'`.
-                If import_or_file is :code:`'import'`, python module
-                containing the class, e.g. :code:`'driver_module.oscilloscopes.rtb2004'`
-            class_name: Name of the class to create an instance of, e.g. :code:`'RTB2004'`.
-            import_or_file: :code:`'file'` for creating the device object from
-                a file on disk, :code:`'import'` for creating the device
-                object from a python module.
+            class_path: If import_or_file is :code:`'file'`, path to the file on
+                the filesystem containing the class, e.g.
+                :code:`'~/drivers/rohde_schwarz/hmp4040.py'`. If import_or_file
+                is :code:`'import'`, python module containing the class, e.g.
+                :code:`'nspyre_drivers.rohde_schwarz.hmp4040.hmp4040'`.
+            class_name: Name of the class to create an instance of, e.g.
+                :code:`'HMP4040'`.
             args: Arguments to pass to the class during initialization, as in
-                :code:`RTB2004(*args, **kwargs)`.
+                :code:`HMP4040(*args, **kwargs)`.
             kwargs: Keyword args to pass to the class during initialization,
-                as in :code:`RTB2004(*args, **kwargs)`.
+                as in :code:`HMP4040(*args, **kwargs)`.
+            import_or_file: :code:`'file'` for creating the device object from
+                a file on the filesystem, :code:`'import'` for creating the
+                device object from a python module.
             local_args: If True, all arguments to this method are assumed to be
                 local variables not passed through an
                 :py:class:`~nspyre.instrument.gateway.InstrumentGateway`. In

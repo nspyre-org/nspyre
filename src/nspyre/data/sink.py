@@ -5,10 +5,6 @@ from typing import Any
 from typing import Dict
 
 from ._asyncio_worker import AsyncioWorker
-from .streaming._pickle import _squash_pickle_diff_queue
-from .streaming._pickle import deserialize_pickle_diff
-from .streaming._pickle import PickleDiff
-from .streaming._pickle import streaming_load_pickle_diff
 from .server import _CustomSock
 from .server import _FAST_TIMEOUT
 from .server import _NEGOTIATION_SINK
@@ -16,6 +12,10 @@ from .server import _NEGOTIATION_TIMEOUT
 from .server import _QUEUE_SIZE
 from .server import _TIMEOUT
 from .server import DATASERV_PORT
+from .streaming._pickle import _squash_pickle_diff_queue
+from .streaming._pickle import deserialize_pickle_diff
+from .streaming._pickle import PickleDiff
+from .streaming._pickle import streaming_load_pickle_diff
 
 _logger = logging.getLogger(__name__)
 

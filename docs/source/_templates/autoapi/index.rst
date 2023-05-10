@@ -1,8 +1,6 @@
 API Reference
 =============
 
-This is the nspyre API reference documentation [#f1]_.
-
 .. toctree::
    :titlesonly:
 
@@ -12,4 +10,4 @@ This is the nspyre API reference documentation [#f1]_.
    {% endif %}
    {% endfor %}
 
-.. [#f1] Created with `sphinx-autoapi <https://github.com/readthedocs/sphinx-autoapi>`_
+Created with `sphinx-autoapi <https://github.com/readthedocs/sphinx-autoapi>`_

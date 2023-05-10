@@ -73,8 +73,8 @@ class DataSaver(QThreadSafeObject):
 
 
 class SaveWidget(QtWidgets.QWidget):
-    """Qt widget that saves data from the
-    :py:class:`~nspyre.data.server.DataServer` to a file."""
+    """Qt widget that saves data from the :py:class:`~nspyre.data.server.DataServer` \
+    to a file."""
 
     def __init__(
         self,

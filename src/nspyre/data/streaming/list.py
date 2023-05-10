@@ -1,5 +1,6 @@
 class StreamingList(list):
-    """List-like object that can be streamed efficiently through the data server.
+    """List-like object that can be streamed efficiently through the \
+    :py:class:`~nspyre.data.server.DataServer`.
     :py:class:`StreamingList` is meant to act as a drop-in replacement for a python
     list. When this object is pushed to the data server using a call to
     :py:meth:`~nspyre.data.source.DataSource.push`, instead of sending the whole

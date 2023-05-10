@@ -19,8 +19,8 @@ _logger = logging.getLogger(__name__)
 
 
 class DataSource(AsyncioWorker):
-    """For sourcing data to the :py:class:`~nspyre.data.server.DataServer`. See
-    :py:meth:`~nspyre.data.sink.DataSink.pop` for typical usage example."""
+    """For sourcing data to the :py:class:`~nspyre.data.server.DataServer`.
+    See :py:meth:`~nspyre.data.sink.DataSink.pop` for typical usage example."""
 
     def __init__(
         self,

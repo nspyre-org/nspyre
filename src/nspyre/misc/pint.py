@@ -7,7 +7,7 @@ try:
     from pint import get_application_registry
 except ImportError:
     Q_ = None
-    """Pint Quantity class. This is provided for backwards compatibility but is not
+    """Pint Quantity class. This is provided for backwards compatibility but is not \
     recommended for future use."""
 else:
     import rpyc

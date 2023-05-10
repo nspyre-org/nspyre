@@ -170,7 +170,7 @@ class LinePlotData(QThreadSafeObject):
 
 
 class LinePlotWidget(QtWidgets.QWidget):
-    """Qt widget that generates a pyqtgraph 1D line plot with some reasonable default
+    """Qt widget that generates a pyqtgraph 1D line plot with some reasonable default \
     settings and a variety of added features."""
 
     def __init__(

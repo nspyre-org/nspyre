@@ -47,12 +47,36 @@ _server_members = _members_list(InstrumentServer)
 
 class InstrumentGatewayError(Exception):
     """Raised for failures related to the
-    :py:class:`~nspyre.instrument.server.InstrumentServer`."""
-
+    :py:class:`~nspyre.instrument.gateway.InstrumentGateway`."""
+    def __init__(self, *args, **kwargs):
+        """
+        Args:
+            args: Arguments to pass to super class Exception().
+            kwargs: Keyword arguments to pass to super class Exception().
+        """
+        # override this so that the docs don't the print superclass docstring
+        super().__init__(*args, **kwargs)
 
 class InstrumentGateway:
-    """Create a connection to an :py:class:`~nspyre.instrument.server.InstrumentServer`
-    and access it's devices."""
+    """Create a connection to an \
+    :py:class:`~nspyre.instrument.server.InstrumentServer` and access it's devices.
+    When accessing a device through the gateway using :code:`gateway.my_device`
+    notation, an :py:class:`InstrumentGatewayDevice` is returned.
+
+    Usage Example:
+
+    .. code-block:: python
+        
+        from nspyre import InstrumentGateway
+
+        with InstrumentGateway() as gw:
+            # d is an InstrumentGatewayDevice object
+            d = gw.dev1
+            # run the set_something() method of dev1
+            d.set_something(5)
+            # run the get_something() method of dev1 and print its return value
+            print(d.get_something())
+    """
 
     def __init__(
         self,
@@ -195,15 +219,10 @@ class InstrumentGateway:
 
 class InstrumentGatewayDevice:
     def __init__(self, name: str, gateway: InstrumentGateway):
-        """Wrapper for a device residing in an
-        :py:class:`~nspyre.instrument.gateway.InstrumentGateway`.
-        Accessing the "device" attribute will return (an rpyc netref to) the
-        device object. Attributes of the device can also be accessed directly
-        from this object. E.g.:
-
-        TODO
-
-        When we access an attribute of a device from the gateway, it will
+        """Wrapper for a device residing in an \
+        :py:class:`~nspyre.instrument.gateway.InstrumentGateway`. When we access an 
+        attribute of a device from an
+        :py:class:`~nspyre.instrument.gateway.InstrumentGateway`, it will
         return an rpyc netref object. This creates a problem when the gateway
         disconnects from the instrument server, then later reconnects. If we
         have an rpyc netref that pointed to a device attribute, it will be stale
@@ -213,6 +232,29 @@ class InstrumentGatewayDevice:
         This way, if the gateway disconnects then reconnects, we will always be
         accessing the attributes of the newly connected gateway, rather than a
         stale netref.
+
+        Accessing the "device" attribute will return (an rpyc netref to) the
+        device object. Attributes of the device can be accessed directly
+        from this object. E.g.:
+
+        .. code-block:: python
+
+            from nspyre import InstrumentGateway
+            
+            with InstrumentGateway() as gw:
+                # let's assume "dev1" was created on the instrument server as an
+                # instance of "MyDriver" 
+
+                # d is an InstrumentGatewayDevice object
+                d = gw.dev1
+                # run the get_something() method of dev1 and print its return value
+                print(d.get_something())
+                # does the same thing
+                print(d.device.get_something())
+
+                print(isinstance(gw.dev1, MyDriver)) # False
+                print(isinstance(gw.dev1, InstrumentGatewayDevice)) # True
+                print(isinstance(gw.dev1.device, MyDriver)) # True
 
         Args:
             name: Name of the device on the gateway.

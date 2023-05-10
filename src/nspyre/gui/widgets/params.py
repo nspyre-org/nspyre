@@ -6,7 +6,8 @@ from pyqtgraph.Qt import QtWidgets
 
 
 class ParamsWidget(QtWidgets.QWidget):
-    """Qt widget containing a list of parameters for the user to enter.
+    """Qt widget containing a set of line edit boxes for the user to enter \
+    parameters into.
 
     Typical usage example:
 

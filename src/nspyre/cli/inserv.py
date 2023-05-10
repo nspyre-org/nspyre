@@ -21,7 +21,7 @@ _logger = logging.getLogger(__name__)
 
 
 def serve_instrument_server_cli(inserv):
-    """Run a command-line interface to allow user interaction with the instrument
+    """Run a command-line interface to allow user interaction with the instrument \
     server.
 
     Args:

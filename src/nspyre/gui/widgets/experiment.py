@@ -183,7 +183,7 @@ class ExperimentWidget(QtWidgets.QWidget):
 
 
 def experiment_widget_process_queue(msg_queue):
-    """Reads messages sent to a multiprocessing Queue by
+    """Reads messages sent to a multiprocessing Queue by \
     :py:class:`~nspyre.gui.widgets.experiment.ExperimentWidget`.
 
     Args:

@@ -15,7 +15,7 @@ _logger = logging.getLogger(__name__)
 
 
 class Subsystem(QObject):
-    """Generalized experimental subsystem that allows for management of
+    """Generalized experimental subsystem that allows for management of \
     dependencies between subsystems for boot sequencing."""
 
     if Qt_GUI:

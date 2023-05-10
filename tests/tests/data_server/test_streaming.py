@@ -4,7 +4,7 @@ import time
 import numpy as np
 from nspyre import DataSink
 from nspyre import DataSource
-from nspyre.data.streaming_list import StreamingList
+from nspyre.data.streaming.list import StreamingList
 
 # from nspyre.misc.misc import _total_sizeof
 

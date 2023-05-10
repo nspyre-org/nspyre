@@ -9,7 +9,7 @@ the data server and each of the sinks pops data from the data server.
 Objects are serialized by the source then pushed to the server. Each sink
 receives a copy of the serialized objects, then deserializes them locally. If
 the user makes use of "Streaming" objects such as the
-:py:class:`~nspyre.data.streaming_list.StreamingList`, the source
+:py:class:`~nspyre.data.streaming.list.StreamingList`, the source
 will only serialize the operations that have been performed on the streaming
 object since the last serialization. The sink can then reconstruct the pushed
 data using a local copy of the last version of the object, and the diff
@@ -29,10 +29,10 @@ import selectors
 import socket
 from typing import Dict
 
-from ._streaming_pickle import _squash_pickle_diff_queue
-from ._streaming_pickle import deserialize_pickle_diff
-from ._streaming_pickle import PickleDiff
-from ._streaming_pickle import serialize_pickle_diff
+from .streaming._pickle import _squash_pickle_diff_queue
+from .streaming._pickle import deserialize_pickle_diff
+from .streaming._pickle import PickleDiff
+from .streaming._pickle import serialize_pickle_diff
 
 _logger = logging.getLogger(__name__)
 

@@ -3,9 +3,9 @@ import concurrent.futures
 import logging
 
 from ._asyncio_worker import AsyncioWorker
-from ._streaming_pickle import _squash_pickle_diff_queue
-from ._streaming_pickle import serialize_pickle_diff
-from ._streaming_pickle import streaming_pickle_diff
+from .streaming._pickle import _squash_pickle_diff_queue
+from .streaming._pickle import serialize_pickle_diff
+from .streaming._pickle import streaming_pickle_diff
 from .server import _CustomSock
 from .server import _FAST_TIMEOUT
 from .server import _KEEPALIVE_TIMEOUT

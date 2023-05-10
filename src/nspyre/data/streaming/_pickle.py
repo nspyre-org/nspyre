@@ -12,7 +12,7 @@ from pickle import UnpicklingError
 from typing import Any
 from typing import Dict
 
-from .streaming_list import StreamingList
+from .list import StreamingList
 
 # maximum length of a diff
 _MAX_DIFF = 10e3

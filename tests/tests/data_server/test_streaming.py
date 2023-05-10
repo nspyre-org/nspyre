@@ -138,11 +138,12 @@ def test_dataserv_streaming_push_pop():
             total_time += end_time - start_time
             # make sure the data is identical
             assert watched_var == sink.data
-            logger.info(f'completed [{100*(i+1)/NPUSHES:>5.1f}]%')
+            logger.info(f'Completed [{100*(i+1)/NPUSHES:>5.1f}]%.')
         avg_time = total_time / NPUSHES
 
     logger.info(
-        f'completed run [{name}] - total time [{total_time:.3f}]s, average time per push/pop [{avg_time:.3f}]s'
+        f'Completed run [{name}] - total time [{total_time:.3f}]s, average time per '
+        f'push/pop [{avg_time:.3f}]s.'
     )
 
 
@@ -162,10 +163,11 @@ def test_dataserv_streaming_push_pop():
 #             # make sure the data is identical
 #             for i in range(len(sl1)):
 #                 assert sl1[i].all() == sink.data[i].all()
-#             logger.info(f'completed [{100*(i+1)/NPUSHES:>5.1f}]%')
+#             logger.info(f'Completed [{100*(i+1)/NPUSHES:>5.1f}]%.')
 #         avg_time = total_time / NPUSHES
 #     logger.info(
-#         f'[{name}] transferred [{_total_sizeof(sink.data)/1e9:.3f}] GB in [{total_time:.3f}]s, average time per push/pop [{avg_time:.3f}]s'
+#         f'[{name}] transferred [{_total_sizeof(sink.data)/1e9:.3f}] GB in '
+#         f'[{total_time:.3f}]s, average time per push/pop [{avg_time:.3f}]s.'
 #     )
 
 
@@ -210,11 +212,12 @@ def test_dataserv_streaming_push_pop_stress():
 
             # make sure the data is identical
             assert watched_var == sink.data
-            logger.info(f'completed [{100*(i+1)/NPUSHES:>5.1f}]%')
+            logger.info(f'Completed [{100*(i+1)/NPUSHES:>5.1f}]%.')
         avg_time = total_time / NPUSHES
 
     logger.info(
-        f'completed run [{name}] - total time [{total_time:.3f}]s, average time per push/pop [{avg_time:.3f}]s'
+        f'Completed run [{name}] - total time [{total_time:.3f}]s, average time per '
+        f'push/pop [{avg_time:.3f}]s.'
     )
 
 
@@ -256,7 +259,7 @@ def test_dataserv_streaming_multi_push():
             else:
                 raise RuntimeError()
             source.push(watched_var)
-            logger.info(f'completed [{100*(i+1)/NPUSHES:>5.1f}]%')
+            logger.info(f'Completed [{100*(i+1)/NPUSHES:>5.1f}]%.')
             i += 1
 
         end_time = time.time()
@@ -272,5 +275,6 @@ def test_dataserv_streaming_multi_push():
         avg_time = (end_time - start_time) / NPUSHES
 
     logger.info(
-        f'completed run [{name}] - total time [{total_time:.3f}]s, average time per push [{avg_time:.3f}]s'
+        f'Completed run [{name}] - total time [{total_time:.3f}]s, average time per '
+        f'push [{avg_time:.3f}]s.'
     )

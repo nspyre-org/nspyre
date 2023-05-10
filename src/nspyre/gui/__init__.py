@@ -1,18 +1,25 @@
 import logging
+from typing import Any
+
+_logger = logging.getLogger(__name__)
 
 try:
     from pyqtgraph.Qt import QtCore
 except ModuleNotFoundError:
-    _logger = logging.getLogger(__name__)
     _logger.info(
-        'Not importing GUI functionality because the required packages are not installed.'
+        'Not importing GUI functionality because the required packages are not '
+        'installed.'
     )
     Qt_GUI: bool = False
     """True if the packages for a Qt GUI are installed."""
+    QObject: Any = object
+    QtCore = None
 else:
     Qt_GUI = True
+    QObject = QtCore.QObject
+    """If Qt GUI packages are installed, this is Qt :code:`QObject`, otherwise it is
+    equal to python :code:`object`."""
 
-if Qt_GUI:
     from .app import nspyre_font
     from .app import nspyre_palette
     from .app import nspyre_style_sheet
@@ -34,9 +41,3 @@ if Qt_GUI:
     from .widgets import QHLine
     from .widgets import QVLine
     from .widgets import sssss
-
-    QObject = QtCore.QObject
-    """If Qt GUI packages are installed, this is Qt :code:`QObject`, otherwise it is equal to python :code:`object`."""
-else:
-    QObject = object
-    QtCore = None

@@ -1,7 +1,7 @@
 """
-This module provides a wrapper around an `RPyC <https://rpyc.readthedocs.io/en/latest/>`__ server.
-Clients may connect and access devices, or command the server to add, remove,
-or restart devices.
+This module provides a wrapper around an
+`RPyC <https://rpyc.readthedocs.io/en/latest/>`__ server. Clients may connect and
+access devices, or command the server to add, remove, or restart devices.
 """
 import logging
 import threading
@@ -40,11 +40,13 @@ _RPYC_SERVER_STOP_EVENT = threading.Event()
 
 
 class InstrumentServerError(Exception):
-    """Raised for failures related to the :py:class:`~nspyre.instrument.server.InstrumentServer`."""
+    """Raised for failures related to the
+    :py:class:`~nspyre.instrument.server.InstrumentServer`."""
 
 
 class InstrumentServerDeviceExistsError(InstrumentServerError):
-    """Raised if attempting to add a device that already exists to the :py:class:`~nspyre.instrument.server.InstrumentServer`."""
+    """Raised if attempting to add a device that already exists to the
+    :py:class:`~nspyre.instrument.server.InstrumentServer`."""
 
 
 class InstrumentServer(ClassicService):
@@ -88,7 +90,8 @@ class InstrumentServer(ClassicService):
         import_or_file: str = 'file',
         local_args: bool = False,
     ):
-        """Create an instance of the specified class and add it to the instrument server.
+        """Create an instance of the specified class and add it to the instrument
+        server.
 
         Args:
             name: Alias for the device.
@@ -115,13 +118,14 @@ class InstrumentServer(ClassicService):
 
         Raises:
             ValueError: An argument was invalid.
-            InstrumentServerDeviceExistsError: Tried to add a device that already exists.
+            InstrumentServerDeviceExistsError: Tried to add a device that already
+                exists.
             InstrumentServerError: Anything else.
         """
         if not local_args:
             # make sure that the arguments actually exist on the local machine
-            # and are not netrefs - otherwise there could be dangling references left over
-            # in the self._devs dictionary after the client disconnects
+            # and are not netrefs - otherwise there could be dangling references
+            # left over in the self._devs dictionary after the client disconnects
             name = obtain(name)
             class_path = obtain(class_path)
             class_name = obtain(class_name)
@@ -159,7 +163,7 @@ class InstrumentServer(ClassicService):
                 ) from exc
         else:
             raise ValueError(
-                'argument import_or_file must be "file" or "import"; got'
+                'Argument import_or_file must be "file" or "import"; got'
                 f' [{import_or_file}].'
             )
 

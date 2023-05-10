@@ -56,8 +56,10 @@ class ExperimentWidget(QtWidgets.QWidget):
             fun_args: Args to pass to cls.fun.
             fun_kwargs: Keyword args to pass to cls.fun.
             title: Window title.
-            kill: Add a kill button to allow the user to forcibly kill the subprocess running the experiment function.
-            layout: Additional Qt layout to place between the parameters and run/stop/kill buttons.
+            kill: Add a kill button to allow the user to forcibly kill the subprocess
+                running the experiment function.
+            layout: Additional Qt layout to place between the parameters and
+                run/stop/kill buttons.
         """
         super().__init__()
 
@@ -104,7 +106,8 @@ class ExperimentWidget(QtWidgets.QWidget):
         # stop button
         stop_button = QtWidgets.QPushButton('Stop')
         stop_button.clicked.connect(self.stop)
-        # use a partial because the stop function may already be destroyed by the time this is called
+        # use a partial because the stop function may already be destroyed by the time
+        # this is called
         self.destroyed.connect(partial(self.stop, log=False))
 
         # kill button
@@ -180,7 +183,8 @@ class ExperimentWidget(QtWidgets.QWidget):
 
 
 def experiment_widget_process_queue(msg_queue):
-    """Reads messages sent to a multiprocessing Queue by :py:class:`~nspyre.gui.widgets.experiment.ExperimentWidget`.
+    """Reads messages sent to a multiprocessing Queue by
+    :py:class:`~nspyre.gui.widgets.experiment.ExperimentWidget`.
 
     Args:
         msg_queue: multiprocessing Queue object.

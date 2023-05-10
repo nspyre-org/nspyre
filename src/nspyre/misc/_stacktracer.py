@@ -1,6 +1,7 @@
 """Stack tracer for multi-threaded applications.
 
-From: https://code.activestate.com/recipes/577334-how-to-debug-deadlocked-multi-threaded-programs/
+From: https://code.activestate.com/recipes/577334-how-to-debug-deadlocked-multi-\
+threaded-programs/
 
 Usage:
 

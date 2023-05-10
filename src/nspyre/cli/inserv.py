@@ -21,7 +21,8 @@ _logger = logging.getLogger(__name__)
 
 
 def serve_instrument_server_cli(inserv):
-    """Run a command-line interface to allow user interaction with the instrument server.
+    """Run a command-line interface to allow user interaction with the instrument
+    server.
 
     Args:
         inserv: :py:class:`~nspyre.instrument.server.InstrumentServer` or
@@ -105,7 +106,8 @@ class _InservCmdPrompt(Cmd):
         :py:class:`~nspyre.instrument.server.InstrumentServer` object. If a server
         was connected to, it will be an
         :py:class:`~nspyre.instrument.gateway.InstrumentGateway`. See
-        :py:class:`~nspyre.instrument.server.InstrumentServer`/:py:class:`~nspyre.instrument.gateway.InstrumentGateway`
+        :py:class:`~nspyre.instrument.server.InstrumentServer`/
+        :py:class:`~nspyre.instrument.gateway.InstrumentGateway`
         documentation for details on how to add/manipulate drivers."""
         if arg_string:
             print('Expected 0 args')
@@ -130,12 +132,14 @@ def start_instrument_server(drivers=None, inserv_kwargs=None):
         drivers: A list of dictionaries, where each dictionary contains keyword
             arguments to the InstrumentServer
             :py:meth:`~nspyre.instrument.server.InstrumentServer.add` method.
-        inserv_kwargs: Keyword args to pass to InstrumentServer, as in :code:`InstrumentServer(**inserv_kwargs)`.
+        inserv_kwargs: Keyword args to pass to InstrumentServer, as in
+            :code:`InstrumentServer(**inserv_kwargs)`.
     """
 
     # parse command-line arguments
     arg_parser = argparse.ArgumentParser(
-        description='Start or connect to an nspyre instrument server. By default, an attempt will be made to connect to an existing server.',
+        description='Start or connect to an nspyre instrument server. By default, an '
+        'attempt will be made to connect to an existing server.'
     )
     arg_parser.add_argument(
         '-a',
@@ -186,7 +190,7 @@ def start_instrument_server(drivers=None, inserv_kwargs=None):
             log_level = logging.ERROR
         else:
             raise InstrumentServerError(
-                f'didn\'t recognize logging level [{cmd_args.verbosity}]'
+                f'Didn\'t recognize logging level [{cmd_args.verbosity}].'
             )
 
         if cmd_args.log:

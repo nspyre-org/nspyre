@@ -47,7 +47,8 @@ class SubsystemsWidget(QtWidgets.QWidget):
     def __init__(self, subsystems: Iterable[Subsystem]):
         """
         Args:
-            subsystems: An iterable containing :py:class:`~nspyre.extras.subsystem.Subsystem` objects.
+            subsystems: An iterable containing
+                :py:class:`~nspyre.extras.subsystem.Subsystem` objects.
         """
         super().__init__()
 
@@ -60,7 +61,8 @@ class SubsystemsWidget(QtWidgets.QWidget):
         tree_model = QtGui.QStandardItemModel()
         tree_root_node = tree_model.invisibleRootItem()
 
-        # recursive function to parse through the subsystems and add them to the tree widget
+        # recursive function to parse through the subsystems and add them to the
+        # tree widget
         def parse_subsystems(subsys, parent):
             # make a tree item to represent this subsystem
             node = _SubsystemTreeItem(subsys)

@@ -51,7 +51,8 @@ class _FlexLinePlotSettings(QThreadSafeObject):
         with QtCore.QMutexLocker(self.mutex):
             if name in self.series_settings:
                 _logger.info(
-                    f'A plot with the name [{name}] already exists. Ignoring add_plot request.'
+                    f'A plot with the name [{name}] already exists. Ignoring add_plot '
+                    'request.'
                 )
                 return
             self.series_settings[name] = _FlexLinePlotSeriesSettings(
@@ -65,7 +66,8 @@ class _FlexLinePlotSettings(QThreadSafeObject):
         with QtCore.QMutexLocker(self.mutex):
             if name not in self.series_settings:
                 _logger.info(
-                    f'A plot with the name [{name}] does not exist. Ignoring remove_plot request.'
+                    f'A plot with the name [{name}] does not exist. Ignoring '
+                    'remove_plot request.'
                 )
                 return
 
@@ -78,7 +80,8 @@ class _FlexLinePlotSettings(QThreadSafeObject):
         with QtCore.QMutexLocker(self.mutex):
             if name not in self.series_settings:
                 _logger.info(
-                    f'A plot with the name [{name}] does not exist. Ignoring hide_plot request.'
+                    f'A plot with the name [{name}] does not exist. Ignoring '
+                    'hide_plot request.'
                 )
                 return
             if self.series_settings[name].hidden:
@@ -94,7 +97,8 @@ class _FlexLinePlotSettings(QThreadSafeObject):
         with QtCore.QMutexLocker(self.mutex):
             if name not in self.series_settings:
                 _logger.info(
-                    f'A plot with the name [{name}] does not exist. Ignoring show_plot request.'
+                    f'A plot with the name [{name}] does not exist. Ignoring show_plot '
+                    'request.'
                 )
                 return
             if not self.series_settings[name].hidden:
@@ -110,7 +114,8 @@ class _FlexLinePlotSettings(QThreadSafeObject):
         with QtCore.QMutexLocker(self.mutex):
             if name not in self.series_settings:
                 _logger.info(
-                    f'A plot with the name [{name}] does not exist. Ignoring update_settings request.'
+                    f'A plot with the name [{name}] does not exist. Ignoring '
+                    'update_settings request.'
                 )
                 return
             self.series_settings[name].series = series
@@ -122,9 +127,9 @@ class _FlexLinePlotSettings(QThreadSafeObject):
 
 class FlexLinePlotWidget(QtWidgets.QWidget):
     """Qt widget for flexible plotting of user data.
-    It connects to an arbitrary data set stored in the :py:class:`~nspyre.data.server.DataServer`,
-    collects and processes the data, and offers a variety of user-controlled
-    plotting options.
+    It connects to an arbitrary data set stored in the
+    :py:class:`~nspyre.data.server.DataServer`, collects and processes the data, and
+    offers a variety of user-controlled plotting options.
 
     The user should push a dictionary containing the following key/value pairs
     to the corresponding :py:class:`~nspyre.data.source.DataSource`
@@ -146,8 +151,10 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         from nspyre import DataSource, StreamingList
 
         with DataSource('my_dataset') as ds:
-            channel_1_data = StreamingList([np.array([[1, 2, 3], [12, 12.5, 12.25]]), np.array([[4, 5, 6], [12.6, 13, 11.2]])])
-            channel_2_data = StreamingList([np.array([[1, 2, 3], [3, 3.3, 3.1]]), np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
+            channel_1_data = StreamingList([np.array([[1, 2, 3], [12, 12.5, 12.25]]), \
+np.array([[4, 5, 6], [12.6, 13, 11.2]])])
+            channel_2_data = StreamingList([np.array([[1, 2, 3], [3, 3.3, 3.1]]), \
+np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
             my_plot_data = {
                 'title': 'MyVoltagePlot',
                 'xlabel': 'Time (s)',
@@ -351,7 +358,8 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
     def _plot_selection_changed_callback(
         self, name: str, settings: _FlexLinePlotSeriesSettings
     ):
-        """Called after the selection is changed to update the plot settings GUI elements."""
+        """Called after the selection is changed to update the plot settings GUI
+        elements."""
         self.plot_name_lineedit.setText(name)
         self.plot_series_lineedit.setText(settings.series)
         self.add_plot_scan_i_textbox.setText(settings.scan_i)
@@ -359,7 +367,8 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
         self.plot_processing_dropdown.setCurrentText(settings.processing)
 
     def _get_plot_settings(self):
-        """Retrieve the user-entered plot settings from the GUI and check them for errors."""
+        """Retrieve the user-entered plot settings from the GUI and check them for
+        errors."""
         scan_i = self.add_plot_scan_i_textbox.text()
         try:
             if scan_i != '':
@@ -595,7 +604,8 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     title = self.plot_settings.sink.title
                 except AttributeError:
                     _logger.info(
-                        f'Data source [{data_set_name}] has no "title" attribute - skipping...'
+                        f'Data source [{data_set_name}] has no "title" attribute - '
+                        'skipping...'
                     )
                 else:
                     title = None
@@ -605,7 +615,8 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     xlabel = self.plot_settings.sink.xlabel
                 except AttributeError:
                     _logger.info(
-                        f'Data source [{data_set_name}] has no "xlabel" attribute - skipping...'
+                        f'Data source [{data_set_name}] has no "xlabel" attribute - '
+                        'skipping...'
                     )
                 else:
                     xlabel = None
@@ -615,7 +626,8 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     ylabel = self.plot_settings.sink.ylabel
                 except AttributeError:
                     _logger.info(
-                        f'Data source [{data_set_name}] has no "ylabel" attribute - skipping...'
+                        f'Data source [{data_set_name}] has no "ylabel" attribute - '
+                        'skipping...'
                     )
                 else:
                     ylabel = None
@@ -625,12 +637,14 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     dsets = self.plot_settings.sink.datasets
                 except AttributeError as err:
                     raise RuntimeError(
-                        f'Data source [{data_set_name}] has no "datasets" attribute - exiting...'
+                        f'Data source [{data_set_name}] has no "datasets" attribute - '
+                        'exiting...'
                     ) from err
                 else:
                     if not isinstance(dsets, dict):
                         raise RuntimeError(
-                            f'Data source [{data_set_name}] "datasets" attribute is not a dictionary - exiting...'
+                            f'Data source [{data_set_name}] "datasets" attribute is '
+                            'not a dictionary - exiting...'
                         )
 
                 # set the new title/labels in the main thread
@@ -645,7 +659,8 @@ class _FlexLinePlotWidget(LinePlotWidget):
                         if self.plot_settings.series_settings[plot_name].hidden:
                             self.hide_plot(plot_name)
 
-                # force plot the data since we used the first pop() to extract the plot info
+                # force plot the data since we used the first pop() to extract the
+                # plot info
                 self.plot_settings.force_update = True
             except (TimeoutError, RuntimeError) as err:
                 self.teardown()
@@ -711,7 +726,8 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
                     if not isinstance(data, list):
                         raise ValueError(
-                            f'Data series [{series}] must be a list of numpy arrays, but has type [{type(data)}].'
+                            f'Data series [{series}] must be a list of numpy arrays, '
+                            f'but has type [{type(data)}].'
                         )
 
                     if len(data) == 0:
@@ -720,12 +736,15 @@ class _FlexLinePlotWidget(LinePlotWidget):
                         # check for numpy array
                         if not isinstance(data[0], np.ndarray):
                             raise ValueError(
-                                f'Data series [{series}] must be a list of numpy arrays, but the first list element has type [{type(data[0])}].'
+                                f'Data series [{series}] must be a list of numpy '
+                                'arrays, but the first list element has type '
+                                f'[{type(data[0])}].'
                             )
                         # check numpy array shape
                         if data[0].shape[0] != 2 or len(data[0].shape) != 2:
                             raise ValueError(
-                                f'Data series [{series}] first list element has shape {data.shape}, but should be (2, n).'
+                                f'Data series [{series}] first list element has '
+                                f'shape {data.shape}, but should be (2, n).'
                             )
 
                         try:
@@ -739,7 +758,8 @@ class _FlexLinePlotWidget(LinePlotWidget):
                                 data_subset = data[int(scan_i) : int(scan_j)]
                         except IndexError:
                             _logger.warning(
-                                f'Data series [{series}] invalid scan indices [{scan_i}, {scan_j}].'
+                                f'Data series [{series}] invalid scan indices '
+                                f'[{scan_i}, {scan_j}].'
                             )
                             continue
 

@@ -1,9 +1,7 @@
 [flake8]
-ignore = E501, B950, W503, C901, E203, F403
+ignore = W503, E203
 # for compaptibility with black
 max-line-length = 88
-# ignore C901 for now 
-# max-complexity = 18
 select = B,C,E,F,W,T4,B9
 # since we aren't using __all__
 per-file-ignores = __init__.py:F401

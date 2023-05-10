@@ -1,7 +1,7 @@
 """
 Color palette. Some colors from https://gist.github.com/mishelen/9525865.
 """
-from collections import OrderedDict
+from typing import Dict
 
 import numpy as np
 
@@ -35,33 +35,31 @@ clouds = (236, 240, 241)
 concrete = (149, 165, 166)
 blackish = (24, 24, 24)
 
-colors = OrderedDict(
-    [
-        ('r', pomegranate),
-        ('g', nephritis),
-        ('b', belize_hole),
-        ('c', green_sea),
-        ('m', amethyst),
-        ('y', sun_flower),
-        ('k', wet_asphalt),
-        ('w', clouds),
-        ('o', orange),
-        ('gr', concrete),
-        ('red', pomegranate),
-        ('green', nephritis),
-        ('blue', belize_hole),
-        ('cyan', green_sea),
-        ('magenta', amethyst),
-        ('yellow', sun_flower),
-        ('black', blackish),
-        ('white', clouds),
-        ('orange', orange),
-        ('gray', concrete),
-    ]
-)
-"""Large list of colors for plotting."""
+colors: Dict = {
+    'r': pomegranate,
+    'g': nephritis,
+    'b': belize_hole,
+    'c': green_sea,
+    'm': amethyst,
+    'y': sun_flower,
+    'k': wet_asphalt,
+    'w': clouds,
+    'o': orange,
+    'gr': concrete,
+    'red': pomegranate,
+    'green': nephritis,
+    'blue': belize_hole,
+    'cyan': green_sea,
+    'magenta': amethyst,
+    'yellow': sun_flower,
+    'black': blackish,
+    'white': clouds,
+    'orange': orange,
+    'gray': concrete,
+}
+"""Some colors."""
 
-cyclic_colors = [
+cyclic_colors: list[tuple] = [
     colors['r'],
     colors['g'],
     colors['b'],

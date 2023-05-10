@@ -1,5 +1,5 @@
 """
-Monkey patch to get `Pint <https://pint.readthedocs.io/en/stable/>`__ to work \
+Monkey patch to get `Pint <https://pint.readthedocs.io/en/stable/>`__ to work
 with `RPyC <https://rpyc.readthedocs.io/en/latest/>`__.
 """
 
@@ -7,7 +7,8 @@ try:
     from pint import get_application_registry
 except ImportError:
     Q_ = None
-    """Pint Quantity class. This is provided for backwards compatibility but is not recommended for future use."""
+    """Pint Quantity class. This is provided for backwards compatibility but is not
+    recommended for future use."""
 else:
     import rpyc
 

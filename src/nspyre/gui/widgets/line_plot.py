@@ -43,7 +43,8 @@ class LinePlotData(QThreadSafeObject):
 
     def __init__(self, plot_widget):
         self.plots: Dict[str, PlotSeriesData] = {}
-        """A dict mapping data set names (str) to a PlotSeriesData associated with each line plot."""
+        """A dict mapping data set names (str) to a PlotSeriesData associated with each
+        line plot."""
         # for blocking set_data until the data has been processed
         self.sem = QtCore.QSemaphore(n=1)
         super().__init__()
@@ -59,7 +60,8 @@ class LinePlotData(QThreadSafeObject):
         with QtCore.QMutexLocker(self.mutex):
             if name in self.plots:
                 _logger.info(
-                    f'A plot with the name [{name}] already exists. Ignoring add_plot request.'
+                    f'A plot with the name [{name}] already exists. Ignoring add_plot '
+                    'request.'
                 )
                 return
             self.plots[name] = PlotSeriesData()
@@ -76,7 +78,8 @@ class LinePlotData(QThreadSafeObject):
         with QtCore.QMutexLocker(self.mutex):
             if name not in self.plots:
                 _logger.info(
-                    f'A plot with the name [{name}] does not exist. Ignoring remove_plot request.'
+                    f'A plot with the name [{name}] does not exist. Ignoring '
+                    'remove_plot request.'
                 )
                 return
 
@@ -107,7 +110,8 @@ class LinePlotData(QThreadSafeObject):
         with QtCore.QMutexLocker(self.mutex):
             if name not in self.plots:
                 _logger.info(
-                    f'A plot with the name [{name}] does not exist. Ignoring hide_plot request.'
+                    f'A plot with the name [{name}] does not exist. Ignoring hide_plot '
+                    'request.'
                 )
                 return
 
@@ -126,7 +130,8 @@ class LinePlotData(QThreadSafeObject):
         with QtCore.QMutexLocker(self.mutex):
             if name not in self.plots:
                 _logger.info(
-                    f'A plot with the name [{name}] does not exist. Ignoring show_plot request.'
+                    f'A plot with the name [{name}] does not exist. Ignoring show_plot '
+                    'request.'
                 )
                 return
 
@@ -150,7 +155,8 @@ class LinePlotData(QThreadSafeObject):
         with QtCore.QMutexLocker(self.mutex):
             if name not in self.plots:
                 _logger.info(
-                    f'A plot with the name [{name}] does not exist. Ignoring set_data request.'
+                    f'A plot with the name [{name}] does not exist. Ignoring set_data '
+                    'request.'
                 )
                 self.sem.release()
                 return
@@ -164,7 +170,8 @@ class LinePlotData(QThreadSafeObject):
 
 
 class LinePlotWidget(QtWidgets.QWidget):
-    """Qt widget that generates a pyqtgraph 1D line plot with some reasonable default settings and a variety of added features."""
+    """Qt widget that generates a pyqtgraph 1D line plot with some reasonable default
+    settings and a variety of added features."""
 
     def __init__(
         self,
@@ -179,7 +186,8 @@ class LinePlotWidget(QtWidgets.QWidget):
     ):
         """
         Args:
-            args: passed to the QWidget init, like :code:`super().__init__(*args, **kwargs)`
+            args: passed to the QWidget init, like
+                :code:`super().__init__(*args, **kwargs)`
             title: Plot title.
             xlabel: Plot x-axis label.
             ylabel: Plot y-axis label.
@@ -187,8 +195,11 @@ class LinePlotWidget(QtWidgets.QWidget):
                 the font type may not be fully honored.
             legend: If True, display a figure legend.
             downsample: If True, utilize the pyqtgraph 'auto' downsampling in
-                the 'mean' mode (see https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/plotitem.html#pyqtgraph.PlotItem.setDownsampling).
-            kwargs: passed to the QWidget init, like :code:`super().__init__(*args, **kwargs)`
+                the 'mean' mode (see `PlotItem docs <https://pyqtgraph.readthedocs.io\
+                /en/latest/api_reference/graphicsItems/plotitem.html\
+                #pyqtgraph.PlotItem.setDownsampling>`__).
+            kwargs: passed to the QWidget init, like
+                :code:`super().__init__(*args, **kwargs)`
         """
         super().__init__(*args, **kwargs)
 
@@ -258,7 +269,8 @@ class LinePlotWidget(QtWidgets.QWidget):
         self.teardown()
 
     def plot_item(self):
-        """Return the pyqtgraph `PlotItem <https://pyqtgraph.readthedocs.io/en/latest/api_reference/graphicsItems/plotitem.html#pyqtgraph.PlotItem>`__."""
+        """Return the pyqtgraph `PlotItem <https://pyqtgraph.readthedocs.io/en/latest/\
+        api_reference/graphicsItems/plotitem.html#pyqtgraph.PlotItem>`__."""
         return self.plot_widget.getPlotItem()
 
     def set_title(self, title: str):
@@ -282,8 +294,9 @@ class LinePlotWidget(QtWidgets.QWidget):
 
     def teardown(self):
         """Subclasses should override this function to perform any teardown code.
-        The thread calling :py:meth:`~nspyre.gui.widgets.line_plot.LinePlotWidget.update`
-        isn't guaranteed to have exited yet."""
+        The thread calling
+        :py:meth:`~nspyre.gui.widgets.line_plot.LinePlotWidget.update` isn't guaranteed
+        to have exited yet."""
         pass
 
     def _next_color(self):
@@ -307,11 +320,16 @@ class LinePlotWidget(QtWidgets.QWidget):
 
         Args:
             name: Name of the plot.
-            pen: See https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/plotdataitem.html.
-            symbolBrush: See https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/plotdataitem.html.
-            symbolPen: See https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/plotdataitem.html.
-            symbol: See https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/plotdataitem.html.
-            symbolSize: See https://pyqtgraph.readthedocs.io/en/latest/graphicsItems/plotdataitem.html.
+            pen: See `PlotDataItem docs <https://pyqtgraph.readthedocs.io/\
+                en/latest/graphicsItems/plotdataitem.html>`__.
+            symbolBrush: See `PlotDataItem docs <https://pyqtgraph.readthedocs.io/\
+                en/latest/graphicsItems/plotdataitem.html>`__.
+            symbolPen: See `PlotDataItem docs <https://pyqtgraph.readthedocs.io/\
+                en/latest/graphicsItems/plotdataitem.html>`__.
+            symbol: See `PlotDataItem docs <https://pyqtgraph.readthedocs.io/\
+                en/latest/graphicsItems/plotdataitem.html>`__.
+            symbolSize: See `PlotDataItem docs <https://pyqtgraph.readthedocs.io/\
+                en/latest/graphicsItems/plotdataitem.html>`__.
             kwargs: Additional keyword args to pass to PlotDataItem().
         """
         if not pen:
@@ -418,7 +436,9 @@ class LinePlotWidget(QtWidgets.QWidget):
 
     # TODO
     # def add_zoom_region(self):
-    #     """Create a GUI element for selecting a plot subregion. Returns a new PlotWidget that contains a view with it's x span linked to the area selected by the plot subregion."""
+    #     """Create a GUI element for selecting a plot subregion. Returns a new
+    #     PlotWidget that contains a view with it's x span linked to the area selected
+    #     by the plot subregion."""
     #     # current display region
     #     plot_xrange, plot_yrange = self.plot_widget.viewRange()
     #     xmin, xmax = plot_xrange

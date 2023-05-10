@@ -1,5 +1,7 @@
 """
-Lines to separate GUI elements. From https://stackoverflow.com/questions/5671354/how-to-programmatically-make-a-horizontal-line-in-qt.
+Lines to separate GUI elements. From
+https://stackoverflow.com/questions/5671354/how-to-programmatically-make-a-horizontal\
+-line-in-qt.
 """
 from pyqtgraph.Qt import QtWidgets
 

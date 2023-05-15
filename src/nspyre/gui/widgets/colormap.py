@@ -117,7 +117,8 @@ class ColorMapWidget(QtWidgets.QWidget):
                 levelMode='mono',
                 xvals=self.image['z'],
             )
-            self.image_view.setCurrentIndex(z_index)
+            if z_index:
+                self.image_view.setCurrentIndex(z_index)
         except Exception as exc:
             raise exc
         finally:

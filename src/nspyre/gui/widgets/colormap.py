@@ -104,7 +104,7 @@ class ColorMapWidget(QtWidgets.QWidget):
     def _stop(self):
         """ """
         self.update_loop.stop()
-        # TODO teardown
+        self.teardown()
 
     def _process_data(self):
         """Update the color map triggered by set_data."""
@@ -136,6 +136,7 @@ class ColorMapWidget(QtWidgets.QWidget):
             raise exc
         finally:
             self.image['sem'].release()
+
 
     def setup(self):
         """Subclasses should override this function to perform any setup code."""

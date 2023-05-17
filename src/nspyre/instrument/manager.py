@@ -9,14 +9,18 @@ class InstrumentManager:
         self, *register_gateway_args, register_gateway=True, **register_gateway_kwargs
     ):
         """For consolidating connections to multiple instrument gateways.
-        If only connecting to a single :py:class:`~nspyre.instrument.gateway.InstrumentGateway`,
-        you can simply pass the arguments and keyword arguments that you'd
-        normally pass to the gateway here.
+        If only connecting to a single
+        :py:class:`~nspyre.instrument.gateway.InstrumentGateway`, you can simply pass
+        the arguments and keyword arguments that you'd normally pass to the gateway
+        here.
 
         Args:
-            register_gateway_args: See arguments for :py:meth:`~nspyre.instrument.manager.InstrumentManager.register_gateway`.
-            register_gateway: if True, call :py:meth:`~nspyre.instrument.manager.InstrumentManager.register_gateway`.
-            register_gateway_kwargs: See keyword arguments for :py:meth:`~nspyre.instrument.manager.InstrumentManager.register_gateway`.
+            register_gateway_args: See arguments for
+                :py:meth:`~nspyre.instrument.manager.InstrumentManager.register_gateway`.
+            register_gateway: if True, call
+                :py:meth:`~nspyre.instrument.manager.InstrumentManager.register_gateway`.
+            register_gateway_kwargs: See keyword arguments for
+                :py:meth:`~nspyre.instrument.manager.InstrumentManager.register_gateway`.
         """
         # mapping between a unique device name key and InstrumentGatewayDevice value
         self.devs = {}
@@ -35,15 +39,23 @@ class InstrumentManager:
     ):
         """
         Args:
-            gateway_args: See arguments for :py:class:`~nspyre.instrument.gateway.InstrumentGateway`.
-            gateway_kwargs: See keyword arguments for :py:class:`~nspyre.instrument.gateway.InstrumentGateway`.
-            default_exclude: If True, only add those devices specified in the :code:`name_mapping`.
-            exclude: List of device names on the :py:class:`~nspyre.instrument.server.InstrumentServer` \
-                that won't be added to the :py:class:`~nspyre.instrument.manager.InstrumentManager`.
-            name_mapping: Keys should be the device names on the :py:class:`~nspyre.instrument.server.InstrumentServer` \
-                whose values are the corresponding desired name on the :py:class:`~nspyre.instrument.manager.InstrumentManager`. \
-                Otherwise their name on the :py:class:`~nspyre.instrument.manager.InstrumentManager` \
-                will be the same as that on the :py:class:`~nspyre.instrument.server.InstrumentServer`.
+            gateway_args: See arguments for
+                :py:class:`~nspyre.instrument.gateway.InstrumentGateway`.
+            gateway_kwargs: See keyword arguments for
+                :py:class:`~nspyre.instrument.gateway.InstrumentGateway`.
+            default_exclude: If True, only add those devices specified in the
+                :code:`name_mapping`.
+            exclude: List of device names on the
+                :py:class:`~nspyre.instrument.server.InstrumentServer` that won't be
+                added to the :py:class:`~nspyre.instrument.manager.InstrumentManager`.
+            name_mapping: Keys should be the device names on the
+                :py:class:`~nspyre.instrument.server.InstrumentServer` whose values are
+                the corresponding desired name on the
+                :py:class:`~nspyre.instrument.manager.InstrumentManager`. Otherwise
+                their name on the
+                :py:class:`~nspyre.instrument.manager.InstrumentManager` will be the
+                same as that on the
+                :py:class:`~nspyre.instrument.server.InstrumentServer`.
         """
         gw = InstrumentGateway(*gateway_args, **gateway_kwargs)
         gw.connect()
@@ -66,13 +78,15 @@ class InstrumentManager:
                     self.devs[mgr_dev_name] = InstrumentGatewayDevice(gw_dev_name, gw)
                 else:
                     raise ValueError(
-                        f'Device named [{mgr_dev_name}] already exists on the InstrumentManager.'
+                        f'Device named [{mgr_dev_name}] already exists on the '
+                        'InstrumentManager.'
                     )
 
         self.gateways.append(gw)
 
     def disconnect(self):
-        """Disconnect from all :py:class:`~nspyre.instrument.gateway.InstrumentGateway`."""
+        """Disconnect from all
+        :py:class:`~nspyre.instrument.gateway.InstrumentGateway`."""
         for gw in self.gateways:
             gw.disconnect()
 

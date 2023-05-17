@@ -64,13 +64,14 @@ suppress_warnings = ['autoapi.python_import_resolution']
 extensions = [
     'autoapi.extension',
     'sphinx.ext.napoleon',  # for numpy and google style docstrings
-    'sphinx_copybutton',  # for adding 'copy to clipboard' buttons to all text/code boxes
+    'sphinx_copybutton',  # for adding 'copy to clipboard' buttons to all code boxes
 ]
 
 # autoapi config
 # https://sphinx-autoapi.readthedocs.io/en/latest/reference/config.html
 autoapi_type = 'python'
 autoapi_dirs = [source_root]
+autoapi_template_dir = '_templates/autoapi'
 autoapi_options = [
     'members',
     'inheritted-members',
@@ -101,7 +102,7 @@ master_doc = 'index'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build']
+exclude_patterns: list[str] = []
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'friendly'

@@ -36,7 +36,8 @@ class MainWidgetItem:
             args: Arguments to pass to the __init__ function of cls.
             kwargs: Keyword arguments to pass to the __init__ function of cls.
             stretch: The dock stretch factor as a tuple (stretch_x, stretch_y) \
-                (see https://pyqtgraph.readthedocs.io/en/latest/api_reference/dockarea.html)
+                (see `DockArea docs <https://pyqtgraph.readthedocs.io/en/latest/\
+                api_reference/dockarea.html>`__)
         """
         super().__init__()
         self.module = module
@@ -102,7 +103,8 @@ class MainWidget(QtWidgets.QWidget):
             'Experiments': {
                 'ODMR': MainWidgetItem(my_module, 'ODMRWidget'),
             },
-            'Plot': MainWidgetItem(nspyre.gui.widgets.flex_line_plot, 'FlexLinePlotWidget'),
+            'Plot': MainWidgetItem(nspyre.gui.widgets.flex_line_plot, \
+'FlexLinePlotWidget'),
             'Data': {
                 'Save': MainWidgetItem(nspyre.gui.widgets.save_widget, 'SaveWidget'),
                 'Load': MainWidgetItem(nspyre.gui.widgets.load_widget, 'LoadWidget'),
@@ -156,7 +158,8 @@ class MainWidget(QtWidgets.QWidget):
                     parse_widgets(value, node)
                 else:
                     raise ValueError(
-                        'Value in widgets dictionary must be a MainWidgetItem or another dictionary containing MainWidgetItem.'
+                        'Value in widgets dictionary must be a MainWidgetItem or '
+                        'another dictionary containing MainWidgetItem.'
                     )
 
         parse_widgets(self.widgets, tree_root_node)

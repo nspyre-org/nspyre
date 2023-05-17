@@ -13,7 +13,8 @@ _logger = logging.getLogger(__name__)
 
 
 class AsyncioWorker:
-    """Implements functionality for an asyncio event loop running in a separate thread."""
+    """Implements functionality for an asyncio event loop running in a separate
+    thread."""
 
     def __init__(self):
         # asyncio event loop for sending/receiving data to/from the socket
@@ -46,7 +47,8 @@ class AsyncioWorker:
             timeout: time to wait to shut down the event loop.
         """
         if self.is_running():
-            # wait for the queue to be empty (with timeout) to allow any pushes in the pipeline to be sent
+            # wait for the queue to be empty (with timeout) to allow any pushes in
+            # the pipeline to be sent
             future = asyncio.run_coroutine_threadsafe(
                 self._queue.join(), self._event_loop
             )
@@ -55,7 +57,8 @@ class AsyncioWorker:
                 future.result(timeout=timeout)
             except concurrent.futures.TimeoutError:
                 _logger.info(
-                    'Timed out waiting for the DataSource queue to be empty. Stopping anyway...'
+                    'Timed out waiting for the DataSource queue to be empty. '
+                    'Stopping anyway...'
                 )
                 future.cancel()
                 return
@@ -75,7 +78,7 @@ class AsyncioWorker:
     def _event_loop_thread(self):
         """Run the asyncio event loop - this may be run in a separate thread because
         we aren't starting any subprocesses or responding to signals."""
-        _logger.debug(f'started DataSource event loop thread {self._thread}')
+        _logger.debug(f'Started DataSource event loop thread {self._thread}.')
         self._event_loop.set_debug(True)
         asyncio.set_event_loop(self._event_loop)
         try:
@@ -83,7 +86,7 @@ class AsyncioWorker:
             self._event_loop.run_forever()
         finally:
             self._event_loop.close()
-            _logger.info(f'source [{(self._addr, self._port)}] closed')
+            _logger.info(f'Source [{(self._addr, self._port)}] closed.')
 
     def _main_helper(self):
         """Callback function to start _main."""

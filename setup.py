@@ -44,7 +44,8 @@ setup(
     long_description_content_type='text/markdown',
     url='https://github.com/nspyre-org/nspyre',
     author='Jacob Feder, Michael Solomon, Jose A. Mendez, Alexandre Bourassa',
-    author_email='jfed@uchicago.edu, msolo@uchicago.edu, mendez99@uchicago.edu, abourassa@uchicago.edu',
+    author_email='jfed@uchicago.edu, msolo@uchicago.edu, mendez99@uchicago.edu, '
+    'abourassa@uchicago.edu',
     maintainer='Jacob Feder, Michael Solomon',
     maintainer_email='jfed@uchicago.edu, msolo@uchicago.edu',
     classifiers=[
@@ -65,7 +66,7 @@ setup(
         'Topic :: Software Development :: User Interfaces',
         'Topic :: System :: Distributed Computing',
     ],
-    keywords='nspyre, measurement toolkit, experimentation platform, physics, science, research',
+    keywords='nspyre, physics, science, research',
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
     zip_safe=False,
@@ -76,9 +77,12 @@ setup(
         # instrument server proxying
         'rpyc >=5.2.3',
         # Qt/GUI (won't install on ARM)
-        'pyqt6 ==6.2.3; platform_machine != "aarch64" and platform_machine != "armv7l"',
-        'pyqt6-qt6 ==6.2.3; platform_machine != "aarch64" and platform_machine != "armv7l"',
-        'pyqtgraph >=0.13.1; platform_machine != "aarch64" and platform_machine != "armv7l"',
+        'pyqt6 ==6.2.3; platform_machine != "aarch64" and '
+        'platform_machine != "armv7l"',
+        'pyqt6-qt6 ==6.2.3; platform_machine != "aarch64" and '
+        'platform_machine != "armv7l"',
+        'pyqtgraph >=0.13.1; platform_machine != "aarch64" and '
+        'platform_machine != "armv7l"',
     ],
     extras_require={
         'dev': [

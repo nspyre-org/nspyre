@@ -9,7 +9,7 @@ the data server and each of the sinks pops data from the data server.
 Objects are serialized by the source then pushed to the server. Each sink
 receives a copy of the serialized objects, then deserializes them locally. If
 the user makes use of "Streaming" objects such as the
-:py:class:`~nspyre.data.streaming_list.StreamingList`, the source
+:py:class:`~nspyre.data.streaming.list.StreamingList`, the source
 will only serialize the operations that have been performed on the streaming
 object since the last serialization. The sink can then reconstruct the pushed
 data using a local copy of the last version of the object, and the diff
@@ -29,10 +29,10 @@ import selectors
 import socket
 from typing import Dict
 
-from ._streaming_pickle import _squash_pickle_diff_queue
-from ._streaming_pickle import deserialize_pickle_diff
-from ._streaming_pickle import PickleDiff
-from ._streaming_pickle import serialize_pickle_diff
+from .streaming._pickle import _squash_pickle_diff_queue
+from .streaming._pickle import deserialize_pickle_diff
+from .streaming._pickle import PickleDiff
+from .streaming._pickle import serialize_pickle_diff
 
 _logger = logging.getLogger(__name__)
 
@@ -95,7 +95,7 @@ class _CustomSock:
         # get the payload
         msg = await self.sock_reader.readexactly(msg_len)
 
-        _logger.debug(f'received [{msg_len}] bytes from [{self.addr}]')
+        _logger.debug(f'Received [{msg_len}] bytes from [{self.addr}].')
 
         return msg
 
@@ -110,13 +110,13 @@ class _CustomSock:
         self.sock_writer.write(msg_len_bytes + msg)
         await self.sock_writer.drain()
 
-        _logger.debug(f'sent [{len(msg)}] bytes to {self.addr}')
+        _logger.debug(f'Sent [{len(msg)}] bytes to {self.addr}.')
 
     async def close(self):
         """Fully close a socket connection"""
         self.sock_writer.close()
         await self.sock_writer.wait_closed()
-        _logger.debug(f'closed socket [{self.addr}]')
+        _logger.debug(f'Closed socket [{self.addr}].')
 
 
 async def _cleanup_event_loop(loop):
@@ -197,7 +197,8 @@ class _DataSet:
         await task
 
     async def _source_coro(self):
-        """Receive data from a source client and transfer it to the sink client queues."""
+        """Receive data from a source client and transfer it to the sink client
+        queues."""
         sock = self.source['sock']
         # reset the PickleDiff since there is a new source
         self.pickle_diff = PickleDiff()
@@ -209,13 +210,15 @@ class _DataSet:
                     # if there was a timeout / problem receiving the message
                     # the source client is dead and will be terminated
                     _logger.debug(
-                        f'source [{sock.addr}] disconnected or hasn\'t sent a keepalive message - dropping connection'
+                        f'Source [{sock.addr}] disconnected or hasn\'t sent a '
+                        'keepalive message - dropping connection.'
                     )
                     raise asyncio.CancelledError from exc
 
                 if len(new_data):
                     _logger.debug(
-                        f'source [{sock.addr}] received pickle of [{len(new_data)}] bytes'
+                        f'Source [{sock.addr}] received pickle of '
+                        f'[{len(new_data)}] bytes.'
                     )
                     # deserialize the PickleDiff
                     new_pickle_diff = deserialize_pickle_diff(new_data)
@@ -229,28 +232,30 @@ class _DataSet:
                         except asyncio.QueueFull:
                             # the sink isn't consuming data fast enough
                             _logger.debug(
-                                f'sink [{sink["sock"].addr}] can\'t keep up with data source'
+                                f'Sink [{sink["sock"].addr}] can\'t keep up '
+                                'with data source.'
                             )
                             if not _squash_pickle_diff_queue(queue, new_pickle_diff):
                                 _logger.warning(
-                                    f'Cancelling sink [{sink_id}] because the \
-                                    max diff size was exceeded. This is a \
-                                    consequence of memory build-up due to the \
-                                    sink not being able to keep up with the \
-                                    data rate. Reduce the data rate or \
-                                    increase the client processing throughput.'
+                                    f'Cancelling sink [{sink_id}] because the '
+                                    'max diff size was exceeded. This is a '
+                                    'consequence of memory build-up due to the '
+                                    'sink not being able to keep up with the '
+                                    'data rate. Reduce the data rate or '
+                                    'increase the client processing throughput.'
                                 )
                                 self.sinks[sink_id]['task'].cancel()
                         _logger.debug(
-                            f'source [{sock.addr}] queued pickle for sink [{sink["sock"].addr}]'
+                            f'Source [{sock.addr}] queued pickle for sink '
+                            f'[{sink["sock"].addr}].'
                         )
                 else:
                     # the server just sent a keepalive signal
-                    _logger.debug(f'source [{sock.addr}] received keepalive')
+                    _logger.debug(f'Source [{sock.addr}] received keepalive.')
         except asyncio.CancelledError as exc:
             raise asyncio.CancelledError from exc
         finally:
-            _logger.info(f'dropped source [{sock.addr}]')
+            _logger.info(f'Dropped source [{sock.addr}].')
             self.source = None
 
     async def _sink_coro(
@@ -269,11 +274,11 @@ class _DataSet:
                         queue.get(), timeout=_KEEPALIVE_TIMEOUT
                     )
                     queue.task_done()
-                    _logger.debug(f'sink [{sock.addr}] got pickle diff from queue')
+                    _logger.debug(f'Sink [{sock.addr}] got pickle diff from queue.')
                 except asyncio.TimeoutError:
                     # if there's no data available, send a keepalive message
                     _logger.debug(
-                        f'sink [{sock.addr}] no data available - sending keepalive'
+                        f'Sink [{sock.addr}] no data available - sending keepalive.'
                     )
                     new_data = b''
                 else:
@@ -284,22 +289,28 @@ class _DataSet:
                         sock.send_msg(new_data),
                         timeout=_OPS_TIMEOUT / 4,
                     )
-                    _logger.debug(f'sink [{sock.addr}] sent [{len(new_data)}] bytes')
+                    _logger.debug(
+                        f'Sink [{sock.addr}] sent ' f'[{len(new_data)}] bytes.'
+                    )
                 except (ConnectionError, asyncio.TimeoutError) as exc:
                     _logger.info(
-                        f'sink [{sock.addr}] disconnected or isn\'t accepting data - dropping connection'
+                        f'Sink [{sock.addr}] disconnected or isn\'t '
+                        'accepting data - dropping connection.'
                     )
                     raise asyncio.CancelledError from exc
         except asyncio.CancelledError as exc:
             raise asyncio.CancelledError from exc
         finally:
             self.sinks.pop(sink_id)
-            _logger.debug(f'dropped sink [{sock.addr}]')
+            _logger.debug(f'Dropped sink [{sock.addr}].')
 
 
 class DataServer:
     """
-    The server has a set of DataSet objects. Each has 1 data source, and any number of data sinks. Pickled object data from the source is received on its socket, then transferred to the FIFO of every sink. The pickle is then sent out on the sink's socket.
+    The server has a set of DataSet objects. Each has 1 data source, and any number of
+    data sinks. Pickled object data from the source is received on its socket, then
+    transferred to the FIFO of every sink. The pickle is then sent out on the sink's
+    socket.
     E.g.::
 
         self.datasets = {
@@ -333,13 +344,15 @@ class DataServer:
         # a dictionary with string identifiers mapping to DataSet objects
         self.datasets: Dict[str, _DataSet] = {}
         # asyncio event loop for running all the server tasks
-        # for some reason there are performance issues on windows when using the ProactorEventLoop
+        # for some reason there are performance issues on windows when using the
+        # ProactorEventLoop
         selector = selectors.SelectSelector()
         self.event_loop = asyncio.SelectorEventLoop(selector)
 
     def serve_forever(self):
-        """Run the asyncio event loop - ayncio requires this be run in the main thread if
-        processes are to be spawned from the event loop. See https://docs.python.org/3/library/asyncio-dev.html."""
+        """Run the asyncio event loop - ayncio requires this be run in the main thread
+        if processes are to be spawned from the event loop.
+        See https://docs.python.org/3/library/asyncio-dev.html."""
         self.event_loop.set_debug(True)
         asyncio.set_event_loop(self.event_loop)
         try:
@@ -347,7 +360,7 @@ class DataServer:
             self.event_loop.run_forever()
         finally:
             self.event_loop.close()
-            _logger.info('data server closed')
+            _logger.info('Data server closed.')
 
     def stop(self):
         """Stop the asyncio event loop."""
@@ -356,7 +369,7 @@ class DataServer:
                 _cleanup_event_loop(self.event_loop), self.event_loop
             )
         else:
-            raise RuntimeError('tried stopping the data server but it isn\'t running!')
+            raise RuntimeError('Tried stopping the data server but it isn\'t running!')
 
     def _main_helper(self):
         """Callback function to start _main"""
@@ -372,7 +385,7 @@ class DataServer:
         )
 
         addr = server.sockets[0].getsockname()
-        _logger.info(f'Serving on {addr}')
+        _logger.info(f'Serving on {addr}.')
 
         async with server:
             await server.serve_forever()
@@ -384,7 +397,7 @@ class DataServer:
         # custom socket wrapper for sending / receiving structured messages
         sock = _CustomSock(sock_reader, sock_writer)
 
-        _logger.info(f'new client connection from [{sock.addr}]')
+        _logger.info(f'New client connection from [{sock.addr}].')
 
         try:
             try:
@@ -395,8 +408,8 @@ class DataServer:
                 )
             except (asyncio.IncompleteReadError, asyncio.TimeoutError):
                 _logger.warning(
-                    f'connection with client [{sock.addr}] failed before it '
-                    'identified itself during the negotiation phase'
+                    f'Connection with client [{sock.addr}] failed before it '
+                    'identified itself during the negotiation phase.'
                 )
                 try:
                     await sock.close()
@@ -406,7 +419,7 @@ class DataServer:
 
             # info client
             if client_type == _NEGOTIATION_INFO:
-                _logger.info(f'client [{sock.addr}] is type [info]')
+                _logger.info(f'Client [{sock.addr}] is type [info].')
                 # the client is requesting general info about the server
                 # tell the client which datasets are available
                 data = ','.join(list(self.datasets.keys())).encode()
@@ -416,7 +429,7 @@ class DataServer:
                     )
                 except (ConnectionError, asyncio.TimeoutError):
                     _logger.warning(
-                        f'server failed sending data to [info] client [{sock.addr}]'
+                        f'Server failed sending data to [info] client [{sock.addr}].'
                     )
                 try:
                     await sock.close()
@@ -426,7 +439,7 @@ class DataServer:
 
             # data source client
             elif client_type == _NEGOTIATION_SOURCE:
-                _logger.info(f'client [{sock.addr}] is type [source]')
+                _logger.info(f'Client [{sock.addr}] is type [source].')
                 # the client will be a data source for a dataset on the server
                 # first we need know which dataset it will provide data for
                 try:
@@ -435,7 +448,7 @@ class DataServer:
                     )
                 except (asyncio.IncompleteReadError, asyncio.TimeoutError):
                     _logger.warning(
-                        f'failed getting the data set name from client [{sock.addr}]'
+                        f'Failed getting the data set name from client [{sock.addr}].'
                     )
                     try:
                         await sock.close()
@@ -453,7 +466,9 @@ class DataServer:
                 if self.datasets[dataset_name].source:
                     # the dataset already has a source
                     _logger.warning(
-                        f'client [{sock.addr}] wants to source data for data set [{dataset_name}], but it already has a source - dropping connection'
+                        f'Client [{sock.addr}] wants to source data for data set '
+                        f'[{dataset_name}], but it already has a source - dropping '
+                        'connection.'
                     )
                     try:
                         await sock.close()
@@ -462,7 +477,8 @@ class DataServer:
                     return
                 else:
                     _logger.info(
-                        f'client [{sock.addr}] sourcing data for data set [{dataset_name}]'
+                        f'Client [{sock.addr}] sourcing data for data set '
+                        f'[{dataset_name}].'
                     )
                     # the dataset exists and it's original source is gone, so the client
                     # will act as the new source
@@ -470,7 +486,7 @@ class DataServer:
 
             # data sink client
             elif client_type == _NEGOTIATION_SINK:
-                _logger.info(f'client [{sock.addr}] is type [sink]')
+                _logger.info(f'Client [{sock.addr}] is type [sink].')
                 # get the dataset name
                 try:
                     dataset_name_bytes = await asyncio.wait_for(
@@ -478,7 +494,7 @@ class DataServer:
                     )
                 except (asyncio.IncompleteReadError, asyncio.TimeoutError):
                     _logger.warning(
-                        f'failed getting the data set name from client [{sock.addr}]'
+                        f'Failed getting the data set name from client [{sock.addr}].'
                     )
                     try:
                         await sock.close()
@@ -490,14 +506,17 @@ class DataServer:
 
                 if dataset_name in self.datasets:
                     _logger.info(
-                        f'client [{sock.addr}] sinking data from data set [{dataset_name}]'
+                        f'Client [{sock.addr}] sinking data from data set '
+                        f'[{dataset_name}].'
                     )
                     # add the client to the sinks for the requested dataset
                     await self.datasets[dataset_name].run_sink(self.event_loop, sock)
                 else:
                     # the requested dataset isn't available on the server
                     _logger.warning(
-                        f'client [{sock.addr}] wants to sink data from data set [{dataset_name}], but it doesn\'t exist - dropping connection'
+                        f'Client [{sock.addr}] wants to sink data from data set '
+                        f'[{dataset_name}], but it doesn\'t exist - dropping '
+                        'connection.'
                     )
                     try:
                         await sock.close()
@@ -508,7 +527,8 @@ class DataServer:
             else:
                 # the client gave an invalid connection type
                 _logger.error(
-                    f'client [{sock.addr}] provided an invalid connection type [{client_type}] - dropping connection'
+                    f'Client [{sock.addr}] provided an invalid connection type '
+                    f'[{client_type}] - dropping connection.'
                 )
                 try:
                     await sock.close()
@@ -516,10 +536,11 @@ class DataServer:
                     pass
                 return
         except ConnectionResetError:
-            _logger.debug(f'client [{sock.addr}] forcibly closed - closing connection')
+            _logger.debug(f'Client [{sock.addr}] forcibly closed - closing connection.')
         except asyncio.CancelledError as exc:
             _logger.debug(
-                f'communication with client [{sock.addr}] cancelled - closing connection'
+                f'Communication with client [{sock.addr}] cancelled - closing '
+                'connection.'
             )
             try:
                 await sock.close()

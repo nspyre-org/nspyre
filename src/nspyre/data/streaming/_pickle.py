@@ -12,7 +12,7 @@ from pickle import UnpicklingError
 from typing import Any
 from typing import Dict
 
-from .streaming_list import StreamingList
+from .list import StreamingList
 
 # maximum length of a diff
 _MAX_DIFF = 10e3
@@ -29,7 +29,7 @@ class PickleDiff:
             pkl: Byte string from pickle operation.
             diffs: Dict where keys are uid and values are lists of diffs as
                 dictated by the corresponding class-specific code in
-                :py:meth:`~nspyre.data._streaming_pickle.StreamingPickler.persistent_id`.
+                :py:meth:`~nspyre.data.streaming._pickle.StreamingPickler.persistent_id`.
         """
         if pkl is None:
             self.pkl = b''

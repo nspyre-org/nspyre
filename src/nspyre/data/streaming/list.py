@@ -1,5 +1,49 @@
 class StreamingList(list):
-    """List-like object that can be streamed efficiently through the data server."""
+    """List-like object that can be streamed efficiently through the \
+    :py:class:`~nspyre.data.server.DataServer`.
+    :py:class:`StreamingList` is meant to act as a drop-in replacement for a python
+    list. When this object is pushed to the data server using a call to
+    :py:meth:`~nspyre.data.source.DataSource.push`, instead of sending the whole
+    contents of :py:class:`StreamingList`, only the differences since the last
+    :py:meth:`~nspyre.data.source.DataSource.push` are sent. This allows
+    for much higher data throughput for larger data sets.
+
+    Although :py:class:`StreamingList` is typically able to automatically calculate the 
+    differences since the last :py:meth:`~nspyre.data.source.DataSource.push`, there is
+    one situation where this is not possible: if a mutable object that is contained
+    somewhere inside the :py:class:`StreamingList` is modified, it cannot be detected.
+    In this situation, the :py:class:`StreamingList` must be manually notified that
+    one of its items has been updated, e.g.:
+
+    .. code-block:: python
+
+        import numpy as np
+        from nspyre import DataSource
+        from nspyre import StreamingList
+
+        with DataSource('my_dataset') as src:
+            sl = StreamingList()
+            a = np.array([1, 2, 3])
+            b = np.array([4, 5, 6])
+            c = np.array([7, 8, 9])
+            
+            # these StreamingList calls will automatically calculate diffs
+            sl.append(a)
+            sl.append(b)
+            sl.append(c)
+
+            src.push(sl)
+
+            # here we are modifying a mutable object inside of the StreamingList,
+            # which it cannot detect
+            a[1] = 10        
+
+            # we can manually tell the StreamingList that its object 'a' was modified
+            sl.updated_item(0)
+
+            src.push(sl)
+
+    """
 
     def __init__(self, iterable=None):
         """
@@ -137,3 +181,8 @@ class StreamingList(list):
     def copy(self):
         """See docs for Python list."""
         return StreamingList(super().copy())
+
+    def __reduce__(self):
+        """Custom pickling method. Required because this is a list subclass,
+        which seems to be handled differently."""
+        return (StreamingList, (super().copy(),))

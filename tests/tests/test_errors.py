@@ -11,7 +11,8 @@ HERE = Path(__file__).parent
 
 class TestErrors:
     def test_output(self, gateway):
-        """Test that the log files are working properly and receiving all the stdout / stderr messages as well"""
+        """Test that the log files are working properly and receiving all the
+        stdout / stderr messages as well."""
 
         # Generate a temporary log file that can be analyzed by the test
         log_path = Path(HERE / 'test_errors.log')

@@ -1,7 +1,7 @@
 """
-This module provides a wrapper around an `RPyC <https://rpyc.readthedocs.io/en/latest/>`__ server.
-Clients may connect and access devices, or command the server to add, remove,
-or restart devices.
+This module provides a wrapper around an
+`RPyC <https://rpyc.readthedocs.io/en/latest/>`__ server. Clients may connect and
+access devices, or command the server to add, remove, or restart devices.
 """
 import logging
 import threading
@@ -40,11 +40,29 @@ _RPYC_SERVER_STOP_EVENT = threading.Event()
 
 
 class InstrumentServerError(Exception):
-    """Raised for failures related to the :py:class:`~nspyre.instrument.server.InstrumentServer`."""
+    """Raised for failures related to the
+    :py:class:`~nspyre.instrument.server.InstrumentServer`."""
+    def __init__(self, *args, **kwargs):
+        """
+        Args:
+            args: Arguments to pass to super class Exception().
+            kwargs: Keyword arguments to pass to super class Exception().
+        """
+        # override this so that the docs don't the print superclass docstring
+        super().__init__(*args, **kwargs)
 
 
 class InstrumentServerDeviceExistsError(InstrumentServerError):
-    """Raised if attempting to add a device that already exists to the :py:class:`~nspyre.instrument.server.InstrumentServer`."""
+    """Raised if attempting to add a device that already exists to the
+    :py:class:`~nspyre.instrument.server.InstrumentServer`."""
+    def __init__(self, *args, **kwargs):
+        """
+        Args:
+            args: Arguments to pass to super class Exception().
+            kwargs: Keyword arguments to pass to super class Exception().
+        """
+        # override this so that the docs don't the print superclass docstring
+        super().__init__(*args, **kwargs)
 
 
 class InstrumentServer(ClassicService):
@@ -84,26 +102,29 @@ class InstrumentServer(ClassicService):
         class_path: str,
         class_name: str,
         args: list = None,
-        import_or_file: str = 'file',
         kwargs: Dict = None,
+        import_or_file: str = 'file',
         local_args: bool = False,
     ):
-        """Create an instance of the specified class and add it to the instrument server.
+        """Create an instance of the specified class and add it to the instrument
+        server.
 
         Args:
             name: Alias for the device.
-            class_path: If import_or_file is :code:`'file'`, path to the file
-                containing the class, e.g. :code:`'~/drivers/oscilloscopes/rtb2004.py'`.
-                If import_or_file is :code:`'import'`, python module
-                containing the class, e.g. :code:`'driver_module.oscilloscopes.rtb2004'`
-            class_name: Name of the class to create an instance of, e.g. :code:`'RTB2004'`.
-            import_or_file: :code:`'file'` for creating the device object from
-                a file on disk, :code:`'import'` for creating the device
-                object from a python module.
+            class_path: If import_or_file is :code:`'file'`, path to the file on
+                the filesystem containing the class, e.g.
+                :code:`'~/drivers/rohde_schwarz/hmp4040.py'`. If import_or_file
+                is :code:`'import'`, python module containing the class, e.g.
+                :code:`'nspyre_drivers.rohde_schwarz.hmp4040.hmp4040'`.
+            class_name: Name of the class to create an instance of, e.g.
+                :code:`'HMP4040'`.
             args: Arguments to pass to the class during initialization, as in
-                :code:`RTB2004(*args, **kwargs)`.
+                :code:`HMP4040(*args, **kwargs)`.
             kwargs: Keyword args to pass to the class during initialization,
-                as in :code:`RTB2004(*args, **kwargs)`.
+                as in :code:`HMP4040(*args, **kwargs)`.
+            import_or_file: :code:`'file'` for creating the device object from
+                a file on the filesystem, :code:`'import'` for creating the
+                device object from a python module.
             local_args: If True, all arguments to this method are assumed to be
                 local variables not passed through an
                 :py:class:`~nspyre.instrument.gateway.InstrumentGateway`. In
@@ -113,13 +134,14 @@ class InstrumentServer(ClassicService):
 
         Raises:
             ValueError: An argument was invalid.
-            InstrumentServerDeviceExistsError: Tried to add a device that already exists.
+            InstrumentServerDeviceExistsError: Tried to add a device that already
+                exists.
             InstrumentServerError: Anything else.
         """
         if not local_args:
             # make sure that the arguments actually exist on the local machine
-            # and are not netrefs - otherwise there could be dangling references left over
-            # in the self._devs dictionary after the client disconnects
+            # and are not netrefs - otherwise there could be dangling references
+            # left over in the self._devs dictionary after the client disconnects
             name = obtain(name)
             class_path = obtain(class_path)
             class_name = obtain(class_name)
@@ -157,7 +179,7 @@ class InstrumentServer(ClassicService):
                 ) from exc
         else:
             raise ValueError(
-                'argument import_or_file must be "file" or "import"; got'
+                'Argument import_or_file must be "file" or "import"; got'
                 f' [{import_or_file}].'
             )
 

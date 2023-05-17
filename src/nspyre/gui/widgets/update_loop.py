@@ -28,7 +28,8 @@ class UpdateLoop(QThreadSafeObject):
             update_func: Function to run repeatedly.
             args: Arguments to pass to the function
             kwargs: Keyword arguments to pass to the function.
-            report_fps: Whether to log the frames-per-second (how many times update_func is running per second).
+            report_fps: Whether to log the frames-per-second (how many times
+                update_func is running per second).
             fps_period: How often (s) to report the frames-per-second.
         """
         super().__init__()

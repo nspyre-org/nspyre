@@ -1,4 +1,5 @@
 import time
+from functools import partial
 from typing import Any
 from typing import Dict
 
@@ -35,7 +36,8 @@ class ColorMapWidget(QtWidgets.QWidget):
             title: Plot title.
             btm_label: Plot bottom axis label.
             lft_label: Plot left axis label.
-            colormap: pyqtgraph `ColorMap <https://pyqtgraph.readthedocs.io/en/latest/api_reference/colormap.html#pyqtgraph.ColorMap>`__ object.
+            colormap: pyqtgraph `ColorMap <https://pyqtgraph.readthedocs.io/en/\
+                latest/api_reference/colormap.html#pyqtgraph.ColorMap>`__ object.
             font: Font to use in the plot title, axis labels, etc., although
                 the font type may not be fully honored.
         """
@@ -86,6 +88,9 @@ class ColorMapWidget(QtWidgets.QWidget):
 
         self.setLayout(self.layout)
 
+        # TODO
+        self.destroyed.connect(partial(self._stop))
+
         # Plot setup code
         self.setup()
 
@@ -95,6 +100,11 @@ class ColorMapWidget(QtWidgets.QWidget):
         self.new_data.connect(self._process_data)
         # start the thread
         self.update_loop.start()
+
+    def _stop(self):
+        """ """
+        self.update_loop.stop()
+        # TODO teardown
 
     def _process_data(self):
         """Update the color map triggered by set_data."""

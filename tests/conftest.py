@@ -47,7 +47,8 @@ def dataserv():
         and 'nspyre-dataserv.exe' not in running_procs
     ):
         raise Exception(
-            "The data server isn't running and must be started manually with 'nspyre-dataserv'"
+            "The data server isn't running and must be started manually with "
+            "'nspyre-dataserv'."
         )
 
 

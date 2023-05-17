@@ -2,6 +2,7 @@ import logging
 import time
 from typing import Callable
 from typing import Dict
+from typing import Optional
 from typing import Union
 
 from ..gui import QObject
@@ -14,7 +15,7 @@ _logger = logging.getLogger(__name__)
 
 
 class Subsystem(QObject):
-    """Generalized experimental subsystem that allows for management of
+    """Generalized experimental subsystem that allows for management of \
     dependencies between subsystems for boot sequencing."""
 
     if Qt_GUI:
@@ -24,14 +25,14 @@ class Subsystem(QObject):
     def __init__(
         self,
         name: str,
-        pre_dep_boot: Callable = None,
-        post_dep_boot: Callable = None,
+        pre_dep_boot: Optional[Callable] = None,
+        post_dep_boot: Optional[Callable] = None,
         default_boot_timeout: float = 10,
         default_boot_inserv: Union[InstrumentServer, InstrumentGateway] = None,
         default_boot_add_args: list = None,
         default_boot_add_kwargs: Dict = None,
-        pre_dep_shutdown: Callable = None,
-        post_dep_shutdown: Callable = None,
+        pre_dep_shutdown: Optional[Callable] = None,
+        post_dep_shutdown: Optional[Callable] = None,
         dependencies: list = None,
     ):
         """
@@ -112,11 +113,13 @@ class Subsystem(QObject):
         return name
 
     def default_boot(self):
-        """Tries to add the driver to the :py:class:`~nspyre.instrument.InstrumentServer`
-        in a loop, until :code:`default_boot_timeout` has elapsed."""
+        """Tries to add the driver to the
+        :py:class:`~nspyre.instrument.InstrumentServer` in a loop, until
+        :code:`default_boot_timeout` has elapsed."""
         if self.default_boot_inserv is None:
             raise ValueError(
-                'If using default_boot, an InstrumentServer or InstrumentGateway must be provided using the default_boot_inserv keyword argument.'
+                'If using default_boot, an InstrumentServer or InstrumentGateway must '
+                'be provided using the default_boot_inserv keyword argument.'
             )
 
         timeout = time.time() + self.default_boot_timeout
@@ -134,10 +137,16 @@ class Subsystem(QObject):
                 time.sleep(0.5)
 
     def default_shutdown(self):
-        """Remove the driver from the :py:class:`~nspyre.instrument.InstrumentServer`."""
+        """Remove the driver from the
+        :py:class:`~nspyre.instrument.InstrumentServer`."""
         self.default_boot_inserv.remove(self._dev_name())
 
     def boot(self, boot_dependencies: bool = True):
+        """
+        Args:
+            boot_dependencies: if True, boot all dependencies before booting
+                this subsystem.
+        """
         if self.booted:
             _logger.warning(
                 f'Ignoring boot request for [{self.name}] because it is already booted.'
@@ -155,7 +164,8 @@ class Subsystem(QObject):
                     subsys.boot(boot_dependencies=True)
                 else:
                     _logger.warning(
-                        f'Cancelling boot request for [{self.name}] because dependency [{subsys.name}] is not booted.'
+                        f'Cancelling boot request for [{self.name}] because dependency '
+                        f'[{subsys.name}] is not booted.'
                     )
                     return
 
@@ -173,7 +183,8 @@ class Subsystem(QObject):
         """Shutdown the subsystem.
 
         Args:
-            shutdown_dependencies: if True, shutdown all dependencies after shutting down
+            shutdown_dependencies: if True, shutdown all dependencies after shutting
+                down
         """
         if not self.booted:
             _logger.warning(
@@ -186,7 +197,8 @@ class Subsystem(QObject):
         for subsys in self.dependents:
             if subsys.booted:
                 _logger.warning(
-                    f'Cancelling shutdown request for [{self.name}] because subsystem dependent [{subsys.name}] is still booted.'
+                    f'Cancelling shutdown request for [{self.name}] because subsystem '
+                    f'dependent [{subsys.name}] is still booted.'
                 )
                 return
 
@@ -209,7 +221,8 @@ class Subsystem(QObject):
                     for d in subsys.dependents:
                         if d.booted:
                             _logger.info(
-                                f'Not shutting down [{subsys.name}] because its dependent [{d.name}] is still booted.'
+                                f'Not shutting down [{subsys.name}] because its '
+                                f'dependent [{d.name}] is still booted.'
                             )
                             should_shutdown = False
                     if should_shutdown:

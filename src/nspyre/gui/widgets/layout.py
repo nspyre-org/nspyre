@@ -7,12 +7,14 @@ class LayoutTreeNode:
     """A node in the tree returned by :py:func:`tree_layout`."""
 
     def __init__(self, layout: QtWidgets.QLayout, children: dict):
-        """Children can be accessed with dot notation - see example in :py:func:`tree_layout`.
+        """Children can be accessed with dot notation - see example in
+        :py:func:`tree_layout`.
 
         Args:
             layout: QLayout object for this node.
             children: Dict with string keys mapped to values of either
-                :code:`QtWidgets.QWidget`, :code:`QtWidgets.QLayout`, or :py:class:`~nspyre.gui.widgets.layout.LayoutTreeNode`.
+                :code:`QtWidgets.QWidget`, :code:`QtWidgets.QLayout`, or
+                :py:class:`~nspyre.gui.widgets.layout.LayoutTreeNode`.
         """
         self.layout = layout
         """Same as 'layout' argument."""
@@ -28,7 +30,8 @@ class LayoutTreeNode:
 
 
 def tree_layout(config: Dict) -> LayoutTreeNode:
-    """Arrange a tree of provided widgets and layouts into corresponding Qt layout objects.
+    """Arrange a tree of provided widgets and layouts into corresponding Qt layout
+    objects.
 
     Example usage:
 

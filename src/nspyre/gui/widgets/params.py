@@ -6,7 +6,8 @@ from pyqtgraph.Qt import QtWidgets
 
 
 class ParamsWidget(QtWidgets.QWidget):
-    """Qt widget containing a list of parameters for the user to enter.
+    """Qt widget containing a set of line edit boxes for the user to enter \
+    parameters into.
 
     Typical usage example:
 
@@ -41,11 +42,13 @@ class ParamsWidget(QtWidgets.QWidget):
                     },
                     'num_points': {
                         'display_text': 'Number of Scan Points',
-                        'widget': SpinBox(value=100, int=True, bounds=(1, None), dec=True),
+                        'widget': \
+SpinBox(value=100, int=True, bounds=(1, None), dec=True),
                     },
                     'iterations': {
                         'display_text': 'Number of Experiment Repeats',
-                        'widget': SpinBox(value=20, int=True, bounds=(1, None), dec=True),
+                        'widget': \
+SpinBox(value=20, int=True, bounds=(1, None), dec=True),
                     },
                     'dataset': {
                         'display_text': 'Data Set',
@@ -56,7 +59,8 @@ class ParamsWidget(QtWidgets.QWidget):
             ...
 
             def doSomething(self):
-                print(f'Scanning from = {self.params_widget.start_freq} Hz to = {self.params_widget.stop_freq} Hz.'
+                print(f'Scanning from = {self.params_widget.start_freq} Hz to = \
+{self.params_widget.stop_freq} Hz.'
 
     """
 
@@ -187,7 +191,9 @@ class ParamsWidget(QtWidgets.QWidget):
                 fun = self.get_param_value_funs[type(widget)]
             except KeyError as err:
                 raise ValueError(
-                    f'Parameter [{attr}] has no function for retrieving its value from the GUI. This should be set using the "get_param_value_funs" in the ParamsWidget constructor.'
+                    f'Parameter [{attr}] has no function for retrieving its value '
+                    'from the GUI. This should be set using the "get_param_value_funs" '
+                    'in the ParamsWidget constructor.'
                 ) from err
             else:
                 return fun(widget)

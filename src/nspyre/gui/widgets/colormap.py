@@ -56,6 +56,7 @@ class ColorMapWidget(QtWidgets.QWidget):
         # plot settings
         self.plot_item.setTitle(title, size=f'{font.pointSize()}pt')
         self.plot_item.enableAutoRange(True)
+        self.plot_item.setAspectLocked(False)
 
         # colormap
         self.image_view.setColorMap(colormap)
@@ -99,24 +100,26 @@ class ColorMapWidget(QtWidgets.QWidget):
         """Update the color map triggered by set_data."""
         try:
             if self.image['z'] is None:
-                axes = {'x': 0, 'y': 1}
+                axes = {'x': 1, 'y': 0}
             else:
-                axes = {'x': 0, 'y': 1, 't': 2}
+                axes = {'x': 1, 'y': 0, 't': 2}
             z_index = self.image_view.currentIndex
             xs, ys = self.image['x'], self.image['y']
-            x_range, y_range = xs[-1] - xs[0], ys[-1] - ys[0]
-            x_pos, y_pos = np.mean(xs) - x_range / 2, np.mean(ys) - y_range / 2
+            x_mx, x_mn, y_mx, y_mn = max(xs), min(xs), max(ys), min(ys)
+            x_rng, y_rng = x_mx - x_mn, y_mx - y_mn
             self.image_view.setImage(
                 self.image['data'],
-                pos=[x_pos, y_pos],
-                scale=[x_range / len(xs), y_range / len(ys)],
+                pos=[x_mn, y_mn],
+                scale=[x_rng / len(xs), y_rng / len(ys)],
+                # scale=[(x_mx - x_mn), (y_mx - y_mn)],
                 autoRange=False,
-                autoLevels=False,
+                autoLevels=True,
                 autoHistogramRange=False,
                 axes=axes,
                 levelMode='mono',
                 xvals=self.image['z'],
             )
+
             if z_index:
                 self.image_view.setCurrentIndex(z_index)
         except Exception as exc:
@@ -144,7 +147,15 @@ class ColorMapWidget(QtWidgets.QWidget):
             name: Name of the plot.
             xs: Array-like of data for the x-axis.
             ys: Array-like of data for the y-axis.
-            data: TODO - Jacob wuz here.
+            data: 2D or 3D array with the data to be plotted. For a 2D imge,
+                data's rows should correspond to the y-axis and the columns
+                should correspond to the x-axis. Moreover, xs should be the
+                same length as the number of columns of data, and ys should
+                be the same length as the number of rows of data. This way,
+                when the widget attempts to display the pixel at (x, y), it
+                looks for it in data[y][x]. In the case of a 3D array, the
+                z-axis information should be in the last index, so that the
+                pixel at (x, y, z) is stored in data[y][x][z].
             zs: Optional array-like of data for the z-axis.
         Raises:
             ValueError: An error with the supplied arguments.

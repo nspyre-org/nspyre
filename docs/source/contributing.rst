@@ -4,12 +4,12 @@
 Contributing
 ############
 
-If you’re reading this, you probably want to contribute to nspyre — great! Any and all support is greatly appreciated. This document lays out guidelines and advice for contributing to this project. If you’re thinking of contributing, please start by reading the immediate info below detailing project specifics to get a feel for how contributing to this project works. If you have any questions, feel free to reach out to one of the primary maintainers. nspyre is hosted on `GitHub <https://github.com/nspyre-org/nspyre>`_.
+If you’re reading this, you probably want to contribute to nspyre — great! Any and all support is greatly appreciated. This document lays out guidelines and advice for contributing to this project. If you’re thinking of contributing, please start by reading the immediate info below to get a feel for how contributing to this project works. If you have any questions, feel free to reach out to one of the primary maintainers. nspyre is hosted on `GitHub <https://github.com/nspyre-org/nspyre>`_.
 
 Quick Facts
 ===========
 
-* For this project, we use a standard *fork & pull* model to collaborate, a common practice for open source projects. If you are interested in helping maintain the platform, send us a message and we’ll be happy to bring you onboard.
+* For this project, we use a standard *fork & pull* model to collaborate, a common practice for open source projects.
 
 * We like to run some automated tools to maintain style throughout the repo using :ref:`pre-commit <precommit>`.
 
@@ -25,8 +25,14 @@ To install the tools necessary for development:
 
 .. code-block:: bash
 
-   $ pip install nspyre[dev]
-   $ pip install nspyre[tests]
+   $ cd nspyre
+   $ pip install .[dev]
+
+Or if you use zsh:
+
+.. code-block:: bash
+
+   $ pip install .\[dev\]
 
 If the above remarks don’t make sense to you, or you simply want a more detailed description of how to do things, continue reading below.
 
@@ -40,6 +46,23 @@ As `WriteTheDocs <https://www.writethedocs.org/guide/writing/beginners-guide-to-
    | If people can’t figure out *how to use your code*, they won’t use it.
 
 One key to good software development is good documentation. Along with that is the need to strike a balance between efficiency and complexity. Because this is a scientific and an experimentation platform, certain requirements with speed and structure are necessary. We try to keep things as simple and modular as possible, but we are flexible in approach when necessary.
+
+Commit Check-list
+=================
+
+Before committing, make sure that all of the :ref:`pre-commit <precommit>` checks are satisfied:
+
+.. code-block:: bash
+
+   $ cd nspyre
+   $ pre-commit run --all
+
+And all of the :ref:`tests <testing>` run successfully:
+
+.. code-block:: bash
+
+   $ cd nspyre/tests
+   $ pytest
 
 Code Contributions
 ==================
@@ -112,7 +135,7 @@ Then, when creating a commit, the checks will be run:
 
 If any checks fail, be sure to fix the issues. If you want to run the checks 
 without actually committing, simply ``pre-commit run``. To force it to run on 
-all files, ``pre-commit run --all-files``.
+all files, ``pre-commit run --all``.
 
 Forking & Pull Requests
 ------------------------------------------
@@ -267,7 +290,7 @@ Writing Docs
 
 Documentation improvements are always welcome! The documentation files live in the ``docs/`` directory of the codebase. They’re written in `reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_, and use `Sphinx <https://www.sphinx-doc.org/en/master/>`__ to generate the full suite of documentation, with site hosting provided by `ReadTheDocs <https://docs.readthedocs.io/en/stable/intro/getting-started-with-sphinx.html>`_. Writing documentation is a great way to start contributing, especially if you are new, and will help get you familiar with the codebase.
 
-reStructuredText is an easy-to-read, what-you-see-is-what-you-get plaintext markup syntax and parser system. It is useful for inline program documentation (such as Python docstrings), for quickly creating simple web pages, and for standalone documents. `Markdown <https://daringfireball.net/projects/markdown/>`__ is another, slightly simpler alternative. reStructuredText is a bit harder to use, but is more powerful and is widely used for Python documentation.
+reStructuredText is an easy-to-read plaintext markup syntax and parser system. `Markdown <https://daringfireball.net/projects/markdown/>`__ is another, slightly simpler alternative. reStructuredText is a bit harder to use, but is more powerful and is widely used for Python documentation.
 
 The reasons for using a markup language are straight-forward:
 
@@ -282,11 +305,17 @@ The reasons for using a markup language are straight-forward:
 Building
 --------
 
-To build the documentation locally, navigate to ``docs`` and run
+To build the documentation locally, navigate to ``docs`` and run:
 
 .. code-block:: bash
 
    $ make html
+
+or, skipping some non-essential steps:
+
+.. code-block:: bash
+
+   $ make fast
 
 You can then view it by opening the root html file ``docs/build/html/index.html`` 
 with a web browser.

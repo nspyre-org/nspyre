@@ -48,6 +48,7 @@ _server_members = _members_list(InstrumentServer)
 class InstrumentGatewayError(Exception):
     """Raised for failures related to the
     :py:class:`~nspyre.instrument.gateway.InstrumentGateway`."""
+
     def __init__(self, *args, **kwargs):
         """
         Args:
@@ -56,6 +57,7 @@ class InstrumentGatewayError(Exception):
         """
         # override this so that the docs don't the print superclass docstring
         super().__init__(*args, **kwargs)
+
 
 class InstrumentGateway:
     """Create a connection to an \
@@ -66,7 +68,7 @@ class InstrumentGateway:
     Usage Example:
 
     .. code-block:: python
-        
+
         from nspyre import InstrumentGateway
 
         with InstrumentGateway() as gw:
@@ -220,7 +222,7 @@ class InstrumentGateway:
 class InstrumentGatewayDevice:
     def __init__(self, name: str, gateway: InstrumentGateway):
         """Wrapper for a device residing in an \
-        :py:class:`~nspyre.instrument.gateway.InstrumentGateway`. When we access an 
+        :py:class:`~nspyre.instrument.gateway.InstrumentGateway`. When we access an
         attribute of a device from an
         :py:class:`~nspyre.instrument.gateway.InstrumentGateway`, it will
         return an rpyc netref object. This creates a problem when the gateway
@@ -240,10 +242,10 @@ class InstrumentGatewayDevice:
         .. code-block:: python
 
             from nspyre import InstrumentGateway
-            
+
             with InstrumentGateway() as gw:
                 # let's assume "dev1" was created on the instrument server as an
-                # instance of "MyDriver" 
+                # instance of "MyDriver"
 
                 # d is an InstrumentGatewayDevice object
                 d = gw.dev1

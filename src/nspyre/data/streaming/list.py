@@ -8,7 +8,7 @@ class StreamingList(list):
     :py:meth:`~nspyre.data.source.DataSource.push` are sent. This allows
     for much higher data throughput for larger data sets.
 
-    Although :py:class:`StreamingList` is typically able to automatically calculate the 
+    Although :py:class:`StreamingList` is typically able to automatically calculate the
     differences since the last :py:meth:`~nspyre.data.source.DataSource.push`, there is
     one situation where this is not possible: if a mutable object that is contained
     somewhere inside the :py:class:`StreamingList` is modified, it cannot be detected.
@@ -26,7 +26,7 @@ class StreamingList(list):
             a = np.array([1, 2, 3])
             b = np.array([4, 5, 6])
             c = np.array([7, 8, 9])
-            
+
             # these StreamingList calls will automatically calculate diffs
             sl.append(a)
             sl.append(b)
@@ -36,7 +36,7 @@ class StreamingList(list):
 
             # here we are modifying a mutable object inside of the StreamingList,
             # which it cannot detect
-            a[1] = 10        
+            a[1] = 10
 
             # we can manually tell the StreamingList that its object 'a' was modified
             sl.updated_item(0)

@@ -42,6 +42,7 @@ _RPYC_SERVER_STOP_EVENT = threading.Event()
 class InstrumentServerError(Exception):
     """Raised for failures related to the
     :py:class:`~nspyre.instrument.server.InstrumentServer`."""
+
     def __init__(self, *args, **kwargs):
         """
         Args:
@@ -55,6 +56,7 @@ class InstrumentServerError(Exception):
 class InstrumentServerDeviceExistsError(InstrumentServerError):
     """Raised if attempting to add a device that already exists to the
     :py:class:`~nspyre.instrument.server.InstrumentServer`."""
+
     def __init__(self, *args, **kwargs):
         """
         Args:

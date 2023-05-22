@@ -3,7 +3,6 @@ from functools import partial
 from typing import Any
 from typing import Dict
 
-import numpy as np
 from pyqtgraph import ImageView
 from pyqtgraph import PlotItem
 from pyqtgraph.colormap import getFromMatplotlib
@@ -136,7 +135,6 @@ class ColorMapWidget(QtWidgets.QWidget):
             raise exc
         finally:
             self.image['sem'].release()
-
 
     def setup(self):
         """Subclasses should override this function to perform any setup code."""

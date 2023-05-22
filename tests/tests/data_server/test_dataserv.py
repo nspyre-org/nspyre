@@ -5,13 +5,13 @@ import numpy as np
 from nspyre import DataSink
 from nspyre import DataSource
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 NPUSHES = 100
 
 
-def test_dataserv_push_pop():
+def test_dataserv_push_pop(dataserv):
     """Test the base functionality of the data server by synchronously
     pushing then popping an object repeatedly."""
     name = 'push_pop'
@@ -42,16 +42,16 @@ def test_dataserv_push_pop():
             total_time += end_time - start_time
             # make sure the data is identical
             assert watched_var.all() == sink.watched_var.all()
-            logger.info(f'Completed [{100*(i+1)/NPUSHES:>5.1f}]%.')
+            _logger.info(f'Completed [{100*(i+1)/NPUSHES:>5.1f}]%.')
         avg_time = total_time / NPUSHES
 
-    logger.info(
+    _logger.info(
         f'Completed run [{name}] - total time [{total_time:.3f}]s average time per '
         f'push/pop [{avg_time:.3f}]s.'
     )
 
 
-def test_dataserv_push_multipop(name: str = 'push_multipop'):
+def test_dataserv_push_multipop(dataserv, name: str = 'push_multipop'):
     """Test the base functionality of the data server by synchronously
     pushing an object, then popping it from two different sinks"""
     name = 'push_multipop'
@@ -84,10 +84,10 @@ def test_dataserv_push_multipop(name: str = 'push_multipop'):
             # make sure the data is identical
             assert watched_var.all() == sink1.watched_var.all()
             assert watched_var.all() == sink2.watched_var.all()
-            logger.info(f'Completed [{100*(i+1)/NPUSHES:>5.1f}]%.')
+            _logger.info(f'Completed [{100*(i+1)/NPUSHES:>5.1f}]%.')
         avg_time = total_time / NPUSHES
 
-    logger.info(
+    _logger.info(
         f'Completed run [{name}] - total time [{total_time:.3f}]s average time per '
         f'push/pop [{avg_time:.3f}]s.'
     )
@@ -110,4 +110,4 @@ def test_dataserv_push_no_pop(dataserv):
         # make sure the DataSource event loop closed properly
         assert not source._thread.is_alive()
 
-        logger.info(f'Completed [{100*(i+1)/nconnects:>5.1f}]%.')
+        _logger.info(f'Completed [{100*(i+1)/nconnects:>5.1f}]%.')

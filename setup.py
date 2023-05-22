@@ -91,12 +91,8 @@ setup(
             'sphinx-copybutton',
             'sphinx_rtd_theme',
             'sphinx-autoapi',
-        ],
-        'tests': [
             'pytest',
             'pytest-cov',
-            'psutil',
-            'lantz',
             'pint',
         ],
     },

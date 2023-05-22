@@ -8,7 +8,7 @@ from nspyre.data.streaming.list import StreamingList
 
 # from nspyre.misc.misc import _total_sizeof
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 NPUSHES = 1000
 
@@ -119,7 +119,7 @@ def test_dataserv_streaming_list():
     assert sl4 == [3, 1, 'a']
 
 
-def test_dataserv_streaming_push_pop():
+def test_dataserv_streaming_push_pop(dataserv):
     name = 'streaming_push_pop'
     with DataSource(name) as source, DataSink(name) as sink:
         sl1 = StreamingList([])
@@ -133,15 +133,14 @@ def test_dataserv_streaming_push_pop():
             start_time = time.time()
             source.push(watched_var)
             sink.pop()
-            # logger.error(f'sinky{sink.streaming_obj_db}')
             end_time = time.time()
             total_time += end_time - start_time
             # make sure the data is identical
             assert watched_var == sink.data
-            logger.info(f'Completed [{100*(i+1)/NPUSHES:>5.1f}]%.')
+            _logger.info(f'Completed [{100*(i+1)/NPUSHES:>5.1f}]%.')
         avg_time = total_time / NPUSHES
 
-    logger.info(
+    _logger.info(
         f'Completed run [{name}] - total time [{total_time:.3f}]s, average time per '
         f'push/pop [{avg_time:.3f}]s.'
     )
@@ -163,15 +162,15 @@ def test_dataserv_streaming_push_pop():
 #             # make sure the data is identical
 #             for i in range(len(sl1)):
 #                 assert sl1[i].all() == sink.data[i].all()
-#             logger.info(f'Completed [{100*(i+1)/NPUSHES:>5.1f}]%.')
+#             _logger.info(f'Completed [{100*(i+1)/NPUSHES:>5.1f}]%.')
 #         avg_time = total_time / NPUSHES
-#     logger.info(
+#     _logger.info(
 #         f'[{name}] transferred [{_total_sizeof(sink.data)/1e9:.3f}] GB in '
 #         f'[{total_time:.3f}]s, average time per push/pop [{avg_time:.3f}]s.'
 #     )
 
 
-def test_dataserv_streaming_push_pop_stress():
+def test_dataserv_streaming_push_pop_stress(dataserv):
     name = 'streaming_push_pop_stress'
     with DataSource(name) as source, DataSink(name) as sink:
         sl1 = StreamingList([])
@@ -212,16 +211,16 @@ def test_dataserv_streaming_push_pop_stress():
 
             # make sure the data is identical
             assert watched_var == sink.data
-            logger.info(f'Completed [{100*(i+1)/NPUSHES:>5.1f}]%.')
+            _logger.info(f'Completed [{100*(i+1)/NPUSHES:>5.1f}]%.')
         avg_time = total_time / NPUSHES
 
-    logger.info(
+    _logger.info(
         f'Completed run [{name}] - total time [{total_time:.3f}]s, average time per '
         f'push/pop [{avg_time:.3f}]s.'
     )
 
 
-def test_dataserv_streaming_multi_push():
+def test_dataserv_streaming_multi_push(dataserv):
     name = 'streaming_multi_push'
     with DataSource(name) as source, DataSink(name) as sink:
         sl1 = StreamingList([])
@@ -259,7 +258,7 @@ def test_dataserv_streaming_multi_push():
             else:
                 raise RuntimeError()
             source.push(watched_var)
-            logger.info(f'Completed [{100*(i+1)/NPUSHES:>5.1f}]%.')
+            _logger.info(f'Completed [{100*(i+1)/NPUSHES:>5.1f}]%.')
             i += 1
 
         end_time = time.time()
@@ -274,7 +273,7 @@ def test_dataserv_streaming_multi_push():
         total_time = end_time - start_time
         avg_time = (end_time - start_time) / NPUSHES
 
-    logger.info(
+    _logger.info(
         f'Completed run [{name}] - total time [{total_time:.3f}]s, average time per '
         f'push [{avg_time:.3f}]s.'
     )

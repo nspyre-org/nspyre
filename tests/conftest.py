@@ -9,11 +9,11 @@ For a copy, see <https://opensource.org/licenses/BSD-3-Clause>.
 """
 import logging
 import socket
+import subprocess
 import time
 from contextlib import closing
 from pathlib import Path
 
-import psutil
 import pytest
 from nspyre import InstrumentGateway
 from nspyre import InstrumentGatewayError
@@ -24,7 +24,7 @@ DRIVERS = HERE / 'fixtures' / 'drivers'
 
 
 def _free_port():
-    """Return a free port number"""
+    """Return a free port number."""
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
         s.bind(('', 0))
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -38,23 +38,20 @@ def free_port():
 
 @pytest.fixture
 def dataserv():
-    """Start a data server if one isn't running"""
-    # TODO: An unresolved bug currently prevents nspyre-dataserv from being started
-    # automatically by pytest, so for now just throw an error if it isn't running
-    running_procs = [p.name() for p in psutil.process_iter()]
-    if (
-        'nspyre-dataserv' not in running_procs
-        and 'nspyre-dataserv.exe' not in running_procs
-    ):
-        raise Exception(
-            "The data server isn't running and must be started manually with "
-            "'nspyre-dataserv'."
-        )
+    """Start a data server if one isn't running."""
+
+    process = subprocess.Popen(['nspyre-dataserv'])
+    time.sleep(1)
+
+    yield process
+
+    process.kill()
+    time.sleep(1)
 
 
 @pytest.fixture
 def inserv():
-    """Create an instrument server"""
+    """Create an instrument server."""
     port = _free_port()
 
     inserv = InstrumentServer(port=port)
@@ -69,7 +66,7 @@ def inserv():
 # depend on inserv to make sure it gets started first
 @pytest.fixture
 def gateway(inserv):
-    """Return a gateway connected to the instrument server"""
+    """Return a gateway connected to the instrument server."""
 
     # ignore logging while we attempt to connect
     logging.disable(logging.CRITICAL)
@@ -95,7 +92,7 @@ def gateway(inserv):
 
 @pytest.fixture
 def gateway_with_devs(gateway):
-    """Return a gateway with initialized test devices"""
+    """Return a gateway with initialized test devices."""
 
     # add test drivers to instrument server
     gateway.add('daq', DRIVERS / 'fake_daq.py', 'FakeDAQ')

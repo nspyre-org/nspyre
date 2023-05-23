@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 from typing import Any
 from typing import Dict
+from typing import Optional
 
 from rpyc import ClassicService
 from rpyc.core.protocol import Connection
@@ -103,8 +104,8 @@ class InstrumentServer(ClassicService):
         name: str,
         class_path: str,
         class_name: str,
-        args: list = None,
-        kwargs: Dict = None,
+        args: Optional[list] = None,
+        kwargs: Optional[Dict] = None,
         import_or_file: str = 'file',
         local_args: bool = False,
     ):

@@ -1,7 +1,7 @@
 import logging
 import time
+from collections import namedtuple
 from typing import Callable
-from typing import Dict
 from typing import Optional
 
 import numpy as np
@@ -17,22 +17,18 @@ from .line_plot import LinePlotWidget
 _logger = logging.getLogger(__name__)
 
 
-class _FlexLinePlotSeriesSettings:
-    """Container class to hold the settings for a single plot."""
-
-    def __init__(self, series, scan_i, scan_j, processing, hidden):
-        self.series: str = series
-        self.scan_i: str = scan_i
-        self.scan_j: str = scan_j
-        self.processing: str = processing
-        self.hidden = hidden
+_FlexLinePlotSeriesSettings = namedtuple(
+    '_FlexLinePlotSeriesSettings',
+    ['series', 'scan_i', 'scan_j', 'processing', 'hidden'],
+)
+"""Contain the settings for a single plot."""
 
 
 class _FlexLinePlotSettings(QThreadSafeObject):
     """Container class to hold the plot settings for a _FlexLinePlotWidget."""
 
     def __init__(self):
-        self.series_settings: Dict[str, _FlexLinePlotSeriesSettings] = {}
+        self.series_settings = {}
         # DataSink for pulling plot data from the data server
         self.sink = None
         # protect access to the sink
@@ -41,13 +37,22 @@ class _FlexLinePlotSettings(QThreadSafeObject):
         self.force_update = False
         super().__init__()
 
-    def get_settings(self, name, callback=None):
+    def get_settings(self, name: str, callback=None):
         with QtCore.QMutexLocker(self.mutex):
             settings = self.series_settings[name]
             if callback is not None:
                 self.run_main(callback, name, settings, blocking=True)
 
-    def add_plot(self, name, series, scan_i, scan_j, processing, hidden, callback=None):
+    def add_plot(
+        self,
+        name: str,
+        series: str,
+        scan_i: str,
+        scan_j: str,
+        processing: str,
+        hidden: bool,
+        callback: Optional[Callable] = None,
+    ):
         with QtCore.QMutexLocker(self.mutex):
             if name in self.series_settings:
                 _logger.info(
@@ -56,7 +61,11 @@ class _FlexLinePlotSettings(QThreadSafeObject):
                 )
                 return
             self.series_settings[name] = _FlexLinePlotSeriesSettings(
-                series, scan_i, scan_j, processing, hidden
+                series=series,
+                scan_i=scan_i,
+                scan_j=scan_j,
+                processing=processing,
+                hidden=hidden,
             )
             self.force_update = True
             if callback is not None:
@@ -168,7 +177,9 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
 
     """
 
-    def __init__(self, timeout: float = 1, data_processing_func: Callable = None):
+    def __init__(
+        self, timeout: float = 1, data_processing_func: Optional[Callable] = None
+    ):
         """
         Args:
             timeout: Timeout for :py:meth:`~nspyre.data.sink.DataSink.pop`.

@@ -5,6 +5,7 @@ from io import TextIOBase
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any
+from typing import Optional
 
 LOG_FILE_MAX_SIZE = 10e6
 """Max size of a log file (in bytes) before creating a new one."""
@@ -45,10 +46,10 @@ class _StreamToLog(TextIOBase):
 
 def nspyre_init_logger(
     log_level: int,
-    log_path: Path = None,
+    log_path: Optional[Path] = None,
     log_path_level: int = 0,
     prefix: str = '',
-    file_size: int = None,
+    file_size: Optional[int] = None,
     remove_handlers: bool = True,
 ):
     """Initialize system-wide logging to stdout/err and, optionally, a file.

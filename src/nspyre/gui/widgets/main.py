@@ -5,6 +5,7 @@ widgets are placed in a pyqtgraph :code:`DockArea`.
 from importlib import reload
 from types import ModuleType
 from typing import Dict
+from typing import Optional
 
 from pyqtgraph.dockarea import Dock
 from pyqtgraph.dockarea import DockArea
@@ -22,9 +23,9 @@ class MainWidgetItem:
         self,
         module: ModuleType,
         cls: str,
-        args: list = None,
-        kwargs: dict = None,
-        stretch: tuple = None,
+        args: Optional[list] = None,
+        kwargs: Optional[dict] = None,
+        stretch: Optional[tuple] = None,
     ):
         """
         Args:

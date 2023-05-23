@@ -4,6 +4,7 @@ from functools import partial
 from importlib import reload
 from multiprocessing import Queue
 from types import ModuleType
+from typing import Optional
 
 from pyqtgraph.Qt import QtWidgets
 
@@ -29,11 +30,11 @@ class ExperimentWidget(QtWidgets.QWidget):
         module: ModuleType,
         cls: str,
         fun_name: str,
-        constructor_args: list = None,
-        constructor_kwargs: dict = None,
-        fun_args: list = None,
-        fun_kwargs: dict = None,
-        title: str = None,
+        constructor_args: Optional[list] = None,
+        constructor_kwargs: Optional[dict] = None,
+        fun_args: Optional[list] = None,
+        fun_kwargs: Optional[dict] = None,
+        title: Optional[str] = None,
         kill: bool = False,
         layout: QtWidgets.QLayout = None,
     ):

@@ -9,7 +9,6 @@ _logger = logging.getLogger(__name__)
 
 
 class _ObjectOnMainThread(QtCore.QObject):
-
     # emitted if an error is raised in the function running in the main thread
     _error = QtCore.Signal(Exception)
 

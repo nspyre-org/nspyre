@@ -4,6 +4,7 @@ will only serialize/deserialize the differences since the most recent pickle.
 This can be used to efficiently stream data e.g. over a network connection.
 """
 import io
+from asyncio import Queue
 from pickle import dumps
 from pickle import loads
 from pickle import Pickler
@@ -11,6 +12,7 @@ from pickle import Unpickler
 from pickle import UnpicklingError
 from typing import Any
 from typing import Dict
+from typing import Optional
 
 from .list import StreamingList
 
@@ -23,7 +25,7 @@ class PickleDiff:
     streaming-capable objects. For streaming objects, a set of diffs is used
     to reconstruct the object."""
 
-    def __init__(self, pkl: bytes = None, diffs: Dict = None):
+    def __init__(self, pkl: Optional[bytes] = None, diffs: Optional[Dict] = None):
         """
         Args:
             pkl: Byte string from pickle operation.
@@ -68,7 +70,7 @@ class PickleDiff:
         return f'PickleDiff pkl: {self.pkl} diffs: {self.diffs}'
 
 
-def _squash_pickle_diff_queue(queue, item, MAX_DIFF=_MAX_DIFF):
+def _squash_pickle_diff_queue(queue: Queue, item: PickleDiff, MAX_DIFF=_MAX_DIFF):
     """Combine all PickleDiff entries in an asyncio queue into a single entry.
 
     Args:

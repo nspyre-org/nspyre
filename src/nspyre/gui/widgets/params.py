@@ -1,6 +1,9 @@
 """Widget that generates a simple GUI that allows the user to enter a set of
 parameters.
 """
+from typing import Dict
+from typing import Optional
+
 from pyqtgraph import SpinBox
 from pyqtgraph.Qt import QtWidgets
 
@@ -64,7 +67,9 @@ SpinBox(value=20, int=True, bounds=(1, None), dec=True),
 
     """
 
-    def __init__(self, params_config: dict, get_param_value_funs: dict = None):
+    def __init__(
+        self, params_config: Dict, get_param_value_funs: Optional[Dict] = None
+    ):
         """
         Args:
             params_config: Dictionary mapping parameter names to a parameter

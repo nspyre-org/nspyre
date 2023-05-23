@@ -28,12 +28,14 @@ class Subsystem(QObject):
         pre_dep_boot: Optional[Callable] = None,
         post_dep_boot: Optional[Callable] = None,
         default_boot_timeout: float = 10,
-        default_boot_inserv: Union[InstrumentServer, InstrumentGateway] = None,
-        default_boot_add_args: list = None,
-        default_boot_add_kwargs: Dict = None,
+        default_boot_inserv: Optional[
+            Union[InstrumentServer, InstrumentGateway]
+        ] = None,
+        default_boot_add_args: Optional[list] = None,
+        default_boot_add_kwargs: Optional[Dict] = None,
         pre_dep_shutdown: Optional[Callable] = None,
         post_dep_shutdown: Optional[Callable] = None,
-        dependencies: list = None,
+        dependencies: Optional[list] = None,
     ):
         """
         Args:

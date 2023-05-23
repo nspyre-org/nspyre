@@ -135,7 +135,9 @@ Then, when creating a commit, the checks will be run:
 
 If any checks fail, be sure to fix the issues. If you want to run the checks 
 without actually committing, simply ``pre-commit run``. To force it to run on 
-all files, ``pre-commit run --all``.
+all files, ``pre-commit run --all``. All packages used for pre-commit checks can be 
+updated by running ``pre-commit autoupdate``.
+
 
 Forking & Pull Requests
 ------------------------------------------

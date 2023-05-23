@@ -5,6 +5,7 @@ from functools import partial
 from pathlib import Path
 from typing import Any
 from typing import Callable
+from typing import Dict
 from typing import Optional
 from typing import Union
 
@@ -98,7 +99,9 @@ class LoadWidget(QtWidgets.QWidget):
     :py:class:`~nspyre.data.server.DataServer`."""
 
     def __init__(
-        self, additional_filetypes=None, load_dialog_dir: Union[str, Path] = None
+        self,
+        additional_filetypes: Optional[Dict[str, Callable]] = None,
+        load_dialog_dir: Optional[Union[str, Path]] = None,
     ):
         """
         Args:

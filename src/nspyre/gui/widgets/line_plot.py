@@ -5,10 +5,8 @@ import logging
 import time
 from functools import partial
 from typing import Any
-from typing import Dict
 
 from pyqtgraph import mkColor
-from pyqtgraph import PlotDataItem
 from pyqtgraph import PlotWidget
 from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
@@ -32,9 +30,9 @@ class PlotSeriesData(QtCore.QObject):
         """X data array."""
         self.y = []
         """Y data array."""
-        self.plot_data_item: PlotDataItem = None
+        self.plot_data_item = None
         """pyqtgraph PlotDataItem associated with the data."""
-        self.hidden: bool = False
+        self.hidden = False
         """Whether the plot is hidden."""
 
 
@@ -42,7 +40,7 @@ class LinePlotData(QThreadSafeObject):
     """Manages all plot data series for a LinePlotWidget."""
 
     def __init__(self, plot_widget):
-        self.plots: Dict[str, PlotSeriesData] = {}
+        self.plots = {}
         """A dict mapping data set names (str) to a PlotSeriesData associated with each
         line plot."""
         # for blocking set_data until the data has been processed

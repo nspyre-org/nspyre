@@ -2,6 +2,7 @@ import logging
 from functools import partial
 from pathlib import Path
 from typing import Callable
+from typing import Dict
 from typing import Optional
 from typing import Union
 
@@ -79,8 +80,8 @@ class SaveWidget(QtWidgets.QWidget):
     def __init__(
         self,
         timeout: float = 10,
-        additional_filetypes: dict = None,
-        save_dialog_dir: Union[str, Path] = None,
+        additional_filetypes: Optional[Dict[str, Callable]] = None,
+        save_dialog_dir: Optional[Union[str, Path]] = None,
     ):
         """
         Args:

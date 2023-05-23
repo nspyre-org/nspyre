@@ -1,4 +1,5 @@
 from typing import Dict
+from typing import Optional
 
 from .gateway import InstrumentGateway
 from .gateway import InstrumentGatewayDevice
@@ -6,7 +7,10 @@ from .gateway import InstrumentGatewayDevice
 
 class InstrumentManager:
     def __init__(
-        self, *register_gateway_args, register_gateway=True, **register_gateway_kwargs
+        self,
+        *register_gateway_args,
+        register_gateway: bool = True,
+        **register_gateway_kwargs,
     ):
         """For consolidating connections to multiple instrument gateways.
         If only connecting to a single
@@ -23,18 +27,18 @@ class InstrumentManager:
                 :py:meth:`~nspyre.instrument.manager.InstrumentManager.register_gateway`.
         """
         # mapping between a unique device name key and InstrumentGatewayDevice value
-        self.devs = {}
+        self.devs: Dict[str, InstrumentGatewayDevice] = {}
         # list of InstrumentGateway
-        self.gateways = []
+        self.gateways: list[InstrumentGateway] = []
         if register_gateway:
             self.register_gateway(*register_gateway_args, **register_gateway_kwargs)
 
     def register_gateway(
         self,
         *gateway_args,
-        default_exclude=False,
-        exclude: list[str] = None,
-        name_mapping: Dict[str, str] = None,
+        default_exclude: bool = False,
+        exclude: Optional[list[str]] = None,
+        name_mapping: Optional[Dict[str, str]] = None,
         **gateway_kwargs,
     ):
         """

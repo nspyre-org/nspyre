@@ -5,7 +5,7 @@ from .data import DataSink
 from .data import DataSource
 from .data import StreamingList
 from .extras import Subsystem
-from .gui import ColorMapWidget
+from .gui import HeatMapWidget
 from .gui import colors
 from .gui import cyclic_colors
 from .gui import experiment_widget_process_queue

@@ -1,44 +1,50 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup
 
-package_dir = \
-{'': 'src'}
+package_dir = {'': 'src'}
 
-packages = \
-['nspyre',
- 'nspyre.cli',
- 'nspyre.data',
- 'nspyre.data.streaming',
- 'nspyre.extras',
- 'nspyre.gui',
- 'nspyre.gui.style',
- 'nspyre.gui.widgets',
- 'nspyre.instrument',
- 'nspyre.misc']
+packages = [
+    'nspyre',
+    'nspyre.cli',
+    'nspyre.data',
+    'nspyre.data.streaming',
+    'nspyre.extras',
+    'nspyre.gui',
+    'nspyre.gui.style',
+    'nspyre.gui.widgets',
+    'nspyre.instrument',
+    'nspyre.misc',
+]
 
-package_data = \
-{'': ['*'], 'nspyre.gui': ['images/*']}
+package_data = {'': ['*'], 'nspyre.gui': ['images/*']}
 
-install_requires = \
-['numpy>=1.23,<2.0',
- 'pyqt6>=6.2.3,<7.0.0',
- 'pyqtgraph>=0.13.1,<0.14.0',
- 'rpyc>=5.2.3,<6.0.0']
+install_requires = [
+    'numpy>=1.23,<2.0',
+    'pyqt6>=6.2.3,<7.0.0',
+    'pyqtgraph>=0.13.1,<0.14.0',
+    'rpyc>=5.2.3,<6.0.0',
+]
 
-extras_require = \
-{'dev': ['pre-commit',
-         'sphinx',
-         'sphinx-copybutton',
-         'sphinx_rtd_theme',
-         'sphinx-autoapi',
-         'pytest',
-         'pytest-cov',
-         'pint',
-         'poetry2setup']}
+extras_require = {
+    'dev': [
+        'pre-commit',
+        'sphinx',
+        'sphinx-copybutton',
+        'sphinx_rtd_theme',
+        'sphinx-autoapi',
+        'pytest',
+        'pytest-cov',
+        'pint',
+        'poetry2setup',
+    ]
+}
 
-entry_points = \
-{'console_scripts': ['nspyre-dataserv = nspyre.cli.dataserv:_main',
-                     'nspyre-inserv = nspyre.cli.inserv:_main']}
+entry_points = {
+    'console_scripts': [
+        'nspyre-dataserv = nspyre.cli.dataserv:_main',
+        'nspyre-inserv = nspyre.cli.inserv:_main',
+    ]
+}
 
 setup_kwargs = {
     'name': 'nspyre',
@@ -88,4 +94,3 @@ setup_kwargs = {
 
 
 setup(**setup_kwargs)
-

@@ -1,4 +1,4 @@
-from .colormap import ColorMapWidget
+from .heatmap import HeatMapWidget
 from .experiment import experiment_widget_process_queue
 from .experiment import ExperimentWidget
 from .flex_line_plot import FlexLinePlotWidget

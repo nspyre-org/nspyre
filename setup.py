@@ -1,112 +1,95 @@
-import codecs
-import re
-from pathlib import Path
-
-from setuptools import find_packages
+# -*- coding: utf-8 -*-
 from setuptools import setup
 
+package_dir = {'': 'src'}
 
-here = Path(__file__).parent.resolve()
+packages = [
+    'nspyre',
+    'nspyre.cli',
+    'nspyre.data',
+    'nspyre.data.streaming',
+    'nspyre.extras',
+    'nspyre.gui',
+    'nspyre.gui.style',
+    'nspyre.gui.widgets',
+    'nspyre.instrument',
+    'nspyre.misc',
+]
+
+package_data = {'': ['*'], 'nspyre.gui': ['images/*']}
+
+install_requires = [
+    'numpy>=1.23,<2.0',
+    'pyqt6>=6.2.3,<7.0.0',
+    'pyqtgraph>=0.13.1,<0.14.0',
+    'rpyc>=5.2.3,<6.0.0',
+]
+
+extras_require = {
+    'dev': [
+        'pre-commit',
+        'sphinx',
+        'sphinx-copybutton',
+        'sphinx_rtd_theme',
+        'sphinx-autoapi',
+        'pytest',
+        'pytest-cov',
+        'pint',
+        'poetry2setup',
+    ]
+}
+
+entry_points = {
+    'console_scripts': [
+        'nspyre-dataserv = nspyre.cli.dataserv:_main',
+        'nspyre-inserv = nspyre.cli.inserv:_main',
+    ]
+}
+
+setup_kwargs = {
+    'name': 'nspyre',
+    'version': '0.6.0',
+    'description': 'Networked Scientific Python Research Environment.',
+    'long_description': '# nspyre\n\n[![GitHub](https://img.shields.io/github/v/'
+    'release/nspyre-org/nspyre?label=GitHub)](https://github.com/nspyre-org/nspyre'
+    '/)\n[![PyPi version](https://img.shields.io/pypi/v/nspyre)](https://pypi.org/'
+    'project/nspyre/)\n[![conda-forge version](https://img.shields.io/conda/v/'
+    'conda-forge/nspyre)](https://github.com/conda-forge/nspyre-feedstock)\n[!'
+    '[License](https://img.shields.io/github/license/nspyre-org/nspyre)](https:'
+    '//github.com/nspyre-org/nspyre/blob/master/LICENSE)\n[![Docs build](https:'
+    '//readthedocs.org/projects/nspyre/badge/?version=latest)](https://nspyre.'
+    'readthedocs.io/en/latest/?badge=latest)\n[![conda-forge platform](https://'
+    'img.shields.io/conda/pn/conda-forge/nspyre)](https://github.com/conda-forge'
+    '/nspyre-feedstock)\n[![DOI](https://zenodo.org/badge/220515183.svg)]'
+    '(https://zenodo.org/badge/latestdoi/220515183)\n\n(N)etworked (S)cientific '
+    '(Py)thon (R)esearch (E)nvironment.\n\nSee https://nspyre.readthedocs.io/.'
+    '\n\n# What is nspyre?\n\nnspyre is a Python package for conducting scientific '
+    'experiments. It provides \na set of tools to allow for control of '
+    'instrumentation, data collection, \nreal-time plotting, as well as GUI '
+    'generation. Anyone in the research or \nindustrial spaces using computer-'
+    'controlled equipment and collecting data can \npotentially benefit from using '
+    'nspyre to run their experiments.\n\nThe hardware being controlled can be '
+    'connected either locally on the machine \nrunning the experimental logic, or '
+    'on a remote machine, which can be accessed \nin a simple, pythonic fashion. '
+    'This allows for the easy integration of shared \ninstrumentation in a '
+    'research environment. Data collection is also \nnetworked, and allows for '
+    'real-time viewing locally, or from a remote machine. \nnspyre provides a set '
+    'of tools for quickly generating a Qt-based GUI for \ncontrol and data viewing.'
+    '\n\nIf you use nspyre for an experiment, we would really appreciate it if you '
+    '\n[cite](https://doi.org/10.5281/zenodo.7315077) it in your publication!\n',
+    'author': 'Jacob Feder',
+    'author_email': 'jacobsfeder@gmail.com',
+    'maintainer': 'Jacob Feder',
+    'maintainer_email': 'jacobsfeder@gmail.com',
+    'url': 'https://github.com/nspyre-org/nspyre',
+    'package_dir': package_dir,
+    'packages': packages,
+    'package_data': package_data,
+    'install_requires': install_requires,
+    'extras_require': extras_require,
+    'entry_points': entry_points,
+    'python_requires': '>=3.10,<4.0',
+}
 
 
-def read(*parts):
-    """
-    Build an absolute path from *parts* and and return the contents of the
-    resulting file.  Assume UTF-8 encoding.
-    """
-    with codecs.open(Path(here, *parts), 'rb', 'utf-8') as f:
-        return f.read()
-
-
-def find_version(*file_paths):
-    """
-    Build a path from *file_paths* and search for a ``__version__``
-    string inside.
-    """
-    version_file = read(*file_paths)
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError('Unable to find version string.')
-
-
-meta_path = Path('src', 'nspyre', '__init__.py')
-version = find_version(meta_path)
-
-long_description = (here / 'README.md').read_text(encoding='utf-8')
-
-setup(
-    name='nspyre',
-    version=version,
-    license='BSD 3-Clause License',
-    description='Networked Scientific Python Research Environment',
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    url='https://github.com/nspyre-org/nspyre',
-    author='Jacob Feder, Michael Solomon, Jose A. Mendez, Alexandre Bourassa',
-    author_email='jfed@uchicago.edu, msolo@uchicago.edu, mendez99@uchicago.edu, '
-    'abourassa@uchicago.edu',
-    maintainer='Jacob Feder, Michael Solomon',
-    maintainer_email='jfed@uchicago.edu, msolo@uchicago.edu',
-    classifiers=[
-        'Intended Audience :: Developers',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: BSD License',
-        'Natural Language :: English',
-        'Operating System :: Microsoft :: Windows',
-        'Operating System :: MacOS',
-        'Operating System :: Unix',
-        'Programming Language :: Python',
-        'Topic :: Scientific/Engineering',
-        'Topic :: Scientific/Engineering :: Physics',
-        'Topic :: Scientific/Engineering :: Visualization',
-        'Topic :: Software Development :: Libraries',
-        'Topic :: Software Development :: Libraries :: Application Frameworks',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        'Topic :: Software Development :: User Interfaces',
-        'Topic :: System :: Distributed Computing',
-    ],
-    keywords='nspyre, physics, science, research',
-    package_dir={'': 'src'},
-    packages=find_packages(where='src'),
-    zip_safe=False,
-    python_requires='>=3.7',
-    install_requires=[
-        # you know it, you love it
-        'numpy >=1.23.1',
-        # instrument server proxying
-        'rpyc >=5.2.3',
-        # Qt/GUI (won't install on ARM)
-        'pyqt6 ==6.2.3; platform_machine != "aarch64" and '
-        'platform_machine != "armv7l"',
-        'pyqt6-qt6 ==6.2.3; platform_machine != "aarch64" and '
-        'platform_machine != "armv7l"',
-        'pyqtgraph >=0.13.1; platform_machine != "aarch64" and '
-        'platform_machine != "armv7l"',
-    ],
-    extras_require={
-        'dev': [
-            'pre-commit',
-            'sphinx',
-            'sphinx-copybutton',
-            'sphinx_rtd_theme',
-            'sphinx-autoapi',
-            'pytest',
-            'pytest-cov',
-            'pint',
-        ],
-    },
-    test_suite='tests',
-    entry_points={
-        'console_scripts': [
-            'nspyre-inserv=nspyre.cli.inserv:_main',
-            'nspyre-dataserv=nspyre.cli.dataserv:_main',
-        ],
-    },
-    project_urls={
-        'Bug Reports': 'https://github.com/nspyre-org/nspyre/issues',
-        'Source': 'https://github.com/nspyre-org/nspyre/',
-    },
-    include_package_data=True,
-    options={'bdist_wheel': {'universal': '1'}},
-)
+setup(**setup_kwargs)

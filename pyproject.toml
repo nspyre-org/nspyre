@@ -1,8 +1,64 @@
 [build-system]
-# These are the assumed default build requirements from pip:
-# https://pip.pypa.io/en/stable/reference/pip/#pep-517-and-518-support
-requires = ['setuptools>=40.8.0', 'wheel']
-build-backend = 'setuptools.build_meta'
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "nspyre"
+version = "0.6.0"
+license = "BSD-3-Clause"
+description = "Networked Scientific Python Research Environment."
+authors = [
+    "Jacob Feder <jacobsfeder@gmail.com>",
+    "Michael Solomon <msolo@uchicago.edu>",
+    "Jose A. Mendez <mendez99@uchicago.edu >",
+    "Alexandre Bourassa"
+]
+maintainers = [
+    "Jacob Feder <jacobsfeder@gmail.com>"
+]
+readme = "README.md"
+documentation = "https://nspyre.readthedocs.io/"
+repository = "https://github.com/nspyre-org/nspyre"
+classifiers = [
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: BSD License',
+    'Operating System :: Microsoft :: Windows',
+    'Operating System :: MacOS',
+    'Operating System :: Unix',
+    'Programming Language :: Python',
+    'Topic :: Scientific/Engineering',
+    'Topic :: Scientific/Engineering :: Physics',
+    'Topic :: Scientific/Engineering :: Visualization',
+]
+packages = [{include = "nspyre", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^1.23"
+rpyc = "^5.2.3"
+pyqt6 = "^6.2.3"
+pyqtgraph = "^0.13.1"
+pre-commit = { version = "*", optional = true }
+sphinx = { version = "*", optional = true }
+sphinx-copybutton = { version = "*", optional = true }
+sphinx_rtd_theme = { version = "*", optional = true }
+sphinx-autoapi = { version = "*", optional = true }
+pytest = { version = "*", optional = true }
+pytest-cov = { version = "*", optional = true }
+pint = { version = "*", optional = true }
+poetry2setup = { version = "*", optional = true }
+
+[tool.poetry.extras]
+dev = ["poetry2setup", "pre-commit", "sphinx", "sphinx-copybutton", "sphinx_rtd_theme", 
+    "sphinx-autoapi", "pytest", "pytest-cov", "pint"
+]
+
+[tool.poetry.scripts]
+nspyre-inserv = 'nspyre.cli.inserv:_main'
+nspyre-dataserv = 'nspyre.cli.dataserv:_main'
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/nspyre-org/nspyre/issues"
 
 [tool.black]
 line-length = 88

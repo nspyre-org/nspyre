@@ -1,6 +1,5 @@
 import logging
 import time
-from collections import namedtuple
 from typing import Callable
 from typing import Optional
 
@@ -17,11 +16,17 @@ from .line_plot import LinePlotWidget
 _logger = logging.getLogger(__name__)
 
 
-_FlexLinePlotSeriesSettings = namedtuple(
-    '_FlexLinePlotSeriesSettings',
-    ['series', 'scan_i', 'scan_j', 'processing', 'hidden'],
-)
-"""Contain the settings for a single plot."""
+class _FlexLinePlotSeriesSettings:
+    """Contain the settings for a single plot."""
+
+    def __init__(
+        self, series: str, scan_i: str, scan_j: str, processing: str, hidden: bool
+    ):
+        self.series: str = series
+        self.scan_i: str = scan_i
+        self.scan_j: str = scan_j
+        self.processing: str = processing
+        self.hidden = hidden
 
 
 class _FlexLinePlotSettings(QThreadSafeObject):

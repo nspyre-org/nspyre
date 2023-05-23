@@ -4,6 +4,7 @@ from .cli import start_instrument_server
 from .data import DataSink
 from .data import DataSource
 from .data import StreamingList
+from .extras import Subsystem
 from .gui import ColorMapWidget
 from .gui import colors
 from .gui import cyclic_colors
@@ -20,7 +21,10 @@ from .gui import nspyre_style_sheet
 from .gui import nspyreApp
 from .gui import ParamsWidget
 from .gui import QHLine
+from .gui import QObject
+from .gui import Qt_GUI
 from .gui import qt_set_trace
+from .gui import QtCore
 from .gui import QThreadSafeObject
 from .gui import QVLine
 from .gui import SaveWidget

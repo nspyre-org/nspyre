@@ -8,7 +8,7 @@
 [![conda-forge platform](https://img.shields.io/conda/pn/conda-forge/nspyre)](https://github.com/conda-forge/nspyre-feedstock)
 [![DOI](https://zenodo.org/badge/220515183.svg)](https://zenodo.org/badge/latestdoi/220515183)
 
-(N)etworked (S)cientific (Py)thon (R)esearch (E)nvironment.
+(n)etworked (s)cientific (py)thon (r)esearch (e)nvironment.
 
 See https://nspyre.readthedocs.io/.
 

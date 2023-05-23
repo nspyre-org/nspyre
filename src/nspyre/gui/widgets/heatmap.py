@@ -14,7 +14,7 @@ from ..style._style import nspyre_font
 from .update_loop import UpdateLoop
 
 
-class ColorMapWidget(QtWidgets.QWidget):
+class HeatMapWidget(QtWidgets.QWidget):
     """Qt widget for displaying 2D data using pyqtgraph ImageView."""
 
     new_data = QtCore.Signal()

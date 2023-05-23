@@ -5,12 +5,12 @@ from .data import DataSink
 from .data import DataSource
 from .data import StreamingList
 from .extras import Subsystem
-from .gui import HeatMapWidget
 from .gui import colors
 from .gui import cyclic_colors
 from .gui import experiment_widget_process_queue
 from .gui import ExperimentWidget
 from .gui import FlexLinePlotWidget
+from .gui import HeatMapWidget
 from .gui import LinePlotWidget
 from .gui import LoadWidget
 from .gui import MainWidget

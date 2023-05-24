@@ -40,7 +40,7 @@ def save_pickle(filename: Union[str, Path], data: Any):
         pickle.dump(data, f)
 
 
-class AutoSaver:
+class _AutoSaver:
     """Automatically save data in the data server to a file."""
 
     def __init__(
@@ -52,4 +52,5 @@ class AutoSaver:
             filename: File to save to.
             min_interval: Minimum time (s) interval to save data.
         """
+        # TODO
         pass

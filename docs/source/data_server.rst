@@ -110,9 +110,42 @@ server will start throwing away older packets (just for that specific sink).
 This design creates a decoupling between the code running an experiment and 
 any user interaction with viewing the resulting data.
 
-The data server is effectively a series of `FIFO buffers <https://en.wikipedia.org/wiki/FIFO_(computing_and_electronics)>`__.
-For each data set, there is one FIFO buffer for the source and one for each of 
-the sinks. ``push()`` queues data to the source FIFO. The data server dequeues 
-data from the source FIFO, then queues a copy of that data on each of the sink 
-FIFOs. Then the data server dequeues data from the sink FIFOs and sends it to 
-the corresponding sink.
+One disadvantage of this design is that on every call to ``push()`` the DataSource is
+redundantly sending data to the data server that has already been sent. To solve this
+problem, there are special "Streaming" data types that can be used for storing data.
+The special streaming objects solve the redundant data problem by automatically
+calculating how they've been modified since the last call to ``push()``. They store
+these modifications in "diffs" and then send only the diffs to the data server. For
+example, this code will have poor performance because the pushed data is growing larger
+with each call to ``push()``:
+
+.. code-block:: python
+
+    import numpy as np
+    from nspyre import DataSource
+
+    with DataSource('my_dataset') as src:
+        data = []
+        for i in range(10_000):
+            print(i)
+            data.append(np.random.random(5))
+            # this will take longer and longer with each call
+            src.push(data)
+
+This code will have much higher performance:
+
+.. code-block:: python
+
+    import numpy as np
+    from nspyre import DataSource
+    from nspyre import StreamingList
+
+    with DataSource('my_dataset') as src:
+        data = StreamingList([])
+        for i in range(10_000):
+            print(i)
+            data.append(np.random.random(5))
+            # this will take the same amount of time for each call
+            src.push(data)
+
+See the API reference on streaming objects for more details.

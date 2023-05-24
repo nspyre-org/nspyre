@@ -2,10 +2,13 @@
 Getting Started
 ###############
 
-There are `code examples <https://github.com/nspyre-org/examples>`__ available 
-to help new users get started, but a brief description is given here. An 
+The quickest way to get started is to clone the nspyre 
+`template <https://github.com/nspyre-org/template>`__. This template contains a mock
+experiment codebase that utilizes nspyre and demonstrates many of its features.
+There are also `code examples <https://github.com/nspyre-org/examples>`__ provided by
+other users. A brief description of some of nspyre's features are given here. An 
 experiment utilizing the full capabilities of nspyre can be broken down into 
-a few pieces of functionality.
+a few pieces of functionality:
 
 The Instrument Server
 =====================
@@ -21,7 +24,7 @@ below demonstrates the creation of an InstrumentServer.
 
    from pathlib import Path
 
-   from nspyre import inserv_cli
+   from nspyre import serve_instrument_server_cli
    from nspyre import InstrumentServer
 
    HERE = Path(__file__).parent
@@ -37,7 +40,7 @@ below demonstrates the creation of an InstrumentServer.
 
       # run a CLI (command-line interface) that allows the user to enter
       # commands to control the server
-      inserv_cli(inserv)
+      serve_instrument_server_cli(inserv)
 
 Running this Python code will start the instrument server:
 

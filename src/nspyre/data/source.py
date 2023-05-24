@@ -29,8 +29,7 @@ class DataSource(AsyncioWorker):
         port: int = DATASERV_PORT,
         auto_reconnect: bool = False,
     ):
-        """Initialize using a with statement.
-
+        """
         Args:
             name: Name of the data set.
             addr: Network address of the data server.

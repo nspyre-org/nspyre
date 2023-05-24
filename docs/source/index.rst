@@ -30,7 +30,7 @@ Welcome to nspyre's documentation!
    :target: https://zenodo.org/badge/latestdoi/220515183
 
 
-(n)etworked (s)cientific (py)thon (r)esearch (e)nvironment.
+(n)etworked (s)cientific (py)thon (r)esearch (e)nvironment
 
 .. toctree::
    :maxdepth: 4

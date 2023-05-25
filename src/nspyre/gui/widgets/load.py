@@ -48,7 +48,7 @@ def load_pickle(filename: Union[str, Path]) -> Any:
     return data
 
 
-class DataLoader(QThreadSafeObject):
+class _DataLoader(QThreadSafeObject):
     """Helper for LoadWidget."""
 
     def load(
@@ -117,7 +117,7 @@ class LoadWidget(QtWidgets.QWidget):
         super().__init__()
 
         # helper to run the loading in a new thread
-        self.loader = DataLoader()
+        self.loader = _DataLoader()
         self.destroyed.connect(partial(self._stop))
         self.loader.start()
 

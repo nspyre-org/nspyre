@@ -140,7 +140,7 @@ class _FlexLinePlotSettings(QThreadSafeObject):
 
 
 class FlexLinePlotWidget(QtWidgets.QWidget):
-    """Qt widget for flexible plotting of user data.
+    """Qt widget for flexible plotting of 1D user data.
     It connects to an arbitrary data set stored in the
     :py:class:`~nspyre.data.server.DataServer`, collects and processes the data, and
     offers a variety of user-controlled plotting options.
@@ -428,7 +428,7 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
     def add_plot(
         self, name: str, series: str, scan_i: str, scan_j: str, processing: str
     ):
-        """Add a new subplot.
+        """Add a new subplot. Thread safe.
 
         Args:
             name: Name for the new plot.
@@ -486,7 +486,7 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
             self.remove_plot(name)
 
     def remove_plot(self, name: str):
-        """Remove a subplot.
+        """Remove a subplot. Thread safe.
 
         Args:
             name: Name of the subplot.
@@ -514,7 +514,7 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
             self.hide_plot(name)
 
     def hide_plot(self, name: str):
-        """Hide a subplot.
+        """Hide a subplot. Thread safe.
 
         Args:
             name: Name of the subplot.
@@ -546,7 +546,7 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
             self.show_plot(name)
 
     def show_plot(self, name: str):
-        """Show a previously hidden subplot.
+        """Show a previously hidden subplot. Thread safe.
 
         Args:
             name: Name of the subplot.

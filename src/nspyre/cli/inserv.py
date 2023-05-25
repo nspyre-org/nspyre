@@ -132,8 +132,7 @@ def start_instrument_server(drivers=None, inserv_kwargs=None):
         drivers: A list of dictionaries, where each dictionary contains keyword
             arguments to the InstrumentServer
             :py:meth:`~nspyre.instrument.server.InstrumentServer.add` method.
-        inserv_kwargs: Keyword args to pass to InstrumentServer, as in
-            :code:`InstrumentServer(**inserv_kwargs)`.
+        inserv_kwargs: Keyword arguments to pass to :code:`InstrumentServer.__init__`.
     """
 
     # parse command-line arguments

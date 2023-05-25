@@ -9,7 +9,7 @@ from pyqtgraph.Qt import QtWidgets
 
 
 class ParamsWidget(QtWidgets.QWidget):
-    """Qt widget containing a set of line edit boxes for the user to enter \
+    """Qt widget containing a set of GUI elements for the user to enter experiment \
     parameters into.
 
     Typical usage example:

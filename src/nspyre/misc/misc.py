@@ -189,10 +189,12 @@ class ProcessRunner:
 
     def run(self, fun, *args, **kwargs):
         """Run the provided function in a separate process.
+
         Args:
             fun: Function to run.
             args: Arguments to pass to fun.
             kwargs: Keyword arguments to pass to fun.
+
         Raises:
             RuntimeError: The function from a previous call is still running.
         """

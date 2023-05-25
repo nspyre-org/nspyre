@@ -29,14 +29,14 @@ class MainWidgetItem:
     ):
         """
         Args:
-            name: Display name for the widget.
-            module: Python module that contains cls.
-            cls: Python class name as a string (that descends from QWidget).
-                An instance of this class will be created when the user tries
-                to load the widget and it will be added to the :code:`DockArea`.
-            args: Arguments to pass to the __init__ function of cls.
-            kwargs: Keyword arguments to pass to the __init__ function of cls.
-            stretch: The dock stretch factor as a tuple (stretch_x, stretch_y) \
+            module: Python module that contains :code:`cls`. The module will be reloaded
+                when the user clicks the "Load" button.
+            cls: Python class name as a string. The class must descend from
+                :code:`QWidget`. An instance of this class will be created when the user
+                tries to load the widget and it will be added to the :code:`DockArea`.
+            args: Arguments to pass to :code:`cls.__init__`.
+            kwargs: Keyword arguments to pass to the :code:`cls.__init__`.
+            stretch: The dock stretch factor :code:`(stretch_x, stretch_y)` \
                 (see `DockArea docs <https://pyqtgraph.readthedocs.io/en/latest/\
                 api_reference/dockarea.html>`__)
         """
@@ -85,7 +85,8 @@ class MainWidget(QtWidgets.QWidget):
     """Qt widget for loading other QWidgets.
     It displays a hierarchy of widgets for the user to select and launch, and a
     pyqtgraph :code:`DockArea` where they are displayed. The widgets dictionary
-    passed to __init__ can contain sub-dictionaries in order to group widgets together.
+    passed to :code:`__init__` can contain sub-dictionaries in order to group widgets
+    together.
 
     Typical usage example:
 
@@ -95,6 +96,7 @@ class MainWidget(QtWidgets.QWidget):
         import nspyre
         from nspyre import nspyreApp
         from nspyre import MainWidget
+        from nspyre import MainWidgetItem
 
         # Create Qt application and apply nspyre visual settings.
         app = nspyreApp()

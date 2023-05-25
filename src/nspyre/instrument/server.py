@@ -121,10 +121,8 @@ class InstrumentServer(ClassicService):
                 :code:`'nspyre_drivers.rohde_schwarz.hmp4040.hmp4040'`.
             class_name: Name of the class to create an instance of, e.g.
                 :code:`'HMP4040'`.
-            args: Arguments to pass to the class during initialization, as in
-                :code:`HMP4040(*args, **kwargs)`.
-            kwargs: Keyword args to pass to the class during initialization,
-                as in :code:`HMP4040(*args, **kwargs)`.
+            args: Arguments to pass to :code:`class_name.__init__`.
+            kwargs: Keyword arguments to pass to :code:`class_name.__init__`..
             import_or_file: :code:`'file'` for creating the device object from
                 a file on the filesystem, :code:`'import'` for creating the
                 device object from a python module.

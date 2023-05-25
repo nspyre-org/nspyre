@@ -47,7 +47,7 @@ class _StreamToLog(TextIOBase):
 def nspyre_init_logger(
     log_level: int,
     log_path: Optional[Path] = None,
-    log_path_level: int = 0,
+    log_path_level: Optional[int] = None,
     prefix: str = '',
     file_size: Optional[int] = None,
     remove_handlers: bool = True,
@@ -135,7 +135,7 @@ def nspyre_init_logger(
             '%Y-%m-%d %H:%M:%S',
         )
         file_handler.setFormatter(file_formatter)
-        if log_path_level:
+        if log_path_level is not None:
             file_handler.setLevel(log_path_level)
         else:
             file_handler.setLevel(log_level)

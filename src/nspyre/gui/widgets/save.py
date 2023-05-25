@@ -19,7 +19,7 @@ _HOME = Path.home()
 _logger = logging.getLogger(__name__)
 
 
-class DataSaver(QThreadSafeObject):
+class _DataSaver(QThreadSafeObject):
     """Helper for SaveWidget."""
 
     def save(
@@ -98,7 +98,7 @@ class SaveWidget(QtWidgets.QWidget):
         super().__init__()
 
         # helper to run the saving in a new thread
-        self.saver = DataSaver()
+        self.saver = _DataSaver()
         self.destroyed.connect(partial(self._stop))
         self.saver.start()
 

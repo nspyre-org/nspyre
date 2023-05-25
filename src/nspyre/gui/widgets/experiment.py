@@ -17,11 +17,7 @@ class ExperimentWidget(QtWidgets.QWidget):
     """Qt widget for automatically generating a GUI for a simple experiment.
     Parameters can be entered by the user in a
     :py:class:`~nspyre.gui.widgets.params.ParamsWidget`. Buttons are
-    generated for the user to run, stop, and kill the experiment process. The
-    keyword argument :code:`msg_queue` containing a multiprocessing Queue
-    object is passed to the function. The Queue is used to pass messages to the
-    subprocess running the experiment function. When the user presses the stop
-    button, the string :code:`stop` is pushed to the Queue.
+    generated for the user to run, stop, and kill the experiment process.
     """
 
     def __init__(
@@ -47,15 +43,15 @@ class ExperimentWidget(QtWidgets.QWidget):
                 be created in a subprocess when the user presses the 'Run' button.
                 The :code:`__enter__` and :code:`__exit__` methods will be called
                 if implemented. In addition, if the class constructor takes
-                keyword arguments 'queue_to_exp' and/or 'queue_from_exp',
+                keyword arguments :code:`queue_to_exp` and/or :code:`queue_from_exp`,
                 multiprocessing :code:`Queue` objects will be passed in that can
                 be used to communicate with the GUI.
             fun_name: Name of function within cls to run. All of the values from
-                the ParamsWidget will be passed as keyword args to this function.
+                the ParamsWidget will be passed as keyword arguments to this function.
             constructor_args: Args to pass to cls.
-            constructor_kwargs: Keyword args to pass to cls.
-            fun_args: Args to pass to cls.fun.
-            fun_kwargs: Keyword args to pass to cls.fun.
+            constructor_kwargs: Keyword arguments to pass to cls.
+            fun_args: Args to pass to :code:`cls.fun`.
+            fun_kwargs: Keyword arguments to pass to :code:`cls.fun`.
             title: Window title.
             kill: Add a kill button to allow the user to forcibly kill the subprocess
                 running the experiment function.
@@ -160,7 +156,8 @@ class ExperimentWidget(QtWidgets.QWidget):
         )
 
     def stop(self, log: bool = True):
-        """Stop the experiment subprocess.
+        """Request the experiment subprocess to stop by sending the string :code:`stop`
+        to :code:`queue_to_exp`.
 
         Args:
             log: if True, log when stop is called but the process isn't running.
@@ -183,15 +180,15 @@ class ExperimentWidget(QtWidgets.QWidget):
             )
 
 
-def experiment_widget_process_queue(msg_queue):
-    """Reads messages sent to a multiprocessing Queue by \
+def experiment_widget_process_queue(msg_queue) -> Optional[str]:
+    """Reads messages sent/received to/from a multiprocessing :code:`Queue` by \
     :py:class:`~nspyre.gui.widgets.experiment.ExperimentWidget`.
 
     Args:
         msg_queue: multiprocessing Queue object.
 
     Returns:
-        True if a stop has been requested, otherwise False.
+        The message received from the experiment subprocess.
     """
     # check for messages from the GUI
     if msg_queue is not None:
@@ -203,3 +200,5 @@ def experiment_widget_process_queue(msg_queue):
             return None
         else:
             return o
+    else:
+        return None

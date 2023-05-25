@@ -46,7 +46,7 @@ _server_members = _members_list(InstrumentServer)
 
 
 class InstrumentGatewayError(Exception):
-    """Raised for failures related to the
+    """Raised for failures related to the \
     :py:class:`~nspyre.instrument.gateway.InstrumentGateway`."""
 
     def __init__(self, *args, **kwargs):
@@ -222,8 +222,8 @@ class InstrumentGateway:
 class InstrumentGatewayDevice:
     def __init__(self, name: str, gateway: InstrumentGateway):
         """Wrapper for a device residing in an \
-        :py:class:`~nspyre.instrument.gateway.InstrumentGateway`. When we access an
-        attribute of a device from an
+        :py:class:`~nspyre.instrument.gateway.InstrumentGateway`.
+        When we access an attribute of a device from an
         :py:class:`~nspyre.instrument.gateway.InstrumentGateway`, it will
         return an rpyc netref object. This creates a problem when the gateway
         disconnects from the instrument server, then later reconnects. If we

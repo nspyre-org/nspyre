@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Iterable
 
 from pyqtgraph.Qt import QtGui
@@ -6,10 +5,10 @@ from pyqtgraph.Qt import QtWidgets
 
 from ...extras.subsystem import Subsystem
 
-logger = logging.getLogger(__name__)
-
 DEFAULT_BOOTED_COLOR = QtGui.QColor(127, 179, 0)
+"""QColor of "booted" items in QTreeView of subsystems."""
 DEFAULT_SHUTDOWN_COLOR = QtGui.QColor(156, 0, 0)
+"""QColor of "shutdown" items in QTreeView of subsystems."""
 
 
 class _SubsystemTreeItem(QtGui.QStandardItem):
@@ -42,7 +41,7 @@ class _SubsystemTreeItem(QtGui.QStandardItem):
 
 
 class SubsystemsWidget(QtWidgets.QWidget):
-    """Qt widget for controlling subsystems."""
+    """Qt widget for booting and shutting down subsystems."""
 
     def __init__(self, subsystems: Iterable[Subsystem]):
         """
@@ -85,14 +84,14 @@ class SubsystemsWidget(QtWidgets.QWidget):
             parse_subsystems(s, tree_root_node)
         self.subsys_tree_widget.setModel(tree_model)
         self.subsys_tree_widget.collapseAll()
-        self.subsys_tree_widget.doubleClicked.connect(self.tree_item_double_click)
+        self.subsys_tree_widget.doubleClicked.connect(self._tree_item_double_click)
 
         buttons_layout = QtWidgets.QGridLayout()
         layout_row = 0
 
         # boot subsystem button
         self.boot_button = QtWidgets.QPushButton('Boot')
-        self.boot_button.clicked.connect(self.boot_clicked)
+        self.boot_button.clicked.connect(self._boot_clicked)
         buttons_layout.addWidget(self.boot_button, layout_row, 0)
 
         # boot dependencies checkbox
@@ -105,7 +104,7 @@ class SubsystemsWidget(QtWidgets.QWidget):
 
         # shutdown subsystem button
         self.shutdown_button = QtWidgets.QPushButton('Shutdown')
-        self.shutdown_button.clicked.connect(self.shutdown_clicked)
+        self.shutdown_button.clicked.connect(self._shutdown_clicked)
         buttons_layout.addWidget(self.shutdown_button, layout_row, 0)
 
         # shutdown dependencies checkbox
@@ -127,20 +126,20 @@ class SubsystemsWidget(QtWidgets.QWidget):
 
         self.setLayout(layout)
 
-    def tree_item_double_click(self, model_index):
+    def _tree_item_double_click(self, model_index):
         tree_subsys_item = self.subsys_tree_widget.model().itemFromIndex(model_index)
-        self.boot(tree_subsys_item.subsys)
+        self._boot(tree_subsys_item.subsys)
 
-    def boot_clicked(self):
+    def _boot_clicked(self):
         # get the currently selected tree index
         selected_tree_index = self.subsys_tree_widget.selectedIndexes()[0]
         # retrieve the item
         tree_subsys_item = self.subsys_tree_widget.model().itemFromIndex(
             selected_tree_index
         )
-        self.boot(tree_subsys_item.subsys)
+        self._boot(tree_subsys_item.subsys)
 
-    def shutdown_clicked(self):
+    def _shutdown_clicked(self):
         # get the currently selected tree index
         selected_tree_index = self.subsys_tree_widget.selectedIndexes()[0]
         # retrieve the item
@@ -150,6 +149,6 @@ class SubsystemsWidget(QtWidgets.QWidget):
         shutdown_dependencies = self.shutdown_dependencies_checkbox.isChecked()
         tree_subsys_item.subsys.shutdown(shutdown_dependencies=shutdown_dependencies)
 
-    def boot(self, subsys):
+    def _boot(self, subsys):
         boot_dependencies = self.boot_dependencies_checkbox.isChecked()
         subsys.boot(boot_dependencies=boot_dependencies)

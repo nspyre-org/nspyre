@@ -20,7 +20,7 @@ package_data = {'': ['*'], 'nspyre.gui': ['images/*']}
 
 install_requires = [
     'numpy>=1.23,<2.0',
-    'pyqt>=5.12.3,<7.0.0',
+    'pyqt6>=6.2.3,<7.0.0',
     'pyqtgraph>=0.13.1,<0.14.0',
     'rpyc>=5.2.3,<6.0.0',
 ]

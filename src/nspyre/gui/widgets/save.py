@@ -57,20 +57,24 @@ class _DataSaver(QThreadSafeObject):
         callback: Optional[Callable] = None,
     ):
         """See save()."""
-        # connect to the dataserver
         try:
-            with DataSink(dataset) as sink:
-                # get the data from the dataserver
-                sink.pop(timeout=timeout)
-                save_fun(filename, sink.data)
-        except TimeoutError as err:
-            raise TimeoutError(
-                f'Timed out retreiving the data set [{dataset}] from data server.'
-            ) from err
-        else:
-            _logger.info(f'Saved data set [{dataset}] to [{filename}].')
-        if callback is not None:
-            self.run_main(callback, blocking=True)
+            try:
+                # connect to the dataserver
+                with DataSink(dataset) as sink:
+                    # get the data from the dataserver
+                    sink.pop(timeout=timeout)
+                    save_fun(filename, sink.data)
+            except TimeoutError as err:
+                raise TimeoutError(
+                    f'Timed out retreiving the data set [{dataset}] from data server.'
+                ) from err
+            else:
+                _logger.info(f'Saved data set [{dataset}] to [{filename}].')
+        except Exception as err:
+            raise err
+        finally:
+            if callback is not None:
+                self.run_main(callback, blocking=True)
 
 
 class SaveWidget(QtWidgets.QWidget):

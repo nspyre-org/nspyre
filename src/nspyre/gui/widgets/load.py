@@ -83,16 +83,19 @@ class _DataLoader(QThreadSafeObject):
         callback: Optional[Callable] = None,
     ):
         """See load()."""
-        # connect to the dataserver
-        with DataSource(dataset) as source:
-            # load data from the file
-            data = load_fun(filename)
-            # push the data to the dataserver
-            source.push(data)
-            _logger.info(f'Pushed loaded data set [{dataset}] to the data server.')
-        if callback is not None:
-            self.run_main(callback, blocking=True)
-
+        try:
+            # connect to the dataserver
+            with DataSource(dataset) as source:
+                # load data from the file
+                data = load_fun(filename)
+                # push the data to the dataserver
+                source.push(data)
+                _logger.info(f'Pushed loaded data set [{dataset}] to the data server.')
+        except Exception as err:
+            raise err
+        finally:
+            if callback is not None:
+                self.run_main(callback, blocking=True)
 
 class LoadWidget(QtWidgets.QWidget):
     """Qt widget that loads data from a file and pushes it to the \

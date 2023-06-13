@@ -156,7 +156,7 @@ class InstrumentServer(ClassicService):
             kwargs = {}
 
         if name in self._devs:
-            raise ValueError(f'Device [{name}] already exists on the InstrumentServer.')
+            raise InstrumentServerDeviceExistsError(f'Device [{name}] already exists on the InstrumentServer.')
 
         if import_or_file == 'file':
             # load the class from a file on disk
@@ -296,6 +296,7 @@ class InstrumentServer(ClassicService):
                 'allow_setattr': True,
                 'allow_delattr': True,
                 'sync_request_timeout': self._sync_timeout,
+                'import_custom_exceptions': True,
             },
         )
         self._rpyc_server.start()

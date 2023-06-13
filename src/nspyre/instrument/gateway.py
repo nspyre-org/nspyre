@@ -19,6 +19,12 @@ else:
 from .server import INSTRUMENT_SERVER_DEFAULT_PORT
 from .server import RPYC_SYNC_TIMEOUT
 from .server import InstrumentServer
+from .server import InstrumentServerDeviceExistsError
+from .server import InstrumentServerError
+
+# add custom exceptions to rpyc cache
+rpyc.core.vinegar._generic_exceptions_cache['nspyre.instrument.server.InstrumentServerDeviceExistsError'] = InstrumentServerDeviceExistsError
+rpyc.core.vinegar._generic_exceptions_cache['nspyre.instrument.server.InstrumentServerError'] = InstrumentServerError
 
 _logger = logging.getLogger(__name__)
 

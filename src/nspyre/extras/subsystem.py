@@ -10,6 +10,7 @@ from ..gui import Qt_GUI
 from ..gui import QtCore
 from ..instrument.gateway import InstrumentGateway
 from ..instrument.server import InstrumentServer
+from ..instrument.server import InstrumentServerDeviceExistsError
 
 _logger = logging.getLogger(__name__)
 
@@ -130,6 +131,10 @@ class Subsystem(QObject):
                 self.default_boot_inserv.add(
                     *self.default_boot_add_args, **self.default_boot_add_kwargs
                 )
+                break
+            except InstrumentServerDeviceExistsError:
+                _logger.info(f'Device [{self.name}] already exists on the '
+                    'instrument server. Leaving it as is and continuing.')
                 break
             except Exception as err:
                 if time.time() > timeout:

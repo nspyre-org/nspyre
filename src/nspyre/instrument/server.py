@@ -156,7 +156,9 @@ class InstrumentServer(ClassicService):
             kwargs = {}
 
         if name in self._devs:
-            raise InstrumentServerDeviceExistsError(f'Device [{name}] already exists on the InstrumentServer.')
+            raise InstrumentServerDeviceExistsError(
+                f'Device [{name}] already exists on the InstrumentServer.'
+            )
 
         if import_or_file == 'file':
             # load the class from a file on disk

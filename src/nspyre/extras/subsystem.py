@@ -133,8 +133,10 @@ class Subsystem(QObject):
                 )
                 break
             except InstrumentServerDeviceExistsError:
-                _logger.info(f'Device [{self.name}] already exists on the '
-                    'instrument server. Leaving it as is and continuing.')
+                _logger.info(
+                    f'Device [{self.name}] already exists on the '
+                    'instrument server. Leaving it as is and continuing.'
+                )
                 break
             except Exception as err:
                 if time.time() > timeout:

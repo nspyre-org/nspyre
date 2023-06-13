@@ -43,7 +43,8 @@ class InstrumentManager:
                 :py:meth:`~nspyre.instrument.manager.InstrumentManager.register_gateway`.
             auto_device_discovery: if True, when an attribute of the manager is
                 accessed, but the device hasn't been registered yet with the
-                manager using :py:meth:`~nspyre.instrument.manager.InstrumentManager.register_device`,
+                manager using
+                :py:meth:`~nspyre.instrument.manager.InstrumentManager.register_device`,
                 the device will be automatically registered.
             register_gateway_kwargs: See keyword arguments for
                 :py:meth:`~nspyre.instrument.manager.InstrumentManager.register_gateway`.
@@ -116,7 +117,8 @@ class InstrumentManager:
             dev: The device to add.
             name: The name of the device on the
                 :py:class:`~nspyre.instrument.manager.InstrumentManager`. If
-                `None`, the :py:class:`~nspyre.instrument.gateway.InstrumentGatewayDevice`
+                :code:`None`, the
+                :py:class:`~nspyre.instrument.gateway.InstrumentGatewayDevice`
                 name will be used.
         """
         if name is None:
@@ -126,8 +128,7 @@ class InstrumentManager:
             self.devs[name] = dev
         else:
             raise ValueError(
-                f'Device named [{name}] already exists on the '
-                'InstrumentManager.'
+                f'Device named [{name}] already exists on the ' 'InstrumentManager.'
             )
 
     def disconnect(self):
@@ -176,9 +177,11 @@ class InstrumentManagerDevice:
             if found_dev is not None:
                 self.____manager__.register_device(found_dev)
             else:
-                raise ValueError(f'InstrumentManager [{self.____manager__}] '
-                    f'does not contain a device named [{self.____manager_dev_name__}].')
-        import pdb; pdb.set_trace()
+                raise ValueError(
+                    f'InstrumentManager [{self.____manager__}] '
+                    f'does not contain a device named [{self.____manager_dev_name__}].'
+                )
+
         gw_dev = self.____manager__.devs[self.____manager_dev_name__]
         if attr == 'device':
             return gw_dev.device

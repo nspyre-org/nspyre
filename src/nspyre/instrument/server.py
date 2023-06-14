@@ -147,8 +147,14 @@ class InstrumentServer(ClassicService):
             class_path = obtain(class_path)
             class_name = obtain(class_name)
             import_or_file = obtain(import_or_file)
-            args = obtain(args)
-            kwargs = obtain(kwargs)
+            try:
+                args = obtain(args)
+                kwargs = obtain(kwargs)
+            except TypeError as err:
+                raise InstrumentServerError('The args or kwargs could not be '
+                    'obtained with rpyc. They may contain unpickleable '
+                    'objects. If the call to add() is being made on the local '
+                    'machine, you can use local_args = True.') from err
 
         if args is None:
             args = []
@@ -208,6 +214,7 @@ class InstrumentServer(ClassicService):
             'import_or_file': import_or_file,
             'args': args,
             'kwargs': kwargs,
+            'local_args': local_args,
         }
         self._devs[name] = (instance, config)
 
@@ -245,20 +252,8 @@ class InstrumentServer(ClassicService):
             InstrumentServerError: Deleting the device failed.
         """
         config_dict = self._devs[name][1]
-        class_path = config_dict['class_path']
-        class_name = config_dict['class_name']
-        args = config_dict['args']
-        import_or_file = config_dict['import_or_file']
-        kwargs = config_dict['kwargs']
         self.remove(name)
-        self.add(
-            name,
-            class_path,
-            class_name,
-            args=args,
-            import_or_file=import_or_file,
-            kwargs=kwargs,
-        )
+        self.add(name, **config_dict)
 
     def restart_all(self):
         """Restart all devices on the server.

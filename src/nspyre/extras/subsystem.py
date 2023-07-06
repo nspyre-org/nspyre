@@ -148,7 +148,10 @@ class Subsystem(QObject):
     def default_shutdown(self):
         """Remove the driver from the
         :py:class:`~nspyre.instrument.InstrumentServer`."""
-        self.default_boot_inserv.remove(self._dev_name())
+        try:
+            self.default_boot_inserv.remove(self._dev_name())
+        except Exception as err:
+            _logger.warning(f'Failed deleting [{self._dev_name()}]. Continuing...')
 
     def boot(self, boot_dependencies: bool = True):
         """

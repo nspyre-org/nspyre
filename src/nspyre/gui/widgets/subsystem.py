@@ -109,7 +109,7 @@ class SubsystemsWidget(QtWidgets.QWidget):
 
         # shutdown dependencies checkbox
         self.shutdown_dependencies_checkbox = QtWidgets.QCheckBox()
-        self.shutdown_dependencies_checkbox.setChecked(True)
+        self.shutdown_dependencies_checkbox.setChecked(False)
         self.shutdown_dependencies_checkbox.setText('Shutdown Dependencies')
         buttons_layout.addWidget(self.shutdown_dependencies_checkbox, layout_row, 1)
 

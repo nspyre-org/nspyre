@@ -163,6 +163,10 @@ class InstrumentManagerDevice:
         self.____manager_dev_name__ = name
         self.____manager__ = manager
 
+    def __getitem__(self, key):
+        gw_dev = self.____manager__.devs[self.____manager_dev_name__]
+        return gw_dev.__getitem__(key)
+
     def __getattr__(self, attr: str):
         if self.____manager_dev_name__ not in self.____manager__.devs:
             # the device hasn't been registered yet with the manager

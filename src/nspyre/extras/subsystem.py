@@ -42,33 +42,34 @@ class Subsystem(QObject):
         Args:
             name: Subsystem name.
             pre_dep_boot: Function to run before booting any dependency
-                subsystems; should take 1 argument, which is the subsystem
+                subsystems. It should take 1 argument, which is the subsystem
                 object.
             post_dep_boot: Function to run to boot the subsystem after booting
-                any dependency subsystems; should take 1 argument, which is the
-                subsystem object. If None, :py:meth:`default_boot` will be used.
+                any dependency subsystems. It should take 1 argument, which is
+                the subsystem object. If None, :py:meth:`default_boot` will be
+                used.
             default_boot_timeout: Time to wait (s) for the driver to initialize
                 in :py:meth:`default_boot`.
             default_boot_inserv: :py:class:`~nspyre.instrument.InstrumentServer`
                 (or a connected :py:class:`~nspyre.instrument.InstrumentGateway`)
                 to add the driver to in :py:meth:`default_boot`.
-            default_boot_args: Arguments to pass to the
+            default_boot_add_args: Arguments to pass to the
                 :py:class:`~nspyre.instrument.InstrumentServer`
                 :py:meth:`~nspyre.instrument.InstrumentServer.add` method to
                 create the driver in :py:meth:`default_boot`.
-            default_boot_args: Keyword arguments to pass to the
+            default_boot_add_kwargs: Keyword arguments to pass to the
                 :py:class:`~nspyre.instrument.InstrumentServer`
                 :py:meth:`~nspyre.instrument.InstrumentServer.add` method to
                 create the driver in :py:meth:`default_boot`.
             pre_dep_shutdown: Function to run once shutdown is requested, but
-                before shutting down any dependencies; should take 1 argument,
-                which is the subsystem object. If None,
+                before shutting down any dependencies. It should take 1
+                argument, which is the subsystem object. If None,
                 :py:meth:`default_shutdown` will be used.
             post_dep_shutdown: Function to run after shutting down any
-                dependencies; should take 1 argument, which is the subsystem
+                dependencies. It should take 1 argument, which is the subsystem
                 object.
-            dependencies: List of Subsystem objects this subsystem depends on;
-                they will be booted (in order) before this subsystem, and
+            dependencies: List of Subsystem objects this subsystem depends on.
+                They will be booted (in order) before this subsystem, and
                 shutdown (in reverse order) after this subsystem shuts down.
         """
         super().__init__()

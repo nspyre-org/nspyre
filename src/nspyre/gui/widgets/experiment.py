@@ -100,6 +100,10 @@ class ExperimentWidget(QtWidgets.QWidget):
         """multiprocessing Queue to pass to the experiment subprocess and use
         for receiving messages from the subprocess."""
 
+        # notes area
+        notes_label = QtWidgets.QLabel('Notes')
+        self.notes_textbox = QtWidgets.QTextEdit('')
+
         # stop button
         stop_button = QtWidgets.QPushButton('Stop')
         stop_button.clicked.connect(self.stop)
@@ -117,8 +121,8 @@ class ExperimentWidget(QtWidgets.QWidget):
         params_layout.addWidget(self.params_widget)
         if layout is not None:
             params_layout.addLayout(layout)
-        # add stretch element to take up any extra space below the spinboxes
-        params_layout.addStretch()
+        params_layout.addWidget(notes_label)
+        params_layout.addWidget(self.notes_textbox)
         params_layout.addWidget(run_button)
         params_layout.addWidget(stop_button)
         if kill:
@@ -139,18 +143,25 @@ class ExperimentWidget(QtWidgets.QWidget):
         reload(self.module)
         # get the experiment class
         exp_cls = getattr(self.module, self.cls)
-        # make a new dict that contains the function kwargs as well as the
-        # user-entered parameters
-        fun_kwargs = dict(self.fun_kwargs, **self.params_widget.all_params())
+        # add the queues to the constructor kwargs
+        constructor_kwargs = dict(
+            **self.constructor_kwargs,
+            queue_to_exp=self.queue_to_exp,
+            queue_from_exp=self.queue_from_exp,
+        )
+        # add the params and notes to the function kwargs
+        fun_kwargs = dict(
+            **self.fun_kwargs,
+            **self.params_widget.all_params(),
+            notes=self.notes_textbox.toPlainText(),
+        )
         # call the function in a new process
         self.run_proc.run(
             run_experiment,
             exp_cls=exp_cls,
             fun_name=self.fun_name,
             constructor_args=self.constructor_args,
-            constructor_kwargs=self.constructor_kwargs,
-            queue_to_exp=self.queue_to_exp,
-            queue_from_exp=self.queue_from_exp,
+            constructor_kwargs=constructor_kwargs,
             fun_args=self.fun_args,
             fun_kwargs=fun_kwargs,
         )

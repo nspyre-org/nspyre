@@ -229,23 +229,23 @@ def run_experiment(
     fun_name: str,
     constructor_args: list,
     constructor_kwargs: Dict,
-    queue_to_exp: Queue,
-    queue_from_exp: Queue,
     fun_args: list,
     fun_kwargs: Dict,
 ):
     """Create an instance of the experiment class and run the experiment function."""
 
-    # check if exp_cls takes keyword args 'queue_to_exp' or 'queue_from_exp',
-    # and add them to the kwargs if so
+    # remove any kwargs to the constructor that aren't implemented
+    culled_constructor_kwargs = {}
     init_spec = inspect.getfullargspec(exp_cls.__init__)
-    if 'queue_to_exp' in init_spec.args or init_spec.varkw is not None:
-        constructor_kwargs['queue_to_exp'] = queue_to_exp
-    if 'queue_from_exp' in init_spec.args or init_spec.varkw is not None:
-        constructor_kwargs['queue_from_exp'] = queue_from_exp
+    if init_spec.varkw is not None:
+        culled_constructor_kwargs = constructor_kwargs
+    else:
+        for kwarg in constructor_kwargs:
+            if kwarg in init_spec.args:
+                culled_constructor_kwargs[kwarg] = constructor_kwargs[kwarg]
 
     # make an instance of the experiment
-    exp_instance = exp_cls(*constructor_args, **constructor_kwargs)
+    exp_instance = exp_cls(*constructor_args, **culled_constructor_kwargs)
 
     # call __enter__ if implemented
     if hasattr(exp_instance, '__enter__'):
@@ -253,8 +253,19 @@ def run_experiment(
 
     # get the method that runs the experiment from the class, and run it
     fun = getattr(exp_instance, fun_name)
-    fun(**fun_kwargs)
+
+    # remove any kwargs to fun that aren't implemented
+    culled_fun_kwargs = {}
+    fun_spec = inspect.getfullargspec(fun)
+    if fun_spec.varkw is not None:
+        culled_fun_kwargs = fun_kwargs
+    else:
+        for kwarg in fun_kwargs:
+            if kwarg in fun_spec.args:
+                culled_fun_kwargs[kwarg] = fun_kwargs[kwarg]
+
+    fun(**culled_fun_kwargs)
 
     # call __exit__ if implemented
     if hasattr(exp_instance, '__exit__'):
-        exp_instance.__exit__()
+        exp_instance.__exit__(None, None, None)

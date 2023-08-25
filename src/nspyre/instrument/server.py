@@ -202,10 +202,8 @@ class InstrumentServer(ClassicService):
             ) from exc
 
         # initialize the driver if it implements an __enter__ function
-        try:
+        if hasattr(instance, '__enter__'):
             instance.__enter__()
-        except AttributeError:
-            pass
 
         # save the device and config info
         config = {
@@ -235,10 +233,8 @@ class InstrumentServer(ClassicService):
             raise InstrumentServerError(f'Failed deleting device [{name}].') from exc
 
         # teardown the driver if it implements an __exit__ function
-        try:
+        if hasattr(dev, '__exit__'):
             dev.__exit__(None, None, None)
-        except AttributeError:
-            pass
 
         _logger.info(f'Deleted device [{name}].')
 

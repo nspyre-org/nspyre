@@ -152,7 +152,7 @@ class FlexLinePlotWidget(QtWidgets.QWidget):
     - key: :code:`title`, value: Plot title string
     - key: :code:`xlabel`, value: X label string
     - key: :code:`ylabel`, value: Y label string
-    - key: :code:`datasets`, value: Dictionary where keys are a data series \
+    - key: :code:`data_series`, value: Dictionary where keys are a data series \
         name, and values are data as a list of 2D numpy arrays of shape (2, n). \
         The two rows represent the x and y axes, respectively, of the plot, and \
         the n columns each represent a data point.
@@ -173,7 +173,7 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
                 'title': 'MyVoltagePlot',
                 'xlabel': 'Time (s)',
                 'ylabel': 'Amplitude (V)',
-                'datasets': {
+                'data_series': {
                     'channel_1': channel_1_data
                     'channel_2': channel_2_data
                 }
@@ -211,10 +211,10 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         plot_settings_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
 
         # plot name lineedit
-        self.plot_name_lineedit = QtWidgets.QLineEdit('avg')
+        self.plot_name_lineedit = QtWidgets.QLineEdit('')
 
         # data series lineedit
-        self.plot_series_lineedit = QtWidgets.QLineEdit('series1')
+        self.plot_series_lineedit = QtWidgets.QLineEdit('')
 
         # scan indices lineedits
         self.add_plot_scan_i_textbox = QtWidgets.QLineEdit()
@@ -648,19 +648,19 @@ class _FlexLinePlotWidget(LinePlotWidget):
                 else:
                     ylabel = None
 
-                # try to access datasets
+                # try to access data_series
                 try:
-                    dsets = self.plot_settings.sink.datasets
+                    data_series = self.plot_settings.sink.data_series
                 except AttributeError as err:
                     raise RuntimeError(
-                        f'Data source [{data_set_name}] has no "datasets" attribute - '
-                        'exiting...'
+                        f'Data source [{data_set_name}] has no "data_series" '
+                        'attribute - exiting...'
                     ) from err
                 else:
-                    if not isinstance(dsets, dict):
+                    if not isinstance(data_series, dict):
                         raise RuntimeError(
-                            f'Data source [{data_set_name}] "datasets" attribute is '
-                            'not a dictionary - exiting...'
+                            f'Data source [{data_set_name}] "data_series" '
+                            'attribute is not a dictionary - exiting...'
                         )
 
                 # set the new title/labels in the main thread
@@ -735,7 +735,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
 
                     # pick out the particular data series
                     try:
-                        data = self.plot_settings.sink.datasets[series]
+                        data = self.plot_settings.sink.data_series[series]
                     except KeyError:
                         _logger.error(f'Data series [{series}] does not exist.')
                         continue

@@ -4,6 +4,8 @@ from functools import partial
 from importlib import reload
 from multiprocessing import Queue
 from types import ModuleType
+from typing import Callable
+from typing import Dict
 from typing import Optional
 
 from pyqtgraph.Qt import QtWidgets
@@ -130,6 +132,17 @@ class ExperimentWidget(QtWidgets.QWidget):
 
         self.setLayout(params_layout)
 
+    def additional_run_kwargs(self) -> Dict:
+        """Users can override this function to provide additional kwargs to
+        the experiment function. It is called when the user clicks the
+        'Run' button.
+
+        Returns:
+            A dict containing any additional kwargs to be passed to the 
+            experiment function.
+        """
+        return {}
+
     def run(self):
         """Run the experiment function in a subprocess."""
 
@@ -153,6 +166,7 @@ class ExperimentWidget(QtWidgets.QWidget):
         fun_kwargs = dict(
             **self.fun_kwargs,
             **self.params_widget.all_params(),
+            **self.additional_run_kwargs(),
             notes=self.notes_textbox.toPlainText(),
         )
         # call the function in a new process

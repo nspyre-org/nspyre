@@ -4,7 +4,6 @@ from functools import partial
 from importlib import reload
 from multiprocessing import Queue
 from types import ModuleType
-from typing import Callable
 from typing import Dict
 from typing import Optional
 

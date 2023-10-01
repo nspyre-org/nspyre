@@ -151,7 +151,7 @@ class Subsystem(QObject):
         :py:class:`~nspyre.instrument.InstrumentServer`."""
         try:
             self.default_boot_inserv.remove(self._dev_name())
-        except Exception as err:
+        except Exception:
             _logger.warning(f'Failed deleting [{self._dev_name()}]. Continuing...')
 
     def boot(self, boot_dependencies: bool = True):

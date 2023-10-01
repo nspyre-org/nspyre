@@ -10,7 +10,6 @@ import warnings
 from collections import deque
 from itertools import chain
 from multiprocessing import Process
-from multiprocessing import Queue
 from pathlib import Path
 from typing import Dict
 from typing import Type

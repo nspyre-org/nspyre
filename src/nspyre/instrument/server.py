@@ -151,10 +151,12 @@ class InstrumentServer(ClassicService):
                 args = obtain(args)
                 kwargs = obtain(kwargs)
             except TypeError as err:
-                raise InstrumentServerError('The args or kwargs could not be '
+                raise InstrumentServerError(
+                    'The args or kwargs could not be '
                     'obtained with rpyc. They may contain unpickleable '
                     'objects. If the call to add() is being made on the local '
-                    'machine, you can use local_args = True.') from err
+                    'machine, you can use local_args = True.'
+                ) from err
 
         if args is None:
             args = []

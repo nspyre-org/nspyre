@@ -138,7 +138,7 @@ class ExperimentWidget(QtWidgets.QWidget):
         'Run' button.
 
         Returns:
-            A dict containing any additional kwargs to be passed to the 
+            A dict containing any additional kwargs to be passed to the
             experiment function.
         """
         return {}

@@ -97,6 +97,7 @@ class _DataLoader(QThreadSafeObject):
             if callback is not None:
                 self.run_main(callback, blocking=True)
 
+
 class LoadWidget(QtWidgets.QWidget):
     """Qt widget that loads data from a file and pushes it to the \
     :py:class:`~nspyre.data.server.DataServer`."""

@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "nspyre"
-version = "0.6.0.1"
+version = "0.6.1"
 license = "BSD-3-Clause"
 description = "Networked Scientific Python Research Environment."
 authors = [

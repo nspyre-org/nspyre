@@ -620,10 +620,9 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     title = self.plot_settings.sink.title
                 except AttributeError:
                     _logger.info(
-                        f'Data source [{data_set_name}] has no "title" attribute - '
-                        'skipping...'
+                        f'Data source [{data_set_name}] has no "title" '
+                        'attribute. Not setting the plot title...'
                     )
-                else:
                     title = None
 
                 # set xlabel
@@ -631,10 +630,9 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     xlabel = self.plot_settings.sink.xlabel
                 except AttributeError:
                     _logger.info(
-                        f'Data source [{data_set_name}] has no "xlabel" attribute - '
-                        'skipping...'
+                        f'Data source [{data_set_name}] has no "xlabel" '
+                        'attribute. Not setting the plot x-axis label...'
                     )
-                else:
                     xlabel = None
 
                 # set ylabel
@@ -642,10 +640,9 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     ylabel = self.plot_settings.sink.ylabel
                 except AttributeError:
                     _logger.info(
-                        f'Data source [{data_set_name}] has no "ylabel" attribute - '
-                        'skipping...'
+                        f'Data source [{data_set_name}] has no "ylabel" '
+                        'attribute. Not setting the plot y-axis label...'
                     )
-                else:
                     ylabel = None
 
                 # try to access data_series

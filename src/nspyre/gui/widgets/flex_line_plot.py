@@ -261,6 +261,7 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
 
         # list of plots
         self.plots_list_widget = QtWidgets.QListWidget()
+        self.plots_list_widget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
         self.plots_list_widget.currentItemChanged.connect(self._plot_selection_changed)
 
         # spacer

@@ -2,6 +2,7 @@ import logging
 import time
 from typing import Callable
 from typing import Optional
+from typing import Dict
 
 import numpy as np
 from pyqtgraph.Qt import QtCore
@@ -183,7 +184,11 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
     """
 
     def __init__(
-        self, timeout: float = 1, data_processing_func: Optional[Callable] = None
+        self,
+        timeout: float = 1,
+        data_processing_func: Optional[Callable] = None,
+        init_kwargs: Optional[Dict] = None,
+        add_plot_kwargs: Optional[Dict] = None,
     ):
         """
         Args:
@@ -191,11 +196,18 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
             data_processing_func: Function to do any post-processing of the data
                 popped by the :py:class:`~nspyre.data.sink.DataSink`. Takes one
                 argument, which is the :py:class:`~nspyre.data.sink.DataSink`.
+            init_kwargs: Keyword arguments to pass to the underlying
+                :py:class:`~nspyre.gui.widgets.LinePlotWidget` init method.
+            add_plot_kwargs: Keyword arguments to pass to the underlying
+                :py:meth:`~nspyre.gui.widgets.LinePlotWidget.add_plot` method.
         """
         super().__init__()
 
         self.line_plot = _FlexLinePlotWidget(
-            timeout=timeout, data_processing_func=data_processing_func
+            timeout=timeout,
+            data_processing_func=data_processing_func,
+            init_kwargs=init_kwargs,
+            add_plot_kwargs=add_plot_kwargs,
         )
         """Underlying LinePlotWidget."""
 
@@ -462,7 +474,7 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
     def _add_plot_callback(self, name: str):
         """Called in main thread after a plot is added."""
         self.plots_list_widget.addItem(name)
-        self.line_plot.add_plot(name)
+        self.line_plot.add_plot(name, **self.line_plot.add_plot_kwargs)
 
     def _find_plot_item(self, name):
         """Return the index of the list widget plot item with the given name."""
@@ -578,17 +590,32 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
 class _FlexLinePlotWidget(LinePlotWidget):
     """See FlexLinePlotWidget."""
 
-    def __init__(self, timeout: float, data_processing_func: Optional[Callable]):
+    def __init__(
+            self,
+            timeout: float,
+            data_processing_func: Optional[Callable],
+            init_kwargs: Optional[Dict],
+            add_plot_kwargs: Optional[Dict],
+        ):
         """
         Args:
             timeout: see :py:class:`FlexLinePlotWidget`.
             data_processing_func: see :py:class:`FlexLinePlotWidget`.
+            init_kwargs: see :py:class:`FlexLinePlotWidget`.
+            add_plot_kwargs: see :py:class:`FlexLinePlotWidget`.
         """
         self.timeout = timeout
         self.data_processing_func = data_processing_func
+        if add_plot_kwargs is None:
+            self.add_plot_kwargs = {}
+        else:
+            self.add_plot_kwargs = add_plot_kwargs
         self.plot_settings = _FlexLinePlotSettings()
         self.plot_settings.start()
-        super().__init__()
+        if init_kwargs is not None:
+            super().__init__(**init_kwargs)
+        else:
+            super().__init__()
 
     def _stop(self):
         """Stop the updating and plot data management threads."""
@@ -669,7 +696,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                 # add the existing plots
                 with QtCore.QMutexLocker(self.plot_settings.mutex):
                     for plot_name in self.plot_settings.series_settings:
-                        self.add_plot(plot_name)
+                        self.add_plot(plot_name, **self.add_plot_kwargs)
                         if self.plot_settings.series_settings[plot_name].hidden:
                             self.hide_plot(plot_name)
 

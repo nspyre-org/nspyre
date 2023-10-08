@@ -5,6 +5,7 @@ import logging
 import time
 from functools import partial
 from typing import Any
+from typing import Optional
 
 from pyqtgraph import mkColor
 from pyqtgraph import PlotWidget
@@ -179,6 +180,7 @@ class LinePlotWidget(QtWidgets.QWidget):
         ylabel: str = '',
         font: QtGui.QFont = nspyre_font,
         legend: bool = True,
+        plot_colors: Optional[Any] = None,
         downsample: bool = True,
         **kwargs,
     ):
@@ -192,6 +194,8 @@ class LinePlotWidget(QtWidgets.QWidget):
             font: Font to use in the plot title, axis labels, etc., although
                 the font type may not be fully honored.
             legend: If True, display a figure legend.
+            plot_colors: Colors as a list of RGB tuples in the range 0-1 as used by
+                matplotlib.
             downsample: If True, utilize the pyqtgraph 'auto' downsampling in
                 the 'mean' mode (see `PlotItem docs <https://pyqtgraph.readthedocs.io\
                 /en/latest/api_reference/graphicsItems/plotitem.html\
@@ -209,6 +213,11 @@ class LinePlotWidget(QtWidgets.QWidget):
         self.plot_widget = PlotWidget()
         # TODO can't figure out how to generate a hyperlink in the docs for this
         """pyqtgraph PlotWidget for displaying the plot."""
+
+        if plot_colors is None:
+            self.plot_colors = cyclic_colors
+        else:
+            self.plot_colors = plot_colors
 
         if downsample:
             self.plot_widget.getPlotItem().setDownsampling(
@@ -299,11 +308,15 @@ class LinePlotWidget(QtWidgets.QWidget):
         pass
 
     def _next_color(self):
-        """Cycle through a set of colors"""
-        idx = self.current_color_idx % len(cyclic_colors)
-        color = mkColor(cyclic_colors[idx])
+        """Cycle through the set of plot colors."""
+        idx = self.current_color_idx % len(self.plot_colors)
         self.current_color_idx += 1
-        return color
+        color_frac = self.plot_colors[idx]
+        # plot_colors are 0-1 scale, so convert to 255 scale
+        color_255 = [255 * c for c in color_frac]
+        # convert to a pyqtgraph color
+        pyqtgraph_color = mkColor(color_255)
+        return pyqtgraph_color
 
     def add_plot(
         self,
@@ -311,8 +324,8 @@ class LinePlotWidget(QtWidgets.QWidget):
         pen: QtGui.QColor = None,
         symbolBrush=(255, 255, 255, 100),
         symbolPen=(255, 255, 255, 100),
-        symbol: str = 's',
-        symbolSize: int = 5,
+        symbol: str = 'o',
+        symbolSize: int = 3,
         **kwargs,
     ):
         """Add a new plot to the PlotWidget. Thread safe.

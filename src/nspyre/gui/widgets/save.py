@@ -83,7 +83,7 @@ class SaveWidget(QtWidgets.QWidget):
 
     def __init__(
         self,
-        timeout: float = 10,
+        timeout: float = 30,
         additional_filetypes: Optional[Dict[str, Callable]] = None,
         save_dialog_dir: Optional[Union[str, Path]] = None,
     ):
@@ -91,11 +91,13 @@ class SaveWidget(QtWidgets.QWidget):
         Args:
             timeout: Timeout for data sink pop().
             additional_filetypes: Dictionary containing string keys that
-                represent a file type mapping to functions that will save data
-                to a file. The keys should have the form
-                :code:`'FileType (*.extension1 *.extension2)'`, e.g.,
-                :code:`'Pickle (*.pickle *.pkl)"`. Functions should have the
-                signature :code:`save(filename: str, data: Any)`.
+                represent a file type mapping to a tuple. The first element of the tuple
+                is a list which contains the possible file extensions for the file type.
+                The second element is a function that will save data to a file using the
+                associated file type. E.g.:
+                :code:`{'FileType': (['.jpg', '.jpeg'], save_fun)} 
+                Functions should have the signature:
+                :code:`save_fun(filename: str, data: Any)`.
             save_dialog_dir: Directory where the file dialog begins. If
                 :code:`None`, default to the user home directory.
         """
@@ -115,12 +117,31 @@ class SaveWidget(QtWidgets.QWidget):
 
         # file type options for saving data
         self.filetypes = {
-            'Pickle (*.pickle *.pkl)': save_pickle,
-            'JSON (*.json)': save_json,
+            # name: (['file extension 2', 'file extension 2', ... ], save_function)
+            'Pickle': (['.pickle', '.pkl'], save_pickle),
+            'JSON': (['.json'], save_json),
+            # TODO
+            # 'Pickle (*.pickle *.pkl)': save_pickle,
+            # 'JSON (*.json)': save_json,
         }
         # merge with the user-provided dictionary
         if additional_filetypes:
             self.filetypes.update(additional_filetypes)
+
+        # generate a list of filetypes of the form:
+        # ['JSON (*.json)', 'Pickle (*.pickle *.pkl)', ...]
+        self.filetype_filters = []
+        for filetype in self.filetypes:
+            # add the file type name
+            filter_str = filetype + ' ('
+            # add all of the extensions
+            for i, ext in enumerate(self.filetypes[filetype][0]):
+                if i:
+                    filter_str += ' *' + ext
+                else:
+                    filter_str += '*' + ext
+            filter_str += ')'
+            self.filetype_filters.append(filter_str)
 
         # label for data set lineedit
         dataset_label = QtWidgets.QLabel('Data Set')
@@ -152,10 +173,6 @@ class SaveWidget(QtWidgets.QWidget):
     def _save_clicked(self):
         """Save the data to a file."""
 
-        # generate a list of filetypes of the form, e.g.:
-        # 'JSON (*.json);;Pickle (*.pickle *.pkl);; ...'
-        filters = ';;'.join(self.filetypes)
-
         # data set name
         dataset = self.dataset_lineedit.text()
 
@@ -163,20 +180,22 @@ class SaveWidget(QtWidgets.QWidget):
         filename, selected_filter = QtWidgets.QFileDialog.getSaveFileName(
             parent=self,
             directory=str(self.save_dialog_dir / f'{dataset}'),
-            filter=filters,
+            filter=';;'.join(self.filetype_filters),
         )
 
         if filename == '':
             # the user cancelled
             return
 
-        # pick out the file extension from the filter string, e.g.
-        # 'Pickle (*.pickle *.pkl)' -> '.pickle'
-        extension = selected_filter.replace(' ', ')').split('*')[1].split(')')[0]
-        filename += extension
+        # determine the selected file type
+        selected_file_type = selected_filter.split(' ')[0]
+        extensions = self.filetypes[selected_file_type][0]
+        # add an extension if the user didn't provide it already
+        if not any(ext in filename for ext in extensions):
+            filename += extensions[0]
 
         # run the relevant save function
-        save_fun = self.filetypes[selected_filter]
+        save_fun = self.filetypes[selected_file_type][1]
 
         # run the saving in a new thread
         self.saver.save(

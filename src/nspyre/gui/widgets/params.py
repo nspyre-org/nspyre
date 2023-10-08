@@ -134,10 +134,10 @@ SpinBox(value=20, int=True, bounds=(1, None), dec=True),
         # QCheckBox
         if QtWidgets.QCheckBox not in self.get_param_value_funs:
 
-            def get_combobox_val(checkbox):
+            def get_checkbox_val(checkbox):
                 return checkbox.isChecked()
 
-            self.get_param_value_funs[QtWidgets.QCheckBox] = get_combobox_val
+            self.get_param_value_funs[QtWidgets.QCheckBox] = get_checkbox_val
 
         # layout
         layout = QtWidgets.QGridLayout()

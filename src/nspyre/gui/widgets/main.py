@@ -143,6 +143,7 @@ class MainWidget(QtWidgets.QWidget):
 
         # make a GUI element to show all the available widgets
         self.tree_widget = QtWidgets.QTreeView()
+        self.tree_widget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
         self.tree_widget.setHeaderHidden(True)
         tree_model = QtGui.QStandardItemModel()
         tree_root_node = tree_model.invisibleRootItem()
@@ -203,11 +204,9 @@ class MainWidget(QtWidgets.QWidget):
         self._load_widget(tree_widget_item)
 
     def _load_widget_clicked(self):
-        # get the currently selected tree index
-        selected_tree_index = self.tree_widget.selectedIndexes()[0]
-        # retrieve the item
-        tree_widget_item = self.tree_widget.model().itemFromIndex(selected_tree_index)
-        self._load_widget(tree_widget_item)
+        for idx in self.tree_widget.selectedIndexes():
+            tree_widget_item = self.tree_widget.model().itemFromIndex(idx)
+            self._load_widget(tree_widget_item)
 
     def _load_widget(self, tree_widget_item):
         """Loads the QWidget corresponding to the given tree item and add it to

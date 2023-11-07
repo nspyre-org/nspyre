@@ -1,3 +1,4 @@
+import functools
 import logging
 from typing import Callable
 from typing import Dict
@@ -175,6 +176,27 @@ class QThreadSafeObject(QtCore.QObject):
             return []
         # wrap the result in a list in order to have a standardized return type
         return [result]
+
+    def run_safe_fun(blocking=False):
+        """Decorate sublass methods with this in order to automatically run them using
+        run_safe. E.g.:
+
+        class DataBackend(QThreadSafeObject):
+            @QThreadSafeObject.run_safe_decorator()
+            def doSomethingThreadSafe(self, arg):
+                # this will be run in the QThreadSafeObject thread
+                return arg 
+
+        Args:
+            blocking: see run_safe().
+
+        """
+        def wrapped_again_run_safe(func):
+            @functools.wraps(func)
+            def wrapped_run_safe(self, *args, **kwargs):
+                return self.run_safe(func, self, *args, blocking = blocking, **kwargs)
+            return wrapped_run_safe
+        return wrapped_again_run_safe
 
     def get_safe(self, attrs: list[str]) -> tuple:
         """Retrieve object attributes in a thread-safe way by accessing them

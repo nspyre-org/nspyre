@@ -37,7 +37,7 @@ else:
     from .widgets import MainWidget
     from .widgets import MainWidgetItem
     from .widgets import ParamsWidget
-    from .widgets import SaveWidget
+    from .widgets import SaveLoadWidget
     from .widgets import QHLine
     from .widgets import QVLine
     from .widgets import sssss

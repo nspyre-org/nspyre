@@ -54,3 +54,30 @@ class _AutoSaver:
         """
         # TODO
         pass
+
+def load_json(filename: Union[str, Path]) -> Any:
+    """Load data from a JSON file.
+
+    Args:
+        filename: File to load from.
+
+    Returns:
+        A Python object loaded from the file.
+    """
+    with open(filename, 'r') as f:
+        data = json.load(f)
+        return data
+
+
+def load_pickle(filename: Union[str, Path]) -> Any:
+    """Load data from a Python pickle file.
+
+    Args:
+        filename: File to load from.
+
+    Returns:
+        A Python object loaded from the file.
+    """
+    with open(filename, 'rb') as f:
+        data = pickle.load(f)
+        return data

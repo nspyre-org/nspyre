@@ -7,7 +7,7 @@ from .load import LoadWidget
 from .main import MainWidget
 from .main import MainWidgetItem
 from .params import ParamsWidget
-from .save import SaveWidget
+from .save_load import SaveLoadWidget
 from .separator import QHLine
 from .separator import QVLine
 from .snake import sssss

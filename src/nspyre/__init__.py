@@ -3,6 +3,10 @@ from .cli import serve_instrument_server_cli
 from .cli import start_instrument_server
 from .data import DataSink
 from .data import DataSource
+from .data import load_json
+from .data import load_pickle
+from .data import save_json
+from .data import save_pickle
 from .data import StreamingList
 from .extras import Subsystem
 from .gui import colors
@@ -27,7 +31,7 @@ from .gui import qt_set_trace
 from .gui import QtCore
 from .gui import QThreadSafeObject
 from .gui import QVLine
-from .gui import SaveWidget
+from .gui import SaveLoadWidget
 from .gui import sssss
 from .instrument import InstrumentGateway
 from .instrument import InstrumentGatewayDevice

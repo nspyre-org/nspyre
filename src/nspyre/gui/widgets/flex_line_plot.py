@@ -1,8 +1,8 @@
 import logging
 import time
 from typing import Callable
-from typing import Optional
 from typing import Dict
+from typing import Optional
 
 import numpy as np
 from pyqtgraph.Qt import QtCore
@@ -273,7 +273,9 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
 
         # list of plots
         self.plots_list_widget = QtWidgets.QListWidget()
-        self.plots_list_widget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.plots_list_widget.setSelectionMode(
+            QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection
+        )
         self.plots_list_widget.currentItemChanged.connect(self._plot_selection_changed)
 
         # spacer
@@ -591,12 +593,12 @@ class _FlexLinePlotWidget(LinePlotWidget):
     """See FlexLinePlotWidget."""
 
     def __init__(
-            self,
-            timeout: float,
-            data_processing_func: Optional[Callable],
-            init_kwargs: Optional[Dict],
-            add_plot_kwargs: Optional[Dict],
-        ):
+        self,
+        timeout: float,
+        data_processing_func: Optional[Callable],
+        init_kwargs: Optional[Dict],
+        add_plot_kwargs: Optional[Dict],
+    ):
         """
         Args:
             timeout: see :py:class:`FlexLinePlotWidget`.

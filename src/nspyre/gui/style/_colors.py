@@ -57,18 +57,20 @@ colors: Dict = {
     'orange': orange,
     'gray': concrete,
 }
-"""Some colors from https://gist.github.com/mishelen/9525865."""
+"""List of colors from
+`<https://gist.github.com/mishelen/9525865>`_."""
 
 cyclic_colors = [
-    (0.12156, 0.46666, 0.70588), # blue
-    (1.00000, 0.49803, 0.05490), # orange
-    (0.17254, 0.62745, 0.17254), # green
-    (0.58039, 0.40392, 0.74117), # purple
-    (0.54901, 0.33725, 0.29411), # brown
-    (0.89019, 0.46666, 0.76078), # pink
-    (0.49803, 0.49803, 0.49803), # grey
-    (0.83921, 0.15294, 0.15686), # red
-    (0.65098, 0.85882, 0.07058), # lime
-    (0.09019, 0.74509, 0.81176), # cyan
+    (0.12156, 0.46666, 0.70588),  # blue
+    (1.00000, 0.49803, 0.05490),  # orange
+    (0.17254, 0.62745, 0.17254),  # green
+    (0.58039, 0.40392, 0.74117),  # purple
+    (0.54901, 0.33725, 0.29411),  # brown
+    (0.89019, 0.46666, 0.76078),  # pink
+    (0.49803, 0.49803, 0.49803),  # grey
+    (0.83921, 0.15294, 0.15686),  # red
+    (0.65098, 0.85882, 0.07058),  # lime
+    (0.09019, 0.74509, 0.81176),  # cyan
 ]
-"""Select list of colors for plotting based on Tableau_10 https://matplotlib.org/stable/gallery/color/named_colors.html."""
+"""List of colors for plotting based on
+`Tableau <https://matplotlib.org/stable/gallery/color/named_colors.html>`_."""

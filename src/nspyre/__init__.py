@@ -31,6 +31,7 @@ from .gui import qt_set_trace
 from .gui import QtCore
 from .gui import QThreadSafeObject
 from .gui import QVLine
+from .gui import run_threadsafe
 from .gui import SaveLoadWidget
 from .gui import sssss
 from .instrument import InstrumentGateway

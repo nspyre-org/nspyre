@@ -28,6 +28,7 @@ else:
     from .style import colors
     from .style import cyclic_colors
     from .threadsafe import QThreadSafeObject
+    from .threadsafe import run_threadsafe
     from .widgets import HeatMapWidget
     from .widgets import experiment_widget_process_queue
     from .widgets import ExperimentWidget

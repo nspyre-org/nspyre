@@ -143,7 +143,9 @@ class MainWidget(QtWidgets.QWidget):
 
         # make a GUI element to show all the available widgets
         self.tree_widget = QtWidgets.QTreeView()
-        self.tree_widget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.tree_widget.setSelectionMode(
+            QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection
+        )
         self.tree_widget.setHeaderHidden(True)
         tree_model = QtGui.QStandardItemModel()
         tree_root_node = tree_model.invisibleRootItem()

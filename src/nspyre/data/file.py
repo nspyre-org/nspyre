@@ -55,6 +55,7 @@ class _AutoSaver:
         # TODO
         pass
 
+
 def load_json(filename: Union[str, Path]) -> Any:
     """Load data from a JSON file.
 

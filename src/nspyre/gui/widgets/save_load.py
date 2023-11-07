@@ -11,13 +11,14 @@ from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
 from pyqtgraph.Qt import QtWidgets
 
-from ...data.file import save_json
-from ...data.file import save_pickle
 from ...data.file import load_json
 from ...data.file import load_pickle
+from ...data.file import save_json
+from ...data.file import save_pickle
 from ...data.sink import DataSink
 from ...data.source import DataSource
 from ..threadsafe import QThreadSafeObject
+from ..threadsafe import run_threadsafe
 
 _HOME = Path.home()
 _logger = logging.getLogger(__name__)
@@ -31,17 +32,17 @@ class _DataBackend(QThreadSafeObject):
         self.data = None
 
     def get_all_keys(self) -> Optional[list]:
-        """If the data is a dictionary, return all of its dictionary keys. Otherwise 
+        """If the data is a dictionary, return all of its dictionary keys. Otherwise
         return None."""
         if isinstance(self.data, dict):
             return list(self.data.keys())
         else:
             return None
 
-    @QThreadSafeObject.run_safe_fun(blocking=True)
+    @run_threadsafe(blocking=True)
     def get_key(self, key) -> Any:
         """Returns the value corresponeding to key.
-        
+
         Args:
             key: The key that we will return the corresponding value for.
 
@@ -54,10 +55,10 @@ class _DataBackend(QThreadSafeObject):
             else:
                 _logger.info(f'Got key [{key}].')
 
-    @QThreadSafeObject.run_safe_fun()
+    @run_threadsafe()
     def set_key(self, key, val, callback: Optional[Callable] = None):
         """Sets the value corresponeding to key.
-        
+
         Args:
             key: The key that we will set the value for.
             value: The value to assign to key.
@@ -71,7 +72,7 @@ class _DataBackend(QThreadSafeObject):
             if callback is not None:
                 self.run_main(callback, self.get_all_keys(), blocking=True)
 
-    @QThreadSafeObject.run_safe_fun()
+    @run_threadsafe()
     def del_key(self, key: str, callback: Optional[Callable] = None):
         """Delete the key.
 
@@ -92,8 +93,8 @@ class _DataBackend(QThreadSafeObject):
                 if callback is not None:
                     self.run_main(callback, self.get_all_keys(), blocking=True)
 
-    @QThreadSafeObject.run_safe_fun()
-    def push( 
+    @run_threadsafe()
+    def push(
         self,
         dataset: str,
         callback: Optional[Callable] = None,
@@ -107,8 +108,10 @@ class _DataBackend(QThreadSafeObject):
         with QtCore.QMutexLocker(self.mutex):
             try:
                 if self.data is None:
-                    raise RuntimeError(f'Cannot push data to data set [{dataset}] '
-                        'because no data is loaded.')
+                    raise RuntimeError(
+                        f'Cannot push data to data set [{dataset}] '
+                        'because no data is loaded.'
+                    )
                 with DataSource(dataset) as source:
                     # push the data to the dataserver
                     source.push(self.data)
@@ -120,7 +123,7 @@ class _DataBackend(QThreadSafeObject):
                 if callback is not None:
                     self.run_main(callback, blocking=True)
 
-    @QThreadSafeObject.run_safe_fun()
+    @run_threadsafe()
     def pop(
         self,
         dataset: str,
@@ -144,7 +147,8 @@ class _DataBackend(QThreadSafeObject):
                         self.data = sink.data
                 except TimeoutError as err:
                     raise TimeoutError(
-                        f'Timed out retreiving the data set [{dataset}] from data server.'
+                        f'Timed out retreiving the data set [{dataset}] from data '
+                        'server.'
                     ) from err
                 else:
                     _logger.info(f'Popped data set [{dataset}].')
@@ -154,7 +158,7 @@ class _DataBackend(QThreadSafeObject):
                 if callback is not None:
                     self.run_main(callback, self.get_all_keys(), blocking=True)
 
-    @QThreadSafeObject.run_safe_fun()
+    @run_threadsafe()
     def save(
         self,
         filename: Union[str, Path],
@@ -171,8 +175,9 @@ class _DataBackend(QThreadSafeObject):
         """
         with QtCore.QMutexLocker(self.mutex):
             if self.data is None:
-                raise RuntimeError(f'Cannot save data to [{filename}] '
-                    'because no data is loaded.')
+                raise RuntimeError(
+                    f'Cannot save data to [{filename}] ' 'because no data is loaded.'
+                )
             try:
                 save_fun(filename, self.data)
             except Exception as err:
@@ -183,7 +188,7 @@ class _DataBackend(QThreadSafeObject):
                 if callback is not None:
                     self.run_main(callback, blocking=True)
 
-    @QThreadSafeObject.run_safe_fun()
+    @run_threadsafe()
     def load(
         self,
         filename: Union[str, Path],
@@ -218,7 +223,9 @@ class SaveLoadWidget(QtWidgets.QWidget):
         self,
         timeout: float = 30,
         file_dialog_dir: Optional[Union[str, Path]] = None,
-        additional_filetypes: Optional[Dict[str, tuple[list, Callable, Callable]]] = None,
+        additional_filetypes: Optional[
+            Dict[str, tuple[list, Callable, Callable]]
+        ] = None,
     ):
         """
         Args:
@@ -229,12 +236,12 @@ class SaveLoadWidget(QtWidgets.QWidget):
                 represent a file type mapping to a tuple. The first element of the tuple
                 is a list which contains the possible file extensions for the file type.
                 The second element is a function that will save data to a file using the
-                associated file type. Functions should have the signature:
+                associated file type. The save function should have the signature:
                 :code:`save_fun(filename: str, data: Any)`.
-                The third element is a function that will load data from a file using 
-                the associated file type. Functions should have the signature:
+                The third element is a function that will load data from a file using
+                the associated file type. The load function should have the signature:
                 :code:`load(filename: Union[str, Path]) -> Any`. E.g.:
-                :code:`{'FileType': (['.jpg', '.jpeg'], save_fun, load_fun)}
+                :code:`{'FileType': (['.jpg', '.jpeg'], save_fun, load_fun)}`
         """
         super().__init__()
 
@@ -371,7 +378,7 @@ class SaveLoadWidget(QtWidgets.QWidget):
         layout.addLayout(key_controls_layout)
 
         layout.addWidget(QtWidgets.QLabel('Value'))
-        
+
         self.value_textedit = QtWidgets.QTextEdit('')
         self.value_textedit.setEnabled(False)
         layout.addWidget(self.value_textedit)
@@ -505,35 +512,34 @@ class SaveLoadWidget(QtWidgets.QWidget):
         """Push data to the dataserver."""
         self._disable_all()
         self.backend.push(
-            dataset = self.dataset_lineedit.text(),
-            callback = self._enable_all
+            dataset=self.dataset_lineedit.text(), callback=self._enable_all
         )
 
     def _pop_dataset_clicked(self):
         """Pop data from the dataserver."""
         self._disable_all()
         self.backend.pop(
-            dataset = self.dataset_lineedit.text(),
-            timeout = self.timeout,
-            callback = self._enable_all_and_update_keys
+            dataset=self.dataset_lineedit.text(),
+            timeout=self.timeout,
+            callback=self._enable_all_and_update_keys,
         )
 
     def _save_file_clicked(self):
         """Save data to a file."""
         self._disable_all()
         self.backend.save(
-            filename = self.path_lineedit.text(),
-            save_fun = self.filetypes[self.file_type_dropdown.currentText()][1],
-            callback = self._enable_all
+            filename=self.path_lineedit.text(),
+            save_fun=self.filetypes[self.file_type_dropdown.currentText()][1],
+            callback=self._enable_all,
         )
 
     def _load_file_clicked(self):
         """Load data from a file."""
         self._disable_all()
         self.backend.load(
-            filename = self.path_lineedit.text(),
-            load_fun = self.filetypes[self.file_type_dropdown.currentText()][2],
-            callback = self._enable_all_and_update_keys
+            filename=self.path_lineedit.text(),
+            load_fun=self.filetypes[self.file_type_dropdown.currentText()][2],
+            callback=self._enable_all_and_update_keys,
         )
 
     def _key_selection_changed(self):
@@ -567,14 +573,14 @@ class SaveLoadWidget(QtWidgets.QWidget):
             # if it's a string, set its new value
             self.backend.set_key(selected_item_text, self.value_textedit.toPlainText())
         else:
-            raise RuntimeError(f'Cannot update key [{selected_item_text}] because it is not a string.')
+            raise RuntimeError(
+                f'Cannot update key [{selected_item_text}] because it is not a string.'
+            )
 
     def _add_key_clicked(self):
         """Called when the user presses the add key button."""
         self.backend.set_key(
-            self.add_key_lineedit.text(),
-            '',
-            callback = self._update_keys
+            self.add_key_lineedit.text(), '', callback=self._update_keys
         )
 
     def _del_key_clicked(self):
@@ -583,5 +589,4 @@ class SaveLoadWidget(QtWidgets.QWidget):
         if selected_item is None:
             return
 
-        self.backend.del_key(selected_item.text(), callback = self._update_keys)
-
+        self.backend.del_key(selected_item.text(), callback=self._update_keys)

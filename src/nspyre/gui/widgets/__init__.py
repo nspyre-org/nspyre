@@ -3,7 +3,6 @@ from .experiment import ExperimentWidget
 from .flex_line_plot import FlexLinePlotWidget
 from .heatmap import HeatMapWidget
 from .line_plot import LinePlotWidget
-from .load import LoadWidget
 from .main import MainWidget
 from .main import MainWidgetItem
 from .params import ParamsWidget

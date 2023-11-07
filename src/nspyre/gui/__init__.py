@@ -34,7 +34,6 @@ else:
     from .widgets import ExperimentWidget
     from .widgets import FlexLinePlotWidget
     from .widgets import LinePlotWidget
-    from .widgets import LoadWidget
     from .widgets import MainWidget
     from .widgets import MainWidgetItem
     from .widgets import ParamsWidget

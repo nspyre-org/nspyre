@@ -161,8 +161,8 @@ class HeatMapWidget(QtWidgets.QWidget):
                 should correspond to the x-axis. Moreover, xs should be the
                 same length as the number of columns of data, and ys should
                 be the same length as the number of rows of data. This way,
-                when the widget attempts to display the pixel at (x, y), it
-                looks for it in data[y][x]. In the case of a 3D array, the
+                when the widget attempts to display the pixel at index (i, j),
+                it looks for it in data[j][i]. In the case of a 3D array, the
                 z-axis information should be in the last index, so that the
                 pixel at (x, y, z) is stored in data[y][x][z].
             zs: Optional array-like of data for the z-axis.

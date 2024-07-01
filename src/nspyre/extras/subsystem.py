@@ -4,6 +4,7 @@ from typing import Callable
 from typing import Dict
 from typing import Optional
 from typing import Union
+from typing_extensions import Self
 
 from ..gui import QObject
 from ..gui import Qt_GUI
@@ -37,6 +38,7 @@ class Subsystem(QObject):
         pre_dep_shutdown: Optional[Callable] = None,
         post_dep_shutdown: Optional[Callable] = None,
         dependencies: Optional[list] = None,
+        exclusions: Optional[list] = None,
     ):
         """
         Args:
@@ -71,6 +73,14 @@ class Subsystem(QObject):
             dependencies: List of Subsystem objects this subsystem depends on.
                 They will be booted (in order) before this subsystem, and
                 shutdown (in reverse order) after this subsystem shuts down.
+            exclusions: List of Subsystem objects that exclude this Subsystem
+                from being booted. This Subsystem will only boot if all
+                Subsytems in exclusions are not booted. Note that this does not
+                necessarily prevent this Subsystem and a Subsystem in exclusions
+                from being simultaneously booted. For example, if you boot this
+                Subsystem, then later boot a Subsystem in exclusions. If you
+                want two Subsystems to never be booted at the same time, you
+                should use :py:meth:`mutual_exclusion`.
         """
         super().__init__()
 
@@ -89,6 +99,12 @@ class Subsystem(QObject):
             # set self as a dependent for all dependencies
             for subsys in self.dependencies:
                 subsys.dependents.append(self)
+
+        # exclusion subsystems
+        if exclusions is None:
+            self.exclusions = []
+        else:
+            self.exclusions = exclusions
 
         self.pre_dep_boot = pre_dep_boot
         self.post_dep_boot = post_dep_boot
@@ -167,6 +183,14 @@ class Subsystem(QObject):
             return
         _logger.info(f'Booting [{self.name}]...')
 
+        for exc in self.exclusions:
+            if exc.booted:
+                _logger.warning(
+                    f'Ignoring boot request for [{self.name}] because [{exc.name}] is '
+                    f'booted and is in the exclusions list for [{self.name}].'
+                )
+                return
+
         if self.pre_dep_boot is not None:
             self.pre_dep_boot(self)
 
@@ -243,3 +267,15 @@ class Subsystem(QObject):
 
         if self.post_dep_shutdown is not None:
             self.post_dep_shutdown(self)
+
+    def mutual_exclusion(self, sub: Self):
+        """Prevent this Subsystem and the given Subsystem from being
+        simultaneously booted.
+
+        Args:
+            sub: The Subsystem that cannot be booted at the same time as this
+                Subsystem.
+
+        """
+        self.exclusions.append(sub)
+        sub.exclusions.append(self)

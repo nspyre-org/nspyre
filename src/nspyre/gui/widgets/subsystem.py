@@ -115,6 +115,14 @@ class SubsystemsWidget(QtWidgets.QWidget):
 
         layout_row += 1
 
+        # shutdown dependencies checkbox
+        self.force_shutdown_checkbox = QtWidgets.QCheckBox()
+        self.force_shutdown_checkbox.setChecked(False)
+        self.force_shutdown_checkbox.setText('Force Shutdown')
+        buttons_layout.addWidget(self.force_shutdown_checkbox, layout_row, 1)
+
+        layout_row += 1
+
         # take up any additional space in the final column with padding
         buttons_layout.setColumnStretch(2, 1)
         # take up any additional space in the final row with padding
@@ -147,7 +155,8 @@ class SubsystemsWidget(QtWidgets.QWidget):
             selected_tree_index
         )
         shutdown_dependencies = self.shutdown_dependencies_checkbox.isChecked()
-        tree_subsys_item.subsys.shutdown(shutdown_dependencies=shutdown_dependencies)
+        force = self.force_shutdown_checkbox.isChecked()
+        tree_subsys_item.subsys.shutdown(shutdown_dependencies=shutdown_dependencies, force=force)
 
     def _boot(self, subsys):
         boot_dependencies = self.boot_dependencies_checkbox.isChecked()

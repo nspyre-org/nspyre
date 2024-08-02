@@ -173,7 +173,7 @@ class Subsystem(QObject):
     def boot(self, boot_dependencies: bool = True):
         """
         Args:
-            boot_dependencies: if True, boot all dependencies before booting
+            boot_dependencies: If True, boot all dependencies before booting
                 this subsystem.
         """
         if self.booted:
@@ -216,12 +216,13 @@ class Subsystem(QObject):
             self.booted_sig.emit()
         _logger.info(f'Booted [{self.name}].')
 
-    def shutdown(self, shutdown_dependencies: bool = True):
+    def shutdown(self, shutdown_dependencies: bool = True, force: bool = False):
         """Shutdown the subsystem.
 
         Args:
-            shutdown_dependencies: if True, shutdown all dependencies after shutting
+            shutdown_dependencies: If True, shutdown all dependencies after shutting
                 down
+            force: If True, ignore any exceptions while shutting down.
         """
         if not self.booted:
             _logger.warning(
@@ -239,10 +240,14 @@ class Subsystem(QObject):
                 )
                 return
 
-        if self.pre_dep_shutdown is not None:
-            self.pre_dep_shutdown(self)
-        else:
-            self.default_shutdown()
+        try:
+            if self.pre_dep_shutdown is not None:
+                self.pre_dep_shutdown(self)
+            else:
+                self.default_shutdown()
+        except Exception as exc:
+            if not force:
+                raise exc
 
         self.booted = False
         if Qt_GUI:
@@ -263,10 +268,14 @@ class Subsystem(QObject):
                             )
                             should_shutdown = False
                     if should_shutdown:
-                        subsys.shutdown(shutdown_dependencies=True)
+                        subsys.shutdown(shutdown_dependencies=True, force=force)
 
-        if self.post_dep_shutdown is not None:
-            self.post_dep_shutdown(self)
+        try:
+            if self.post_dep_shutdown is not None:
+                self.post_dep_shutdown(self)
+        except Exception as exc:
+            if not force:
+                raise exc
 
     def mutual_exclusion(self, sub: Self):
         """Prevent this Subsystem and the given Subsystem from being

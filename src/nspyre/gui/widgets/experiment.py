@@ -131,7 +131,17 @@ class ExperimentWidget(QtWidgets.QWidget):
 
         self.setLayout(params_layout)
 
-    def additional_run_kwargs(self) -> Dict:
+    def additional_constructor_kwargs(self) -> Dict:
+        """Users can override this function to provide additional kwargs to
+        the experiment class constructor.
+
+        Returns:
+            A dict containing any additional kwargs to be passed to the
+            experiment class constructor.
+        """
+        return {}
+
+    def additional_fun_kwargs(self) -> Dict:
         """Users can override this function to provide additional kwargs to
         the experiment function. It is called when the user clicks the
         'Run' button.
@@ -140,7 +150,12 @@ class ExperimentWidget(QtWidgets.QWidget):
             A dict containing any additional kwargs to be passed to the
             experiment function.
         """
-        return {}
+        ret = {
+            'notes': self.notes_textbox.toPlainText(),
+            'queue_to_exp': self.queue_to_exp,
+            'queue_from_exp': self.queue_from_exp,
+        }
+        return ret
 
     def run(self):
         """Run the experiment function in a subprocess."""
@@ -158,15 +173,12 @@ class ExperimentWidget(QtWidgets.QWidget):
         # add the queues to the constructor kwargs
         constructor_kwargs = dict(
             **self.constructor_kwargs,
-            queue_to_exp=self.queue_to_exp,
-            queue_from_exp=self.queue_from_exp,
+            **self.additional_constructor_kwargs()
         )
         # add the params and notes to the function kwargs
         fun_kwargs = dict(
             **self.fun_kwargs,
-            **self.params_widget.all_params(),
-            **self.additional_run_kwargs(),
-            notes=self.notes_textbox.toPlainText(),
+            **self.additional_fun_kwargs(),
         )
         # call the function in a new process
         self.run_proc.run(

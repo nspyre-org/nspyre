@@ -156,7 +156,9 @@ class SubsystemsWidget(QtWidgets.QWidget):
         )
         shutdown_dependencies = self.shutdown_dependencies_checkbox.isChecked()
         force = self.force_shutdown_checkbox.isChecked()
-        tree_subsys_item.subsys.shutdown(shutdown_dependencies=shutdown_dependencies, force=force)
+        tree_subsys_item.subsys.shutdown(
+            shutdown_dependencies=shutdown_dependencies, force=force
+        )
 
     def _boot(self, subsys):
         boot_dependencies = self.boot_dependencies_checkbox.isChecked()

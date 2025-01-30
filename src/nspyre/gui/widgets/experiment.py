@@ -172,8 +172,7 @@ class ExperimentWidget(QtWidgets.QWidget):
         exp_cls = getattr(self.module, self.cls)
         # add the queues to the constructor kwargs
         constructor_kwargs = dict(
-            **self.constructor_kwargs,
-            **self.additional_constructor_kwargs()
+            **self.constructor_kwargs, **self.additional_constructor_kwargs()
         )
         # add the params and notes to the function kwargs
         fun_kwargs = dict(

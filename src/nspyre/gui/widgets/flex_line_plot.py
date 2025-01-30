@@ -718,7 +718,8 @@ class _FlexLinePlotWidget(LinePlotWidget):
                 self.plot_settings.force_update = True
 
                 # run callback indicating a new source connected
-                self.new_source_func(self, self.plot_settings.sink)
+                if self.new_source_func is not None:
+                    self.new_source_func(self, self.plot_settings.sink)
             except (TimeoutError, RuntimeError) as err:
                 self.teardown()
                 raise RuntimeError(

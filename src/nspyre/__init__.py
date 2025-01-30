@@ -16,7 +16,6 @@ from .gui import ExperimentWidget
 from .gui import FlexLinePlotWidget
 from .gui import HeatMapWidget
 from .gui import LinePlotWidget
-
 from .gui import MainWidget
 from .gui import MainWidgetItem
 from .gui import nspyre_font

@@ -3,8 +3,8 @@ import time
 from typing import Callable
 from typing import Dict
 from typing import Optional
+from typing import Self
 from typing import Union
-from typing_extensions import Self
 
 from ..gui import QObject
 from ..gui import Qt_GUI

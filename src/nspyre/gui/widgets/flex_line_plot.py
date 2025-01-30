@@ -187,6 +187,7 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         self,
         timeout: float = 1,
         data_processing_func: Optional[Callable] = None,
+        new_source_func: Optional[Callable] = None,
         init_kwargs: Optional[Dict] = None,
         add_plot_kwargs: Optional[Dict] = None,
     ):
@@ -194,8 +195,14 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         Args:
             timeout: Timeout for :py:meth:`~nspyre.data.sink.DataSink.pop`.
             data_processing_func: Function to do any post-processing of the data
-                popped by the :py:class:`~nspyre.data.sink.DataSink`. Takes one
-                argument, which is the :py:class:`~nspyre.data.sink.DataSink`.
+                popped by the :py:class:`~nspyre.data.sink.DataSink`. Takes two
+                arguments. The first is the LinePlotWidget instance associated
+                with the :py:class:`FlexLinePlotWidget`. The second is the
+                associated :py:class:`~nspyre.data.sink.DataSink`.
+            new_source_func: Function to run after a new source is connected.
+                The first is the LinePlotWidget instance associated with the
+                :py:class:`FlexLinePlotWidget`. The second is the associated
+                :py:class:`~nspyre.data.sink.DataSink`.
             init_kwargs: Keyword arguments to pass to the underlying
                 :py:class:`~nspyre.gui.widgets.LinePlotWidget` init method.
             add_plot_kwargs: Keyword arguments to pass to the underlying
@@ -206,6 +213,7 @@ np.array([[4, 5, 6], [3.4, 3.6, 3.5]])])
         self.line_plot = _FlexLinePlotWidget(
             timeout=timeout,
             data_processing_func=data_processing_func,
+            new_source_func=new_source_func,
             init_kwargs=init_kwargs,
             add_plot_kwargs=add_plot_kwargs,
         )
@@ -596,6 +604,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
         self,
         timeout: float,
         data_processing_func: Optional[Callable],
+        new_source_func: Optional[Callable],
         init_kwargs: Optional[Dict],
         add_plot_kwargs: Optional[Dict],
     ):
@@ -603,11 +612,13 @@ class _FlexLinePlotWidget(LinePlotWidget):
         Args:
             timeout: see :py:class:`FlexLinePlotWidget`.
             data_processing_func: see :py:class:`FlexLinePlotWidget`.
+            new_source_func: see :py:class:`FlexLinePlotWidget`.
             init_kwargs: see :py:class:`FlexLinePlotWidget`.
             add_plot_kwargs: see :py:class:`FlexLinePlotWidget`.
         """
         self.timeout = timeout
         self.data_processing_func = data_processing_func
+        self.new_source_func = new_source_func
         if add_plot_kwargs is None:
             self.add_plot_kwargs = {}
         else:
@@ -705,6 +716,9 @@ class _FlexLinePlotWidget(LinePlotWidget):
                 # force plot the data since we used the first pop() to extract the
                 # plot info
                 self.plot_settings.force_update = True
+
+                # run callback indicating a new source connected
+                self.new_source_func(self, self.plot_settings.sink)
             except (TimeoutError, RuntimeError) as err:
                 self.teardown()
                 raise RuntimeError(
@@ -750,7 +764,7 @@ class _FlexLinePlotWidget(LinePlotWidget):
                     return
 
             if self.data_processing_func is not None:
-                self.data_processing_func(self.plot_settings.sink)
+                self.data_processing_func(self, self.plot_settings.sink)
 
             with QtCore.QMutexLocker(self.plot_settings.mutex):
                 for plot_name in self.plot_settings.series_settings:

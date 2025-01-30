@@ -263,7 +263,7 @@ def run_experiment(
             if kwarg in fun_spec.args:
                 culled_fun_kwargs[kwarg] = fun_kwargs[kwarg]
 
-    fun(**culled_fun_kwargs)
+    fun(*fun_args, **culled_fun_kwargs)
 
     # call __exit__ if implemented
     if hasattr(exp_instance, '__exit__'):

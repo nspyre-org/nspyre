@@ -5,6 +5,7 @@ from typing import Dict
 
 from pyqtgraph import ImageView
 from pyqtgraph import PlotItem
+from pyqtgraph import InfiniteLine
 from pyqtgraph.colormap import getFromMatplotlib
 from pyqtgraph.Qt import QtCore
 from pyqtgraph.Qt import QtGui
@@ -28,6 +29,7 @@ class HeatMapWidget(QtWidgets.QWidget):
         lft_label: str = '',
         colormap=None,
         font: QtGui.QFont = nspyre_font,
+        crosshair_func=None,
         **kwargs,
     ):
         """
@@ -39,25 +41,36 @@ class HeatMapWidget(QtWidgets.QWidget):
                 latest/api_reference/colormap.html#pyqtgraph.ColorMap>`__ object.
             font: Font to use in the plot title, axis labels, etc., although
                 the font type may not be fully honored.
+            crosshair_func: Optional function to call when the user clicks
         """
         super().__init__(*args, **kwargs)
+        self.crosshair_func = crosshair_func
 
         if colormap is None:
-            colormap = getFromMatplotlib('magma')
-
-        # layout for storing plot
+            colormap = getFromMatplotlib('magma')        # layout for storing plot
         self.layout = QtWidgets.QVBoxLayout()
+        
+        # button layout for controls
+        self.button_layout = QtWidgets.QHBoxLayout()
+        
+        # crosshair toggle button
+        self.crosshair_button = QtWidgets.QPushButton("Enable Crosshair")
+        self.crosshair_button.setCheckable(True)
+        self.crosshair_button.clicked.connect(self._toggle_crosshair)
+        self.button_layout.addWidget(self.crosshair_button)
+        self.button_layout.addStretch()  # push button to the left
+        
+        self.layout.addLayout(self.button_layout)
 
         # pyqtgraph widget for displaying an Image (2d or 3d plot) and related
         # items like axes, legends, etc.
         self.plot_item = PlotItem()
         self.image_view = ImageView(view=self.plot_item)
-        self.layout.addWidget(self.image_view)
-
-        # plot settings
+        self.layout.addWidget(self.image_view)        # plot settings
         self.plot_item.setTitle(title, size=f'{font.pointSize()}pt')
         self.plot_item.enableAutoRange(True)
         self.plot_item.setAspectLocked(False)
+        self.plot_item.invertY(False)  # Set y-axis to non-inverted by default
 
         # colormap
         self.image_view.setColorMap(colormap)
@@ -72,9 +85,7 @@ class HeatMapWidget(QtWidgets.QWidget):
         self.lft_axis.setLabel(text=lft_label)
         self.lft_axis.label.setFont(font)
         self.lft_axis.setTickFont(font)
-        self.lft_axis.enableAutoSIPrefix(False)
-
-        # we keep a dict containing the x-axis, y-axis, z-axis (optional, only
+        self.lft_axis.enableAutoSIPrefix(False)        # we keep a dict containing the x-axis, y-axis, z-axis (optional, only
         # for 3D images), data, semaphore, and pyqtgraph PlotDataItem
         # associated with each line plot
         self.image: Dict[str, Any] = {
@@ -83,9 +94,15 @@ class HeatMapWidget(QtWidgets.QWidget):
             'z': None,
             'data': [],
             'sem': QtCore.QSemaphore(n=1),
-        }
+        }        # crosshair lines
+        self.crosshair_v = InfiniteLine(angle=90, movable=False, pen='y')
+        self.crosshair_h = InfiniteLine(angle=0, movable=False, pen='y')
+        self.crosshair_enabled = False
 
         self.setLayout(self.layout)
+        
+        # Enable keyboard focus to capture key events
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
         # TODO
         self.destroyed.connect(partial(self._stop))
@@ -180,9 +197,74 @@ class HeatMapWidget(QtWidgets.QWidget):
         # notify the watcher
         try:
             self.parent()
-        except RuntimeError:
-            # this Qt object has already been deleted
+        except RuntimeError:            # this Qt object has already been deleted
             return
         else:
             # notify that new data is available
             self.new_data.emit()
+
+    def _toggle_crosshair(self, checked):
+        """Toggle crosshair mode on/off."""
+        if checked:
+            self.crosshair_button.setText("Disable Crosshair")
+            self.crosshair_enabled = True
+            # Add crosshair lines to the plot
+            self.plot_item.addItem(self.crosshair_v)
+            self.plot_item.addItem(self.crosshair_h)
+            # Connect mouse move and click events
+            self.plot_item.scene().sigMouseMoved.connect(self._on_mouse_move)
+            self.plot_item.scene().sigMouseClicked.connect(self._on_click)
+        else:
+            self.crosshair_button.setText("Enable Crosshair")
+            self.crosshair_enabled = False
+            # Remove crosshair lines from the plot
+            self.plot_item.removeItem(self.crosshair_v)
+            self.plot_item.removeItem(self.crosshair_h)
+            # Disconnect mouse events
+            self.plot_item.scene().sigMouseMoved.disconnect(self._on_mouse_move)
+            self.plot_item.scene().sigMouseClicked.disconnect(self._on_click)
+    
+    def _on_mouse_move(self, pos):
+        """Update crosshair position when mouse moves."""
+        if not self.crosshair_enabled:
+            return
+            
+        # Convert scene coordinates to data coordinates
+        if self.plot_item.sceneBoundingRect().contains(pos):
+            mouse_point = self.plot_item.vb.mapSceneToView(pos)
+            x, y = mouse_point.x(), mouse_point.y()
+            # Update crosshair positions
+            self.crosshair_v.setPos(x)
+            self.crosshair_h.setPos(y)
+    def _on_click(self, event):
+        """Handle mouse click events on the plot."""
+        if not self.crosshair_enabled or event.double():
+            return  # Ignore if crosshair disabled or double clicks
+        
+        # Get the click position in the scene
+        scene_pos = event.scenePos()
+        # Convert scene coordinates to data coordinates
+        if self.plot_item.sceneBoundingRect().contains(scene_pos):
+            mouse_point = self.plot_item.vb.mapSceneToView(scene_pos)
+            x, y = mouse_point.x(), mouse_point.y()
+            print(f"Clicked at x: {x:.3f}, y: {y:.3f}")
+            
+            # Call the optional callback function if provided
+            if self.crosshair_func is not None:
+                try:
+                    self.crosshair_func(x, y)
+                except Exception as e:
+                    print(f"Error calling crosshair callback function: {e}")
+
+    def keyPressEvent(self, event):
+        """Handle key press events."""
+        if event.key() == QtCore.Qt.Key_Escape and self.crosshair_enabled:
+            # Exit crosshair mode when Escape is pressed
+            self.crosshair_button.setChecked(False)
+            self._toggle_crosshair(False)
+        elif event.key() == QtCore.Qt.Key_C:
+            # Toggle crosshair mode when C is pressed
+            self.crosshair_button.setChecked(not self.crosshair_enabled)
+            self._toggle_crosshair(not self.crosshair_enabled)
+        else:
+            super().keyPressEvent(event)

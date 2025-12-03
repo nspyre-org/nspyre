@@ -35,7 +35,7 @@ packages = [{include = "nspyre", from = "src"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 numpy = "^1.23"
-rpyc = "^5.2.3"
+rpyc = ">=5.2.3,<7.0.0"
 pyqt6 = "^6.2.3"
 pyqtgraph = "^0.13.1"
 pre-commit = { version = "*", optional = true }

@@ -6,6 +6,7 @@ from multiprocessing import Queue
 from types import ModuleType
 from typing import Dict
 from typing import Optional
+from typing import Dict
 
 from pyqtgraph.Qt import QtWidgets
 
@@ -34,6 +35,7 @@ class ExperimentWidget(QtWidgets.QWidget):
         title: Optional[str] = None,
         kill: bool = False,
         layout: QtWidgets.QLayout = None,
+        get_param_value_funs: Optional[Dict] = None
     ):
         """
         Args:
@@ -87,7 +89,7 @@ class ExperimentWidget(QtWidgets.QWidget):
         else:
             self.fun_kwargs = {}
 
-        self.params_widget = ParamsWidget(params_config)
+        self.params_widget = ParamsWidget(params_config, get_param_value_funs=get_param_value_funs)
 
         # run button
         run_button = QtWidgets.QPushButton('Run')
